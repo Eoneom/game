@@ -17,6 +17,7 @@ dist
 # Local data files
 
 containers/data
+containers/postgres-data
 
 .env
 coverage

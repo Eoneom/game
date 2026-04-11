@@ -9,3 +9,14 @@ services:
       - ./data:/data/db
     ports:
       - '27017-27019:27017-27019'
+  postgres:
+    image: 'postgres:16'
+    container_name: 'postgres'
+    environment:
+      - POSTGRES_USER=eoneom
+      - POSTGRES_PASSWORD=eoneom
+      - POSTGRES_DB=eoneom
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
