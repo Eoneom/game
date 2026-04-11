@@ -1,6 +1,6 @@
 import { CityEntity } from '#core/city/entity'
 import { CityRepository } from '#app/port/repository/city'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { CityError } from '#core/city/error'
 import type { DB } from '#adapter/database/types'
 import {

@@ -41,13 +41,11 @@
   },
   "dependencies": {
     "@eoneom/api-client": "workspace:^",
-    "@typegoose/typegoose": "13.2.1",
     "body-parser": "2.2.2",
     "cors": "2.8.6",
     "dotenv": "17.4.2",
     "express": "5.2.1",
     "kysely": "0.29.4",
-    "mongoose": "9.5.0",
     "node-cron": "4.2.1",
     "pg": "8.22.0",
     "pino": "10.3.1",

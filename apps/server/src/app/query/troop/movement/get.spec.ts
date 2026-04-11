@@ -7,10 +7,12 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopError } from '#core/troop/error'
+import { id } from '#shared/identification'
 
 describe('TroopMovementGetQuery', () => {
-  const player_id = 'player_id'
-  const movement_id = 'mov1'
+  const player_id = id()
+  const other_player_id = id()
+  const movement_id = id()
   let movement: MovementEntity
   let troops: TroopEntity[]
   let repository: Pick<Repository, 'movement' | 'troop'>
@@ -34,7 +36,7 @@ describe('TroopMovementGetQuery', () => {
     })
     troops = [
       TroopEntity.create({
-        id: 't1',
+        id: id(),
         code: TroopCode.EXPLORER,
         count: 1,
         player_id,
@@ -57,7 +59,7 @@ describe('TroopMovementGetQuery', () => {
   it('throws when movement is not owned by player', async () => {
     const other = MovementEntity.create({
       ...movement,
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.movement.getById as MockInstance).mockResolvedValue(other)
 

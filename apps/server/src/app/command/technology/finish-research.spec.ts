@@ -6,9 +6,10 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import { now } from '#shared/time'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('finishTechnologyResearch', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let technology_to_finish: TechnologyEntity
   let technologyUpdateOne: MockInstance
   let repository: Pick<Repository, 'technology'>

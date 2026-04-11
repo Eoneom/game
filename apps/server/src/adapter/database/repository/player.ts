@@ -1,6 +1,6 @@
 import { PlayerEntity } from '#core/player/entity'
 import { PlayerRepository } from '#app/port/repository/player'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { PlayerError } from '#core/player/error'
 import type { DB } from '#adapter/database/types'
 import {
@@ -9,7 +9,7 @@ import {
   Selectable,
   sql
 } from 'kysely'
-import { toTimestampRequired } from '#adapter/repository/postgres/shared/time'
+import { toTimestampRequired } from '#adapter/database/repository/shared/time'
 
 export class PostgresPlayerRepository
   extends PostgreSQLGenericRepository<'player', PlayerEntity>

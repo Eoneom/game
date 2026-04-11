@@ -15,9 +15,11 @@ import assert from 'assert'
 import {
   testResourceStock, testCityCell 
 } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('researchTechnology', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -43,7 +45,7 @@ describe('researchTechnology', () => {
       code: TechnologyCode.ARCHITECTURE
     })
     research_lab = BuildingEntity.create({
-      id: 'research_lab_id',
+      id: id(),
       city_id: city.id,
       code: BuildingCode.RESEARCH_LAB,
       level: 0
@@ -82,7 +84,7 @@ describe('researchTechnology', () => {
     await assert.rejects(
       () => researchTechnology({
         city_id: city.id,
-        player_id: 'another_player_id',
+        player_id: other_player_id,
         technology_code: TechnologyCode.ARCHITECTURE
       }),
       new RegExp(CityError.NOT_OWNER)
@@ -150,7 +152,7 @@ describe('researchTechnology', () => {
 
   it('should reject when research lab meets base requirement but not base plus technology level', async () => {
     const technology_at_level_2 = TechnologyEntity.create({
-      id: 'technology_id',
+      id: id(),
       code: TechnologyCode.ARCHITECTURE,
       player_id,
       level: 2,
@@ -177,7 +179,7 @@ describe('researchTechnology', () => {
 
   it('should allow research when research lab meets base plus technology level', async () => {
     const technology_at_level_2 = TechnologyEntity.create({
-      id: 'technology_id',
+      id: id(),
       code: TechnologyCode.ARCHITECTURE,
       player_id,
       level: 2,

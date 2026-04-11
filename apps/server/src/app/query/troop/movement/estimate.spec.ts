@@ -6,6 +6,7 @@ import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { WorldService } from '#core/world/service'
 import { TroopService } from '#core/troop/service'
+import { id } from '#shared/identification'
 
 describe('TroopMovementEstimateQuery', () => {
   const origin = {
@@ -22,7 +23,7 @@ describe('TroopMovementEstimateQuery', () => {
 
   beforeEach(() => {
     const cell = CellEntity.create({
-      id: 'c',
+      id: id(),
       coordinates: origin,
       type: CellType.FOREST,
       resource_coefficient: {

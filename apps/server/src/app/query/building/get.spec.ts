@@ -8,9 +8,11 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { id } from '#shared/identification'
 
 describe('BuildingGetQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let building: BuildingEntity
   let architecture: TechnologyEntity
@@ -22,13 +24,13 @@ describe('BuildingGetQuery', () => {
       player_id
     })
     building = BuildingEntity.create({
-      id: 'b1',
+      id: id(),
       city_id: city.id,
       code: BuildingCode.RESEARCH_LAB,
       level: 1
     })
     architecture = TechnologyEntity.create({
-      id: 't1',
+      id: id(),
       player_id,
       code: TechnologyCode.ARCHITECTURE,
       level: 2
@@ -49,7 +51,7 @@ describe('BuildingGetQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other = CityEntity.initCity({
       name: 'x',
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.city.get as MockInstance).mockResolvedValue(other)
 

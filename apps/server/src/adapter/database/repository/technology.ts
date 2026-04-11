@@ -1,6 +1,6 @@
 import { TechnologyEntity } from '#core/technology/entity'
 import { TechnologyRepository } from '#app/port/repository/technology'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyError } from '#core/technology/error'
 import { now } from '#shared/time'
@@ -14,7 +14,7 @@ import {
   fromTimestamp,
   toTimestamp,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresTechnologyRepository
   extends PostgreSQLGenericRepository<'technology', TechnologyEntity>

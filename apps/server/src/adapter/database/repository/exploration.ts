@@ -1,6 +1,6 @@
 import { ExplorationEntity } from '#core/world/exploration/entity'
 import { ExplorationRepository } from '#app/port/repository/exploration'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { WorldError } from '#core/world/error'
 import { FAKE_ID } from '#shared/identification'
 import type { DB } from '#adapter/database/types'

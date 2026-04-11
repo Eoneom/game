@@ -12,18 +12,21 @@ import { TroopEntity } from '#core/troop/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostError } from '#core/outpost/error'
+import { id } from '#shared/identification'
 
 describe('finishTroopBaseMovement', () => {
-  const player_id = 'player_id'
-  const movement_id = 'movement_id'
-  const movement_troop_id = 'movement_troop_id'
-  const city_troop_id = 'city_troop_id'
+  const player_id = id()
+  const other_player_id = id()
+  const movement_id = id()
+  const movement_troop_id = id()
+  const city_troop_id = id()
+  const city_id = id()
   const origin: Coordinates = {
     sector: 1,
     x: 2,
     y: 3,
   }
-  const destination_cell_id = 'destination_cell_id'
+  const destination_cell_id = id()
   const destination: Coordinates = {
     sector: 4,
     x: 5,
@@ -79,7 +82,7 @@ describe('finishTroopBaseMovement', () => {
         getCell: vi.fn().mockResolvedValue({
           id: destination_cell_id,
           coordinates: destination,
-          city_id: city_exists ? 'some_city' : undefined,
+          city_id: city_exists ? city_id : undefined,
         }),
       } as unknown as Repository['cell'],
       outpost: {
@@ -147,7 +150,7 @@ describe('finishTroopBaseMovement', () => {
     })
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...movement,
-      player_id: 'another_player_id',
+      player_id: other_player_id,
     }))
 
     await assert.rejects(

@@ -1,6 +1,6 @@
 import { TroopEntity } from '#core/troop/entity'
 import { TroopRepository } from '#app/port/repository/troop'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopError } from '#core/troop/error'
 import type { DB } from '#adapter/database/types'
@@ -12,7 +12,7 @@ import {
 import {
   fromTimestamp,
   toTimestamp
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresTroopRepository
   extends PostgreSQLGenericRepository<'troop', TroopEntity>

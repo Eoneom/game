@@ -1,5 +1,5 @@
 import { ResourceStockRepository } from '#app/port/repository/resource-stock'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { ResourceStockError } from '#core/resources/resource-stock/error'
 import { now } from '#shared/time'
@@ -12,7 +12,7 @@ import {
 import {
   fromTimestampRequired,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresResourceStockRepository
   extends PostgreSQLGenericRepository<'resource_stock', ResourceStockEntity>

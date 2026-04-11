@@ -5,11 +5,13 @@ import { Repository } from '#app/port/repository/generic'
 import { PlayerEntity } from '#core/player/entity'
 import { PlayerError } from '#core/player/error'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('loginAuth', () => {
   const player_name = 'player_name'
+  const player_id = id()
   const player = PlayerEntity.create({
-    id: 'player_id',
+    id: player_id,
     name: player_name 
   })
 

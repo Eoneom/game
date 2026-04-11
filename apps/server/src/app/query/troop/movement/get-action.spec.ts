@@ -3,16 +3,18 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
+import { id } from '#shared/identification'
 
 describe('TroopMovementGetActionQuery', () => {
-  const movement_id = 'mov1'
+  const movement_id = id()
+  const player_id = id()
   let movement: MovementEntity
   let repository: Pick<Repository, 'movement'>
 
   beforeEach(() => {
     movement = MovementEntity.create({
       id: movement_id,
-      player_id: 'p1',
+      player_id,
       action: MovementAction.BASE,
       origin: {
         x: 0,

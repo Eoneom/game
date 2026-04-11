@@ -1,6 +1,6 @@
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingRepository } from '#app/port/repository/building'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingError } from '#core/building/error'
 import { now } from '#shared/time'
@@ -14,7 +14,7 @@ import {
   fromTimestamp,
   toTimestamp,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresBuildingRepository
   extends PostgreSQLGenericRepository<'building', BuildingEntity>

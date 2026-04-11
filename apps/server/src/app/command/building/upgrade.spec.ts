@@ -15,9 +15,11 @@ import { RequirementError } from '#core/requirement/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('upgradeBuilding', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -39,13 +41,13 @@ describe('upgradeBuilding', () => {
       mushroom: 30000
     })
     building = BuildingEntity.create({
-      id: 'building_id',
+      id: id(),
       code: BuildingCode.CLONING_FACTORY,
       level: 0,
       city_id: city.id
     })
     architecture = TechnologyEntity.create({
-      id: 'tech_id',
+      id: id(),
       code: TechnologyCode.ARCHITECTURE,
       player_id,
       level: 0
@@ -67,7 +69,7 @@ describe('upgradeBuilding', () => {
         get: vi.fn().mockResolvedValue(architecture),
         list: vi.fn().mockResolvedValue([
           TechnologyEntity.create({
-            id: 'arch_tech',
+            id: id(),
             code: TechnologyCode.ARCHITECTURE,
             player_id,
             level: 2
@@ -94,7 +96,7 @@ describe('upgradeBuilding', () => {
   it('should prevent a player to upgrade building in another player city', async () => {
     await assert.rejects(
       () => upgradeBuilding({
-        player_id: 'another_player_id',
+        player_id: other_player_id,
         city_id: city.id,
         building_code: BuildingCode.CLONING_FACTORY
       }),

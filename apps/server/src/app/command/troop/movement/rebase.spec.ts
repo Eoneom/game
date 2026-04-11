@@ -13,7 +13,8 @@ import { now } from '#shared/time'
 import assert from 'assert'
 
 describe('rebaseTroopMovement', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
 
   let initial_base_movement: MovementEntity
   let initial_movement_troops: TroopEntity[]
@@ -80,7 +81,7 @@ describe('rebaseTroopMovement', () => {
   it('should prevent player from rebasing another player troops', async () => {
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...initial_base_movement,
-      player_id: 'another_player_id',
+      player_id: other_player_id,
     }))
 
     await assert.rejects(

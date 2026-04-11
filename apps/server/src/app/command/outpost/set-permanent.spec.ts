@@ -6,11 +6,13 @@ import { outpostSetPermanent } from '#app/command/outpost/set-permanent'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostError } from '#core/outpost/error'
+import { id } from '#shared/identification'
 
 describe('outpostSetPermanent', () => {
-  const outpost_id = 'outpost_id'
-  const player_id = 'player_id'
-  const cell_id = 'cell_id'
+  const outpost_id = id()
+  const player_id = id()
+  const other_player_id = id()
+  const cell_id = id()
 
   let updateOne: MockInstance
   let getById: MockInstance
@@ -42,7 +44,7 @@ describe('outpostSetPermanent', () => {
   it('should reject when player does not own outpost', async () => {
     getById.mockResolvedValue(OutpostEntity.create({
       id: outpost_id,
-      player_id: 'another_player',
+      player_id: other_player_id,
       cell_id,
       type: OutpostType.TEMPORARY
     }))

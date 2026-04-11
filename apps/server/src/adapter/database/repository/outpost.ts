@@ -1,6 +1,6 @@
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostRepository } from '#app/port/repository/outpost'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { OutpostError } from '#core/outpost/error'
 import { OutpostType } from '#core/outpost/constant/type'
 import type { DB } from '#adapter/database/types'

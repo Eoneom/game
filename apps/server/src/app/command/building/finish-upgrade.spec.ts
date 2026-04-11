@@ -8,9 +8,11 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { now } from '#shared/time'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('finishBuildingUpgrade', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let building_to_finish: BuildingEntity
   let buildingUpdateOne: MockInstance
@@ -22,7 +24,7 @@ describe('finishBuildingUpgrade', () => {
       player_id
     })
     building_to_finish = BuildingEntity.create({
-      id: 'building_id',
+      id: id(),
       level: 0,
       code: BuildingCode.MUSHROOM_FARM,
       city_id: city.id,
@@ -50,7 +52,7 @@ describe('finishBuildingUpgrade', () => {
     await assert.rejects(
       () => finishBuildingUpgrade({
         city_id: city.id,
-        player_id: 'another_player_id'
+        player_id: other_player_id
       }),
       new RegExp(CityError.NOT_OWNER)
     )

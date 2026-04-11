@@ -1,6 +1,6 @@
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportRepository } from '#app/port/repository/report'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { CommunicationError } from '#core/communication/error'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
@@ -15,7 +15,7 @@ import {
 import {
   fromTimestampRequired,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresReportRepository
   extends PostgreSQLGenericRepository<'report', ReportEntity>

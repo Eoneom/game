@@ -8,9 +8,11 @@ import { CellType } from '#core/world/value/cell-type'
 import * as time from '#shared/time'
 import { testResourceStock } from '../../test-support/resource-stock'
 import type { MockInstance } from 'vitest'
+import { id } from '#shared/identification'
 
 describe('CityGetQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const cell_id = id()
   let city: CityEntity
   let cell: CellEntity
   let repository: Pick<Repository, 'building' | 'city' | 'cell' | 'resource_stock'>
@@ -23,7 +25,7 @@ describe('CityGetQuery', () => {
       player_id
     })
     cell = CellEntity.create({
-      id: 'cell_id',
+      id: cell_id,
       coordinates: {
         x: 1,
         y: 2,

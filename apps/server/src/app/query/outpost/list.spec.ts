@@ -7,9 +7,10 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { testResourceStock } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('OutpostListQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let repository: Pick<Repository, 'outpost' | 'cell' | 'resource_stock'>
 
   beforeEach(() => {
@@ -36,7 +37,7 @@ describe('OutpostListQuery', () => {
 
   it('loads a cell per outpost', async () => {
     const cell = CellEntity.create({
-      id: 'c1',
+      id: id(),
       coordinates: {
         x: 0,
         y: 0,
@@ -49,7 +50,7 @@ describe('OutpostListQuery', () => {
       }
     })
     const outpost = OutpostEntity.create({
-      id: 'o1',
+      id: id(),
       player_id,
       cell_id: cell.id,
       type: OutpostType.TEMPORARY

@@ -17,12 +17,13 @@ import { troop_costs } from '#core/pricing/constant/troop'
 import {
   testResourceStock, testCityCell 
 } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('cancelTroop', () => {
-  const player_id = 'player_id'
-  const another_player_id = 'another_player_id'
+  const player_id = id()
+  const another_player_id = id()
   const code = TroopCode.EXPLORER
-  const cell_id = 'cell_id'
+  const cell_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -50,7 +51,7 @@ describe('cancelTroop', () => {
     const last_progress = current_time - troop_costs[code].duration * 1000
     const remaining_count = 1000
     troop = TroopEntity.create({
-      id: 'troop_id',
+      id: id(),
       code,
       count: 0,
       cell_id,

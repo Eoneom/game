@@ -13,14 +13,22 @@ import { TroopEntity } from '#core/troop/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { ExplorationEntity } from '#core/world/exploration/entity'
 import { CellType } from '#core/world/value/cell-type'
-import { FAKE_ID } from '#shared/identification'
+import {
+  FAKE_ID, id 
+} from '#shared/identification'
 import assert from 'assert'
 
 describe('citySettle', () => {
-  const player_id = 'player_id'
-  const cell_id = 'cell_id'
+  const player_id = id()
+  const other_player_id = id()
+  const cell_id = id()
   const city_name = 'city_name'
   const outpost_id = FAKE_ID
+  const troop_id = id()
+  const cell_id_1 = id()
+  const cell_id_2 = id()
+  const cell_id_3 = id()
+  const cell_id_4 = id()
 
   const default_cell_params = {
     type: CellType.FOREST,
@@ -53,7 +61,7 @@ describe('citySettle', () => {
     })
 
     settler_troop = TroopEntity.create({
-      id: 'troop_id',
+      id: troop_id,
       code: TroopCode.SETTLER,
       count: 1,
       player_id,
@@ -84,7 +92,7 @@ describe('citySettle', () => {
     cells_around_city = [
       CellEntity.create({
         ...default_cell_params,
-        id: 'cell_id_1',
+        id: cell_id_1,
         coordinates: {
           sector: 1,
           x: 1,
@@ -93,7 +101,7 @@ describe('citySettle', () => {
       }),
       CellEntity.create({
         ...default_cell_params,
-        id: 'cell_id_2',
+        id: cell_id_2,
         coordinates: {
           sector: 1,
           x: 3,
@@ -102,7 +110,7 @@ describe('citySettle', () => {
       }),
       CellEntity.create({
         ...default_cell_params,
-        id: 'cell_id_3',
+        id: cell_id_3,
         coordinates: {
           sector: 1,
           x: 2,
@@ -111,7 +119,7 @@ describe('citySettle', () => {
       }),
       CellEntity.create({
         ...default_cell_params,
-        id: 'cell_id_4',
+        id: cell_id_4,
         coordinates: {
           sector: 1,
           x: 2,
@@ -176,7 +184,7 @@ describe('citySettle', () => {
   it('should prevent player from settling a city on another player outpost', async () => {
     repository.outpost.getById = vi.fn().mockResolvedValue(OutpostEntity.create({
       ...outpost,
-      player_id: 'another_player_id'
+      player_id: other_player_id
     }))
 
     await assert.rejects(

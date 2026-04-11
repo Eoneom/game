@@ -5,10 +5,12 @@ import { Repository } from '#app/port/repository/generic'
 import { CommunicationError } from '#core/communication/error'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
+import { id } from '#shared/identification'
 
 describe('CommunicationGetReportQuery', () => {
-  const player_id = 'player_id'
-  const report_id = 'r1'
+  const player_id = id()
+  const other_player_id = id()
+  const report_id = id()
   let report: ReportEntity
   let repository: Pick<Repository, 'report'>
 
@@ -42,7 +44,7 @@ describe('CommunicationGetReportQuery', () => {
   it('throws when report is not owned by player', async () => {
     const other = ReportEntity.create({
       ...report,
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.report.getById as MockInstance).mockResolvedValue(other)
 

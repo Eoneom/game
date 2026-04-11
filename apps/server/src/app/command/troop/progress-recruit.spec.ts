@@ -9,10 +9,12 @@ import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { now } from '#shared/time'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('progressTroopRecruitment', () => {
-  const player_id = 'player_id'
-  const cell_id = 'cell_id'
+  const player_id = id()
+  const other_player_id = id()
+  const cell_id = id()
   let city: CityEntity
   let troop: TroopEntity
   let troopUpdateOne: MockInstance
@@ -60,7 +62,7 @@ describe('progressTroopRecruitment', () => {
     await assert.rejects(
       () => progressTroopRecruitment({
         city_id: city.id,
-        player_id: 'another_player_id',
+        player_id: other_player_id,
       }),
       new RegExp(CityError.NOT_OWNER)
     )

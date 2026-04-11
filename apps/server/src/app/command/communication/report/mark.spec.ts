@@ -5,12 +5,15 @@ import { Repository } from '#app/port/repository/generic'
 import { CommunicationError } from '#core/communication/error'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
-import { FAKE_ID } from '#shared/identification'
+import {
+  FAKE_ID, id 
+} from '#shared/identification'
 import { now } from '#shared/time'
 import assert from 'assert'
 
 describe('markCommunicationReport', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   const origin = {
     x: 1,
     y: 2,
@@ -62,7 +65,7 @@ describe('markCommunicationReport', () => {
     await assert.rejects(
       () => markCommunicationReport({
         report_id: report.id,
-        player_id: 'another_player_id',
+        player_id: other_player_id,
         was_read: true
       }),
       new RegExp(CommunicationError.REPORT_NOT_OWNER)

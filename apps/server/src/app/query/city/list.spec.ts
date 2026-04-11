@@ -3,9 +3,10 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { CityEntity } from '#core/city/entity'
 import { CityService } from '#core/city/service'
+import { id } from '#shared/identification'
 
 describe('CityListQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let cities: CityEntity[]
   let repository: Pick<Repository, 'city'>
 

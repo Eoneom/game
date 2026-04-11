@@ -1,6 +1,6 @@
 import { MovementEntity } from '#core/troop/movement/entity'
 import { MovementRepository } from '#app/port/repository/movement'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { TroopError } from '#core/troop/error'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { now } from '#shared/time'
@@ -13,7 +13,7 @@ import {
 import {
   fromTimestampRequired,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresMovementRepository
   extends PostgreSQLGenericRepository<'movement', MovementEntity>

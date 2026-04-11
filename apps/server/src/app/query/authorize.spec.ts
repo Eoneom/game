@@ -2,12 +2,13 @@ import { AuthorizeQuery } from '#app/query/authorize'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { AuthEntity } from '#core/auth/entity'
+import { id } from '#shared/identification'
 
 describe('AuthorizeQuery', () => {
   const token = 'token_value'
   const auth = AuthEntity.create({
-    id: 'auth_id',
-    player_id: 'player_id',
+    id: id(),
+    player_id: id(),
     token,
     last_action_at: 100
   })

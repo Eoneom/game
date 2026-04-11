@@ -8,10 +8,15 @@ import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
+import { id } from '#shared/identification'
 
 describe('TroopGetQuery', () => {
-  const player_id = 'player_id'
-  const troop_id = 'troop_id'
+  const player_id = id()
+  const other_player_id = id()
+  const troop_id = id()
+  const movement_id = id()
+  const cell_id = id()
+  const city_id = id()
   let troop_no_cell: TroopEntity
   let repository: Pick<Repository, 'troop' | 'technology' | 'cell' | 'building'>
 
@@ -22,7 +27,7 @@ describe('TroopGetQuery', () => {
       count: 5,
       player_id,
       cell_id: null,
-      movement_id: 'mov1',
+      movement_id,
       ongoing_recruitment: null
     })
     repository = {
@@ -41,7 +46,7 @@ describe('TroopGetQuery', () => {
   it('throws when troop is not owned by player', async () => {
     const other = TroopEntity.create({
       ...troop_no_cell,
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.troop.getById as MockInstance).mockResolvedValue(other)
 
@@ -65,7 +70,7 @@ describe('TroopGetQuery', () => {
 
   it('uses cloning factory level when troop is on a city cell', async () => {
     const cell = CellEntity.create({
-      id: 'cell1',
+      id: cell_id,
       coordinates: {
         x: 0,
         y: 0,
@@ -76,7 +81,7 @@ describe('TroopGetQuery', () => {
         plastic: 1,
         mushroom: 1 
       },
-      city_id: 'city1'
+      city_id
     })
     const troop_in_city = TroopEntity.create({
       id: troop_id,
@@ -97,7 +102,7 @@ describe('TroopGetQuery', () => {
     })
 
     expect(repository.building.getLevel).toHaveBeenCalledWith({
-      city_id: 'city1',
+      city_id,
       code: BuildingCode.CLONING_FACTORY
     })
   })

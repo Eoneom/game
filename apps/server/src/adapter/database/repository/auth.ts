@@ -1,6 +1,6 @@
 import { AuthEntity } from '#core/auth/entity'
 import { AuthRepository } from '#app/port/repository/auth'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { AuthError } from '#core/auth/error'
 import type { DB } from '#adapter/database/types'
 import {
@@ -11,7 +11,7 @@ import {
 import {
   fromTimestampRequired,
   toTimestampRequired
-} from '#adapter/repository/postgres/shared/time'
+} from '#adapter/database/repository/shared/time'
 
 export class PostgresAuthRepository
   extends PostgreSQLGenericRepository<'auth', AuthEntity>

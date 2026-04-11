@@ -4,16 +4,17 @@ import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { id } from '#shared/identification'
 
 describe('TechnologyGetQuery', () => {
-  const player_id = 'player_id'
-  const city_id = 'city_id'
+  const player_id = id()
+  const city_id = id()
   let technology: TechnologyEntity
   let repository: Pick<Repository, 'technology' | 'building'>
 
   beforeEach(() => {
     technology = TechnologyEntity.create({
-      id: 't1',
+      id: id(),
       player_id,
       code: TechnologyCode.ARCHITECTURE,
       level: 0

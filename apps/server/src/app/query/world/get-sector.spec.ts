@@ -3,17 +3,20 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
+import { id } from '#shared/identification'
 
 describe('WorldGetSectorQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   const sector = 3
+  const cell_id_1 = id()
+  const cell_id_2 = id()
   let cells: CellEntity[]
   let repository: Pick<Repository, 'cell' | 'exploration'>
 
   beforeEach(() => {
     cells = [
       CellEntity.create({
-        id: 'c1',
+        id: cell_id_1,
         coordinates: {
           x: 0,
           y: 0,
@@ -31,8 +34,8 @@ describe('WorldGetSectorQuery', () => {
       exploration: {
         get: vi.fn().mockResolvedValue({
           cell_ids: [
-            'c1',
-            'c2' 
+            cell_id_1,
+            cell_id_2 
           ] 
         }) 
       } as unknown as Repository['exploration']
@@ -52,8 +55,8 @@ describe('WorldGetSectorQuery', () => {
 
     expect(result.cells).toBe(cells)
     expect(result.explored_cell_ids).toEqual([
-      'c1',
-      'c2' 
+      cell_id_1,
+      cell_id_2 
     ])
     expect(repository.cell.getSector).toHaveBeenCalledWith({ sector })
     expect(repository.exploration.get).toHaveBeenCalledWith({ player_id })

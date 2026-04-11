@@ -14,11 +14,13 @@ import assert from 'assert'
 import {
   testResourceStock, testCityCell 
 } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('recruitTroop', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   const requested_troop_count = 10
-  const cell_id = 'cell_id'
+  const cell_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -81,7 +83,7 @@ describe('recruitTroop', () => {
     await assert.rejects(
       () => recruitTroop({
         city_id: city.id,
-        player_id: 'another_player_id',
+        player_id: other_player_id,
         troop_code: TroopCode.EXPLORER,
         count: requested_troop_count,
       }),

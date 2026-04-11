@@ -5,12 +5,13 @@ import { Repository } from '#app/port/repository/generic'
 import { AuthEntity } from '#core/auth/entity'
 import { AuthError } from '#core/auth/error'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('logoutAuth', () => {
   const token = 'token_value'
   const auth = AuthEntity.create({
-    id: 'auth_id',
-    player_id: 'player_id',
+    id: id(),
+    player_id: id(),
     token,
     last_action_at: 100
   })

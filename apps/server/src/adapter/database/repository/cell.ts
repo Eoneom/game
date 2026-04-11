@@ -1,6 +1,6 @@
 import { CellEntity } from '#core/world/cell/entity'
 import { CellRepository } from '#app/port/repository/cell'
-import { PostgreSQLGenericRepository } from '#adapter/repository/postgres/generic'
+import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { WorldError } from '#core/world/error'
 import { Coordinates } from '#core/world/value/coordinates'
 import { CellType } from '#core/world/value/cell-type'

@@ -1,12 +1,13 @@
 import { TroopMovementListFinishedQuery } from '#app/query/troop/movement/list-finished'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
+import { id } from '#shared/identification'
 
 describe('TroopMovementListFinishedQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   const ids = [
-    'a',
-    'b' 
+    id(),
+    id() 
   ]
   let repository: Pick<Repository, 'movement'>
 

@@ -14,13 +14,19 @@ import {
 } from '#core/city/constant'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
-import { FAKE_ID } from '#shared/identification'
+import {
+  FAKE_ID, id 
+} from '#shared/identification'
 import assert from 'assert'
 import { testResourceStock } from '../../test-support/resource-stock'
 
 describe('signupAuth', () => {
   const player_name = 'player_name'
   const city_name = 'city_name'
+  const cell_id_1 = id()
+  const cell_id_2 = id()
+  const cell_id_3 = id()
+  const cell_id_4 = id()
   const default_cell_params = {
     type: CellType.FOREST,
     resource_coefficient: {
@@ -41,7 +47,7 @@ describe('signupAuth', () => {
   const cells_around_city = [
     CellEntity.create({
       ...default_cell_params,
-      id: 'cell_id_1',
+      id: cell_id_1,
       coordinates: {
         sector: 1,
         x: 0,
@@ -50,7 +56,7 @@ describe('signupAuth', () => {
     }),
     CellEntity.create({
       ...default_cell_params,
-      id: 'cell_id_2',
+      id: cell_id_2,
       coordinates: {
         sector: 1,
         x: 1,
@@ -59,7 +65,7 @@ describe('signupAuth', () => {
     }),
     CellEntity.create({
       ...default_cell_params,
-      id: 'cell_id_3',
+      id: cell_id_3,
       coordinates: {
         sector: 1,
         x: 2,
@@ -68,7 +74,7 @@ describe('signupAuth', () => {
     }),
     CellEntity.create({
       ...default_cell_params,
-      id: 'cell_id_4',
+      id: cell_id_4,
       coordinates: {
         sector: 1,
         x: 1,

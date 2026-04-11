@@ -15,6 +15,7 @@ import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { Coordinates } from '#core/world/value/coordinates'
 import { WorldService } from '#core/world/service'
+import { id } from '#shared/identification'
 
 describe('AppService', () => {
   const setRepositoryMock = (repository: Repository) => {
@@ -30,7 +31,7 @@ describe('AppService', () => {
   })
 
   describe('getCityProductionBreakdown', () => {
-    const city_id = 'city_1'
+    const city_id = id()
     const coordinates: Coordinates = {
       x: 1,
       y: 2,
@@ -41,7 +42,7 @@ describe('AppService', () => {
       mushroom: 1.1
     }
     const city_cell = CellEntity.create({
-      id: 'cell_id',
+      id: id(),
       coordinates,
       type: CellType.LAKE,
       resource_coefficient
@@ -109,7 +110,7 @@ describe('AppService', () => {
       sector: 1 
     }
     const cell = CellEntity.create({
-      id: 'explored_cell',
+      id: id(),
       coordinates,
       type: CellType.FOREST,
       resource_coefficient: {
@@ -130,7 +131,7 @@ describe('AppService', () => {
   })
   
   describe('getCityMaximumBuildingLevels', () => {
-    const city_id = 'city_max_levels'
+    const city_id = id()
   
     beforeEach(() => {
       const repository = { cell: { getCityCellsCount: vi.fn().mockResolvedValue(7) } } as unknown as Repository
@@ -144,7 +145,7 @@ describe('AppService', () => {
   })
   
   describe('getCityWarehousesCapacity', () => {
-    const city_id = 'city_wh'
+    const city_id = id()
   
     beforeEach(() => {
       const repository = {
@@ -177,8 +178,8 @@ describe('AppService', () => {
   })
   
   describe('getBuildingRequirementLevels', () => {
-    const city_id = 'city_req_b'
-    const player_id = 'player_req_b'
+    const city_id = id()
+    const player_id = id()
   
     afterEach(() => {
       vi.restoreAllMocks()
@@ -215,7 +216,7 @@ describe('AppService', () => {
   
     it('maps CLONING_FACTORY technology requirements from repository', async () => {
       const architecture = TechnologyEntity.create({
-        id: 'tech_1',
+        id: id(),
         player_id,
         code: TechnologyCode.ARCHITECTURE,
         level: 4
@@ -244,12 +245,12 @@ describe('AppService', () => {
   })
   
   describe('getTechnologyRequirementLevels', () => {
-    const city_id = 'city_req_t'
-    const player_id = 'player_req_t'
+    const city_id = id()
+    const player_id = id()
   
     it('maps ARCHITECTURE building requirements from repository', async () => {
       const research_lab = BuildingEntity.create({
-        id: 'b_lab',
+        id: id(),
         city_id,
         code: BuildingCode.RESEARCH_LAB,
         level: 6
@@ -279,12 +280,12 @@ describe('AppService', () => {
   })
   
   describe('getTroopRequirementLevels', () => {
-    const city_id = 'city_req_tr'
-    const player_id = 'player_req_tr'
+    const city_id = id()
+    const player_id = id()
   
     it('maps EXPLORER building requirements from repository', async () => {
       const cloning = BuildingEntity.create({
-        id: 'b_cf',
+        id: id(),
         city_id,
         code: BuildingCode.CLONING_FACTORY,
         level: 2
@@ -324,16 +325,16 @@ describe('AppService', () => {
       sector: 1 
     }
     const assigned_cell = CellEntity.create({
-      id: 'cell_taken',
+      id: id(),
       coordinates: coords_taken,
       type: CellType.RUINS,
       resource_coefficient: {
         plastic: 1,
         mushroom: 0.5 
       }
-    }).assign({ city_id: 'c1' })
+    }).assign({ city_id: id() })
     const free_cell = CellEntity.create({
-      id: 'cell_free',
+      id: id(),
       coordinates: coords_free,
       type: CellType.LAKE,
       resource_coefficient: {
@@ -390,7 +391,7 @@ describe('AppService', () => {
   
     beforeEach(() => {
       const getCell = vi.fn().mockImplementation(({ coordinates }: { coordinates: Coordinates }) => Promise.resolve(CellEntity.create({
-        id: `cell_${coordinates.x}_${coordinates.y}`,
+        id: id(),
         coordinates,
         type: CellType.LAKE,
         resource_coefficient: {

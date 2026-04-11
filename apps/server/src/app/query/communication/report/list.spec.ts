@@ -3,16 +3,18 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
+import { id } from '#shared/identification'
 
 describe('CommunicationListReportQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const report_id = id()
   let reports: ReportEntity[]
   let repository: Pick<Repository, 'report'>
 
   beforeEach(() => {
     reports = [
       ReportEntity.create({
-        id: 'r1',
+        id: report_id,
         player_id,
         destination: {
           x: 1,

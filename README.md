@@ -6,7 +6,7 @@ Proof-of-concept web strategy game. This repository is a **Yarn 4** monorepo: th
 
 - **Node.js** (LTS recommended; the stack targets modern Node for native ESM tooling in scripts)
 - **Yarn 4** — the repo pins Yarn via Corepack (see root `package.json` `packageManager` field)
-- **Docker** — for local MongoDB (optional if you already run MongoDB on `localhost:27017`)
+- **Docker** — for local Postgres (optional if you already run Postgres on `localhost:5432`)
 
 Enable Corepack once so the correct Yarn version is used:
 
@@ -22,17 +22,18 @@ From the **repository root**:
 yarn install
 ```
 
-## Run MongoDB locally
+## Run Postgres locally
 
-The server connects to MongoDB at `mongodb://localhost:27017/` with database name `eoneom` (see `apps/server/src/adapter/repository/mongo.ts`).
+The server connects to Postgres via `DATABASE_URL` (default `postgres://eoneom:eoneom@localhost:5432/eoneom`).
 
 From the repository root:
 
 ```bash
 docker compose -f containers/docker-compose.yml up -d
+yarn workspace @eoneom/server db:migrate
 ```
 
-Data is stored under `containers/data`. To stop:
+Data is stored under `containers/postgres-data`. To stop:
 
 ```bash
 docker compose -f containers/docker-compose.yml down
@@ -65,8 +66,7 @@ Copy [`apps/server/.env.example`](apps/server/.env.example) to `apps/server/.env
 | Variable | Description |
 | -------- | ----------- |
 | `GAME_TIME_SCALE` | Optional **speed multiplier** (`1` = default). For example `2` makes the game **twice as fast**: wait times (recruitment, building upgrades, technology research, troop movement) are shortened, and **production earnings** (`BuildingService` rates used for gathering and warehouse timers) are multiplied by the same factor. Invalid, empty, or non-positive values fall back to `1`. |
-| `MONGODB_URI` | MongoDB connection string (default `mongodb://localhost:27017/`). |
-| `MONGODB_DB_NAME` | Database name (default `eoneom`). |
+| `DATABASE_URL` | Postgres connection string (default `postgres://eoneom:eoneom@localhost:5432/eoneom`). |
 | `HTTP_PORT` | API listen port (default `3000`). |
 
 Example from the repository root without a `.env` file:
@@ -133,7 +133,7 @@ Additional scripts (coverage, eject) are defined only on `apps/web/package.json`
 | ------------------- | ---------------------------------------------- |
 | `yarn client:build` | Build `@eoneom/api-client` (shared package)    |
 
-Typical full-stack local setup: MongoDB running, `yarn server:start` in one terminal, `yarn web:start` in another (API on 3000, UI on 3001).
+Typical full-stack local setup: Postgres running and migrated, `yarn server:start` in one terminal, `yarn web:start` in another (API on 3000, UI on 3001).
 
 ## Interact with the server
 
@@ -147,10 +147,11 @@ Implements the application’s outbound ports: database, logging, locking.
 
 #### Database
 
-MongoDB adapter for repository ports. Models follow a common shape:
+Postgres (Kysely) under `apps/server/src/adapter/database/`:
 
-- `document`: Typegoose document classes and exported models
-- `repository`: extends the generic repository and adds domain-specific methods
+- Infra: `client.ts`, `types.ts`, `migrate.ts`, `migrations/`
+- Domain repositories under `repository/` (`auth.ts`, `city.ts`, …) extend the generic Kysely repository
+- Wired through `Factory.getRepository()` → `PostgresRepository`
 
 ### App
 

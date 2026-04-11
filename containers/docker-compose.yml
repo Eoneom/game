@@ -1,14 +1,5 @@
 version: '3'
 services:
-  database:
-    image: 'mongo'
-    container_name: 'database'
-    environment:
-      - MONGO_INITDB_DATABASE=eoneom
-    volumes:
-      - ./data:/data/db
-    ports:
-      - '27017-27019:27017-27019'
   postgres:
     image: 'postgres:16'
     container_name: 'postgres'

@@ -1,4 +1,4 @@
-import { MongoRepository } from '#adapter/repository/mongo'
+import { PostgresRepository } from '#adapter/database/repository'
 import { Repository } from '#app/port/repository/generic'
 import { AppLogger } from '#app/port/logger'
 import { loggerAdapter } from '#adapter/logger'
@@ -13,7 +13,7 @@ export class Factory {
 
   static getRepository(): Repository {
     if (!this.repository) {
-      this.repository = new MongoRepository()
+      this.repository = new PostgresRepository()
     }
 
     return this.repository

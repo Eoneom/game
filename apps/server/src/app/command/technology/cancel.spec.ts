@@ -7,9 +7,10 @@ import { TechnologyEntity } from '#core/technology/entity'
 import { TechnologyError } from '#core/technology/error'
 import { now } from '#shared/time'
 import assert from 'assert'
+import { id } from '#shared/identification'
 
 describe('cancelTechnology', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let technology: TechnologyEntity
   let technologyUpdateOne: MockInstance
   let repository: Pick<Repository, 'technology'>

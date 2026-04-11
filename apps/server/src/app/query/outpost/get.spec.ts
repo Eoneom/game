@@ -8,10 +8,13 @@ import { OutpostError } from '#core/outpost/error'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { testResourceStock } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('OutpostGetQuery', () => {
-  const player_id = 'player_id'
-  const outpost_id = 'o1'
+  const player_id = id()
+  const other_player_id = id()
+  const outpost_id = id()
+  const cell_id = id()
   let outpost: OutpostEntity
   let cell: CellEntity
   let stock: ReturnType<typeof testResourceStock>
@@ -21,16 +24,16 @@ describe('OutpostGetQuery', () => {
     outpost = OutpostEntity.create({
       id: outpost_id,
       player_id,
-      cell_id: 'cell1',
+      cell_id,
       type: OutpostType.TEMPORARY
     })
     stock = testResourceStock({
-      cell_id: 'cell1',
+      cell_id,
       plastic: 10,
       mushroom: 20
     })
     cell = CellEntity.create({
-      id: 'cell1',
+      id: cell_id,
       coordinates: {
         x: 0,
         y: 0,
@@ -57,7 +60,7 @@ describe('OutpostGetQuery', () => {
   it('throws when outpost is not owned by player', async () => {
     const other = OutpostEntity.create({
       ...outpost,
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.outpost.getById as MockInstance).mockResolvedValue(other)
 

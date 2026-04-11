@@ -16,10 +16,11 @@ import assert from 'assert'
 import {
   testResourceStock, testCityCell 
 } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('cancelBuilding', () => {
-  const player_id = 'player_id'
-  const another_player_id = 'another_player_id'
+  const player_id = id()
+  const another_player_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -41,7 +42,7 @@ describe('cancelBuilding', () => {
     })
 
     building = BuildingEntity.create({
-      id: 'building_id',
+      id: id(),
       code: BuildingCode.MUSHROOM_FARM,
       level: 0,
       city_id: city.id,

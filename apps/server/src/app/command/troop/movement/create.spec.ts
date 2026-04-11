@@ -15,8 +15,8 @@ import { id } from '#shared/identification'
 import assert from 'assert'
 
 describe('createTroopMovement', () => {
-  const player_id = 'player_id'
-  const cell_id = 'cell_id'
+  const player_id = id()
+  const cell_id = id()
   const origin = {
     x: 1,
     y: 2,
@@ -160,7 +160,7 @@ describe('createTroopMovement', () => {
   })
 
   it('should delete temporary outpost and origin troops when cell is fully emptied', async () => {
-    const outpost_id = 'outpost_id'
+    const outpost_id = id()
     const temporary_outpost = OutpostEntity.create({
       id: outpost_id,
       player_id,
@@ -187,7 +187,7 @@ describe('createTroopMovement', () => {
   })
 
   it('should emit OutpostDeleted event when temporary outpost is deleted', async () => {
-    const outpost_id = 'outpost_id'
+    const outpost_id = id()
     const mockEmit = vi.fn()
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit: mockEmit } as any)
 
@@ -234,7 +234,7 @@ describe('createTroopMovement', () => {
 
   it('should not delete outpost when temporary outpost remains garrisoned after partial move', async () => {
     const temporary_outpost = OutpostEntity.create({
-      id: 'outpost_id',
+      id: id(),
       player_id,
       cell_id,
       type: OutpostType.TEMPORARY,
@@ -259,7 +259,7 @@ describe('createTroopMovement', () => {
 
   it('should not delete permanent outpost when cell is fully emptied', async () => {
     const permanent_outpost = OutpostEntity.create({
-      id: 'outpost_id',
+      id: id(),
       player_id,
       cell_id,
       type: OutpostType.PERMANENT,

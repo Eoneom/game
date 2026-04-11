@@ -1,9 +1,10 @@
 import { CommunicationCountUnreadReportQuery } from '#app/query/communication/report/count-unread'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
+import { id } from '#shared/identification'
 
 describe('CommunicationCountUnreadReportQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let repository: Pick<Repository, 'report'>
 
   beforeEach(() => {

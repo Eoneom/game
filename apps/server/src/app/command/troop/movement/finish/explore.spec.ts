@@ -11,15 +11,17 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { now } from '#shared/time'
 import { TroopEntity } from '#core/troop/entity'
 import { ExplorationEntity } from '#core/world/exploration/entity'
+import { id } from '#shared/identification'
 
 describe('finishTroopExploreMovement', () => {
-  const player_id = 'player_id'
-  const movement_id = 'movement_id'
-  const troop_id = 'troop_id'
-  const exploration_id = 'exploration_id'
-  const already_explored_cell_id = 'already_explored_cell_id'
-  const cell_id = 'cell_id'
-  const city_cell_id = 'city_cell_id'
+  const player_id = id()
+  const other_player_id = id()
+  const movement_id = id()
+  const troop_id = id()
+  const exploration_id = id()
+  const already_explored_cell_id = id()
+  const cell_id = id()
+  const city_cell_id = id()
   let movement: MovementEntity
   let troop: TroopEntity
   let exploration: ExplorationEntity
@@ -98,7 +100,7 @@ describe('finishTroopExploreMovement', () => {
   it('should prevent a player for finishing a movement of another player', async () => {
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...movement,
-      player_id: 'another_player_id',
+      player_id: other_player_id,
     }))
 
     await assert.rejects(

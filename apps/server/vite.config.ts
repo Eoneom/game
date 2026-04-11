@@ -31,8 +31,8 @@ export default defineConfig({
       },
       external: [
         'express',
-        'mongoose',
-        '@typegoose/typegoose',
+        'kysely',
+        'pg',
         'ws',
         'uuid',
         'dotenv',

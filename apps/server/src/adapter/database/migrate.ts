@@ -18,18 +18,23 @@ async function createMigrator() {
       migrationFolder: path.join(__dirname, 'migrations')
     })
   })
-  return { db, migrator }
+  return {
+    db,
+    migrator 
+  }
 }
 
 async function migrateToLatest(): Promise<void> {
-  const { db, migrator } = await createMigrator()
-  const { error, results } = await migrator.migrateToLatest()
+  const {
+    db, migrator 
+  } = await createMigrator()
+  const {
+    error, results 
+  } = await migrator.migrateToLatest()
 
   results?.forEach((result) => {
     if (result.status === 'Success') {
-      console.log(
-        `migration "${result.migrationName}" was executed successfully`
-      )
+      console.log(`migration "${result.migrationName}" was executed successfully`)
     } else if (result.status === 'Error') {
       console.error(`failed to execute migration "${result.migrationName}"`)
     }
@@ -46,14 +51,16 @@ async function migrateToLatest(): Promise<void> {
 }
 
 async function migrateDown(): Promise<void> {
-  const { db, migrator } = await createMigrator()
-  const { error, results } = await migrator.migrateDown()
+  const {
+    db, migrator 
+  } = await createMigrator()
+  const {
+    error, results 
+  } = await migrator.migrateDown()
 
   results?.forEach((result) => {
     if (result.status === 'Success') {
-      console.log(
-        `migration "${result.migrationName}" was reverted successfully`
-      )
+      console.log(`migration "${result.migrationName}" was reverted successfully`)
     } else if (result.status === 'Error') {
       console.error(`failed to revert migration "${result.migrationName}"`)
     }

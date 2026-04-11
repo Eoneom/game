@@ -12,9 +12,11 @@ import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
+import { id } from '#shared/identification'
 
 describe('TroopListQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let cell: CellEntity
   let troop: TroopEntity
@@ -26,7 +28,7 @@ describe('TroopListQuery', () => {
       player_id
     })
     cell = CellEntity.create({
-      id: 'cell1',
+      id: id(),
       coordinates: {
         x: 0,
         y: 0,
@@ -40,7 +42,7 @@ describe('TroopListQuery', () => {
       city_id: city.id
     })
     troop = TroopEntity.create({
-      id: 'tr1',
+      id: id(),
       code: TroopCode.EXPLORER,
       count: 2,
       player_id,
@@ -70,7 +72,7 @@ describe('TroopListQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other_city = CityEntity.initCity({
       name: 'x',
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.city.get as MockInstance).mockResolvedValue(other_city)
 
@@ -106,9 +108,9 @@ describe('TroopListQuery', () => {
 
   it('throws when outpost is not owned by player', async () => {
     const outpost = OutpostEntity.create({
-      id: 'o1',
-      player_id: 'other',
-      cell_id: 'cell_o',
+      id: id(),
+      player_id: other_player_id,
+      cell_id: id(),
       type: OutpostType.TEMPORARY
     })
     repository.outpost = { getById: vi.fn().mockResolvedValue(outpost) } as unknown as Repository['outpost']
@@ -124,7 +126,7 @@ describe('TroopListQuery', () => {
 
   it('lists troops for outpost location', async () => {
     const outpost = OutpostEntity.create({
-      id: 'o1',
+      id: id(),
       player_id,
       cell_id: cell.id,
       type: OutpostType.TEMPORARY

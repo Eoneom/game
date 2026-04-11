@@ -15,9 +15,11 @@ import assert from 'assert'
 import {
   testResourceStock, testCityCell 
 } from '../../test-support/resource-stock'
+import { id } from '#shared/identification'
 
 describe('cityGather', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
   let city: CityEntity
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
@@ -73,7 +75,7 @@ describe('cityGather', () => {
     await assert.rejects(
       () => cityGather({
         city_id: city.id,
-        player_id: 'another_player_id',
+        player_id: other_player_id,
         gather_at_time
       }),
       new RegExp(CityError.NOT_OWNER)

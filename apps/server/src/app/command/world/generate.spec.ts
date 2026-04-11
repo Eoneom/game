@@ -6,10 +6,13 @@ import { CellEntity } from '#core/world/cell/entity'
 import { WorldError } from '#core/world/error'
 import { WorldService } from '#core/world/service'
 import { CellType } from '#core/world/value/cell-type'
+import { id } from '#shared/identification'
 
 describe('generateWorld', () => {
+  const cell_id = id()
+  const persisted_cell_id = id()
   const cell = CellEntity.create({
-    id: 'cell_id',
+    id: cell_id,
     coordinates: {
       x: 1,
       y: 1,
@@ -29,7 +32,7 @@ describe('generateWorld', () => {
 
   beforeEach(() => {
     isInitialized = vi.fn()
-    cellCreate = vi.fn().mockResolvedValue('persisted_cell_id')
+    cellCreate = vi.fn().mockResolvedValue(persisted_cell_id)
     stockCreate = vi.fn().mockResolvedValue(undefined)
     repository = {
       cell: {
@@ -64,6 +67,6 @@ describe('generateWorld', () => {
     expect(cellCreate).toHaveBeenCalledWith(cell)
     expect(stockCreate).toHaveBeenCalledTimes(1)
     const stock_arg = stockCreate.mock.calls[0][0]
-    expect(stock_arg.cell_id).toBe('persisted_cell_id')
+    expect(stock_arg.cell_id).toBe(persisted_cell_id)
   })
 })

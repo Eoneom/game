@@ -9,9 +9,14 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { id } from '#shared/identification'
 
 describe('BuildingListQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const other_player_id = id()
+  const technology_id = id()
+  const building_id_idle = id()
+  const building_id_upgrade = id()
   let city: CityEntity
   let architecture: TechnologyEntity
   let b_idle: BuildingEntity
@@ -24,19 +29,19 @@ describe('BuildingListQuery', () => {
       player_id
     })
     architecture = TechnologyEntity.create({
-      id: 't1',
+      id: technology_id,
       player_id,
       code: TechnologyCode.ARCHITECTURE,
       level: 1
     })
     b_idle = BuildingEntity.create({
-      id: 'b1',
+      id: building_id_idle,
       city_id: city.id,
       code: BuildingCode.RESEARCH_LAB,
       level: 1
     })
     b_upgrade = BuildingEntity.create({
-      id: 'b2',
+      id: building_id_upgrade,
       city_id: city.id,
       code: BuildingCode.CLONING_FACTORY,
       level: 0,
@@ -63,7 +68,7 @@ describe('BuildingListQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other = CityEntity.initCity({
       name: 'x',
-      player_id: 'other'
+      player_id: other_player_id
     })
     ;(repository.city.get as unknown as MockInstance).mockResolvedValue(other)
 

@@ -3,22 +3,23 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { id } from '#shared/identification'
 
 describe('TechnologyListQuery', () => {
-  const player_id = 'player_id'
+  const player_id = id()
   let technologies: TechnologyEntity[]
   let repository: Pick<Repository, 'technology'>
 
   beforeEach(() => {
     technologies = [
       TechnologyEntity.create({
-        id: 't2',
+        id: id(),
         player_id,
         code: TechnologyCode.REPLICATION_CATALYST,
         level: 0
       }),
       TechnologyEntity.create({
-        id: 't1',
+        id: id(),
         player_id,
         code: TechnologyCode.ARCHITECTURE,
         level: 1

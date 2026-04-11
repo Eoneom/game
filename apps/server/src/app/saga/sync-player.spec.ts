@@ -6,6 +6,7 @@ import { sagaSyncPlayer } from './sync-player'
 import { sagaRefreshGameState } from '#app/saga/game/refresh-state'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
+import { id } from '#shared/identification'
 
 vi.mock('#app/saga/game/refresh-state')
 vi.mock('#adapter/factory', () => ({
@@ -16,7 +17,9 @@ vi.mock('#adapter/factory', () => ({
 }))
 
 describe('sagaSyncPlayer', () => {
-  const player_id = 'player_id'
+  const player_id = id()
+  const city_id_1 = id()
+  const city_id_2 = id()
   let cityList: MockInstance
   let repository: Pick<Repository, 'city'>
 
@@ -48,8 +51,8 @@ describe('sagaSyncPlayer', () => {
 
   it('calls sagaRefreshGameState for each city', async () => {
     const cities = [
-      { id: 'city_1' },
-      { id: 'city_2' },
+      { id: city_id_1 },
+      { id: city_id_2 },
     ]
     cityList.mockResolvedValue(cities)
 
@@ -57,7 +60,7 @@ describe('sagaSyncPlayer', () => {
 
     assert.strictEqual((sagaRefreshGameState as MockInstance).mock.calls.length, 2)
     const call_args = (sagaRefreshGameState as MockInstance).mock.calls.map(([ arg ]) => arg)
-    assert.ok(call_args.some(arg => arg.player_id === player_id && arg.city_id === 'city_1'))
-    assert.ok(call_args.some(arg => arg.player_id === player_id && arg.city_id === 'city_2'))
+    assert.ok(call_args.some(arg => arg.player_id === player_id && arg.city_id === city_id_1))
+    assert.ok(call_args.some(arg => arg.player_id === player_id && arg.city_id === city_id_2))
   })
 })
