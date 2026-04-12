@@ -13,9 +13,7 @@ import { TroopEntity } from '#core/troop/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { ExplorationEntity } from '#core/world/exploration/entity'
 import { CellType } from '#core/world/value/cell-type'
-import {
-  FAKE_ID, id 
-} from '#shared/identification'
+import { id } from '#shared/identification'
 import assert from 'assert'
 
 describe('citySettle', () => {
@@ -23,7 +21,7 @@ describe('citySettle', () => {
   const other_player_id = id()
   const cell_id = id()
   const city_name = 'city_name'
-  const outpost_id = FAKE_ID
+  const outpost_id = id()
   const troop_id = id()
   const cell_id_1 = id()
   const cell_id_2 = id()

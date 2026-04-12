@@ -5,9 +5,7 @@ import { Repository } from '#app/port/repository/generic'
 import { CommunicationError } from '#core/communication/error'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
-import {
-  FAKE_ID, id 
-} from '#shared/identification'
+import { id } from '#shared/identification'
 import { now } from '#shared/time'
 import assert from 'assert'
 
@@ -34,7 +32,7 @@ describe('markCommunicationReport', () => {
 
   beforeEach(() => {
     report = ReportEntity.create({
-      id: FAKE_ID,
+      id: id(),
       destination,
       origin,
       player_id,

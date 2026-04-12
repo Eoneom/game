@@ -2,7 +2,6 @@ import { ExplorationEntity } from '#core/world/exploration/entity'
 import { ExplorationRepository } from '#app/port/repository/exploration'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { WorldError } from '#core/world/error'
-import { FAKE_ID } from '#shared/identification'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
@@ -53,7 +52,7 @@ export class PostgresExplorationRepository
     return this.db.transaction().execute(async (trx) => {
       let exploration_id: string
 
-      if (with_id.id && with_id.id !== FAKE_ID) {
+      if (with_id.id) {
         await trx
           .insertInto('exploration')
           .values({

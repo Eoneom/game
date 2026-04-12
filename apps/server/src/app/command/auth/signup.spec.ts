@@ -14,9 +14,7 @@ import {
 } from '#core/city/constant'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
-import {
-  FAKE_ID, id 
-} from '#shared/identification'
+import { id } from '#shared/identification'
 import assert from 'assert'
 import { testResourceStock } from '../../test-support/resource-stock'
 
@@ -36,7 +34,7 @@ describe('signupAuth', () => {
   }
   const city_first_cell = CellEntity.create({
     ...default_cell_params,
-    id: FAKE_ID,
+    id: id(),
     coordinates: {
       x: 1,
       y: 1,

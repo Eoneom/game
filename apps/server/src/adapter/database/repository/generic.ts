@@ -1,4 +1,3 @@
-import { FAKE_ID } from '#shared/identification'
 import { GenericRepository } from '#app/port/repository/generic'
 import { BaseEntity } from '#core/type/base/entity'
 import { AppLogger } from '#app/port/logger'
@@ -74,7 +73,7 @@ export abstract class PostgreSQLGenericRepository<
     const with_id = entity as Entity
     const row = this.toRow(with_id)
 
-    if (with_id.id && with_id.id !== FAKE_ID) {
+    if (with_id.id) {
       this.logger.debug('create:upsert', { id: with_id.id })
       await this.upsertRow({
         ...row,

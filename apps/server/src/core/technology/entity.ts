@@ -1,5 +1,5 @@
 import { TechnologyCode } from '#core/technology/constant/code'
-import { FAKE_ID } from '#shared/identification'
+import { id } from '#shared/identification'
 import { now } from '#shared/time'
 import { BaseEntity } from '#core/type/base/entity'
 import { TechnologyError } from '#core/technology/error'
@@ -44,7 +44,7 @@ export class TechnologyEntity extends BaseEntity {
     code
   }: { player_id: string, code: TechnologyCode }): TechnologyEntity {
     return new TechnologyEntity({
-      id: FAKE_ID,
+      id: id(),
       code,
       player_id,
       level: 0,

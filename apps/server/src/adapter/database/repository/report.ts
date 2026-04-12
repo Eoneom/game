@@ -4,7 +4,6 @@ import { PostgreSQLGenericRepository } from '#adapter/database/repository/generi
 import { CommunicationError } from '#core/communication/error'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
-import { FAKE_ID } from '#shared/identification'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
@@ -103,7 +102,7 @@ export class PostgresReportRepository
       const row = this.toRow(with_id)
       let report_id: string
 
-      if (with_id.id && with_id.id !== FAKE_ID) {
+      if (with_id.id) {
         await trx
           .insertInto('report')
           .values({

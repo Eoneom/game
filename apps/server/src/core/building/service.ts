@@ -3,7 +3,7 @@ import { building_earnings } from '#core/building/constant/earnings'
 import { building_order } from '#core/building/constant/order'
 import { warehouses_capacity } from '#core/building/constant/warehouse-capacity'
 import { BuildingEntity } from '#core/building/entity'
-import { FAKE_ID } from '#shared/identification'
+import { id } from '#shared/identification'
 import { Resource } from '#shared/resource'
 import { gameTimeScale } from '#shared/game-time-scale'
 
@@ -11,7 +11,7 @@ export class BuildingService {
   static init({ city_id }: { city_id: string }): BuildingEntity[] {
     return Object.values(BuildingCode).map(code => {
       return BuildingEntity.create({
-        id: FAKE_ID,
+        id: id(),
         code,
         city_id,
         level: 0

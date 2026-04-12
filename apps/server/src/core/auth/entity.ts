@@ -1,5 +1,5 @@
 import {
-  FAKE_ID, generateToken
+  id, generateToken
 } from '#shared/identification'
 import { BaseEntity } from '#core/type/base/entity'
 import { now } from '#shared/time'
@@ -41,7 +41,7 @@ export class AuthEntity extends BaseEntity {
 
   static generate({ player_id }: { player_id: string }): AuthEntity {
     return new AuthEntity({
-      id: FAKE_ID,
+      id: id(),
       player_id,
       token: generateToken(),
       last_action_at: now()
