@@ -9,11 +9,13 @@ import { sync_task } from '#cron/index'
 
 (async () => {
   const repository = Factory.getRepository()
+  const jobQueue = Factory.getJobQueue()
   const logger = Factory.getLogger('index')
   if (gameTimeScale !== 1) {
     logger.warn('game time scale active', { gameTimeScale })
   }
   await repository.connect()
+  await jobQueue.start()
 
   try {
     await generateWorld()
@@ -27,4 +29,25 @@ import { sync_task } from '#cron/index'
   launchServer()
 
   sync_task.start()
+
+  let shutting_down = false
+  const shutdown = async () => {
+    if (shutting_down) {
+      return
+    }
+    shutting_down = true
+    logger.info('shutting down...')
+    try {
+      await jobQueue.stop()
+    } catch (err) {
+      logger.error('failed to stop job queue', { err })
+    }
+    process.exit(0)
+  }
+  process.on('SIGTERM', () => {
+    void shutdown()
+  })
+  process.on('SIGINT', () => {
+    void shutdown()
+  })
 })()

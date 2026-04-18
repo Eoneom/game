@@ -5,11 +5,15 @@ import { loggerAdapter } from '#adapter/logger'
 import { Lock } from '#app/port/lock'
 import { LockInMemory } from '#adapter/lock'
 import { AppEventBus } from '#app/event-bus'
+import {
+  createJobQueue, JobQueue 
+} from '#adapter/job-queue'
 
 export class Factory {
   private static repository: Repository
   private static lock: Lock
   private static eventBus: AppEventBus
+  private static jobQueue: JobQueue
 
   static getRepository(): Repository {
     if (!this.repository) {
@@ -37,5 +41,13 @@ export class Factory {
     }
 
     return this.eventBus
+  }
+
+  static getJobQueue(): JobQueue {
+    if (!this.jobQueue) {
+      this.jobQueue = createJobQueue({ logger: this.getLogger('job-queue') })
+    }
+
+    return this.jobQueue
   }
 }

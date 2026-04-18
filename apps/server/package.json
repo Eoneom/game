@@ -10,7 +10,7 @@
     "start": "node --enable-source-maps dist/index.js | pino-pretty-min",
     "db:migrate": "tsx src/adapter/database/migrate.ts",
     "db:migrate:down": "tsx src/adapter/database/migrate.ts down",
-    "db:codegen": "kysely-codegen --dialect postgres --env-file .env --out-file ./src/adapter/database/types.ts --exclude-pattern \"kysely_*\"",
+    "db:codegen": "kysely-codegen --dialect postgres --env-file .env --out-file ./src/adapter/database/types.ts --exclude-pattern \"kysely_*|pgboss.*\"",
     "lint": "eslint ./src",
     "lint:fix": "eslint --fix ./src",
     "test": "vitest run",
@@ -48,6 +48,7 @@
     "kysely": "0.29.4",
     "node-cron": "4.2.1",
     "pg": "8.22.0",
+    "pg-boss": "12.26.4",
     "pino": "10.3.1",
     "uuid": "14.0.0",
     "ws": "8.20.0"

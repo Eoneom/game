@@ -388,6 +388,7 @@ __metadata:
     kysely-codegen: "npm:0.20.0"
     node-cron: "npm:4.2.1"
     pg: "npm:8.22.0"
+    pg-boss: "npm:12.26.4"
     pino: "npm:10.3.1"
     pino-pretty-min: "npm:0.3.2"
     tsx: "npm:4.23.1"
@@ -2755,6 +2756,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cron-parser@npm:^5.6.2":
+  version: 5.7.0
+  resolution: "cron-parser@npm:5.7.0"
+  dependencies:
+    luxon: "npm:^3.7.2"
+  checksum: 10c0/866adc2b3fdb48236e40504efb3156a98da0e5d1c31dd38332362e36a41a02303a011b12498290dfb933a5d7d83880a0ea06bf9629b98cb3c685cebda541d7dd
+  languageName: node
+  linkType: hard
+
 "cross-spawn@npm:^7.0.2, cross-spawn@npm:^7.0.6":
   version: 7.0.6
   resolution: "cross-spawn@npm:7.0.6"
@@ -5050,6 +5060,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"luxon@npm:^3.7.2":
+  version: 3.7.2
+  resolution: "luxon@npm:3.7.2"
+  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
+  languageName: node
+  linkType: hard
+
 "lz-string@npm:^1.5.0":
   version: 1.5.0
   resolution: "lz-string@npm:1.5.0"
@@ -5383,6 +5400,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"non-error@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "non-error@npm:0.1.0"
+  checksum: 10c0/acaba9060f2682037b85241d914bbbf17210024e5bcce9f80ce104fec8f2946a19222b0503e3c1a5ed6d172354cf772f474211680c9d8559e4868cdd8e9d878d
+  languageName: node
+  linkType: hard
+
 "nopt@npm:^9.0.0":
   version: 9.0.0
   resolution: "nopt@npm:9.0.0"
@@ -5663,6 +5687,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-boss@npm:12.26.4":
+  version: 12.26.4
+  resolution: "pg-boss@npm:12.26.4"
+  dependencies:
+    cron-parser: "npm:^5.6.2"
+    pg: "npm:^8.22.0"
+    serialize-error: "npm:^13.0.1"
+  bin:
+    pg-boss: dist/cli.js
+  checksum: 10c0/5377120af7a5c4566e0c69d94af32c603484805693f5483f40f9800e52dabcbf8de1093d2f1aa934c27ed7f1688e12323f3bcd43156d2eb6e2a60e8337626748
+  languageName: node
+  linkType: hard
+
 "pg-cloudflare@npm:^1.4.0":
   version: 1.4.0
   resolution: "pg-cloudflare@npm:1.4.0"
@@ -5713,7 +5750,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg@npm:8.22.0":
+"pg@npm:8.22.0, pg@npm:^8.22.0":
   version: 8.22.0
   resolution: "pg@npm:8.22.0"
   dependencies:
@@ -6407,6 +6444,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"serialize-error@npm:^13.0.1":
+  version: 13.0.1
+  resolution: "serialize-error@npm:13.0.1"
+  dependencies:
+    non-error: "npm:^0.1.0"
+    type-fest: "npm:^5.4.1"
+  checksum: 10c0/bca59e7b1d6ad6f8f50d698f2851b65a907a7a0fe63bb35fb8e1712781d7d7634fde49a2df1586d5aa6874e56c2e2304514725ef0810c7b964941d9bc7b7ae02
+  languageName: node
+  linkType: hard
+
 "seroval-plugins@npm:^1.5.0":
   version: 1.5.2
   resolution: "seroval-plugins@npm:1.5.2"
@@ -6803,6 +6850,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tagged-tag@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "tagged-tag@npm:1.0.0"
+  checksum: 10c0/91d25c9ffb86a91f20522cefb2cbec9b64caa1febe27ad0df52f08993ff60888022d771e868e6416cf2e72dab68449d2139e8709ba009b74c6c7ecd4000048d1
+  languageName: node
+  linkType: hard
+
 "tar@npm:^7.5.4":
   version: 7.5.13
   resolution: "tar@npm:7.5.13"
@@ -7012,6 +7066,15 @@ __metadata:
   version: 0.20.2
   resolution: "type-fest@npm:0.20.2"
   checksum: 10c0/dea9df45ea1f0aaa4e2d3bed3f9a0bfe9e5b2592bddb92eb1bf06e50bcf98dbb78189668cd8bc31a0511d3fc25539b4cd5c704497e53e93e2d40ca764b10bfc3
+  languageName: node
+  linkType: hard
+
+"type-fest@npm:^5.4.1":
+  version: 5.8.0
+  resolution: "type-fest@npm:5.8.0"
+  dependencies:
+    tagged-tag: "npm:^1.0.0"
+  checksum: 10c0/c8aae118a763d550a9552a511dff6b71840a23dab4edf693cf1c4df22596942794e6f6723389bd9036a90182249d915158bacf0815a1ae87f05f901b1d5f574e
   languageName: node
   linkType: hard
 

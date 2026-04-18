@@ -33,6 +33,7 @@ export default defineConfig({
         'express',
         'kysely',
         'pg',
+        'pg-boss',
         'ws',
         'uuid',
         'dotenv',
