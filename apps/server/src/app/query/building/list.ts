@@ -1,3 +1,4 @@
+import { Factory } from '#adapter/factory'
 import { GenericQuery } from '#query/generic'
 import { CityError } from '#core/city/error'
 import { BuildingService } from '#core/building/service'
@@ -28,19 +29,20 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
 
     const [
       buildings,
-      architecture 
+      architecture,
+      pending_upgrade
     ] = await Promise.all([
       this.repository.building.list({ city_id }),
       this.repository.technology.get({
         player_id,
         code: TechnologyCode.ARCHITECTURE
       }),
+      Factory.getJobQueue().getPendingBuildingUpgrade({ city_id }),
     ])
 
     const sorted = BuildingService.sortBuildings({ buildings })
     const response_buildings: BuildingListDataResponse['buildings'] = sorted.map(building => {
-      const upgrade_at = building.upgrade_at
-      if (upgrade_at == null) {
+      if (!pending_upgrade || pending_upgrade.building_id !== building.id) {
         return {
           id: building.id,
           code: building.code,
@@ -52,6 +54,7 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
         code: building.code,
         architecture_level: architecture.level
       })
+      const upgrade_at = pending_upgrade.execute_at
       return {
         id: building.id,
         code: building.code,

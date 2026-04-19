@@ -7,7 +7,7 @@ import { Button } from '#ui/button'
 import { CountdownProgress } from '#ui/countdown-progress'
 import { List } from '#ui/list'
 import { useCountdownProgress } from '#hook/countdown-progress'
-import { useListBuildings, useFinishBuildingUpgrade, useCancelBuildingUpgrade } from '#building/hooks'
+import { useListBuildings, useCancelBuildingUpgrade } from '#building/hooks'
 import { BuildingItem } from '#types'
 
 interface Props {
@@ -18,7 +18,6 @@ interface Props {
 
 export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }) => {
   const { data: buildings = [] } = useListBuildings(cityId)
-  const finishUpgrade = useFinishBuildingUpgrade(cityId)
   const cancelUpgrade = useCancelBuildingUpgrade(cityId)
 
   const inProgress = buildings.find(
@@ -26,7 +25,7 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
   )
 
   const { remainingSeconds, elapsedProgress, reset } = useCountdownProgress({
-    onDone: () => finishUpgrade.mutate(),
+    onDone: () => undefined,
     endAt: inProgress?.upgrade_at,
     startAt: inProgress?.upgrade_started_at
   })

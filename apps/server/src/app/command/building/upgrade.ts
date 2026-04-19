@@ -5,6 +5,7 @@ import { CityError } from '#core/city/error'
 import { PricingService } from '#core/pricing/service'
 import { RequirementService } from '#core/requirement/service'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { now } from '#shared/time'
 
 export interface BuildingUpgradeRequest {
   player_id: string
@@ -18,6 +19,7 @@ export async function upgradeBuilding({
   building_code,
 }: BuildingUpgradeRequest): Promise<void> {
   const repository = Factory.getRepository()
+  const job_queue = Factory.getJobQueue()
   const logger = Factory.getLogger('app:command:building:upgrade')
   logger.info('run')
 
@@ -33,11 +35,13 @@ export async function upgradeBuilding({
     throw new Error(CityError.NOT_ENOUGH_SPACE)
   }
 
+  const pending_upgrade = await job_queue.getPendingBuildingUpgrade({ city_id })
+  const is_building_in_progress = pending_upgrade !== null
+
   const [
     city,
     city_cell,
     building,
-    is_building_in_progress,
     levels
   ] = await Promise.all([
     repository.city.get(city_id),
@@ -46,13 +50,14 @@ export async function upgradeBuilding({
       city_id,
       code: building_code
     }),
-    repository.building.isInProgress({ city_id }),
     AppService.getBuildingRequirementLevels({
       city_id,
       player_id,
       building_code
     })
   ])
+
+  building.assertCanUpgrade({ is_building_in_progress })
 
   RequirementService.checkBuildingRequirement({
     building_code: building.code,
@@ -77,16 +82,18 @@ export async function upgradeBuilding({
     city,
     city_cell,
     stock,
-    player_id 
+    player_id
   })
   const updated_stock = stock.purchase({ resource })
-  const updated_building = building.launchUpgrade({
-    is_building_in_progress,
-    duration,
-  })
+  const execute_at = now() + duration * 1000
 
-  await Promise.all([
-    repository.resource_stock.updateOne(updated_stock),
-    repository.building.updateOne(updated_building)
-  ])
+  await repository.resource_stock.updateOne(updated_stock)
+
+  await job_queue.scheduleBuildingUpgradeFinish({
+    player_id,
+    city_id,
+    building_id: building.id,
+    level: building.level,
+    execute_at
+  })
 }

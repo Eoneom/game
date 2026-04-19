@@ -15,21 +15,21 @@ type MockRes = {
 const queryResult = {
   building: {
     code: 'SAWMILL',
-    level: 1,
-    upgrade_at: undefined 
+    level: 1
   },
   cost: {
     resource: {
       plastic: 100,
-      mushroom: 50 
+      mushroom: 50
     },
-    duration: 3600 
+    duration: 3600
   },
   requirement: {
     buildings: [],
-    technologies: [] 
+    technologies: []
   },
   metadata: { name: 'Sawmill' },
+  upgrade_at: undefined,
   upgrade_started_at: undefined
 }
 

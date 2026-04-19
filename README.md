@@ -4,7 +4,7 @@ Proof-of-concept web strategy game. This repository is a **Yarn 4** monorepo: th
 
 ## Prerequisites
 
-- **Node.js** (LTS recommended; the stack targets modern Node for native ESM tooling in scripts)
+- **Node.js** ≥ 22.12 (pg-boss requirement; LTS recommended)
 - **Yarn 4** — the repo pins Yarn via Corepack (see root `package.json` `packageManager` field)
 - **Docker** — for local Postgres (optional if you already run Postgres on `localhost:5432`)
 
@@ -143,7 +143,7 @@ With the server running, send HTTP commands and queries to port **3000**. See `a
 
 ### Adapter
 
-Implements the application’s outbound ports: database, logging, locking.
+Implements the application’s outbound ports: database, logging, locking, and the job queue.
 
 #### Database
 
@@ -152,6 +152,21 @@ Postgres (Kysely) under `apps/server/src/adapter/database/`:
 - Infra: `client.ts`, `types.ts`, `migrate.ts`, `migrations/`
 - Domain repositories under `repository/` (`auth.ts`, `city.ts`, …) extend the generic Kysely repository
 - Wired through `Factory.getRepository()` → `PostgresRepository`
+
+#### Job queue
+
+[pg-boss](https://github.com/timgit/pg-boss) under `apps/server/src/adapter/job-queue/`, using the same `DATABASE_URL` and a dedicated Postgres schema `pgboss` (created on `boss.start()`, not via Kysely migrations).
+
+- Wired through `Factory.getJobQueue()`; started in `apps/server/src/index.ts` after the repository connects
+- Workers are registered from `apps/server/src/app/job/register.ts`
+
+**Building upgrades** are the first consumer:
+
+1. `upgradeBuilding` debits resources and enqueues a delayed job on queue `building.upgrade.finish` (`startAfter` = finish time, `singletonKey` = `city_id`)
+2. The worker runs `sagaFinishUpgrade` (level bump, production/warehouse gather, `building:upgrade-finished` on the event bus)
+3. `cancelBuilding` cancels the pending job and refunds resources
+4. In-progress state lives in the queue (no `upgrade_at` on the building row). Building list/get still expose `upgrade_at` / `upgrade_started_at` for the UI by reading the pending job
+5. Client `PUT /game/refresh-state` does **not** finish building upgrades (technology, movements, and gather still run there)
 
 ### App
 
@@ -185,7 +200,7 @@ Domain logic and mostly pure functions. Each module is organized as:
 
 ### Cron
 
-Scheduled tasks that invoke app commands and queries.
+Scheduled tasks that invoke app commands and queries (e.g. hourly player sync). Building upgrade completion is handled by pg-boss, not this cron.
 
 ### Shared
 
@@ -200,7 +215,7 @@ Current events (`apps/server/src/core/events.ts`):
 | Event | Emitted by | Payload |
 | ----- | ---------- | ------- |
 | `city:resources-gathered` | `gather` command | `city_id`, `player_id` |
-| `building:upgrade-finished` | `finish-upgrade` command | `city_id`, `player_id` |
+| `building:upgrade-finished` | `finish-upgrade` command (via pg-boss worker / `sagaFinishUpgrade`) | `city_id`, `player_id` |
 | `technology:research-finished` | `finish-research` command | `player_id` |
 | `troop:movement-finished` | `finish/movement` saga | `player_id` |
 | `outpost:created` | `finish/movement` saga | `player_id` |
@@ -210,4 +225,4 @@ Current events (`apps/server/src/core/events.ts`):
 
 `http` boots Express, middleware, and the router. **Handlers** map routes to command/query behavior.
 
-`ws.ts` opens a WebSocket server on the same port. After a player authenticates via the token query parameter, their connection is stored in memory. The server subscribes to all `AppEventBus` events and forwards the relevant payload to the matching player's socket. The React client (`apps/web/src/helpers/websocket.ts`) connects on login and dispatches Redux actions through per-module WS listeners (e.g. `registerTroopWsListeners`) when messages arrive.
+`ws.ts` opens a WebSocket server on the same port. After a player authenticates via the token query parameter, their connection is stored in memory. The server subscribes to all `AppEventBus` events and forwards the relevant payload to the matching player's socket. The React client (`apps/web/src/helpers/websocket.ts`) connects on login and invalidates React Query caches through per-module WS listeners (e.g. `registerBuildingWsListeners`) when messages arrive.

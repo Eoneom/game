@@ -42,6 +42,7 @@ describe('BuildingGetQuery', () => {
       technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade: vi.fn().mockResolvedValue(null) } as unknown as import('#adapter/job-queue').JobQueue)
   })
 
   afterEach(() => {

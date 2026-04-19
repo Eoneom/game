@@ -6,14 +6,23 @@ import {
 
 export const sagaFinishUpgrade = async ({
   player_id,
-  city_id
+  city_id,
+  building_id,
+  level,
+  upgraded_at
 }: {
   player_id: string
   city_id: string
+  building_id: string
+  level: number
+  upgraded_at: number
 }): Promise<void> => {
   const upgrade_result = await finishBuildingUpgrade({
     player_id,
     city_id,
+    building_id,
+    level,
+    upgraded_at,
   })
 
   if (upgrade_result && (isProductionBuildingCode(upgrade_result.code) || isWarehouseBuildingCode(upgrade_result.code))) {

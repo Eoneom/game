@@ -2,6 +2,7 @@ import type { MockInstance } from 'vitest'
 import { BuildingListQuery } from '#app/query/building/list'
 import type { BuildingListEntry } from '@eoneom/api-client/src/endpoints/building/list'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingCode } from '#core/building/constant/code'
@@ -22,6 +23,7 @@ describe('BuildingListQuery', () => {
   let b_idle: BuildingEntity
   let b_upgrade: BuildingEntity
   let repository: Pick<Repository, 'city' | 'building' | 'technology'>
+  let getPendingBuildingUpgrade: MockInstance
 
   beforeEach(() => {
     city = CityEntity.initCity({
@@ -44,8 +46,16 @@ describe('BuildingListQuery', () => {
       id: building_id_upgrade,
       city_id: city.id,
       code: BuildingCode.CLONING_FACTORY,
+      level: 0
+    })
+
+    getPendingBuildingUpgrade = vi.fn().mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      building_id: building_id_upgrade,
       level: 0,
-      upgrade_at: 10_000
+      execute_at: 10_000,
+      job_id: 'job'
     })
 
     repository = {
@@ -53,12 +63,13 @@ describe('BuildingListQuery', () => {
       building: {
         list: vi.fn().mockResolvedValue([
           b_upgrade,
-          b_idle 
-        ]) 
+          b_idle
+        ])
       } as unknown as Repository['building'],
       technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -74,14 +85,14 @@ describe('BuildingListQuery', () => {
 
     await expect(new BuildingListQuery().run({
       city_id: other.id,
-      player_id 
+      player_id
     })).rejects.toThrow(CityError.NOT_OWNER)
   })
 
   it('returns sorted buildings with upgrade fields when upgrade in progress', async () => {
     const result = await new BuildingListQuery().run({
       city_id: city.id,
-      player_id 
+      player_id
     })
 
     expect(result.buildings).toHaveLength(2)

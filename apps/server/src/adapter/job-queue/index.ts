@@ -1,8 +1,26 @@
-import { PgBoss } from 'pg-boss'
+import {
+  PgBoss,
+  type WorkHandlerFor,
+  type WorkOptions
+} from 'pg-boss'
 import { AppLogger } from '#app/port/logger'
 
 const DEFAULT_DATABASE_URL = 'postgres://eoneom:eoneom@localhost:5432/eoneom'
 const PGBOSS_SCHEMA = 'pgboss'
+
+export const BUILDING_UPGRADE_FINISH_QUEUE = 'building.upgrade.finish'
+
+export type BuildingUpgradeFinishJobData = {
+  player_id: string
+  city_id: string
+  building_id: string
+  level: number
+}
+
+export type PendingBuildingUpgrade = BuildingUpgradeFinishJobData & {
+  execute_at: number
+  job_id: string
+}
 
 const resolveDatabaseUrl = (connectionString?: string): string => {
   return connectionString ?? process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL
@@ -33,6 +51,7 @@ export class JobQueue {
   async start(): Promise<void> {
     this.logger.info('starting pg-boss...')
     await this.boss.start()
+    await this.boss.createQueue(BUILDING_UPGRADE_FINISH_QUEUE)
     this.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
 
@@ -44,6 +63,91 @@ export class JobQueue {
 
   getBoss(): PgBoss {
     return this.boss
+  }
+
+  async work<ReqData, ResData = unknown, const O extends WorkOptions = WorkOptions>(
+    name: string,
+    options: O,
+    handler: WorkHandlerFor<O, ReqData, ResData>
+  ): Promise<string> {
+    return this.boss.work(name, options, handler)
+  }
+
+  async scheduleBuildingUpgradeFinish({
+    player_id,
+    city_id,
+    building_id,
+    level,
+    execute_at
+  }: {
+    player_id: string
+    city_id: string
+    building_id: string
+    level: number
+    execute_at: number
+  }): Promise<string | null> {
+    const data: BuildingUpgradeFinishJobData = {
+      player_id,
+      city_id,
+      building_id,
+      level
+    }
+
+    this.logger.info('schedule building upgrade finish', {
+      city_id,
+      building_id,
+      level,
+      execute_at
+    })
+
+    return this.boss.send(BUILDING_UPGRADE_FINISH_QUEUE, data, {
+      startAfter: new Date(execute_at),
+      singletonKey: city_id
+    })
+  }
+
+  async cancelBuildingUpgradeFinish({ city_id }: { city_id: string }): Promise<void> {
+    const jobs = await this.boss.findJobs<BuildingUpgradeFinishJobData>(
+      BUILDING_UPGRADE_FINISH_QUEUE,
+      {
+        key: city_id,
+        queued: true
+      }
+    )
+
+    if (jobs.length === 0) {
+      this.logger.info('no queued building upgrade job to cancel', { city_id })
+      return
+    }
+
+    const ids = jobs.map(job => job.id)
+    this.logger.info('cancel building upgrade finish', {
+      city_id,
+      ids
+    })
+    await this.boss.cancel(BUILDING_UPGRADE_FINISH_QUEUE, ids)
+  }
+
+  async getPendingBuildingUpgrade({ city_id }: { city_id: string }): Promise<PendingBuildingUpgrade | null> {
+    const jobs = await this.boss.findJobs<BuildingUpgradeFinishJobData>(
+      BUILDING_UPGRADE_FINISH_QUEUE,
+      { key: city_id }
+    )
+
+    const job = jobs.find(candidate => candidate.state === 'created' || candidate.state === 'retry' || candidate.state === 'active')
+
+    if (!job || !job.data) {
+      return null
+    }
+
+    return {
+      player_id: job.data.player_id,
+      city_id: job.data.city_id,
+      building_id: job.data.building_id,
+      level: job.data.level,
+      execute_at: job.startAfter.getTime(),
+      job_id: job.id
+    }
   }
 }
 

@@ -23,7 +23,6 @@ export interface Building {
   code: string;
   id: Generated<string>;
   level: number;
-  upgrade_at: Timestamp | null;
 }
 
 export interface Cell {

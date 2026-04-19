@@ -1,10 +1,11 @@
 import type { MockInstance } from 'vitest'
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import {
-  testResourceStock, testCityCell 
+  testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
@@ -26,7 +27,8 @@ describe('upgradeBuilding', () => {
   let building: BuildingEntity
   let architecture: TechnologyEntity
   let stockUpdateOne: MockInstance
-  let buildingUpdateOne: MockInstance
+  let scheduleBuildingUpgradeFinish: MockInstance
+  let getPendingBuildingUpgrade: MockInstance
   let repository: Pick<Repository, 'building' | 'city' | 'technology' | 'cell' | 'resource_stock'>
 
   beforeEach(() => {
@@ -53,16 +55,15 @@ describe('upgradeBuilding', () => {
       level: 0
     })
 
-    buildingUpdateOne = vi.fn().mockResolvedValue(undefined)
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+    scheduleBuildingUpgradeFinish = vi.fn().mockResolvedValue('job-id')
+    getPendingBuildingUpgrade = vi.fn().mockResolvedValue(null)
 
     repository = {
       building: {
         get: vi.fn().mockResolvedValue(building),
-        isInProgress: vi.fn().mockResolvedValue(false),
         getTotalLevels: vi.fn().mockResolvedValue(1),
-        list: vi.fn().mockResolvedValue([]),
-        updateOne: buildingUpdateOne
+        list: vi.fn().mockResolvedValue([])
       } as unknown as Repository['building'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       technology: {
@@ -87,6 +88,10 @@ describe('upgradeBuilding', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingBuildingUpgrade,
+      scheduleBuildingUpgradeFinish
+    } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -123,7 +128,14 @@ describe('upgradeBuilding', () => {
   })
 
   it('should prevent a player to upgrade if another building is in progress', async () => {
-    repository.building.isInProgress = vi.fn().mockResolvedValue(true)
+    getPendingBuildingUpgrade.mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      building_id: id(),
+      level: 0,
+      execute_at: Date.now() + 1000,
+      job_id: 'job'
+    })
 
     await assert.rejects(
       () => upgradeBuilding({
@@ -174,16 +186,20 @@ describe('upgradeBuilding', () => {
     assert.ok(updated_stock.mushroom < stock.mushroom)
   })
 
-  it('should launch the building upgrade', async () => {
+  it('should schedule the building upgrade finish job', async () => {
     await upgradeBuilding({
       player_id,
       city_id: city.id,
       building_code: BuildingCode.CLONING_FACTORY
     })
 
-    const updated_building = buildingUpdateOne.mock.calls[0][0]
-    assert.ok(!building.upgrade_at)
-    assert.ok(updated_building.upgrade_at)
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 1)
+    const args = scheduleBuildingUpgradeFinish.mock.calls[0][0]
+    assert.strictEqual(args.player_id, player_id)
+    assert.strictEqual(args.city_id, city.id)
+    assert.strictEqual(args.building_id, building.id)
+    assert.strictEqual(args.level, building.level)
+    assert.ok(typeof args.execute_at === 'number')
   })
 
   it('should take less time to upgrade with an increase architecture level', async () => {
@@ -207,17 +223,15 @@ describe('upgradeBuilding', () => {
       city_id: city.id,
       building_code: BuildingCode.CLONING_FACTORY
     })
-    const building_without_architecture_level = buildingUpdateOne.mock.calls[0][0]
+    const without_architecture = scheduleBuildingUpgradeFinish.mock.calls[0][0]
 
     await upgradeBuilding({
       player_id,
       city_id: city.id,
       building_code: BuildingCode.CLONING_FACTORY
     })
-    const building_with_architecture_level = buildingUpdateOne.mock.calls[1][0]
+    const with_architecture = scheduleBuildingUpgradeFinish.mock.calls[1][0]
 
-    assert.ok(building_with_architecture_level.upgrade_at)
-    assert.ok(building_without_architecture_level.upgrade_at)
-    assert.ok(building_with_architecture_level.upgrade_at < building_without_architecture_level.upgrade_at)
+    assert.ok(with_architecture.execute_at < without_architecture.execute_at)
   })
 })

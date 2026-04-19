@@ -67,23 +67,6 @@ export const useUpgradeBuilding = (cityId: string) => {
   })
 }
 
-export const useFinishBuildingUpgrade = (cityId: string) => {
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!token) throw new Error('no token')
-      const res = await client.building.finishUpgrade(token, { city_id: cityId })
-      if (isError(res)) throw new Error(res.error_code)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: buildingKeys.list(cityId) })
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-}
-
 export const useCancelBuildingUpgrade = (cityId: string) => {
   const { token } = useAuth()
   const queryClient = useQueryClient()

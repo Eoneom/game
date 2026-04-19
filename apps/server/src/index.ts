@@ -6,6 +6,7 @@ import { WorldError } from '#core/world/error'
 import { gameTimeScale } from '#shared/game-time-scale'
 import { launchServer } from '#web/http'
 import { sync_task } from '#cron/index'
+import { registerJobWorkers } from '#app/job/register'
 
 (async () => {
   const repository = Factory.getRepository()
@@ -16,6 +17,7 @@ import { sync_task } from '#cron/index'
   }
   await repository.connect()
   await jobQueue.start()
+  await registerJobWorkers(jobQueue)
 
   try {
     await generateWorld()

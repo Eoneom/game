@@ -3,18 +3,12 @@ import { BuildingRepository } from '#app/port/repository/building'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingError } from '#core/building/error'
-import { now } from '#shared/time'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
   Selectable
 } from 'kysely'
-import {
-  fromTimestamp,
-  toTimestamp,
-  toTimestampRequired
-} from '#adapter/database/repository/shared/time'
 
 export class PostgresBuildingRepository
   extends PostgreSQLGenericRepository<'building', BuildingEntity>
@@ -55,15 +49,8 @@ export class PostgresBuildingRepository
     return this.getInCity(query)
   }
 
-  async isInProgress({ city_id }: { city_id: string }): Promise<boolean> {
-    const row = await this.db
-      .selectFrom('building')
-      .select('id')
-      .where('city_id', '=', city_id)
-      .where('upgrade_at', 'is not', null)
-      .executeTakeFirst()
-
-    return Boolean(row)
+  async getById(id: string): Promise<BuildingEntity> {
+    return this.findByIdOrThrow(id)
   }
 
   async getInCity({
@@ -102,36 +89,12 @@ export class PostgresBuildingRepository
     return row.level
   }
 
-  async getUpgradeDone({ city_id }: { city_id: string }): Promise<BuildingEntity | null> {
-    const row = await this.db
-      .selectFrom('building')
-      .selectAll()
-      .where('city_id', '=', city_id)
-      .where('upgrade_at', 'is not', null)
-      .where('upgrade_at', '<=', toTimestampRequired(now()))
-      .executeTakeFirst()
-
-    return row ? this.buildFromRow(row) : null
-  }
-
-  async getInProgress({ city_id }: { city_id: string }): Promise<BuildingEntity | null> {
-    const row = await this.db
-      .selectFrom('building')
-      .selectAll()
-      .where('city_id', '=', city_id)
-      .where('upgrade_at', 'is not', null)
-      .executeTakeFirst()
-
-    return row ? this.buildFromRow(row) : null
-  }
-
   protected buildFromRow(row: Selectable<DB['building']>): BuildingEntity {
     return BuildingEntity.create({
       id: row.id,
       code: row.code as BuildingCode,
       level: row.level,
-      city_id: row.city_id,
-      upgrade_at: fromTimestamp(row.upgrade_at) ?? undefined
+      city_id: row.city_id
     })
   }
 
@@ -140,8 +103,7 @@ export class PostgresBuildingRepository
       id: entity.id,
       city_id: entity.city_id,
       code: entity.code,
-      level: entity.level,
-      upgrade_at: toTimestamp(entity.upgrade_at)
+      level: entity.level
     }
   }
 }

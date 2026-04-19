@@ -5,16 +5,16 @@ import {
   STARTING_PLASTIC
 } from '#core/city/constant'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingError } from '#core/building/error'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
-import { now } from '#shared/time'
 import assert from 'assert'
 import {
-  testResourceStock, testCityCell 
+  testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { id } from '#shared/identification'
 
@@ -26,7 +26,8 @@ describe('cancelBuilding', () => {
   let stock: ReturnType<typeof testResourceStock>
   let building: BuildingEntity
   let stockUpdateOne: MockInstance
-  let buildingUpdateOne: MockInstance
+  let getPendingBuildingUpgrade: MockInstance
+  let cancelBuildingUpgradeFinish: MockInstance
   let repository: Pick<Repository, 'building' | 'city' | 'cell' | 'resource_stock'>
 
   beforeEach(() => {
@@ -45,18 +46,22 @@ describe('cancelBuilding', () => {
       id: id(),
       code: BuildingCode.MUSHROOM_FARM,
       level: 0,
-      city_id: city.id,
-      upgrade_at: now() + 1000 * 60
+      city_id: city.id
     })
 
-    buildingUpdateOne = vi.fn().mockResolvedValue(undefined)
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+    getPendingBuildingUpgrade = vi.fn().mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      building_id: building.id,
+      level: 0,
+      execute_at: Date.now() + 60_000,
+      job_id: 'job'
+    })
+    cancelBuildingUpgradeFinish = vi.fn().mockResolvedValue(undefined)
 
     repository = {
-      building: {
-        getInProgress: vi.fn().mockResolvedValue(building),
-        updateOne: buildingUpdateOne
-      } as unknown as Repository['building'],
+      building: { getById: vi.fn().mockResolvedValue(building) } as unknown as Repository['building'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
       resource_stock: {
@@ -66,6 +71,10 @@ describe('cancelBuilding', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingBuildingUpgrade,
+      cancelBuildingUpgradeFinish
+    } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -83,7 +92,7 @@ describe('cancelBuilding', () => {
   })
 
   it('should assert that there is a building in progress', async () => {
-    repository.building.getInProgress = vi.fn().mockResolvedValue(null)
+    getPendingBuildingUpgrade.mockResolvedValue(null)
 
     await assert.rejects(
       () => cancelBuilding({
@@ -105,14 +114,13 @@ describe('cancelBuilding', () => {
     assert.strictEqual(updated_stock.mushroom, STARTING_MUSHROOM + 67)
   })
 
-  it('should cancel building', async () => {
+  it('should cancel the scheduled upgrade job', async () => {
     await cancelBuilding({
       player_id,
       city_id: city.id
     })
 
-    const updated_building = buildingUpdateOne.mock.calls[0][0]
-    assert.ok(building.upgrade_at)
-    assert.ok(!updated_building.upgrade_at)
+    assert.strictEqual(cancelBuildingUpgradeFinish.mock.calls.length, 1)
+    assert.deepStrictEqual(cancelBuildingUpgradeFinish.mock.calls[0][0], { city_id: city.id })
   })
 })

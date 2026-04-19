@@ -13,14 +13,17 @@ export async function cancelBuilding({
   player_id,
 }: BuildingCancelRequest): Promise<void> {
   const repository = Factory.getRepository()
+  const job_queue = Factory.getJobQueue()
   const logger = Factory.getLogger('app:command:building:cancel')
   logger.info('run')
 
-  const building = await repository.building.getInProgress({ city_id })
+  const pending = await job_queue.getPendingBuildingUpgrade({ city_id })
 
-  if (!building) {
+  if (!pending) {
     throw new Error(BuildingError.NOT_IN_PROGRESS)
   }
+
+  const building = await repository.building.getById(pending.building_id)
 
   const [
     city,
@@ -40,13 +43,12 @@ export async function cancelBuilding({
     city,
     city_cell,
     stock,
-    player_id 
+    player_id
   })
   const updated_stock = stock.refund({ resource: resource_refund })
-  const updated_building = building.cancel()
 
   await Promise.all([
-    repository.building.updateOne(updated_building),
-    repository.resource_stock.updateOne(updated_stock)
+    repository.resource_stock.updateOne(updated_stock),
+    job_queue.cancelBuildingUpgradeFinish({ city_id })
   ])
 }

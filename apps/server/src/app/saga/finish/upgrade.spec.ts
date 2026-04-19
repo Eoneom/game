@@ -1,5 +1,5 @@
 import {
-  vi, type MockInstance 
+  vi, type MockInstance
 } from 'vitest'
 import assert from 'assert'
 import { sagaFinishUpgrade } from './upgrade'
@@ -13,6 +13,8 @@ vi.mock('#app/command/city/gather')
 describe('sagaFinishUpgrade', () => {
   const player_id = 'player_id'
   const city_id = 'city_id'
+  const building_id = 'building_id'
+  const level = 0
   const upgraded_at = 1000
 
   beforeEach(() => {
@@ -28,13 +30,19 @@ describe('sagaFinishUpgrade', () => {
   it('calls finishBuildingUpgrade with correct args', async () => {
     await sagaFinishUpgrade({
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
 
     assert.strictEqual((finishBuildingUpgrade as MockInstance).mock.calls.length, 1)
     assert.deepStrictEqual((finishBuildingUpgrade as MockInstance).mock.calls[0][0], {
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
   })
 
@@ -43,7 +51,10 @@ describe('sagaFinishUpgrade', () => {
 
     await sagaFinishUpgrade({
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
 
     assert.strictEqual((cityGather as MockInstance).mock.calls.length, 0)
@@ -57,14 +68,17 @@ describe('sagaFinishUpgrade', () => {
 
     await sagaFinishUpgrade({
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
 
     assert.strictEqual((cityGather as MockInstance).mock.calls.length, 1)
     assert.deepStrictEqual((cityGather as MockInstance).mock.calls[0][0], {
       player_id,
       city_id,
-      gather_at_time: upgraded_at 
+      gather_at_time: upgraded_at
     })
   })
 
@@ -76,14 +90,17 @@ describe('sagaFinishUpgrade', () => {
 
     await sagaFinishUpgrade({
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
 
     assert.strictEqual((cityGather as MockInstance).mock.calls.length, 1)
     assert.deepStrictEqual((cityGather as MockInstance).mock.calls[0][0], {
       player_id,
       city_id,
-      gather_at_time: upgraded_at 
+      gather_at_time: upgraded_at
     })
   })
 
@@ -95,7 +112,10 @@ describe('sagaFinishUpgrade', () => {
 
     await sagaFinishUpgrade({
       player_id,
-      city_id 
+      city_id,
+      building_id,
+      level,
+      upgraded_at
     })
 
     assert.strictEqual((cityGather as MockInstance).mock.calls.length, 0)

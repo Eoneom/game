@@ -58,6 +58,7 @@ const response_mapper = ({
   cost,
   requirement,
   metadata,
+  upgrade_at,
   upgrade_started_at,
 }: BuildingGetQueryResponse): BuildingGetDataResponse => {
   const base = {
@@ -74,7 +75,6 @@ const response_mapper = ({
     },
     metadata
   }
-  const upgrade_at = building.upgrade_at
   if (upgrade_at == null || upgrade_started_at == null) {
     return base
   }

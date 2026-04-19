@@ -1,3 +1,4 @@
+import { Factory } from '#adapter/factory'
 import { GenericQuery } from '#query/generic'
 import { BuildingEntity } from '#core/building/entity'
 import { PricingService } from '#core/pricing/service'
@@ -24,6 +25,7 @@ export interface BuildingGetQueryResponse {
   cost: LevelCostValue
   requirement: RequirementValue
   metadata: Record<string, unknown>
+  upgrade_at?: number
   upgrade_started_at?: number
 }
 
@@ -45,6 +47,7 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     const [
       building,
       architecture,
+      pending_upgrade,
     ] = await Promise.all([
       this.repository.building.getInCity({
         city_id,
@@ -54,6 +57,7 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
         player_id,
         code: TechnologyCode.ARCHITECTURE
       }),
+      Factory.getJobQueue().getPendingBuildingUpgrade({ city_id }),
     ])
 
     const metadata = await this.getMetadata({ building })
@@ -63,12 +67,16 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       level: building.level + 1,
       architecture_level: architecture.level
     })
-    const upgrade_at = building.upgrade_at
+
+    const is_upgrading = pending_upgrade?.building_id === building.id
+    const upgrade_at = is_upgrading ? pending_upgrade.execute_at : undefined
+
     return {
       building,
       requirement,
       metadata,
       cost,
+      upgrade_at,
       upgrade_started_at:
         upgrade_at != null ? upgrade_at - cost.duration * 1000 : undefined,
     }

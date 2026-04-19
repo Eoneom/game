@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { authMiddleware } from '#web/middleware/auth'
 import { buildingCancelHandler } from '#web/handler/building/cancel'
-import { buildingFinishUpgradeHandler } from '#web/handler/building/finish-upgrade'
 import { buildingGetHandler } from '#web/handler/building/get'
 import { buildingListHandler } from '#web/handler/building/list'
 import { buildingUpgradeHandler } from '#web/handler/building/upgrade'
@@ -57,7 +56,6 @@ export const router = (): Router => {
 
   r.put('/building/cancel', authMiddleware, buildingCancelHandler)
   r.put('/building/upgrade', authMiddleware, buildingUpgradeHandler)
-  r.put('/building/upgrade/finish', authMiddleware, buildingFinishUpgradeHandler)
   r.get('/city/:city_id/building', authMiddleware, buildingListHandler)
   r.get('/city/:city_id/building/:building_code', authMiddleware, buildingGetHandler)
 

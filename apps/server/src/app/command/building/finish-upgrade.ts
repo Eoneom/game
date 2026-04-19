@@ -2,11 +2,13 @@ import { Factory } from '#adapter/factory'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
 import { AppEvent } from '#core/events'
-import assert from 'assert'
 
 export interface BuildingFinishUpgradeRequest {
   player_id: string
   city_id: string
+  building_id: string
+  level: number
+  upgraded_at: number
 }
 
 export type BuildingFinishUpgradeResult = {
@@ -17,6 +19,9 @@ export type BuildingFinishUpgradeResult = {
 export async function finishBuildingUpgrade({
   player_id,
   city_id,
+  building_id,
+  level,
+  upgraded_at,
 }: BuildingFinishUpgradeRequest): Promise<BuildingFinishUpgradeResult> {
   const repository = Factory.getRepository()
   const logger = Factory.getLogger('app:command:building:finish-upgrade')
@@ -28,22 +33,28 @@ export async function finishBuildingUpgrade({
     throw new Error(CityError.NOT_OWNER)
   }
 
-  const building_to_finish = await repository.building.getUpgradeDone({ city_id })
+  const building_to_finish = await repository.building.getById(building_id)
 
-  if (!building_to_finish) {
+  if (building_to_finish.city_id !== city_id) {
+    throw new Error(CityError.NOT_OWNER)
+  }
+
+  if (building_to_finish.level !== level) {
+    logger.info('building already finished or level mismatch', {
+      building_id,
+      expected_level: level,
+      actual_level: building_to_finish.level
+    })
     return null
   }
 
-  assert(building_to_finish.upgrade_at)
-
-  const upgraded_at = building_to_finish.upgrade_at
   const building = building_to_finish.finishUpgrade()
 
   await repository.building.updateOne(building)
 
   Factory.getEventBus().emit(AppEvent.BuildingUpgradeFinished, {
     city_id,
-    player_id 
+    player_id
   })
 
   return {
