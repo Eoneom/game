@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2020",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ],
-    "baseUrl": ".",
     "paths": {
       "@eoneom/api-client": [
         "../../packages/api-client/src/index.ts"
@@ -67,7 +66,7 @@
       ],
       "#ui/*": [
         "./src/ui/*"
-      ],
+      ]
     },
     "allowJs": false,
     "skipLibCheck": true,
@@ -77,7 +76,8 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "rootDir": "../..",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
