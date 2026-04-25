@@ -112,8 +112,6 @@ export interface Technology {
   id: Generated<string>;
   level: number;
   player_id: string;
-  research_at: Timestamp | null;
-  research_started_at: Timestamp | null;
 }
 
 export interface Troop {

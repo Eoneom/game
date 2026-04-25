@@ -53,7 +53,9 @@ export const technologyGetHandler = async (
 const response_mapper = ({
   technology,
   cost,
-  requirement
+  requirement,
+  research_at,
+  research_started_at,
 }: TechnologyGetQueryResponse): TechnologyGetDataResponse => {
   const base = {
     id: technology.id,
@@ -66,12 +68,12 @@ const response_mapper = ({
     },
     requirement
   }
-  if (technology.research_at != null && technology.research_started_at != null) {
-    return {
-      ...base,
-      research_at: technology.research_at,
-      research_started_at: technology.research_started_at,
-    }
+  if (research_at == null || research_started_at == null) {
+    return base
   }
-  return base
+  return {
+    ...base,
+    research_at,
+    research_started_at,
+  }
 }

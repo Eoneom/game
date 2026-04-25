@@ -6,15 +6,15 @@ export interface CancelTechnologyParams {
 }
 
 export async function cancelTechnology({ player_id }: CancelTechnologyParams): Promise<void> {
-  const repository = Factory.getRepository()
+  const job_queue = Factory.getJobQueue()
   const logger = Factory.getLogger('app:command:technology:cancel')
   logger.info('run')
 
-  const technology = await repository.technology.getInProgress({ player_id })
+  const pending = await job_queue.getPendingTechnologyResearch({ player_id })
 
-  if (!technology) {
+  if (!pending) {
     throw new Error(TechnologyError.NOT_IN_PROGRESS)
   }
 
-  await repository.technology.updateOne(technology.cancel())
+  await job_queue.cancelTechnologyResearchFinish({ player_id })
 }

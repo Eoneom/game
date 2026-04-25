@@ -28,23 +28,6 @@ export const technologyListHandler = async (
   }
 }
 
-const response_mapper = ({ technologies }: TechnologyListQueryResponse): TechnologyListDataResponse => {
-  const response_technologies = technologies.map(technology => {
-    if (!technology.research_at) {
-      return {
-        id: technology.id,
-        code: technology.code,
-        level: technology.level,
-      }
-    }
-    return {
-      id: technology.id,
-      code: technology.code,
-      level: technology.level,
-      research_at: technology.research_at,
-      research_started_at: technology.research_started_at,
-    }
-  })
-
-  return { technologies: response_technologies }
+  const response_mapper = ({ technologies }: TechnologyListQueryResponse): TechnologyListDataResponse => {
+  return { technologies }
 }

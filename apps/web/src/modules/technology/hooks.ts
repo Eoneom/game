@@ -64,23 +64,6 @@ export const useResearchTechnology = (cityId: string) => {
   })
 }
 
-export const useFinishResearch = () => {
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!token) throw new Error('no token')
-      const res = await client.technology.finishResearch(token)
-      if (isError(res)) throw new Error(res.error_code)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: technologyKeys.all })
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-}
-
 export const useCancelTechnology = () => {
   const { token } = useAuth()
   const queryClient = useQueryClient()

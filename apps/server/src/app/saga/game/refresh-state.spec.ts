@@ -3,11 +3,9 @@ import {
 } from 'vitest'
 import assert from 'assert'
 import { sagaRefreshGameState } from './refresh-state'
-import { finishTechnologyResearch } from '#app/command/technology/finish-research'
 import { cityGather } from '#app/command/city/gather'
 import { sagaFinishMovement } from '#app/saga/finish/movement'
 
-vi.mock('#app/command/technology/finish-research')
 vi.mock('#app/command/city/gather')
 vi.mock('#app/saga/finish/movement')
 
@@ -17,23 +15,12 @@ describe('sagaRefreshGameState', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    ;(finishTechnologyResearch as MockInstance).mockResolvedValue(undefined)
     ;(sagaFinishMovement as MockInstance).mockResolvedValue(undefined)
     ;(cityGather as MockInstance).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
-  })
-
-  it('calls finishTechnologyResearch with player_id', async () => {
-    await sagaRefreshGameState({
-      player_id,
-      city_id
-    })
-
-    assert.strictEqual((finishTechnologyResearch as MockInstance).mock.calls.length, 1)
-    assert.deepStrictEqual((finishTechnologyResearch as MockInstance).mock.calls[0][0], { player_id })
   })
 
   it('calls sagaFinishMovement with player_id', async () => {
@@ -59,11 +46,8 @@ describe('sagaRefreshGameState', () => {
     assert.ok(typeof call.gather_at_time === 'number')
   })
 
-  it('calls commands in order: finishTechnologyResearch, sagaFinishMovement, cityGather', async () => {
+  it('calls commands in order: sagaFinishMovement, cityGather', async () => {
     const order: string[] = []
-    ;(finishTechnologyResearch as MockInstance).mockImplementation(async () => {
-      order.push('finish-technology')
-    })
     ;(sagaFinishMovement as MockInstance).mockImplementation(async () => {
       order.push('finish-movement')
     })
@@ -77,7 +61,6 @@ describe('sagaRefreshGameState', () => {
     })
 
     assert.deepStrictEqual(order, [
-      'finish-technology',
       'finish-movement',
       'city-gather'
     ])

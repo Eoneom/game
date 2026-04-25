@@ -4,6 +4,7 @@ import { BuildingCode } from '#core/building/constant/code'
 import { PricingService } from '#core/pricing/service'
 import { RequirementService } from '#core/requirement/service'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { now } from '#shared/time'
 
 export interface ResearchTechnologyParams {
   player_id: string
@@ -17,14 +18,17 @@ export async function researchTechnology({
   technology_code,
 }: ResearchTechnologyParams): Promise<void> {
   const repository = Factory.getRepository()
+  const job_queue = Factory.getJobQueue()
   const logger = Factory.getLogger('app:command:technology:research')
   logger.info('run')
+
+  const pending_research = await job_queue.getPendingTechnologyResearch({ player_id })
+  const is_technology_in_progress = pending_research !== null
 
   const [
     city,
     city_cell,
     technology,
-    is_technology_in_progress
   ] = await Promise.all([
     repository.city.get(city_id),
     repository.cell.getCityCell({ city_id }),
@@ -32,8 +36,9 @@ export async function researchTechnology({
       player_id,
       code: technology_code
     }),
-    repository.technology.isInProgress({ player_id })
   ])
+
+  technology.assertCanResearch({ is_technology_in_progress })
 
   const levels = await AppService.getTechnologyRequirementLevels({
     city_id,
@@ -69,13 +74,15 @@ export async function researchTechnology({
     player_id 
   })
   const updated_stock = stock.purchase({ resource })
-  const updated_technology = technology.launchResearch({
-    is_technology_in_progress,
-    duration,
-  })
+  const execute_at = now() + duration * 1000
 
-  await Promise.all([
-    repository.resource_stock.updateOne(updated_stock),
-    repository.technology.updateOne(updated_technology)
-  ])
+  await repository.resource_stock.updateOne(updated_stock)
+
+  await job_queue.scheduleTechnologyResearchFinish({
+    player_id,
+    city_id,
+    technology_id: technology.id,
+    level: technology.level,
+    execute_at
+  })
 }

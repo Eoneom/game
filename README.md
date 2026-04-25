@@ -160,13 +160,13 @@ Postgres (Kysely) under `apps/server/src/adapter/database/`:
 - Wired through `Factory.getJobQueue()`; started in `apps/server/src/index.ts` after the repository connects
 - Workers are registered from `apps/server/src/app/job/register.ts`
 
-**Building upgrades** are the first consumer:
+**Building upgrades** and **technology research** finish via delayed jobs:
 
-1. `upgradeBuilding` debits resources and enqueues a delayed job on queue `building.upgrade.finish` (`startAfter` = finish time, `singletonKey` = `city_id`)
-2. The worker runs `sagaFinishUpgrade` (level bump, production/warehouse gather, `building:upgrade-finished` on the event bus)
-3. `cancelBuilding` cancels the pending job and refunds resources
-4. In-progress state lives in the queue (no `upgrade_at` on the building row). Building list/get still expose `upgrade_at` / `upgrade_started_at` for the UI by reading the pending job
-5. Client `PUT /game/refresh-state` does **not** finish building upgrades (technology, movements, and gather still run there)
+1. `upgradeBuilding` / `researchTechnology` debit resources and enqueue a delayed job (`building.upgrade.finish` with `singletonKey` = `city_id`, or `technology.research.finish` with `singletonKey` = `player_id`; `startAfter` = finish time)
+2. The worker runs `sagaFinishUpgrade` (level bump, production/warehouse gather, `building:upgrade-finished`) or `sagaFinishResearch` (level bump, `technology:research-finished`)
+3. Cancel cancels the pending job (buildings also refund resources; technology does not)
+4. In-progress state lives in the queue (no timer columns on the building/technology rows). List/get still expose `upgrade_at` / `research_at` (and started-at) for the UI by reading the pending job
+5. Client `PUT /game/refresh-state` does **not** finish building upgrades or technology research (movements and gather still run there)
 
 ### App
 
@@ -200,7 +200,7 @@ Domain logic and mostly pure functions. Each module is organized as:
 
 ### Cron
 
-Scheduled tasks that invoke app commands and queries (e.g. hourly player sync). Building upgrade completion is handled by pg-boss, not this cron.
+Scheduled tasks that invoke app commands and queries (e.g. hourly player sync). Building upgrade and technology research completion are handled by pg-boss, not this cron.
 
 ### Shared
 
@@ -216,7 +216,7 @@ Current events (`apps/server/src/core/events.ts`):
 | ----- | ---------- | ------- |
 | `city:resources-gathered` | `gather` command | `city_id`, `player_id` |
 | `building:upgrade-finished` | `finish-upgrade` command (via pg-boss worker / `sagaFinishUpgrade`) | `city_id`, `player_id` |
-| `technology:research-finished` | `finish-research` command | `player_id` |
+| `technology:research-finished` | `finish-research` command (via pg-boss worker / `sagaFinishResearch`) | `player_id` |
 | `troop:movement-finished` | `finish/movement` saga | `player_id` |
 | `outpost:created` | `finish/movement` saga | `player_id` |
 | `outpost:deleted` | `troop/movement/create` command | `player_id`, `outpost_id` |

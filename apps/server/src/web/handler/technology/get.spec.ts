@@ -17,8 +17,6 @@ const queryResult = {
     id: 't1',
     code: 'ARCHERY',
     level: 2,
-    research_at: undefined,
-    research_started_at: undefined
   },
   cost: {
     resource: {

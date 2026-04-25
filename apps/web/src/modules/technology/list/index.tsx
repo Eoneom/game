@@ -7,7 +7,7 @@ import { Button } from '#ui/button'
 import { CountdownProgress } from '#ui/countdown-progress'
 import { List } from '#ui/list'
 import { useCountdownProgress } from '#hook/countdown-progress'
-import { useListTechnologies, useFinishResearch, useCancelTechnology } from '#technology/hooks'
+import { useListTechnologies, useCancelTechnology } from '#technology/hooks'
 import { TechnologyItem } from '#types'
 
 interface Props {
@@ -17,7 +17,6 @@ interface Props {
 
 export const TechnologyList: React.FC<Props> = ({ selectedCode, onSelect }) => {
   const { data: technologies = [] } = useListTechnologies()
-  const finishResearch = useFinishResearch()
   const cancelTechnology = useCancelTechnology()
 
   const inProgress = technologies.find(
@@ -25,7 +24,7 @@ export const TechnologyList: React.FC<Props> = ({ selectedCode, onSelect }) => {
   )
 
   const { remainingSeconds, elapsedProgress } = useCountdownProgress({
-    onDone: () => finishResearch.mutate(),
+    onDone: () => undefined,
     endAt: inProgress?.research_at,
     startAt: inProgress?.research_started_at
   })

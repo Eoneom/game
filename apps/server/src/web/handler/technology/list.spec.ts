@@ -18,15 +18,13 @@ const queryResult = {
       id: 't1',
       code: 'ARCHERY',
       level: 2,
-      research_at: null,
-      research_started_at: null 
     },
     {
       id: 't2',
       code: 'METALLURGY',
       level: 1,
-      research_at: '2026-01-01T00:00:00.000Z',
-      research_started_at: '2025-12-31T00:00:00.000Z'
+      research_at: 1_700_000_000_000,
+      research_started_at: 1_699_993_600_000
     }
   ]
 }
@@ -80,8 +78,8 @@ describe('technologyListHandler', () => {
             id: 't2',
             code: 'METALLURGY',
             level: 1,
-            research_at: '2026-01-01T00:00:00.000Z',
-            research_started_at: '2025-12-31T00:00:00.000Z'
+            research_at: 1_700_000_000_000,
+            research_started_at: 1_699_993_600_000
           }
         ]
       }

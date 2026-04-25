@@ -1,5 +1,4 @@
 import { upgradeBuilding } from '#app/command/building/upgrade'
-import { finishTechnologyResearch } from '#app/command/technology/finish-research'
 import { BuildingCode } from '#core/building/constant/code'
 
 export const sagaUpgradeBuilding = async ({
@@ -11,7 +10,6 @@ export const sagaUpgradeBuilding = async ({
   city_id: string
   building_code: BuildingCode
 }): Promise<void> => {
-  await finishTechnologyResearch({ player_id })
   await upgradeBuilding({
     player_id,
     city_id,
