@@ -1,5 +1,32 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type Plugin } from 'vitest/config'
+import { promises as fs } from 'fs'
 import path from 'path'
+import { build as esbuildBuild } from 'esbuild'
+
+const migrationsSrcDir = path.resolve(__dirname, 'src/adapter/database/migrations')
+const migrationsOutDir = path.resolve(__dirname, 'dist/migrations')
+
+function compileMigrationsPlugin(): Plugin {
+  return {
+    name: 'compile-migrations',
+    async closeBundle() {
+      const files = (await fs.readdir(migrationsSrcDir))
+        .filter((file) => file.endsWith('.ts') && !file.endsWith('.d.ts'))
+
+      await fs.mkdir(migrationsOutDir, { recursive: true })
+
+      await Promise.all(files.map((file) => esbuildBuild({
+        entryPoints: [ path.join(migrationsSrcDir, file) ],
+        outfile: path.join(migrationsOutDir, file.replace(/\.ts$/, '.js')),
+        platform: 'node',
+        format: 'cjs',
+        target: 'node24',
+        bundle: true,
+        external: [ 'kysely' ],
+      })))
+    },
+  }
+}
 
 export default defineConfig({
   resolve: {
@@ -18,6 +45,7 @@ export default defineConfig({
     },
     tsconfigPaths: true,
   },
+  plugins: [ compileMigrationsPlugin() ],
   build: {
     target: 'node24',
     outDir: 'dist',
@@ -50,6 +78,7 @@ export default defineConfig({
     include: [ 'src/**/*.spec.ts' ],
     globals: true,
     fileParallelism: true,
+    setupFiles: [ './src/test-support/vitest-setup.ts' ],
     coverage: {
       provider: 'v8',
       reporter: [ 'text', 'lcov' ],

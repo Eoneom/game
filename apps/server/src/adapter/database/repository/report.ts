@@ -1,6 +1,7 @@
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportRepository } from '#app/port/repository/report'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
+import { withTransaction } from '#adapter/database/context'
 import { CommunicationError } from '#core/communication/error'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
@@ -8,8 +9,7 @@ import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
-  Selectable,
-  Transaction
+  Selectable
 } from 'kysely'
 import {
   fromTimestampRequired,
@@ -98,12 +98,12 @@ export class PostgresReportRepository
   override async create(entity: ReportEntity | Omit<ReportEntity, 'id'>): Promise<string> {
     const with_id = entity as ReportEntity
 
-    return this.db.transaction().execute(async (trx) => {
+    return withTransaction(async () => {
       const row = this.toRow(with_id)
       let report_id: string
 
       if (with_id.id) {
-        await trx
+        await this.db
           .insertInto('report')
           .values({
             ...row,
@@ -128,7 +128,7 @@ export class PostgresReportRepository
       } else {
         const without_id = { ...row }
         delete without_id.id
-        const inserted = await trx
+        const inserted = await this.db
           .insertInto('report')
           .values(without_id)
           .returning('id')
@@ -136,7 +136,7 @@ export class PostgresReportRepository
         report_id = inserted.id
       }
 
-      await this.syncTroops(trx, report_id, with_id.troops)
+      await this.syncTroops(report_id, with_id.troops)
       return report_id
     })
   }
@@ -147,9 +147,9 @@ export class PostgresReportRepository
   ): Promise<void> {
     const row = this.toRow(entity)
 
-    await this.db.transaction().execute(async (trx) => {
+    await withTransaction(async () => {
       if (options?.upsert) {
-        await trx
+        await this.db
           .insertInto('report')
           .values({
             ...row,
@@ -171,7 +171,7 @@ export class PostgresReportRepository
             }))
           .execute()
       } else {
-        await trx
+        await this.db
           .updateTable('report')
           .set({
             type: row.type,
@@ -189,7 +189,7 @@ export class PostgresReportRepository
           .execute()
       }
 
-      await this.syncTroops(trx, entity.id, entity.troops)
+      await this.syncTroops(entity.id, entity.troops)
     })
   }
 
@@ -227,11 +227,10 @@ export class PostgresReportRepository
   }
 
   private async syncTroops(
-    trx: Transaction<DB>,
     report_id: string,
     troops: { code: TroopCode; count: number }[]
   ): Promise<void> {
-    await trx
+    await this.db
       .deleteFrom('report_troop')
       .where('report_id', '=', report_id)
       .execute()
@@ -240,7 +239,7 @@ export class PostgresReportRepository
       return
     }
 
-    await trx
+    await this.db
       .insertInto('report_troop')
       .values(troops.map(troop => ({
         report_id,

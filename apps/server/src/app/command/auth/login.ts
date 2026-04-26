@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 import { AuthEntity } from '#core/auth/entity'
 
 export interface LoginAuthParams {
@@ -10,14 +11,14 @@ export interface LoginAuthResult {
 }
 
 export async function loginAuth({ player_name }: LoginAuthParams): Promise<LoginAuthResult> {
-  const repository = Factory.getRepository()
-  const logger = Factory.getLogger('app:command:auth:login')
-  logger.info('run')
+  return runCommand('auth:login', async () => {
+    const repository = Factory.getRepository()
 
-  const player = await repository.player.getByName(player_name)
-  const auth = AuthEntity.generate({ player_id: player.id })
+    const player = await repository.player.getByName(player_name)
+    const auth = AuthEntity.generate({ player_id: player.id })
 
-  await repository.auth.create(auth)
+    await repository.auth.create(auth)
 
-  return { token: auth.token }
+    return { token: auth.token }
+  })
 }

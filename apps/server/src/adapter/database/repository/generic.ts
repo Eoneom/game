@@ -2,6 +2,7 @@ import { GenericRepository } from '#app/port/repository/generic'
 import { BaseEntity } from '#core/type/base/entity'
 import { AppLogger } from '#app/port/logger'
 import { Factory } from '#adapter/factory'
+import { getDatabase } from '#adapter/database/context'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
@@ -28,19 +29,23 @@ export abstract class PostgreSQLGenericRepository<
   Entity extends BaseEntity
 > implements GenericRepository<Entity> {
   protected logger: AppLogger
-  protected db: Kysely<DB>
   protected table: TableName
   private not_found_error: string
-  private loose_db: LooseDB
   private loose_table: string
 
-  protected constructor(db: Kysely<DB>, table: TableName, not_found_error: string) {
-    this.db = db
-    this.loose_db = db as LooseDB
+  protected constructor(_db: Kysely<DB>, table: TableName, not_found_error: string) {
     this.table = table
     this.loose_table = table
     this.not_found_error = not_found_error
     this.logger = Factory.getLogger('adapter:repository').child({ table })
+  }
+
+  protected get db(): Kysely<DB> {
+    return getDatabase()
+  }
+
+  private get loose_db(): LooseDB {
+    return getDatabase() as LooseDB
   }
 
   async findById(id: string): Promise<Entity | null> {

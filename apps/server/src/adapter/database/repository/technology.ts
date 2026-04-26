@@ -30,7 +30,7 @@ export class PostgresTechnologyRepository
       .selectAll()
       .where('player_id', '=', player_id)
 
-    if (codes) {
+    if (codes && codes.length > 0) {
       query = query.where('code', 'in', codes)
     }
 

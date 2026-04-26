@@ -37,7 +37,7 @@ export class PostgresBuildingRepository
       .selectAll()
       .where('city_id', '=', city_id)
 
-    if (codes) {
+    if (codes && codes.length > 0) {
       query = query.where('code', 'in', codes)
     }
 

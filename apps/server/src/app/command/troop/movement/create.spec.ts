@@ -117,10 +117,10 @@ describe('createTroopMovement', () => {
       () => callCreate([
         {
           code: TroopCode.EXPLORER,
-          count: 5 
-        } 
+          count: 5
+        }
       ]),
-      new RegExp(TroopError.NOT_ENOUGH_TROUPS)
+      new RegExp(TroopError.NOT_ENOUGH_TROOPS)
     )
 
     assert.strictEqual(movementCreate.mock.calls.length, 0)

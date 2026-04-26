@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 
 export interface AuthorizeAuthParams {
   token: string
@@ -13,14 +14,14 @@ export async function authorizeAuth({
   token,
   action_at,
 }: AuthorizeAuthParams): Promise<AuthorizeAuthResult> {
-  const repository = Factory.getRepository()
-  const logger = Factory.getLogger('app:command:auth:authorize')
-  logger.info('run')
+  return runCommand('auth:authorize', async () => {
+    const repository = Factory.getRepository()
 
-  const auth = await repository.auth.get({ token })
-  const updated_auth = auth.updateLastAction(action_at)
+    const auth = await repository.auth.get({ token })
+    const updated_auth = auth.updateLastAction(action_at)
 
-  await repository.auth.updateOne(updated_auth)
+    await repository.auth.updateOne(updated_auth)
 
-  return { player_id: updated_auth.player_id }
+    return { player_id: updated_auth.player_id }
+  })
 }

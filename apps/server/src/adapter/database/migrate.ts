@@ -1,4 +1,5 @@
-import { createDatabase } from './client'
+import { getRootDatabase } from '#adapter/database/context'
+import { Factory } from '#adapter/factory'
 import { promises as fs } from 'fs'
 import {
   FileMigrationProvider,
@@ -6,80 +7,59 @@ import {
 } from 'kysely/migration'
 import * as path from 'path'
 
-import '../../load-env'
-
-async function createMigrator() {
-  const db = createDatabase()
-  const migrator = new Migrator({
-    db,
+function createMigrator() {
+  return new Migrator({
+    db: getRootDatabase(),
     provider: new FileMigrationProvider({
       fs,
       path,
-      migrationFolder: path.join(__dirname, 'migrations')
-    })
+      migrationFolder: path.join(__dirname, 'migrations'),
+    }),
   })
-  return {
-    db,
-    migrator 
-  }
 }
 
-async function migrateToLatest(): Promise<void> {
+function logResults(
+  results: Awaited<ReturnType<Migrator['migrateToLatest']>>['results'],
+  action: 'execute' | 'revert'
+): void {
+  const logger = Factory.getLogger('adapter:database:migrate')
+  results?.forEach((result) => {
+    if (result.status === 'Success') {
+      logger.info(`migration "${result.migrationName}" was ${action === 'execute' ? 'executed' : 'reverted'} successfully`)
+    } else if (result.status === 'Error') {
+      logger.error(`failed to ${action} migration "${result.migrationName}"`)
+    }
+  })
+}
+
+export async function migrateToLatest(): Promise<void> {
+  const logger = Factory.getLogger('adapter:database:migrate')
+  const migrator = createMigrator()
   const {
-    db, migrator 
-  } = await createMigrator()
-  const {
-    error, results 
+    error,
+    results,
   } = await migrator.migrateToLatest()
 
-  results?.forEach((result) => {
-    if (result.status === 'Success') {
-      console.log(`migration "${result.migrationName}" was executed successfully`)
-    } else if (result.status === 'Error') {
-      console.error(`failed to execute migration "${result.migrationName}"`)
-    }
-  })
+  logResults(results, 'execute')
 
   if (error) {
-    console.error('failed to migrate')
-    console.error(error)
-    await db.destroy()
-    process.exit(1)
+    logger.error('failed to migrate')
+    throw error
   }
-
-  await db.destroy()
 }
 
-async function migrateDown(): Promise<void> {
+export async function migrateDown(): Promise<void> {
+  const logger = Factory.getLogger('adapter:database:migrate')
+  const migrator = createMigrator()
   const {
-    db, migrator 
-  } = await createMigrator()
-  const {
-    error, results 
+    error,
+    results,
   } = await migrator.migrateDown()
 
-  results?.forEach((result) => {
-    if (result.status === 'Success') {
-      console.log(`migration "${result.migrationName}" was reverted successfully`)
-    } else if (result.status === 'Error') {
-      console.error(`failed to revert migration "${result.migrationName}"`)
-    }
-  })
+  logResults(results, 'revert')
 
   if (error) {
-    console.error('failed to migrate down')
-    console.error(error)
-    await db.destroy()
-    process.exit(1)
+    logger.error('failed to migrate down')
+    throw error
   }
-
-  await db.destroy()
-}
-
-const direction = process.argv[2]
-
-if (direction === 'down') {
-  migrateDown()
-} else {
-  migrateToLatest()
 }

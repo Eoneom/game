@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostError } from '#core/outpost/error'
 
@@ -11,18 +12,18 @@ export async function outpostSetPermanent({
   outpost_id,
   player_id,
 }: OutpostSetPermanentParams): Promise<void> {
-  const repository = Factory.getRepository()
-  const logger = Factory.getLogger('app:command:outpost:set-permanent')
-  logger.info('run')
+  return runCommand('outpost:set-permanent', async () => {
+    const repository = Factory.getRepository()
 
-  const outpost = await repository.outpost.getById(outpost_id)
-  if (!outpost.isOwnedBy(player_id)) {
-    throw new Error(OutpostError.NOT_OWNER)
-  }
+    const outpost = await repository.outpost.getById(outpost_id)
+    if (!outpost.isOwnedBy(player_id)) {
+      throw new Error(OutpostError.NOT_OWNER)
+    }
 
-  if (outpost.type === OutpostType.PERMANENT) {
-    return
-  }
+    if (outpost.type === OutpostType.PERMANENT) {
+      return
+    }
 
-  await repository.outpost.updateOne(outpost.setPermanent())
+    await repository.outpost.updateOne(outpost.setPermanent())
+  })
 }

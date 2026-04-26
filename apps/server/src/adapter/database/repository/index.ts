@@ -1,5 +1,8 @@
 import { Factory } from '#adapter/factory'
-import { createDatabase } from '#adapter/database/client'
+import {
+  getRootDatabase,
+  setRootDatabase
+} from '#adapter/database/context'
 import type { DB } from '#adapter/database/types'
 import { Repository } from '#app/port/repository/generic'
 import { AuthRepository } from '#app/port/repository/auth'
@@ -48,7 +51,10 @@ export class PostgresRepository implements Repository {
   private db: Kysely<DB>
 
   constructor(db?: Kysely<DB>) {
-    this.db = db ?? createDatabase()
+    if (db) {
+      setRootDatabase(db)
+    }
+    this.db = getRootDatabase()
     this.auth = new PostgresAuthRepository(this.db)
     this.building = new PostgresBuildingRepository(this.db)
     this.cell = new PostgresCellRepository(this.db)

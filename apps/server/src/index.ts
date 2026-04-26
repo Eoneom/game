@@ -2,6 +2,7 @@ import './load-env'
 
 import { generateWorld } from '#app/command/world/generate'
 import { Factory } from '#adapter/factory'
+import { migrateToLatest } from '#adapter/database/migrate'
 import { WorldError } from '#core/world/error'
 import { gameTimeScale } from '#shared/game-time-scale'
 import { launchServer } from '#web/http'
@@ -16,6 +17,7 @@ import { registerJobWorkers } from '#app/job/register'
     logger.warn('game time scale active', { gameTimeScale })
   }
   await repository.connect()
+  await migrateToLatest()
   await jobQueue.start()
   await registerJobWorkers(jobQueue)
 

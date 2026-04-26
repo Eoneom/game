@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 import { TechnologyError } from '#core/technology/error'
 
 export interface CancelTechnologyParams {
@@ -6,15 +7,15 @@ export interface CancelTechnologyParams {
 }
 
 export async function cancelTechnology({ player_id }: CancelTechnologyParams): Promise<void> {
-  const job_queue = Factory.getJobQueue()
-  const logger = Factory.getLogger('app:command:technology:cancel')
-  logger.info('run')
+  return runCommand('technology:cancel', async () => {
+    const job_queue = Factory.getJobQueue()
 
-  const pending = await job_queue.getPendingTechnologyResearch({ player_id })
+    const pending = await job_queue.getPendingTechnologyResearch({ player_id })
 
-  if (!pending) {
-    throw new Error(TechnologyError.NOT_IN_PROGRESS)
-  }
+    if (!pending) {
+      throw new Error(TechnologyError.NOT_IN_PROGRESS)
+    }
 
-  await job_queue.cancelTechnologyResearchFinish({ player_id })
+    await job_queue.cancelTechnologyResearchFinish({ player_id })
+  })
 }

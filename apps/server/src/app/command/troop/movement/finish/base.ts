@@ -1,5 +1,6 @@
 import assert from 'assert'
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
@@ -117,76 +118,76 @@ export async function finishTroopBaseMovement({
   player_id,
   movement_id,
 }: FinishTroopBaseMovementParams): Promise<FinishTroopBaseMovementResult> {
-  const repository = Factory.getRepository()
-  const logger = Factory.getLogger('app:command:troop:finish:base')
-  logger.info('run')
+  return runCommand('troop:finish:base', async () => {
+    const repository = Factory.getRepository()
 
-  const movement = await repository.movement.getById(movement_id)
+    const movement = await repository.movement.getById(movement_id)
 
-  assert.strictEqual(movement.action, MovementAction.BASE)
+    assert.strictEqual(movement.action, MovementAction.BASE)
 
-  if (movement.player_id !== player_id) {
-    throw new Error(TroopError.NOT_OWNER)
-  }
+    if (movement.player_id !== player_id) {
+      throw new Error(TroopError.NOT_OWNER)
+    }
 
-  if (!movement.isArrived()) {
-    throw new Error(TroopError.MOVEMENT_NOT_ARRIVED)
-  }
+    if (!movement.isArrived()) {
+      throw new Error(TroopError.MOVEMENT_NOT_ARRIVED)
+    }
 
-  const destination_cell = await repository.cell.getCell({ coordinates: movement.destination })
+    const destination_cell = await repository.cell.getCell({ coordinates: movement.destination })
 
-  const city_exists = Boolean(destination_cell.city_id)
-  const outpost_exists = await repository.outpost.existsOnCell({ cell_id: destination_cell.id })
-  const does_location_exist = city_exists || outpost_exists
+    const city_exists = Boolean(destination_cell.city_id)
+    const outpost_exists = await repository.outpost.existsOnCell({ cell_id: destination_cell.id })
+    const does_location_exist = city_exists || outpost_exists
 
-  let finish_save: FinishBaseSave
-  if (does_location_exist) {
-    const [
-      movement_troops,
-      existing_destination_troops 
-    ] = await Promise.all([
-      repository.troop.listByMovement({ movement_id }),
-      repository.troop.listInCell({
-        cell_id: destination_cell.id,
+    let finish_save: FinishBaseSave
+    if (does_location_exist) {
+      const [
+        movement_troops,
+        existing_destination_troops
+      ] = await Promise.all([
+        repository.troop.listByMovement({ movement_id }),
+        repository.troop.listInCell({
+          cell_id: destination_cell.id,
+          player_id,
+        }),
+      ])
+      finish_save = finishBaseMovementInLocation({
+        movement,
+        movement_troops,
+        destination_cell_id: destination_cell.id,
+        existing_destination_troops,
+      })
+    } else {
+      const [
+        movement_troops,
+        existing_outposts_count
+      ] = await Promise.all([
+        repository.troop.listByMovement({ movement_id }),
+        repository.outpost.countForPlayer({ player_id }),
+      ])
+      finish_save = finishBaseMovementInTemporaryOutpost({
+        destination_cell_id: destination_cell.id,
+        movement,
+        existing_outposts_count,
+        movement_troops,
         player_id,
-      }),
-    ])
-    finish_save = finishBaseMovementInLocation({
-      movement,
-      movement_troops,
-      destination_cell_id: destination_cell.id,
-      existing_destination_troops,
-    })
-  } else {
-    const [
-      movement_troops,
-      existing_outposts_count 
-    ] = await Promise.all([
-      repository.troop.listByMovement({ movement_id }),
-      repository.outpost.countForPlayer({ player_id }),
-    ])
-    finish_save = finishBaseMovementInTemporaryOutpost({
-      destination_cell_id: destination_cell.id,
-      movement,
-      existing_outposts_count,
-      movement_troops,
-      player_id,
-    })
-  }
+      })
+    }
 
-  const save_promises: Promise<unknown>[] = [
-    repository.report.create(finish_save.report),
-    repository.movement.delete(finish_save.delete_movement_id),
-    ...finish_save.updated_troops.map(troop => repository.troop.updateOne(troop, { upsert: true })),
-    ...finish_save.delete_troop_ids.map(troop_id => repository.troop.delete(troop_id)),
-  ]
-  if (finish_save.outpost) {
-    save_promises.push(
-      repository.outpost.create(finish_save.outpost),
-      repository.resource_stock.ensureWorldStockForCell({ cell_id: finish_save.outpost.cell_id }),
-    )
-  }
-  await Promise.all(save_promises)
+    const save_promises: Promise<unknown>[] = [
+      repository.report.create(finish_save.report),
+      repository.movement.delete(finish_save.delete_movement_id),
+      ...finish_save.updated_troops.map(troop => repository.troop.updateOne(troop, { upsert: true })),
+      ...finish_save.delete_troop_ids.map(troop_id => repository.troop.delete(troop_id)),
+    ]
+    if (finish_save.outpost) {
+      save_promises.push(
+        repository.outpost.create(finish_save.outpost),
+        repository.resource_stock.ensureWorldStockForCell({ cell_id: finish_save.outpost.cell_id }),
+      )
+    }
+    await Promise.all(save_promises)
 
-  return { is_outpost_created: Boolean(finish_save.outpost) }
+    return { is_outpost_created: Boolean(finish_save.outpost) }
+  })
 }

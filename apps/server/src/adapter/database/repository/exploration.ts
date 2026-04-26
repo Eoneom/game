@@ -1,13 +1,13 @@
 import { ExplorationEntity } from '#core/world/exploration/entity'
 import { ExplorationRepository } from '#app/port/repository/exploration'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
+import { withTransaction } from '#adapter/database/context'
 import { WorldError } from '#core/world/error'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
-  Selectable,
-  Transaction
+  Selectable
 } from 'kysely'
 
 export class PostgresExplorationRepository
@@ -49,11 +49,11 @@ export class PostgresExplorationRepository
   override async create(entity: ExplorationEntity | Omit<ExplorationEntity, 'id'>): Promise<string> {
     const with_id = entity as ExplorationEntity
 
-    return this.db.transaction().execute(async (trx) => {
+    return withTransaction(async () => {
       let exploration_id: string
 
       if (with_id.id) {
-        await trx
+        await this.db
           .insertInto('exploration')
           .values({
             id: with_id.id,
@@ -65,7 +65,7 @@ export class PostgresExplorationRepository
           .execute()
         exploration_id = with_id.id
       } else {
-        const inserted = await trx
+        const inserted = await this.db
           .insertInto('exploration')
           .values({ player_id: with_id.player_id })
           .returning('id')
@@ -73,7 +73,7 @@ export class PostgresExplorationRepository
         exploration_id = inserted.id
       }
 
-      await this.syncCells(trx, exploration_id, with_id.cell_ids)
+      await this.syncCells(exploration_id, with_id.cell_ids)
       return exploration_id
     })
   }
@@ -82,9 +82,9 @@ export class PostgresExplorationRepository
     entity: ExplorationEntity,
     options?: { upsert: boolean }
   ): Promise<void> {
-    await this.db.transaction().execute(async (trx) => {
+    await withTransaction(async () => {
       if (options?.upsert) {
-        await trx
+        await this.db
           .insertInto('exploration')
           .values({
             id: entity.id,
@@ -95,14 +95,14 @@ export class PostgresExplorationRepository
             .doUpdateSet({ player_id: entity.player_id }))
           .execute()
       } else {
-        await trx
+        await this.db
           .updateTable('exploration')
           .set({ player_id: entity.player_id })
           .where('id', '=', entity.id)
           .execute()
       }
 
-      await this.syncCells(trx, entity.id, entity.cell_ids)
+      await this.syncCells(entity.id, entity.cell_ids)
     })
   }
 
@@ -121,11 +121,10 @@ export class PostgresExplorationRepository
   }
 
   private async syncCells(
-    trx: Transaction<DB>,
     exploration_id: string,
     cell_ids: string[]
   ): Promise<void> {
-    await trx
+    await this.db
       .deleteFrom('exploration_cell')
       .where('exploration_id', '=', exploration_id)
       .execute()
@@ -134,7 +133,7 @@ export class PostgresExplorationRepository
       return
     }
 
-    await trx
+    await this.db
       .insertInto('exploration_cell')
       .values(cell_ids.map(cell_id => ({
         exploration_id,

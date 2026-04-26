@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { BuildingService } from '#core/building/service'
 import { CityEntity } from '#core/city/entity'
@@ -24,90 +25,90 @@ export async function citySettle({
   player_id,
   city_name,
 }: CitySettleParams): Promise<CitySettleResult> {
-  const repository = Factory.getRepository()
-  const logger = Factory.getLogger('app:command:city:settle')
-  logger.info('run')
+  return runCommand('city:settle', async () => {
+    const repository = Factory.getRepository()
 
-  const [
-    outpost,
-    existing_cities_count,
-    does_city_exist,
-  ] = await Promise.all([
-    repository.outpost.getById(outpost_id),
-    repository.city.count({ player_id }),
-    repository.city.exist(city_name),
-  ])
+    const [
+      outpost,
+      existing_cities_count,
+      does_city_exist,
+    ] = await Promise.all([
+      repository.outpost.getById(outpost_id),
+      repository.city.count({ player_id }),
+      repository.city.exist(city_name),
+    ])
 
-  if (CityService.isLimitReached(existing_cities_count)) {
-    throw new Error(CityError.LIMIT_REACHED)
-  }
+    if (CityService.isLimitReached(existing_cities_count)) {
+      throw new Error(CityError.LIMIT_REACHED)
+    }
 
-  if (!outpost.isOwnedBy(player_id)) {
-    throw new Error(OutpostError.NOT_OWNER)
-  }
+    if (!outpost.isOwnedBy(player_id)) {
+      throw new Error(OutpostError.NOT_OWNER)
+    }
 
-  if (outpost.type === OutpostType.PERMANENT) {
-    throw new Error(CityError.CANNOT_SETTLE_ON_PERMANENT_OUTPOST)
-  }
+    if (outpost.type === OutpostType.PERMANENT) {
+      throw new Error(CityError.CANNOT_SETTLE_ON_PERMANENT_OUTPOST)
+    }
 
-  if (does_city_exist) {
-    throw new Error(CityError.ALREADY_EXISTS)
-  }
+    if (does_city_exist) {
+      throw new Error(CityError.ALREADY_EXISTS)
+    }
 
-  const [
-    cell,
-    settler_troop 
-  ] = await Promise.all([
-    repository.cell.getById(outpost.cell_id),
-    repository.troop.getInCell({
-      cell_id: outpost.cell_id,
-      code: TroopCode.SETTLER
-    }),
-  ])
+    const [
+      cell,
+      settler_troop
+    ] = await Promise.all([
+      repository.cell.getById(outpost.cell_id),
+      repository.troop.getInCell({
+        cell_id: outpost.cell_id,
+        code: TroopCode.SETTLER
+      }),
+    ])
 
-  const have_enough_settler = TroopService.haveEnoughTroops({
-    origin_troops: [ settler_troop ],
-    move_troops: [
-      {
-        code: TroopCode.SETTLER,
-        count: 1
-      }
-    ]
+    const have_enough_settler = TroopService.haveEnoughTroops({
+      origin_troops: [ settler_troop ],
+      move_troops: [
+        {
+          code: TroopCode.SETTLER,
+          count: 1
+        }
+      ]
+    })
+    if (!have_enough_settler) {
+      throw new Error(CityError.NO_SETTLER_AVAILABLE)
+    }
+
+    const [
+      exploration,
+      cells_around_city
+    ] = await Promise.all([
+      repository.exploration.get({ player_id }),
+      AppService.getCellsAround({ coordinates: cell.coordinates }),
+    ])
+
+    const city = CityEntity.initCity({
+      player_id,
+      name: city_name
+    })
+
+    const buildings = BuildingService.init({ city_id: city.id })
+
+    const settler_troop_to_update = settler_troop.removeCount(1)
+    const cell_to_update = cell.assign({ city_id: city.id })
+    const exploration_to_update = exploration.exploreCells([
+      ...cells_around_city.map(c => c.id),
+      cell.id
+    ])
+
+    await repository.city.create(city)
+    await Promise.all([
+      repository.outpost.delete(outpost.id),
+      ...buildings.map(building => repository.building.create(building)),
+      repository.troop.updateOne(settler_troop_to_update),
+      repository.cell.updateOne(cell_to_update),
+      repository.exploration.updateOne(exploration_to_update)
+    ])
+
+    return { city_id: city.id }
   })
-  if (!have_enough_settler) {
-    throw new Error(CityError.NO_SETTLER_AVAILABLE)
-  }
-
-  const [
-    exploration,
-    cells_around_city 
-  ] = await Promise.all([
-    repository.exploration.get({ player_id }),
-    AppService.getCellsAround({ coordinates: cell.coordinates }),
-  ])
-
-  const city = CityEntity.initCity({
-    player_id,
-    name: city_name
-  })
-
-  const buildings = BuildingService.init({ city_id: city.id })
-
-  const settler_troop_to_update = settler_troop.removeCount(1)
-  const cell_to_update = cell.assign({ city_id: city.id })
-  const exploration_to_update = exploration.exploreCells([
-    ...cells_around_city.map(c => c.id),
-    cell.id
-  ])
-
-  await Promise.all([
-    repository.outpost.delete(outpost.id),
-    repository.city.create(city),
-    ...buildings.map(building => repository.building.create(building)),
-    repository.troop.updateOne(settler_troop_to_update),
-    repository.cell.updateOne(cell_to_update),
-    repository.exploration.updateOne(exploration_to_update)
-  ])
-
-  return { city_id: city.id }
 }
