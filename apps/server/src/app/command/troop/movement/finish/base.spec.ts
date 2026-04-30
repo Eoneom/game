@@ -113,7 +113,6 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: null,
       count: 1,
-      ongoing_recruitment: null,
       movement_id: movement.id,
     })
 
@@ -123,7 +122,6 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: null,
       count: 2,
-      ongoing_recruitment: null,
       movement_id: movement.id,
     })
 
@@ -133,7 +131,6 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: destination_cell_id,
       count: 1,
-      ongoing_recruitment: null,
       movement_id: null,
     })
   })

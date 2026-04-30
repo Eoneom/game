@@ -28,7 +28,8 @@ export const troopGetHandler = async (
     const {
       troop,
       cost,
-      requirement
+      requirement,
+      ongoing_recruitment
     } = await new TroopGetQuery().run({
       player_id,
       troop_id
@@ -38,10 +39,10 @@ export const troopGetHandler = async (
       id: troop.id,
       code: troop.code,
       count: troop.count,
-      ongoing_recruitment: troop.ongoing_recruitment ? {
-        finish_at: troop.ongoing_recruitment.finish_at,
-        remaining_count: troop.ongoing_recruitment.remaining_count,
-        started_at: troop.ongoing_recruitment.started_at
+      ongoing_recruitment: ongoing_recruitment ? {
+        finish_at: ongoing_recruitment.finish_at,
+        remaining_count: ongoing_recruitment.remaining_count,
+        started_at: ongoing_recruitment.started_at
       } : undefined,
       cost: {
         plastic: cost.resource.plastic,

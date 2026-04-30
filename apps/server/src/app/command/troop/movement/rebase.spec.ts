@@ -48,8 +48,7 @@ describe('rebaseTroopMovement', () => {
         count: 1,
         player_id,
         cell_id: null,
-        movement_id: initial_base_movement.id,
-        ongoing_recruitment: null,
+        movement_id: initial_base_movement.id
       }),
     ]
 

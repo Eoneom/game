@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { nextTroopRecruitProgressAt } from '#adapter/job-queue'
 import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { BuildingCode } from '#core/building/constant/code'
@@ -8,7 +9,6 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopError } from '#core/troop/error'
 import { now } from '#shared/time'
-import assert from 'assert'
 
 export interface RecruitTroopParams {
   city_id: string
@@ -17,23 +17,20 @@ export interface RecruitTroopParams {
   player_id: string
 }
 
-export interface RecruitTroopResult {
-  recruit_at: number
-}
-
 export async function recruitTroop({
   city_id,
   player_id,
   troop_code,
   count,
-}: RecruitTroopParams): Promise<RecruitTroopResult> {
+}: RecruitTroopParams): Promise<void> {
   return runCommand('troop:recruit', async () => {
     const repository = Factory.getRepository()
+    const job_queue = Factory.getJobQueue()
 
     const city_cell = await repository.cell.getCityCell({ city_id })
 
-    const is_recruitment_in_progress = await repository.troop.isInProgress({ cell_id: city_cell.id })
-    if (is_recruitment_in_progress) {
+    const pending_recruit = await job_queue.getPendingTroopRecruitProgress({ city_id })
+    if (pending_recruit) {
       throw new Error(TroopError.ALREADY_IN_PROGRESS)
     }
 
@@ -87,18 +84,25 @@ export async function recruitTroop({
     })
     const updated_stock = stock.purchase({ resource })
 
-    const updated_troop = troop.launchRecruitment({
-      count,
-      duration,
-      recruitment_time: now(),
+    const recruitment_time = now()
+    const finish_at = recruitment_time + duration * 1000
+    const execute_at = nextTroopRecruitProgressAt({
+      finish_at,
+      remaining_count: count,
+      now: recruitment_time
     })
 
-    await Promise.all([
-      repository.troop.updateOne(updated_troop),
-      repository.resource_stock.updateOne(updated_stock),
-    ])
+    await repository.resource_stock.updateOne(updated_stock)
 
-    assert(updated_troop.ongoing_recruitment)
-    return { recruit_at: updated_troop.ongoing_recruitment.finish_at }
+    await job_queue.scheduleTroopRecruitProgress({
+      player_id,
+      city_id,
+      troop_id: troop.id,
+      remaining_count: count,
+      finish_at,
+      started_at: recruitment_time,
+      last_progress: recruitment_time,
+      execute_at
+    })
   })
 }

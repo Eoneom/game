@@ -1,12 +1,19 @@
 import { Factory } from '#adapter/factory'
+import { nextTroopRecruitProgressAt } from '#adapter/job-queue'
 import { runCommand } from '#command/run'
-import { CityError } from '#core/city/error'
-import { TroopError } from '#core/troop/error'
+import { AppEvent } from '#core/events'
+import { TroopEntity } from '#core/troop/entity'
+import { TroopService } from '#core/troop/service'
 import { now } from '#shared/time'
 
 export interface ProgressTroopRecruitmentParams {
-  city_id: string
   player_id: string
+  city_id: string
+  troop_id: string
+  remaining_count: number
+  finish_at: number
+  started_at: number
+  last_progress: number
 }
 
 export interface ProgressTroopRecruitmentResult {
@@ -14,34 +21,68 @@ export interface ProgressTroopRecruitmentResult {
 }
 
 export async function progressTroopRecruitment({
-  city_id,
   player_id,
+  city_id,
+  troop_id,
+  remaining_count,
+  finish_at,
+  started_at,
+  last_progress,
 }: ProgressTroopRecruitmentParams): Promise<ProgressTroopRecruitmentResult> {
   return runCommand('troop:progress-recruit', async () => {
     const repository = Factory.getRepository()
+    const job_queue = Factory.getJobQueue()
+    const logger = Factory.getLogger('app:command:troop:progress-recruit')
 
-    const [
-      city_cell,
-      city
-    ] = await Promise.all([
-      repository.cell.getCityCell({ city_id }),
-      repository.city.get(city_id),
-    ])
+    const troop = await repository.troop.getById(troop_id)
 
-    if (!city.isOwnedBy(player_id)) {
-      throw new Error(CityError.NOT_OWNER)
+    if (troop.player_id !== player_id) {
+      logger.info('troop does not belong to player', {
+        troop_id,
+        player_id
+      })
+      return { recruit_count: 0 }
     }
 
-    const troop = await repository.troop.getInProgress({ cell_id: city_cell.id })
+    const progress_time = now()
+    const progressed = TroopService.progressRecruitment({
+      count: troop.count,
+      recruitment: {
+        remaining_count,
+        finish_at,
+        started_at,
+        last_progress
+      },
+      progress_time
+    })
+    const recruit_count = progressed.count - troop.count
 
-    if (!troop) {
-      throw new Error(TroopError.NOT_IN_PROGRESS)
+    await repository.troop.updateOne(TroopEntity.create({
+      ...troop,
+      count: progressed.count
+    }))
+
+    if (progressed.recruitment) {
+      await job_queue.scheduleTroopRecruitProgress({
+        player_id,
+        city_id,
+        troop_id,
+        remaining_count: progressed.recruitment.remaining_count,
+        finish_at: progressed.recruitment.finish_at,
+        started_at: progressed.recruitment.started_at,
+        last_progress: progressed.recruitment.last_progress,
+        execute_at: nextTroopRecruitProgressAt({
+          finish_at: progressed.recruitment.finish_at,
+          remaining_count: progressed.recruitment.remaining_count,
+          now: progress_time
+        })
+      })
     }
 
-    const updated_troop = troop.progressRecruitment({ progress_time: now() })
-    const recruit_count = updated_troop.count - troop.count
-
-    await repository.troop.updateOne(updated_troop)
+    Factory.getEventBus().emit(AppEvent.TroopRecruitmentUpdated, {
+      city_id,
+      player_id
+    })
 
     return { recruit_count }
   })

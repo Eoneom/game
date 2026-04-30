@@ -56,7 +56,6 @@ describe('finishTroopExploreMovement', () => {
       player_id,
       cell_id: city_cell_id,
       count: 1,
-      ongoing_recruitment: null,
       movement_id: null,
     })
 

@@ -250,7 +250,6 @@ describe('signupAuth', () => {
       assert.strictEqual(troop.count, 0)
       assert.strictEqual(troop.player_id, created_player.id)
       assert.strictEqual(troop.cell_id, city_first_cell.id)
-      assert.strictEqual(troop.ongoing_recruitment, null)
       assert.strictEqual(troop.movement_id, null)
     })
   })

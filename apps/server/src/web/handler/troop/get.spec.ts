@@ -17,19 +17,19 @@ const queryResult = {
     id: 't1',
     code: 'WARRIOR',
     count: 10,
-    ongoing_recruitment: undefined 
   },
   cost: {
     resource: {
       plastic: 50,
-      mushroom: 25 
+      mushroom: 25
     },
-    duration: 1800 
+    duration: 1800
   },
   requirement: {
     buildings: [],
-    technologies: [] 
-  }
+    technologies: []
+  },
+  ongoing_recruitment: null
 }
 
 describe('troopGetHandler', () => {

@@ -64,7 +64,6 @@ describe('citySettle', () => {
       count: 1,
       player_id,
       cell_id,
-      ongoing_recruitment: null,
       movement_id: null
     })
 

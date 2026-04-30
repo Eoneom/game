@@ -18,10 +18,10 @@ const queryResult = {
       id: 't1',
       code: 'WARRIOR',
       count: 5,
-      ongoing_recruitment: undefined
     }
   ],
-  costs: { WARRIOR: { duration: 120 } }
+  costs: { WARRIOR: { duration: 120 } },
+  pending_recruitment: null
 }
 
 describe('troopListCityHandler', () => {

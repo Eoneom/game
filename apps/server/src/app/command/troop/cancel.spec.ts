@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { cancelTroop } from '#app/command/troop/cancel'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
@@ -15,7 +16,7 @@ import { now } from '#shared/time'
 import assert from 'assert'
 import { troop_costs } from '#core/pricing/constant/troop'
 import {
-  testResourceStock, testCityCell 
+  testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { id } from '#shared/identification'
 
@@ -30,7 +31,20 @@ describe('cancelTroop', () => {
   let troop: TroopEntity
   let troopUpdateOne: MockInstance
   let stockUpdateOne: MockInstance
+  let getPendingTroopRecruitProgress: MockInstance
+  let cancelTroopRecruitProgress: MockInstance
   let repository: Pick<Repository, 'cell' | 'city' | 'troop' | 'resource_stock'>
+  let pending: {
+    player_id: string
+    city_id: string
+    troop_id: string
+    remaining_count: number
+    finish_at: number
+    started_at: number
+    last_progress: number
+    execute_at: number
+    job_id: string
+  }
 
   beforeEach(() => {
     city = CityEntity.initCity({
@@ -39,7 +53,7 @@ describe('cancelTroop', () => {
     })
     city_cell = testCityCell({
       city_id: city.id,
-      cell_id 
+      cell_id
     })
     stock = testResourceStock({
       cell_id,
@@ -56,23 +70,31 @@ describe('cancelTroop', () => {
       count: 0,
       cell_id,
       player_id,
-      movement_id: null,
-      ongoing_recruitment: {
-        finish_at: last_progress + 1000 * remaining_count * troop_costs[code].duration,
-        remaining_count,
-        last_progress,
-        started_at: last_progress,
-      },
+      movement_id: null
     })
+
+    pending = {
+      player_id,
+      city_id: city.id,
+      troop_id: troop.id,
+      remaining_count,
+      finish_at: last_progress + 1000 * remaining_count * troop_costs[code].duration,
+      last_progress,
+      started_at: last_progress,
+      execute_at: current_time,
+      job_id: 'job-1'
+    }
 
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+    getPendingTroopRecruitProgress = vi.fn().mockResolvedValue(pending)
+    cancelTroopRecruitProgress = vi.fn().mockResolvedValue(undefined)
 
     repository = {
       cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       troop: {
-        getInProgress: vi.fn().mockResolvedValue(troop),
+        getById: vi.fn().mockResolvedValue(troop),
         updateOne: troopUpdateOne,
       } as unknown as Repository['troop'],
       resource_stock: {
@@ -82,6 +104,10 @@ describe('cancelTroop', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingTroopRecruitProgress,
+      cancelTroopRecruitProgress
+    } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -99,7 +125,7 @@ describe('cancelTroop', () => {
   })
 
   it('should assert that there is a troop in progress', async () => {
-    repository.troop.getInProgress = vi.fn().mockResolvedValue(null)
+    getPendingTroopRecruitProgress.mockResolvedValue(null)
 
     await assert.rejects(
       () => cancelTroop({
@@ -131,14 +157,13 @@ describe('cancelTroop', () => {
     assert.strictEqual(updated_troop.count, 1)
   })
 
-  it('should cancel troop', async () => {
+  it('should cancel troop and job', async () => {
     await cancelTroop({
       city_id: city.id,
       player_id,
     })
 
-    const updated_troop = troopUpdateOne.mock.calls[0][0]
-    assert.ok(troop.ongoing_recruitment)
-    assert.ok(!updated_troop.ongoing_recruitment)
+    assert.strictEqual(cancelTroopRecruitProgress.mock.calls.length, 1)
+    assert.deepStrictEqual(cancelTroopRecruitProgress.mock.calls[0][0], { city_id: city.id })
   })
 })

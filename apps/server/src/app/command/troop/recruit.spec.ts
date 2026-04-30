@@ -2,6 +2,10 @@ import type { MockInstance } from 'vitest'
 import { recruitTroop } from '#app/command/troop/recruit'
 import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
+import {
+  JobQueue,
+  TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS
+} from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityEntity } from '#core/city/entity'
@@ -12,9 +16,10 @@ import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import assert from 'assert'
 import {
-  testResourceStock, testCityCell 
+  testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { id } from '#shared/identification'
+import { PricingService } from '#core/pricing/service'
 
 describe('recruitTroop', () => {
   const player_id = id()
@@ -25,8 +30,9 @@ describe('recruitTroop', () => {
   let city_cell: ReturnType<typeof testCityCell>
   let stock: ReturnType<typeof testResourceStock>
   let troop: TroopEntity
-  let troopUpdateOne: MockInstance
   let stockUpdateOne: MockInstance
+  let scheduleTroopRecruitProgress: MockInstance
+  let getPendingTroopRecruitProgress: MockInstance
   let repository: Pick<Repository, 'cell' | 'city' | 'building' | 'technology' | 'troop' | 'resource_stock'>
 
   beforeEach(() => {
@@ -36,7 +42,7 @@ describe('recruitTroop', () => {
     })
     city_cell = testCityCell({
       city_id: city.id,
-      cell_id 
+      cell_id
     })
     stock = testResourceStock({
       cell_id,
@@ -49,8 +55,9 @@ describe('recruitTroop', () => {
       code: TroopCode.EXPLORER,
     })
 
-    troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+    scheduleTroopRecruitProgress = vi.fn().mockResolvedValue('job-id')
+    getPendingTroopRecruitProgress = vi.fn().mockResolvedValue(null)
 
     repository = {
       cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
@@ -59,8 +66,6 @@ describe('recruitTroop', () => {
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
       troop: {
         getInCell: vi.fn().mockResolvedValue(troop),
-        isInProgress: vi.fn().mockResolvedValue(false),
-        updateOne: troopUpdateOne,
       } as unknown as Repository['troop'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
@@ -69,6 +74,10 @@ describe('recruitTroop', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingTroopRecruitProgress,
+      scheduleTroopRecruitProgress
+    } as unknown as JobQueue)
     vi.spyOn(AppService, 'getTroopRequirementLevels').mockResolvedValue({
       building: { [BuildingCode.CLONING_FACTORY]: 1 },
       technology: {},
@@ -95,7 +104,7 @@ describe('recruitTroop', () => {
     const broke = testResourceStock({
       cell_id,
       plastic: 0,
-      mushroom: 0 
+      mushroom: 0
     })
     repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(broke)
 
@@ -111,7 +120,10 @@ describe('recruitTroop', () => {
   })
 
   it('should prevent player to recruit when recruitment is already in progress', async () => {
-    repository.troop.isInProgress = vi.fn().mockResolvedValue(true)
+    getPendingTroopRecruitProgress.mockResolvedValue({
+      city_id: city.id,
+      troop_id: troop.id
+    })
 
     await assert.rejects(
       () => recruitTroop({
@@ -154,7 +166,14 @@ describe('recruitTroop', () => {
     assert.ok(updated_stock.mushroom < stock.mushroom)
   })
 
-  it('should launch troops recruitment', async () => {
+  it('should schedule troop recruit progress job', async () => {
+    const { duration } = PricingService.getTroopCost({
+      code: TroopCode.EXPLORER,
+      count: requested_troop_count,
+      cloning_factory_level: 0,
+      replication_catalyst_level: 0,
+    })
+
     await recruitTroop({
       city_id: city.id,
       player_id,
@@ -162,10 +181,16 @@ describe('recruitTroop', () => {
       count: requested_troop_count,
     })
 
-    const updated_troop = troopUpdateOne.mock.calls[0][0]
-    assert.ok(updated_troop.ongoing_recruitment)
-    assert.ok(updated_troop.ongoing_recruitment.finish_at)
-    assert.ok(updated_troop.ongoing_recruitment.last_progress)
-    assert.strictEqual(updated_troop.ongoing_recruitment.remaining_count, requested_troop_count)
+    assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 1)
+    const scheduled = scheduleTroopRecruitProgress.mock.calls[0][0]
+    assert.strictEqual(scheduled.player_id, player_id)
+    assert.strictEqual(scheduled.city_id, city.id)
+    assert.strictEqual(scheduled.troop_id, troop.id)
+    assert.strictEqual(scheduled.remaining_count, requested_troop_count)
+    assert.strictEqual(scheduled.finish_at - scheduled.started_at, duration * 1000)
+    assert.strictEqual(scheduled.last_progress, scheduled.started_at)
+    assert.ok(scheduled.execute_at >= scheduled.started_at + TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS
+      || scheduled.execute_at === scheduled.finish_at)
+    assert.ok(scheduled.execute_at <= scheduled.finish_at)
   })
 })

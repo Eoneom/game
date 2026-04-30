@@ -7,9 +7,64 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { scaleGameDurationMs } from '#shared/game-time-scale'
 import { id } from '#shared/identification'
-import { TroopCount } from '#core/troop/type'
+import {
+  OngoingRecruitment,
+  TroopCount
+} from '#core/troop/type'
 
 export class TroopService {
+  static launchRecruitment({
+    duration,
+    count,
+    recruitment_time,
+  }: {
+    duration: number
+    count: number
+    recruitment_time: number
+  }): OngoingRecruitment {
+    return {
+      finish_at: recruitment_time + duration * 1000,
+      remaining_count: count,
+      last_progress: recruitment_time,
+      started_at: recruitment_time
+    }
+  }
+
+  static progressRecruitment({
+    count,
+    recruitment,
+    progress_time,
+  }: {
+    count: number
+    recruitment: OngoingRecruitment
+    progress_time: number
+  }): {
+    count: number
+    recruitment: OngoingRecruitment | null
+  } {
+    if (progress_time >= recruitment.finish_at) {
+      return {
+        count: count + recruitment.remaining_count,
+        recruitment: null
+      }
+    }
+
+    const remaining_time = recruitment.finish_at - recruitment.last_progress
+    const count_per_ms = recruitment.remaining_count / remaining_time
+    const time_elapsed = progress_time - recruitment.last_progress
+    const count_since_last = Math.floor(count_per_ms * time_elapsed)
+
+    return {
+      count: count + count_since_last,
+      recruitment: {
+        finish_at: recruitment.finish_at,
+        remaining_count: recruitment.remaining_count - count_since_last,
+        last_progress: count_since_last ? progress_time : recruitment.last_progress,
+        started_at: recruitment.started_at
+      }
+    }
+  }
+
   static init({
     player_id,
     cell_id
@@ -72,7 +127,6 @@ export class TroopService {
         player_id: origin_troop.player_id,
         cell_id: origin_troop.cell_id,
         count: troop_to_split.count,
-        ongoing_recruitment: null,
         movement_id: null
       }))
     })

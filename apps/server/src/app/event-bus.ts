@@ -20,6 +20,11 @@ export type TroopMovementFinishedPayload = {
   player_id: string
 }
 
+export type TroopRecruitmentUpdatedPayload = {
+  city_id: string
+  player_id: string
+}
+
 export type OutpostCreatedPayload = {
   player_id: string
 }
@@ -34,6 +39,7 @@ export type AppEventMap = {
   [AppEvent.BuildingUpgradeFinished]: BuildingUpgradeFinishedPayload
   [AppEvent.TechnologyResearchFinished]: TechnologyResearchFinishedPayload
   [AppEvent.TroopMovementFinished]: TroopMovementFinishedPayload
+  [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.OutpostCreated]: OutpostCreatedPayload
   [AppEvent.OutpostDeleted]: OutpostDeletedPayload
 }

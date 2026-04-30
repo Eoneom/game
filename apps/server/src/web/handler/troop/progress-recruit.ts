@@ -5,8 +5,10 @@ import {
   TroopProgressRecruitRequest,
   TroopProgressRecruitResponse
 } from '@eoneom/api-client/src/endpoints/troop/progress-recruit'
+import { Factory } from '#adapter/factory'
 import { getPlayerIdFromContext } from '#web/helpers'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
+import { TroopError } from '#core/troop/error'
 
 export const troopProgressRecruitHandler = async (
   req: Request<TroopProgressRecruitRequest>,
@@ -23,9 +25,20 @@ export const troopProgressRecruitHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
+    const pending = await Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id })
+
+    if (!pending) {
+      throw new Error(TroopError.NOT_IN_PROGRESS)
+    }
+
     const { recruit_count } = await progressTroopRecruitment({
-      city_id,
       player_id,
+      city_id: pending.city_id,
+      troop_id: pending.troop_id,
+      remaining_count: pending.remaining_count,
+      finish_at: pending.finish_at,
+      started_at: pending.started_at,
+      last_progress: pending.last_progress,
     })
 
     const response: TroopProgressRecruitResponse = {

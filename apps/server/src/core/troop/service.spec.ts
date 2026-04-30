@@ -106,7 +106,6 @@ describe('TroopService', () => {
         code: TroopCode.SETTLER,
         player_id,
         cell_id,
-        ongoing_recruitment: null,
         movement_id: null,
       }),
       TroopEntity.create({
@@ -115,7 +114,6 @@ describe('TroopService', () => {
         code: TroopCode.EXPLORER,
         player_id,
         cell_id,
-        ongoing_recruitment: null,
         movement_id: null,
       })
     ]
@@ -183,8 +181,7 @@ describe('TroopService', () => {
         player_id,
         cell_id: null,
         movement_id,
-        count: 1,
-        ongoing_recruitment: null
+        count: 1
       })
 
       const destination_troop = TroopEntity.create({
@@ -193,8 +190,7 @@ describe('TroopService', () => {
         player_id,
         cell_id: destination_cell_id,
         movement_id: null,
-        count: 1,
-        ongoing_recruitment: null
+        count: 1
       })
 
       const merged_troops = TroopService.mergeTroops({
@@ -216,8 +212,7 @@ describe('TroopService', () => {
         player_id,
         cell_id: null,
         movement_id,
-        count: 1,
-        ongoing_recruitment: null
+        count: 1
       })
 
       const merged_troops = TroopService.mergeTroops({

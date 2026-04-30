@@ -121,10 +121,6 @@ export interface Troop {
   id: Generated<string>;
   movement_id: string | null;
   player_id: string;
-  recruitment_finish_at: Timestamp | null;
-  recruitment_last_progress: Timestamp | null;
-  recruitment_remaining_count: number | null;
-  recruitment_started_at: Timestamp | null;
 }
 
 export interface DB {

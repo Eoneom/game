@@ -41,8 +41,7 @@ describe('TroopMovementGetQuery', () => {
         count: 1,
         player_id,
         cell_id: null,
-        movement_id,
-        ongoing_recruitment: null
+        movement_id
       })
     ]
     repository = {

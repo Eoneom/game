@@ -47,8 +47,7 @@ describe('TroopListQuery', () => {
       count: 2,
       player_id,
       cell_id: cell.id,
-      movement_id: null,
-      ongoing_recruitment: null
+      movement_id: null
     })
 
     repository = {
@@ -63,6 +62,9 @@ describe('TroopListQuery', () => {
       outpost: {} as unknown as Repository['outpost']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingTroopRecruitProgress: vi.fn().mockResolvedValue(null)
+    } as unknown as import('#adapter/job-queue').JobQueue)
   })
 
   afterEach(() => {
@@ -89,7 +91,7 @@ describe('TroopListQuery', () => {
     const result = await new TroopListQuery().run({
       location: {
         type: 'city',
-        city_id: city.id 
+        city_id: city.id
       },
       player_id
     })
@@ -103,6 +105,39 @@ describe('TroopListQuery', () => {
     expect(repository.building.getLevel).toHaveBeenCalledWith({
       city_id: city.id,
       code: BuildingCode.CLONING_FACTORY
+    })
+  })
+
+  it('hydrates ongoing recruitment from pending job', async () => {
+    const finish_at = 10_000
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingTroopRecruitProgress: vi.fn().mockResolvedValue({
+        player_id,
+        city_id: city.id,
+        troop_id: troop.id,
+        remaining_count: 3,
+        finish_at,
+        started_at: 0,
+        last_progress: 0,
+        execute_at: 5_000,
+        job_id: 'job-1'
+      })
+    } as unknown as import('#adapter/job-queue').JobQueue)
+
+    const result = await new TroopListQuery().run({
+      location: {
+        type: 'city',
+        city_id: city.id
+      },
+      player_id
+    })
+
+    expect(result.pending_recruitment).toEqual({
+      troop_id: troop.id,
+      finish_at,
+      remaining_count: 3,
+      last_progress: 0,
+      started_at: 0
     })
   })
 

@@ -46,8 +46,7 @@ describe('createTroopMovement', () => {
       count: 10,
       player_id,
       cell_id,
-      movement_id: null,
-      ongoing_recruitment: null,
+      movement_id: null
     })
 
     cell = CellEntity.create({

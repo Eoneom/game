@@ -1,3 +1,4 @@
+import { Factory } from '#adapter/factory'
 import { GenericQuery } from '#query/generic'
 import { TroopEntity } from '#core/troop/entity'
 import { CityError } from '#core/city/error'
@@ -9,6 +10,7 @@ import { TroopCode } from '#core/troop/constant/code'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { BuildingCode } from '#core/building/constant/code'
 import { PricingService } from '#core/pricing/service'
+import { OngoingRecruitment } from '#core/troop/type'
 
 type Location = { type: 'city', city_id: string} | { type: 'outpost', outpost_id: string }
 
@@ -17,9 +19,14 @@ export interface TroopListQueryRequest {
   player_id: string
 }
 
+export interface TroopListPendingRecruitment extends OngoingRecruitment {
+  troop_id: string
+}
+
 export interface TroopListQueryResponse {
   troops: TroopEntity[]
   costs: Record<TroopCode, CountCostValue>
+  pending_recruitment: TroopListPendingRecruitment | null
 }
 
 export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopListQueryResponse> {
@@ -39,7 +46,8 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
     const [
       troops,
       cloning_factory_level,
-      replication_catalyst_level
+      replication_catalyst_level,
+      pending_recruit
     ] = await Promise.all([
       this.repository.troop.listInCell({
         cell_id: cell.id,
@@ -52,7 +60,10 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
       this.repository.technology.getLevel({
         player_id,
         code: TechnologyCode.REPLICATION_CATALYST
-      })
+      }),
+      location.type === 'city'
+        ? Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id: location.city_id })
+        : Promise.resolve(null)
     ])
 
     const costs = troops.reduce((acc, troop) => {
@@ -71,7 +82,16 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
 
     return {
       troops: TroopService.sortTroops({ troops }),
-      costs
+      costs,
+      pending_recruitment: pending_recruit
+        ? {
+          troop_id: pending_recruit.troop_id,
+          finish_at: pending_recruit.finish_at,
+          remaining_count: pending_recruit.remaining_count,
+          last_progress: pending_recruit.last_progress,
+          started_at: pending_recruit.started_at
+        }
+        : null
     }
   }
 

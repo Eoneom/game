@@ -27,8 +27,7 @@ describe('TroopGetQuery', () => {
       count: 5,
       player_id,
       cell_id: null,
-      movement_id,
-      ongoing_recruitment: null
+      movement_id
     })
     repository = {
       troop: { getById: vi.fn().mockResolvedValue(troop_no_cell) } as unknown as Repository['troop'],
@@ -37,6 +36,9 @@ describe('TroopGetQuery', () => {
       building: { getLevel: vi.fn() } as unknown as Repository['building']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      getPendingTroopRecruitProgress: vi.fn().mockResolvedValue(null)
+    } as unknown as import('#adapter/job-queue').JobQueue)
   })
 
   afterEach(() => {
@@ -89,8 +91,7 @@ describe('TroopGetQuery', () => {
       count: 1,
       player_id,
       cell_id: cell.id,
-      movement_id: null,
-      ongoing_recruitment: null
+      movement_id: null
     })
     ;(repository.troop.getById as MockInstance).mockResolvedValue(troop_in_city)
     repository.cell = { getById: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell']

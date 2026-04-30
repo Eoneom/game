@@ -79,6 +79,18 @@ export function setupWebSocketServer(server: Server): void {
     }
   })
 
+  eventBus.on(AppEvent.TroopRecruitmentUpdated, ({
+    city_id, player_id
+  }) => {
+    const ws = connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.TroopRecruitmentUpdated,
+        city_id
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.OutpostCreated, ({ player_id }) => {
     const ws = connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {

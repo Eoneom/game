@@ -18,10 +18,10 @@ const queryResult = {
       id: 't2',
       code: 'ARCHER',
       count: 3,
-      ongoing_recruitment: undefined
     }
   ],
-  costs: { ARCHER: { duration: 90 } }
+  costs: { ARCHER: { duration: 90 } },
+  pending_recruitment: null
 }
 
 describe('troopListOutpostHandler', () => {
