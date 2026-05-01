@@ -1,9 +1,11 @@
 import type { MockInstance } from 'vitest'
 import {
-  Request, Response, NextFunction 
+  Request, Response, NextFunction
 } from 'express'
 import { troopGetMovementHandler } from './get'
 import { TroopMovementGetQuery } from '#query/troop/movement/get'
+import { MovementEntity } from '#core/troop/movement/entity'
+import { MovementAction } from '#core/troop/constant/movement-action'
 
 type MockRes = {
   status: MockInstance
@@ -13,25 +15,27 @@ type MockRes = {
 }
 
 const queryResult = {
-  movement: {
-    action: 'ATTACK',
+  movement: MovementEntity.create({
+    id: 'm1',
+    player_id: 'p1',
+    action: MovementAction.EXPLORE,
     origin: {
       sector: 0,
       x: 0,
-      y: 0 
+      y: 0
     },
     destination: {
       sector: 0,
       x: 3,
-      y: 4 
+      y: 4
     },
-    arrive_at: '2026-04-01T12:00:00.000Z'
-  },
+  }),
+  arrive_at: 1_744_000_000_000,
   troops: [
     {
       code: 'WARRIOR',
-      count: 8 
-    } 
+      count: 8
+    }
   ]
 }
 
@@ -62,7 +66,7 @@ describe('troopGetMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'movement_id:not-found' 
+      error_code: 'movement_id:not-found'
     })
   })
 
@@ -78,23 +82,23 @@ describe('troopGetMovementHandler', () => {
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
       data: {
-        action: 'ATTACK',
+        action: MovementAction.EXPLORE,
         origin: {
           sector: 0,
           x: 0,
-          y: 0 
+          y: 0
         },
         destination: {
           sector: 0,
           x: 3,
-          y: 4 
+          y: 4
         },
-        arrive_at: '2026-04-01T12:00:00.000Z',
+        arrive_at: 1_744_000_000_000,
         troops: [
           {
             code: 'WARRIOR',
-            count: 8 
-          } 
+            count: 8
+          }
         ]
       }
     })

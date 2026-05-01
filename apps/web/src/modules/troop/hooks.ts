@@ -182,20 +182,3 @@ export const useCreateMovement = () => {
     onError: (err: Error) => toast.error(err.message),
   })
 }
-
-export const useFinishMovement = () => {
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!token) throw new Error('no token')
-      const res = await client.troop.finishMovement(token)
-      if (isError(res)) throw new Error(res.error_code)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: troopKeys.movements })
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-}

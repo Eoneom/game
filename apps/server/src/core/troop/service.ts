@@ -199,20 +199,22 @@ export class TroopService {
     destination: Coordinates
     player_id: string
     action: MovementAction
-  }): MovementEntity {
+  }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
       troop_codes: troops.map(troop => troop.code)
     })
 
-    return MovementEntity.create({
+    const arrive_at = start_at + duration
+    const movement = MovementEntity.create({
       id: id(),
       player_id,
       action,
       origin,
       destination,
-      arrive_at: start_at + duration
     })
+
+    return { movement, arrive_at }
   }
 
   static sortTroops({ troops } : { troops: TroopEntity[] }): TroopEntity[] {

@@ -26,7 +26,6 @@ describe('TroopMovementGetActionQuery', () => {
         y: 0,
         sector: 1 
       },
-      arrive_at: 50_000
     })
     repository = { movement: { getById: vi.fn().mockResolvedValue(movement) } as unknown as Repository['movement'] }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)

@@ -6,9 +6,6 @@ import { useTimer } from '#hook/timer'
 import { MovementActionLabels } from '#movement/translations'
 import { MovementItem } from '#types'
 import { useLocation } from '#location/context'
-import { useFinishMovement } from '#troop/hooks'
-import { useQueryClient } from '@tanstack/react-query'
-import { reportKeys } from '#communication/report/hooks'
 
 interface Props {
   movement: MovementItem
@@ -16,8 +13,6 @@ interface Props {
 
 export const MovementListItem: React.FC<Props> = ({ movement }) => {
   const { cityId, outpostId } = useLocation()
-  const finishMovement = useFinishMovement()
-  const queryClient = useQueryClient()
   const RouterLink = Link as React.ComponentType<{
     to: string
     params?: Record<string, string>
@@ -26,10 +21,7 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
   }>
 
   const { remainingTime } = useTimer({
-    onDone: async () => {
-      finishMovement.mutate()
-      queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
-    },
+    onDone: () => undefined,
     doneAt: movement.arrive_at
   })
 

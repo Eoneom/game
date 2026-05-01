@@ -4,11 +4,14 @@ import {
   JobQueue,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
   TechnologyResearchFinishJobData,
+  TROOP_MOVEMENT_FINISH_QUEUE,
   TROOP_RECRUIT_PROGRESS_QUEUE,
+  TroopMovementFinishJobData,
   TroopRecruitProgressJobData
 } from '#adapter/job-queue'
 import { sagaFinishUpgrade } from '#app/saga/finish/upgrade'
 import { sagaFinishResearch } from '#app/saga/finish/research'
+import { sagaFinishOneMovement } from '#app/saga/finish/movement'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
 import { Factory } from '#adapter/factory'
 
@@ -95,6 +98,32 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
           finish_at: data.finish_at,
           started_at: data.started_at,
           last_progress: data.last_progress,
+        })
+      }
+    }
+  )
+
+  await jobQueue.work<TroopMovementFinishJobData, void, { includeMetadata: true }>(
+    TROOP_MOVEMENT_FINISH_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        const data = job.data
+        if (!data) {
+          logger.warn('troop movement finish job missing data', { job_id: job.id })
+          continue
+        }
+
+        logger.info('processing troop movement finish', {
+          job_id: job.id,
+          player_id: data.player_id,
+          movement_id: data.movement_id
+        })
+
+        await sagaFinishOneMovement({
+          player_id: data.player_id,
+          movement_id: data.movement_id,
+          arrived_at: job.startAfter.getTime(),
         })
       }
     }

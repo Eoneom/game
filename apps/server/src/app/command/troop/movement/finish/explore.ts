@@ -8,31 +8,32 @@ import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopService } from '#core/troop/service'
 import { WorldService } from '#core/world/service'
+import { now } from '#shared/time'
 
 export interface FinishTroopExploreMovementParams {
   player_id: string
   movement_id: string
+  arrived_at: number
 }
 
 export interface FinishTroopExploreMovementResult {
   base_movement: MovementEntity
+  base_arrive_at: number
 }
 
 export async function finishTroopExploreMovement({
   player_id,
   movement_id,
+  arrived_at,
 }: FinishTroopExploreMovementParams): Promise<FinishTroopExploreMovementResult> {
   return runCommand('troop:finish:explore', async () => {
     const repository = Factory.getRepository()
+    const job_queue = Factory.getJobQueue()
 
     const movement = await repository.movement.getById(movement_id)
 
     if (!movement.isOwnedBy(player_id)) {
       throw new Error(TroopError.MOVEMENT_NOT_OWNER)
-    }
-
-    if (!movement.isArrived()) {
-      throw new Error(TroopError.MOVEMENT_NOT_ARRIVED)
     }
 
     const [
@@ -50,9 +51,9 @@ export async function finishTroopExploreMovement({
       destination: movement.origin,
     })
 
-    const base_movement = TroopService.createMovement({
+    const { movement: base_movement, arrive_at: base_arrive_at } = TroopService.createMovement({
       troops,
-      start_at: movement.arrive_at,
+      start_at: arrived_at,
       distance,
       origin: movement.destination,
       destination: movement.origin,
@@ -71,6 +72,7 @@ export async function finishTroopExploreMovement({
       type: ReportType.EXPLORATION,
       movement,
       troops,
+      recorded_at: arrived_at,
     })
 
     await Promise.all([
@@ -81,6 +83,14 @@ export async function finishTroopExploreMovement({
       repository.report.create(report),
     ])
 
-    return { base_movement }
+    if (base_arrive_at > now()) {
+      await job_queue.scheduleTroopMovementFinish({
+        player_id,
+        movement_id: base_movement.id,
+        execute_at: base_arrive_at,
+      })
+    }
+
+    return { base_movement, base_arrive_at }
   })
 }

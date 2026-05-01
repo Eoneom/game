@@ -3,7 +3,6 @@ import {
   TroopCancelRequest,
   TroopCancelResponse
 } from './cancel'
-import { TroopFinishMovementResponse } from './movement/finish'
 import { TroopListCityRequest } from './list/city'
 import { TroopListMovementResponse } from './movement/list'
 import {
@@ -79,10 +78,6 @@ export class TroopEndpoint {
 
   public async getMovement(token: string, { movement_id }: TroopGetMovementRequest): Promise<TroopGetMovementResponse> {
     return this.fetcher.get(`/troop/movement/${movement_id}`, { token })
-  }
-
-  public async finishMovement(token: string): Promise<TroopFinishMovementResponse> {
-    return this.fetcher.put('/troop/movement/finish', { token })
   }
 
   public async estimateMovement(token: string, body: TroopMovementEstimateRequest): Promise<TroopMovementEstimateResponse> {

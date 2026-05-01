@@ -34,6 +34,7 @@ export async function createTroopMovement({
 }: CreateTroopMovementParams): Promise<CreateTroopMovementResult> {
   return runCommand('troop:move', async () => {
     const repository = Factory.getRepository()
+    const job_queue = Factory.getJobQueue()
 
     const origin_cell = await repository.cell.getCell({ coordinates: origin })
 
@@ -63,7 +64,7 @@ export async function createTroopMovement({
       troops_to_split: move_troops,
     })
 
-    const movement = TroopService.createMovement({
+    const { movement, arrive_at } = TroopService.createMovement({
       player_id,
       origin,
       destination,
@@ -128,6 +129,12 @@ export async function createTroopMovement({
     }
 
     await Promise.all(promises)
+
+    await job_queue.scheduleTroopMovementFinish({
+      player_id,
+      movement_id: movement.id,
+      execute_at: arrive_at,
+    })
 
     if (deleted_outpost_id) {
       Factory.getEventBus().emit(AppEvent.OutpostDeleted, {

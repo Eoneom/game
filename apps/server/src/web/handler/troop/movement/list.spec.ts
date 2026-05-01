@@ -1,9 +1,11 @@
 import type { MockInstance } from 'vitest'
 import {
-  Request, Response, NextFunction 
+  Request, Response, NextFunction
 } from 'express'
 import { troopListMovementHandler } from './list'
 import { TroopMovementListQuery } from '#query/troop/movement/list'
+import { MovementEntity } from '#core/troop/movement/entity'
+import { MovementAction } from '#core/troop/constant/movement-action'
 
 type MockRes = {
   status: MockInstance
@@ -12,22 +14,27 @@ type MockRes = {
   locals: Record<string, unknown>
 }
 
+const movement = MovementEntity.create({
+  id: 'm1',
+  player_id: 'p1',
+  action: MovementAction.EXPLORE,
+  origin: {
+    sector: 0,
+    x: 0,
+    y: 0
+  },
+  destination: {
+    sector: 0,
+    x: 3,
+    y: 4
+  },
+})
+
 const queryResult = {
   movements: [
     {
-      id: 'm1',
-      action: 'ATTACK',
-      origin: {
-        sector: 0,
-        x: 0,
-        y: 0 
-      },
-      destination: {
-        sector: 0,
-        x: 3,
-        y: 4 
-      },
-      arrive_at: '2026-04-01T12:00:00.000Z'
+      movement,
+      arrive_at: 1_744_000_000_000,
     }
   ]
 }
@@ -74,18 +81,18 @@ describe('troopListMovementHandler', () => {
         movements: [
           {
             id: 'm1',
-            action: 'ATTACK',
+            action: MovementAction.EXPLORE,
             origin: {
               sector: 0,
               x: 0,
-              y: 0 
+              y: 0
             },
             destination: {
               sector: 0,
               x: 3,
-              y: 4 
+              y: 4
             },
-            arrive_at: '2026-04-01T12:00:00.000Z'
+            arrive_at: 1_744_000_000_000
           }
         ]
       }

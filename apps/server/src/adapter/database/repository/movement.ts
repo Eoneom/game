@@ -3,17 +3,12 @@ import { MovementRepository } from '#app/port/repository/movement'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { TroopError } from '#core/troop/error'
 import { MovementAction } from '#core/troop/constant/movement-action'
-import { now } from '#shared/time'
 import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
   Selectable
 } from 'kysely'
-import {
-  fromTimestampRequired,
-  toTimestampRequired
-} from '#adapter/database/repository/shared/time'
 
 export class PostgresMovementRepository
   extends PostgreSQLGenericRepository<'movement', MovementEntity>
@@ -21,18 +16,6 @@ export class PostgresMovementRepository
 
   constructor(db: Kysely<DB>) {
     super(db, 'movement', TroopError.MOVEMENT_NOT_FOUND)
-  }
-
-  async listFinishedIds({ player_id }: { player_id: string }): Promise<string[]> {
-    const rows = await this.db
-      .selectFrom('movement')
-      .select('id')
-      .where('player_id', '=', player_id)
-      .where('arrive_at', '<', toTimestampRequired(now()))
-      .orderBy('arrive_at', 'asc')
-      .execute()
-
-    return rows.map(row => row.id)
   }
 
   async getById(id: string): Promise<MovementEntity> {
@@ -64,7 +47,6 @@ export class PostgresMovementRepository
         y: row.destination_y,
         sector: row.destination_sector
       },
-      arrive_at: fromTimestampRequired(row.arrive_at)
     })
   }
 
@@ -79,7 +61,6 @@ export class PostgresMovementRepository
       destination_x: entity.destination.x,
       destination_y: entity.destination.y,
       destination_sector: entity.destination.sector,
-      arrive_at: toTimestampRequired(entity.arrive_at)
     }
   }
 }

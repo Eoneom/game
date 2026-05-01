@@ -8,6 +8,7 @@ type GenerateUnreadParams = {
   type: ReportType
   troops: TroopEntity[]
   movement: MovementEntity
+  recorded_at: number
 }
 
 export class ReportFactory {
@@ -15,6 +16,7 @@ export class ReportFactory {
     type,
     troops,
     movement,
+    recorded_at,
   }: GenerateUnreadParams): ReportEntity {
     const report_troops = troops.map(troop => ({
       code: troop.code,
@@ -27,7 +29,7 @@ export class ReportFactory {
       was_read: false,
       troops: report_troops,
       player_id: movement.player_id,
-      recorded_at: movement.arrive_at,
+      recorded_at,
       origin: movement.origin,
       destination: movement.destination
     })

@@ -31,7 +31,7 @@ export const troopListMovementHandler = async (
 }
 
 const response_mapper = ({ movements }: TroopMovementListQueryResponse): TroopListMovementDataResponse => {
-  const response_movements: TroopListMovementDataResponse['movements'] = movements.map(movement => {
+  const response_movements: TroopListMovementDataResponse['movements'] = movements.map(({ movement, arrive_at }) => {
     return {
       id: movement.id,
       action: movement.action,
@@ -45,7 +45,7 @@ const response_mapper = ({ movements }: TroopMovementListQueryResponse): TroopLi
         x: movement.destination.x,
         y: movement.destination.y
       },
-      arrive_at: movement.arrive_at
+      arrive_at
     }
   })
 

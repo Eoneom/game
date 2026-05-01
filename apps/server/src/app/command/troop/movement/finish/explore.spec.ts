@@ -3,6 +3,7 @@ import assert from 'assert'
 import { finishTroopExploreMovement } from '#app/command/troop/movement/finish/explore'
 import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
@@ -22,6 +23,7 @@ describe('finishTroopExploreMovement', () => {
   const already_explored_cell_id = id()
   const cell_id = id()
   const city_cell_id = id()
+  const arrived_at = now() - 5000
   let movement: MovementEntity
   let troop: TroopEntity
   let exploration: ExplorationEntity
@@ -30,6 +32,7 @@ describe('finishTroopExploreMovement', () => {
   let troopUpdateOne: MockInstance
   let explorationUpdateOne: MockInstance
   let reportCreate: MockInstance
+  let scheduleTroopMovementFinish: MockInstance
   let repository: Pick<Repository, 'troop' | 'movement' | 'exploration' | 'report'>
 
   beforeEach(() => {
@@ -47,7 +50,6 @@ describe('finishTroopExploreMovement', () => {
         x: 5,
         y: 6,
       },
-      arrive_at: now() - 5000,
     })
 
     troop = TroopEntity.create({
@@ -70,6 +72,7 @@ describe('finishTroopExploreMovement', () => {
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     explorationUpdateOne = vi.fn().mockResolvedValue(undefined)
     reportCreate = vi.fn().mockResolvedValue(undefined)
+    scheduleTroopMovementFinish = vi.fn().mockResolvedValue('job-id')
 
     repository = {
       troop: {
@@ -89,6 +92,7 @@ describe('finishTroopExploreMovement', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
     vi.spyOn(AppService, 'getExploredCellIds').mockResolvedValue([ cell_id ])
   })
 
@@ -106,23 +110,9 @@ describe('finishTroopExploreMovement', () => {
       () => finishTroopExploreMovement({
         player_id,
         movement_id,
+        arrived_at,
       }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
-    )
-  })
-
-  it('should prevent a player from finishing a movement when arrive at date is in the future', async () => {
-    repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
-      ...movement,
-      arrive_at: now() + 10000,
-    }))
-
-    await assert.rejects(
-      () => finishTroopExploreMovement({
-        player_id,
-        movement_id,
-      }),
-      new RegExp(TroopError.MOVEMENT_NOT_ARRIVED)
     )
   })
 
@@ -130,6 +120,7 @@ describe('finishTroopExploreMovement', () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const updated_exploration = explorationUpdateOne.mock.calls[0][0]
@@ -141,6 +132,7 @@ describe('finishTroopExploreMovement', () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const movement_to_create = movementCreate.mock.calls[0][0]
@@ -149,17 +141,24 @@ describe('finishTroopExploreMovement', () => {
     const troops_updated = troopUpdateOne.mock.calls.map(([ t ]) => t)
     assert.strictEqual(troops_updated.length, 1)
     assert.strictEqual(troops_updated[0].movement_id, movement_to_create.id)
+
+    assert.strictEqual(scheduleTroopMovementFinish.mock.calls.length, 1)
+    const scheduled = scheduleTroopMovementFinish.mock.calls[0][0]
+    assert.strictEqual(scheduled.movement_id, movement_to_create.id)
+    assert.ok(scheduled.execute_at > arrived_at)
   })
 
   it('should create a report describing the explored cell', async () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const report = reportCreate.mock.calls[0][0]
     assert.strictEqual(report.troops.length, 1)
     assert.strictEqual(report.was_read, false)
     assert.strictEqual(report.troops[0].code, TroopCode.EXPLORER)
+    assert.strictEqual(report.recorded_at, arrived_at)
   })
 })

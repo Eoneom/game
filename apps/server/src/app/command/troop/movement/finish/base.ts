@@ -18,6 +18,7 @@ import { id } from '#shared/identification'
 export interface FinishTroopBaseMovementParams {
   player_id: string
   movement_id: string
+  arrived_at: number
 }
 
 export interface FinishTroopBaseMovementResult {
@@ -37,11 +38,13 @@ function finishBaseMovementInLocation({
   movement_troops,
   destination_cell_id,
   existing_destination_troops,
+  arrived_at,
 }: {
   movement: MovementEntity
   movement_troops: TroopEntity[]
   existing_destination_troops: TroopEntity[]
   destination_cell_id: string
+  arrived_at: number
 }): FinishBaseSave {
   const updated_troops = TroopService.mergeTroopsInCell({
     movement_troops,
@@ -53,6 +56,7 @@ function finishBaseMovementInLocation({
     type: ReportType.BASE,
     movement,
     troops: movement_troops,
+    recorded_at: arrived_at,
   })
 
   return {
@@ -69,12 +73,14 @@ function finishBaseMovementInTemporaryOutpost({
   existing_outposts_count,
   player_id,
   movement_troops,
+  arrived_at,
 }: {
   destination_cell_id: string
   movement: MovementEntity
   existing_outposts_count: number
   player_id: string
   movement_troops: TroopEntity[]
+  arrived_at: number
 }): FinishBaseSave {
   const is_limit_reached = OutpostService.isLimitReached({ existing_outposts_count })
   if (is_limit_reached) {
@@ -96,6 +102,7 @@ function finishBaseMovementInTemporaryOutpost({
     type: ReportType.BASE,
     movement,
     troops: movement_troops,
+    recorded_at: arrived_at,
   })
 
   const outpost = OutpostEntity.create({
@@ -117,6 +124,7 @@ function finishBaseMovementInTemporaryOutpost({
 export async function finishTroopBaseMovement({
   player_id,
   movement_id,
+  arrived_at,
 }: FinishTroopBaseMovementParams): Promise<FinishTroopBaseMovementResult> {
   return runCommand('troop:finish:base', async () => {
     const repository = Factory.getRepository()
@@ -127,10 +135,6 @@ export async function finishTroopBaseMovement({
 
     if (movement.player_id !== player_id) {
       throw new Error(TroopError.NOT_OWNER)
-    }
-
-    if (!movement.isArrived()) {
-      throw new Error(TroopError.MOVEMENT_NOT_ARRIVED)
     }
 
     const destination_cell = await repository.cell.getCell({ coordinates: movement.destination })
@@ -156,6 +160,7 @@ export async function finishTroopBaseMovement({
         movement_troops,
         destination_cell_id: destination_cell.id,
         existing_destination_troops,
+        arrived_at,
       })
     } else {
       const [
@@ -171,6 +176,7 @@ export async function finishTroopBaseMovement({
         existing_outposts_count,
         movement_troops,
         player_id,
+        arrived_at,
       })
     }
 

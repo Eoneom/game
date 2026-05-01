@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { TroopMovementGetQuery } from '#app/query/troop/movement/get'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -16,6 +17,7 @@ describe('TroopMovementGetQuery', () => {
   let movement: MovementEntity
   let troops: TroopEntity[]
   let repository: Pick<Repository, 'movement' | 'troop'>
+  let getPendingTroopMovementFinish: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     movement = MovementEntity.create({
@@ -25,14 +27,13 @@ describe('TroopMovementGetQuery', () => {
       origin: {
         x: 0,
         y: 0,
-        sector: 1 
+        sector: 1
       },
       destination: {
         x: 1,
         y: 0,
-        sector: 1 
+        sector: 1
       },
-      arrive_at: 99_999
     })
     troops = [
       TroopEntity.create({
@@ -48,7 +49,14 @@ describe('TroopMovementGetQuery', () => {
       movement: { getById: vi.fn().mockResolvedValue(movement) } as unknown as Repository['movement'],
       troop: { listByMovement: vi.fn().mockResolvedValue(troops) } as unknown as Repository['troop']
     }
+    getPendingTroopMovementFinish = vi.fn().mockResolvedValue({
+      player_id,
+      movement_id,
+      execute_at: 99_999,
+      job_id: 'job-1',
+    })
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingTroopMovementFinish } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -64,18 +72,20 @@ describe('TroopMovementGetQuery', () => {
 
     await expect(new TroopMovementGetQuery().run({
       player_id,
-      movement_id 
+      movement_id
     })).rejects.toThrow(TroopError.MOVEMENT_NOT_FOUND)
   })
 
-  it('returns movement and troops', async () => {
+  it('returns movement, troops and arrive_at from pending job', async () => {
     const result = await new TroopMovementGetQuery().run({
       player_id,
-      movement_id 
+      movement_id
     })
 
     expect(result.movement).toBe(movement)
     expect(result.troops).toBe(troops)
+    expect(result.arrive_at).toBe(99_999)
     expect(repository.troop.listByMovement).toHaveBeenCalledWith({ movement_id })
+    expect(getPendingTroopMovementFinish).toHaveBeenCalledWith({ movement_id })
   })
 })

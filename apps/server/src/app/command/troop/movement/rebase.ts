@@ -10,14 +10,17 @@ import { WorldService } from '#core/world/service'
 export interface RebaseTroopMovementParams {
   player_id: string
   movement_id: string
+  arrived_at: number
 }
 
 export async function rebaseTroopMovement({
   movement_id,
   player_id,
+  arrived_at,
 }: RebaseTroopMovementParams): Promise<void> {
   return runCommand('troop:rebase', async () => {
     const repository = Factory.getRepository()
+    const job_queue = Factory.getJobQueue()
 
     const movement = await repository.movement.getById(movement_id)
 
@@ -32,25 +35,26 @@ export async function rebaseTroopMovement({
       destination: movement.origin,
     })
 
-    const rebase_movement = TroopService.createMovement({
+    const { movement: rebase_movement, arrive_at } = TroopService.createMovement({
       action: MovementAction.BASE,
       destination: movement.origin,
       distance,
       origin: movement.destination,
       player_id,
-      start_at: movement.arrive_at,
+      start_at: arrived_at,
       troops,
     })
 
     const rebase_troops = TroopService.assignToMovement({
       troops,
-      movement_id: movement.id,
+      movement_id: rebase_movement.id,
     })
 
     const report = ReportFactory.generateUnread({
       type: ReportType.REBASE,
       movement,
       troops,
+      recorded_at: arrived_at,
     })
 
     await Promise.all([
@@ -59,5 +63,11 @@ export async function rebaseTroopMovement({
       repository.movement.create(rebase_movement),
       repository.report.create(report),
     ])
+
+    await job_queue.scheduleTroopMovementFinish({
+      player_id,
+      movement_id: rebase_movement.id,
+      execute_at: arrive_at,
+    })
   })
 }

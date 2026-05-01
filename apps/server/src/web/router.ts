@@ -14,7 +14,6 @@ import { technologyCancelHandler } from '#web/handler/technology/cancel'
 import { technologyListHandler } from '#web/handler/technology/list'
 import { technologyResearchHandler } from '#web/handler/technology/research'
 import { troopCancelHandler } from '#web/handler/troop/cancel'
-import { troopFinishMovementHandler } from '#web/handler/troop/movement/finish'
 import { troopListCityHandler } from '#web/handler/troop/list/city'
 import { troopListOutpostHandler } from '#web/handler/troop/list/outpost'
 import { troopListMovementHandler } from '#web/handler/troop/movement/list'
@@ -66,7 +65,6 @@ export const router = (): Router => {
   r.get('/troop/movement', authMiddleware, troopListMovementHandler)
   r.post('/troop/movement', authMiddleware, troopCreateMovementHandler)
   r.get('/troop/movement/:movement_id', authMiddleware, troopGetMovementHandler)
-  r.put('/troop/movement/finish', authMiddleware, troopFinishMovementHandler)
   r.post('/troop/movement/estimate', authMiddleware, troopEstimateMovementHandler)
 
   r.get('/troop/:troop_id', authMiddleware, troopGetHandler)

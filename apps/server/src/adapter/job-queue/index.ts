@@ -11,6 +11,7 @@ const PGBOSS_SCHEMA = 'pgboss'
 export const BUILDING_UPGRADE_FINISH_QUEUE = 'building.upgrade.finish'
 export const TECHNOLOGY_RESEARCH_FINISH_QUEUE = 'technology.research.finish'
 export const TROOP_RECRUIT_PROGRESS_QUEUE = 'troop.recruit.progress'
+export const TROOP_MOVEMENT_FINISH_QUEUE = 'troop.movement.finish'
 
 export const TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS = 5_000
 
@@ -49,6 +50,16 @@ export type TroopRecruitProgressJobData = {
 }
 
 export type PendingTroopRecruitProgress = TroopRecruitProgressJobData & {
+  execute_at: number
+  job_id: string
+}
+
+export type TroopMovementFinishJobData = {
+  player_id: string
+  movement_id: string
+}
+
+export type PendingTroopMovementFinish = TroopMovementFinishJobData & {
   execute_at: number
   job_id: string
 }
@@ -104,6 +115,7 @@ export class JobQueue {
     await this.boss.createQueue(BUILDING_UPGRADE_FINISH_QUEUE)
     await this.boss.createQueue(TECHNOLOGY_RESEARCH_FINISH_QUEUE)
     await this.boss.createQueue(TROOP_RECRUIT_PROGRESS_QUEUE, { policy: 'stately' })
+    await this.boss.createQueue(TROOP_MOVEMENT_FINISH_QUEUE)
     this.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
 
@@ -360,6 +372,74 @@ export class JobQueue {
       finish_at: job.data.finish_at,
       started_at: job.data.started_at,
       last_progress: job.data.last_progress,
+      execute_at: job.startAfter.getTime(),
+      job_id: job.id
+    }
+  }
+
+  async scheduleTroopMovementFinish({
+    player_id,
+    movement_id,
+    execute_at
+  }: {
+    player_id: string
+    movement_id: string
+    execute_at: number
+  }): Promise<string | null> {
+    const data: TroopMovementFinishJobData = {
+      player_id,
+      movement_id
+    }
+
+    this.logger.info('schedule troop movement finish', {
+      player_id,
+      movement_id,
+      execute_at
+    })
+
+    return this.boss.send(TROOP_MOVEMENT_FINISH_QUEUE, data, {
+      startAfter: new Date(execute_at),
+      singletonKey: movement_id
+    })
+  }
+
+  async cancelTroopMovementFinish({ movement_id }: { movement_id: string }): Promise<void> {
+    const jobs = await this.boss.findJobs<TroopMovementFinishJobData>(
+      TROOP_MOVEMENT_FINISH_QUEUE,
+      {
+        key: movement_id,
+        queued: true
+      }
+    )
+
+    if (jobs.length === 0) {
+      this.logger.info('no queued troop movement finish job to cancel', { movement_id })
+      return
+    }
+
+    const ids = jobs.map(job => job.id)
+    this.logger.info('cancel troop movement finish', {
+      movement_id,
+      ids
+    })
+    await this.boss.cancel(TROOP_MOVEMENT_FINISH_QUEUE, ids)
+  }
+
+  async getPendingTroopMovementFinish({ movement_id }: { movement_id: string }): Promise<PendingTroopMovementFinish | null> {
+    const jobs = await this.boss.findJobs<TroopMovementFinishJobData>(
+      TROOP_MOVEMENT_FINISH_QUEUE,
+      { key: movement_id }
+    )
+
+    const job = jobs.find(candidate => candidate.state === 'created' || candidate.state === 'retry' || candidate.state === 'active')
+
+    if (!job || !job.data) {
+      return null
+    }
+
+    return {
+      player_id: job.data.player_id,
+      movement_id: job.data.movement_id,
       execute_at: job.startAfter.getTime(),
       job_id: job.id
     }

@@ -1,5 +1,5 @@
 import {
-  vi, type MockInstance 
+  vi, type MockInstance
 } from 'vitest'
 import assert from 'assert'
 import { sagaFinishBase } from './base'
@@ -13,6 +13,7 @@ vi.mock('#app/command/troop/movement/rebase')
 describe('sagaFinishBase', () => {
   const player_id = 'player_id'
   const movement_id = 'movement_id'
+  const arrived_at = 1_000
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -27,13 +28,15 @@ describe('sagaFinishBase', () => {
   it('calls finishTroopBaseMovement with correct args', async () => {
     await sagaFinishBase({
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
 
     assert.strictEqual((finishTroopBaseMovement as MockInstance).mock.calls.length, 1)
     assert.deepStrictEqual((finishTroopBaseMovement as MockInstance).mock.calls[0][0], {
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
   })
 
@@ -43,7 +46,8 @@ describe('sagaFinishBase', () => {
 
     const result = await sagaFinishBase({
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
 
     assert.deepStrictEqual(result, expected)
@@ -55,13 +59,15 @@ describe('sagaFinishBase', () => {
 
     await sagaFinishBase({
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
 
     assert.strictEqual((rebaseTroopMovement as MockInstance).mock.calls.length, 1)
     assert.deepStrictEqual((rebaseTroopMovement as MockInstance).mock.calls[0][0], {
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
   })
 
@@ -70,7 +76,8 @@ describe('sagaFinishBase', () => {
 
     const result = await sagaFinishBase({
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     })
 
     assert.deepStrictEqual(result, { is_outpost_created: false })
@@ -81,7 +88,8 @@ describe('sagaFinishBase', () => {
 
     await assert.rejects(() => sagaFinishBase({
       player_id,
-      movement_id 
+      movement_id,
+      arrived_at,
     }), /unexpected error/)
     assert.strictEqual((rebaseTroopMovement as MockInstance).mock.calls.length, 0)
   })

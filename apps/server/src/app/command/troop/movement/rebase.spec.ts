@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { rebaseTroopMovement } from '#app/command/troop/movement/rebase'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
@@ -15,6 +16,7 @@ import assert from 'assert'
 describe('rebaseTroopMovement', () => {
   const player_id = id()
   const other_player_id = id()
+  const arrived_at = now()
 
   let initial_base_movement: MovementEntity
   let initial_movement_troops: TroopEntity[]
@@ -22,6 +24,7 @@ describe('rebaseTroopMovement', () => {
   let movementCreate: MockInstance
   let troopUpdateOne: MockInstance
   let reportCreate: MockInstance
+  let scheduleTroopMovementFinish: MockInstance
   let repository: Pick<Repository, 'troop' | 'movement' | 'report'>
 
   beforeEach(() => {
@@ -29,7 +32,6 @@ describe('rebaseTroopMovement', () => {
       id: id(),
       action: MovementAction.BASE,
       player_id,
-      arrive_at: now() + 10 * 1000,
       origin: {
         x: 1,
         y: 2,
@@ -56,6 +58,7 @@ describe('rebaseTroopMovement', () => {
     movementCreate = vi.fn().mockResolvedValue(undefined)
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     reportCreate = vi.fn().mockResolvedValue(undefined)
+    scheduleTroopMovementFinish = vi.fn().mockResolvedValue('job-id')
 
     repository = {
       troop: {
@@ -71,6 +74,7 @@ describe('rebaseTroopMovement', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
   })
 
   afterEach(() => {
@@ -87,6 +91,7 @@ describe('rebaseTroopMovement', () => {
       () => rebaseTroopMovement({
         player_id,
         movement_id: initial_base_movement.id,
+        arrived_at,
       }),
       new RegExp(TroopError.NOT_OWNER)
     )
@@ -96,6 +101,7 @@ describe('rebaseTroopMovement', () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
+      arrived_at,
     })
 
     assert.strictEqual(movementDelete.mock.calls[0][0], initial_base_movement.id)
@@ -105,12 +111,12 @@ describe('rebaseTroopMovement', () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
+      arrived_at,
     })
 
     const movement_to_create = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(movement_to_create.origin, initial_base_movement.destination)
     assert.deepStrictEqual(movement_to_create.destination, initial_base_movement.origin)
-    assert.ok(movement_to_create.arrive_at > initial_base_movement.arrive_at)
 
     const troops_to_update = troopUpdateOne.mock.calls.map(([ t ]) => t)
     troops_to_update.forEach(troop_to_update => {
@@ -119,13 +125,20 @@ describe('rebaseTroopMovement', () => {
       assert.ok(initial_troop)
       assert.strictEqual(troop_to_update.id, initial_troop.id)
       assert.strictEqual(troop_to_update.count, initial_troop.count)
+      assert.strictEqual(troop_to_update.movement_id, movement_to_create.id)
     })
+
+    assert.strictEqual(scheduleTroopMovementFinish.mock.calls.length, 1)
+    const scheduled = scheduleTroopMovementFinish.mock.calls[0][0]
+    assert.strictEqual(scheduled.movement_id, movement_to_create.id)
+    assert.ok(scheduled.execute_at > arrived_at)
   })
 
   it('should create a report indicating that a rebase was needed', async () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
+      arrived_at,
     })
 
     const report = reportCreate.mock.calls[0][0]
@@ -133,7 +146,7 @@ describe('rebaseTroopMovement', () => {
     assert.strictEqual(report.player_id, player_id)
     assert.strictEqual(report.was_read, false)
 
-    assert.strictEqual(report.recorded_at, initial_base_movement.arrive_at)
+    assert.strictEqual(report.recorded_at, arrived_at)
     assert.deepStrictEqual(report.origin, initial_base_movement.origin)
     assert.deepStrictEqual(report.destination, initial_base_movement.destination)
 

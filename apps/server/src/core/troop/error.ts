@@ -6,6 +6,5 @@ export enum TroopError {
   NOT_OWNER = 'troop:not-owner',
   MOVEMENT_NOT_OWNER = 'troop:movement:not-owner',
   MOVEMENT_NOT_FOUND = 'troop:movement:not-found',
-  MOVEMENT_NOT_ARRIVED = 'troop:movement:not-arrived',
   MOVEMENT_ACTION_NOT_IMPLEMENTED = 'troop:movement:action-not-implemented'
 }

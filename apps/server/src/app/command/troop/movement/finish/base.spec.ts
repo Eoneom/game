@@ -21,6 +21,7 @@ describe('finishTroopBaseMovement', () => {
   const movement_troop_id = id()
   const city_troop_id = id()
   const city_id = id()
+  const arrived_at = now() - 5000
   const origin: Coordinates = {
     sector: 1,
     x: 2,
@@ -104,7 +105,6 @@ describe('finishTroopBaseMovement', () => {
       action: MovementAction.BASE,
       origin,
       destination,
-      arrive_at: now() - 5000,
     })
 
     movement_troop_settler = TroopEntity.create({
@@ -154,28 +154,9 @@ describe('finishTroopBaseMovement', () => {
       () => finishTroopBaseMovement({
         player_id,
         movement_id,
+        arrived_at,
       }),
       new RegExp(TroopError.NOT_OWNER)
-    )
-  })
-
-  it('should prevent a player from finishing a movement when arrive at date is in the future', async () => {
-    mountRepository({
-      city_exists: false,
-      outpost_exists: false,
-      existing_outposts_count: 0,
-    })
-    repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
-      ...movement,
-      arrive_at: now() + 10000,
-    }))
-
-    await assert.rejects(
-      () => finishTroopBaseMovement({
-        player_id,
-        movement_id,
-      }),
-      new RegExp(TroopError.MOVEMENT_NOT_ARRIVED)
     )
   })
 
@@ -189,6 +170,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 0)
@@ -204,6 +186,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 0)
@@ -220,6 +203,7 @@ describe('finishTroopBaseMovement', () => {
       () => finishTroopBaseMovement({
         player_id,
         movement_id,
+        arrived_at,
       }),
       new RegExp(OutpostError.LIMIT_REACHED)
     )
@@ -235,6 +219,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 1)
@@ -254,6 +239,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
@@ -287,6 +273,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
@@ -323,6 +310,7 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
@@ -358,11 +346,13 @@ describe('finishTroopBaseMovement', () => {
     await finishTroopBaseMovement({
       player_id,
       movement_id,
+      arrived_at,
     })
 
     const report = reportCreate.mock.calls[0][0]
     assert.strictEqual(report.troops.length, 2)
     assert.strictEqual(report.was_read, false)
+    assert.strictEqual(report.recorded_at, arrived_at)
 
     const report_explorer = report.troops.find((t: { code: TroopCode }) => t.code === TroopCode.EXPLORER)
     const report_settler = report.troops.find((t: { code: TroopCode }) => t.code === TroopCode.SETTLER)

@@ -54,7 +54,6 @@ export interface ExplorationCell {
 
 export interface Movement {
   action: string;
-  arrive_at: Timestamp;
   destination_sector: number;
   destination_x: number;
   destination_y: number;

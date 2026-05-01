@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { createTroopMovement } from '#app/command/troop/movement/create'
 import { Factory } from '#adapter/factory'
+import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
@@ -20,12 +21,12 @@ describe('createTroopMovement', () => {
   const origin = {
     x: 1,
     y: 2,
-    sector: 3 
+    sector: 3
   }
   const destination = {
     x: 4,
     y: 5,
-    sector: 6 
+    sector: 6
   }
 
   let origin_troop: TroopEntity
@@ -37,6 +38,7 @@ describe('createTroopMovement', () => {
   let outpostDelete: MockInstance
   let searchByCell: MockInstance
   let listInCell: MockInstance
+  let scheduleTroopMovementFinish: MockInstance
   let repository: Pick<Repository, 'cell' | 'troop' | 'outpost' | 'movement'>
 
   beforeEach(() => {
@@ -55,7 +57,7 @@ describe('createTroopMovement', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 0.1,
-        mushroom: 0.1 
+        mushroom: 0.1
       },
     })
 
@@ -66,6 +68,7 @@ describe('createTroopMovement', () => {
     outpostDelete = vi.fn().mockResolvedValue(undefined)
     searchByCell = vi.fn().mockResolvedValue(null)
     listInCell = vi.fn().mockResolvedValue([ origin_troop ])
+    scheduleTroopMovementFinish = vi.fn().mockResolvedValue('job-id')
 
     repository = {
       cell: { getCell: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
@@ -83,6 +86,7 @@ describe('createTroopMovement', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit: vi.fn() } as any)
   })
 
@@ -124,14 +128,15 @@ describe('createTroopMovement', () => {
 
     assert.strictEqual(movementCreate.mock.calls.length, 0)
     assert.strictEqual(troopCreate.mock.calls.length, 0)
+    assert.strictEqual(scheduleTroopMovementFinish.mock.calls.length, 0)
   })
 
   it('should create movement and update origin troops on partial move without outpost', async () => {
     const result = await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 5 
-      } 
+        count: 5
+      }
     ])
 
     assert.strictEqual(result.deleted_outpost_id, undefined)
@@ -156,6 +161,12 @@ describe('createTroopMovement', () => {
 
     assert.strictEqual(outpostDelete.mock.calls.length, 0)
     assert.strictEqual(troopDelete.mock.calls.length, 0)
+
+    assert.strictEqual(scheduleTroopMovementFinish.mock.calls.length, 1)
+    const scheduled = scheduleTroopMovementFinish.mock.calls[0][0]
+    assert.strictEqual(scheduled.player_id, player_id)
+    assert.strictEqual(scheduled.movement_id, movement.id)
+    assert.ok(typeof scheduled.execute_at === 'number')
   })
 
   it('should delete temporary outpost and origin troops when cell is fully emptied', async () => {
@@ -175,8 +186,8 @@ describe('createTroopMovement', () => {
     const result = await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 10 
-      } 
+        count: 10
+      }
     ])
 
     assert.strictEqual(result.deleted_outpost_id, outpost_id)
@@ -205,15 +216,15 @@ describe('createTroopMovement', () => {
     await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 10 
-      } 
+        count: 10
+      }
     ])
 
     assert.strictEqual(mockEmit.mock.calls.length, 1)
     assert.strictEqual(mockEmit.mock.calls[0][0], AppEvent.OutpostDeleted)
     assert.deepStrictEqual(mockEmit.mock.calls[0][1], {
       player_id,
-      outpost_id 
+      outpost_id
     })
   })
 
@@ -224,8 +235,8 @@ describe('createTroopMovement', () => {
     await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 5 
-      } 
+        count: 5
+      }
     ])
 
     assert.strictEqual(mockEmit.mock.calls.length, 0)
@@ -247,8 +258,8 @@ describe('createTroopMovement', () => {
     await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 5 
-      } 
+        count: 5
+      }
     ])
 
     assert.strictEqual(outpostDelete.mock.calls.length, 0)
@@ -272,8 +283,8 @@ describe('createTroopMovement', () => {
     const result = await callCreate([
       {
         code: TroopCode.EXPLORER,
-        count: 10 
-      } 
+        count: 10
+      }
     ])
 
     assert.strictEqual(result.deleted_outpost_id, undefined)
