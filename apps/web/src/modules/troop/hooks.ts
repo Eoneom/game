@@ -91,23 +91,6 @@ export const useRecruitTroop = (cityId: string) => {
   })
 }
 
-export const useProgressRecruitTroop = (cityId: string) => {
-  const { token } = useAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!cityId || !token) throw new Error('no city id or token')
-      const res = await client.troop.progressRecruit(token, { city_id: cityId })
-      if (isError(res)) throw new Error(res.error_code)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: troopKeys.cityList(cityId ?? '') })
-    },
-    onError: (err: Error) => toast.error(err.message),
-  })
-}
-
 export const useCancelTroop = (cityId: string) => {
   const { token } = useAuth()
   const queryClient = useQueryClient()

@@ -17,7 +17,6 @@ import { troopCancelHandler } from '#web/handler/troop/cancel'
 import { troopListCityHandler } from '#web/handler/troop/list/city'
 import { troopListOutpostHandler } from '#web/handler/troop/list/outpost'
 import { troopListMovementHandler } from '#web/handler/troop/movement/list'
-import { troopProgressRecruitHandler } from '#web/handler/troop/progress-recruit'
 import { troopRecruitHandler } from '#web/handler/troop/recruit'
 import { worldGetSectorHandler } from '#web/handler/world/get-sector'
 import { technologyGetHandler } from '#web/handler/technology/get'
@@ -70,7 +69,6 @@ export const router = (): Router => {
   r.get('/troop/:troop_id', authMiddleware, troopGetHandler)
   r.put('/troop/cancel', authMiddleware, troopCancelHandler)
   r.put('/troop/recruit', authMiddleware, troopRecruitHandler)
-  r.put('/troop/recruit/progress', authMiddleware, troopProgressRecruitHandler)
   r.get('/city/:city_id/troop', authMiddleware, troopListCityHandler)
   r.get('/outpost/:outpost_id/troop', authMiddleware, troopListOutpostHandler)
 

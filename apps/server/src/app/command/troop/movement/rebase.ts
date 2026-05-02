@@ -57,10 +57,11 @@ export async function rebaseTroopMovement({
       recorded_at: arrived_at,
     })
 
+    await repository.movement.create(rebase_movement)
+
     await Promise.all([
       ...rebase_troops.map(t => repository.troop.updateOne(t)),
       repository.movement.delete(movement.id),
-      repository.movement.create(rebase_movement),
       repository.report.create(report),
     ])
 

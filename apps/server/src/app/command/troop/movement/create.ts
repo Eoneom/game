@@ -110,9 +110,10 @@ export async function createTroopMovement({
       }
     }
 
+    await repository.movement.create(save.movement_to_create)
+
     const promises: Promise<void | string>[] = [
       ...save.troops_to_create.map(troop => repository.troop.create(troop)),
-      repository.movement.create(save.movement_to_create),
     ]
 
     let deleted_outpost_id: string | undefined = undefined

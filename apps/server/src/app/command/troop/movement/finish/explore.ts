@@ -75,9 +75,10 @@ export async function finishTroopExploreMovement({
       recorded_at: arrived_at,
     })
 
+    await repository.movement.create(base_movement)
+
     await Promise.all([
       repository.movement.delete(movement.id),
-      repository.movement.create(base_movement),
       ...base_troops.map(troop => repository.troop.updateOne(troop)),
       repository.exploration.updateOne(updated_exploration),
       repository.report.create(report),
