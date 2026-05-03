@@ -24,7 +24,6 @@
     "@types/cors": "2.8.19",
     "@types/express": "5.0.6",
     "@types/node": "25.6.0",
-    "@types/node-cron": "3.0.11",
     "@types/pg": "8.20.3",
     "@types/uuid": "11.0.0",
     "@types/ws": "8.18.1",
@@ -46,7 +45,6 @@
     "dotenv": "17.4.2",
     "express": "5.2.1",
     "kysely": "0.29.4",
-    "node-cron": "4.2.1",
     "pg": "8.22.0",
     "pg-boss": "12.26.4",
     "pino": "10.3.1",
@@ -65,9 +63,6 @@
     },
     "#core/*": {
       "default": "./dist/core/*.js"
-    },
-    "#cron/*": {
-      "default": "./dist/cron/*.js"
     },
     "#query/*": {
       "default": "./dist/app/query/*.js"

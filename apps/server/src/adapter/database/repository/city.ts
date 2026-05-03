@@ -41,6 +41,15 @@ export class PostgresCityRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async listAll(): Promise<CityEntity[]> {
+    const rows = await this.db
+      .selectFrom('city')
+      .selectAll()
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   async exist(name: string): Promise<boolean> {
     const row = await this.db
       .selectFrom('city')

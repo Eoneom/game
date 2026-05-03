@@ -6,8 +6,8 @@ import { migrateToLatest } from '#adapter/database/migrate'
 import { WorldError } from '#core/world/error'
 import { gameTimeScale } from '#shared/game-time-scale'
 import { launchServer } from '#web/http'
-import { sync_task } from '#cron/index'
 import { registerJobWorkers } from '#app/job/register'
+import { now } from '#shared/time'
 
 (async () => {
   const repository = Factory.getRepository()
@@ -20,6 +20,7 @@ import { registerJobWorkers } from '#app/job/register'
   await migrateToLatest()
   await jobQueue.start()
   await registerJobWorkers(jobQueue)
+  await jobQueue.ensureCityResourcesGatherScheduled({ execute_at: now() })
 
   try {
     await generateWorld()
@@ -31,8 +32,6 @@ import { registerJobWorkers } from '#app/job/register'
   }
 
   launchServer()
-
-  sync_task.start()
 
   let shutting_down = false
   const shutdown = async () => {

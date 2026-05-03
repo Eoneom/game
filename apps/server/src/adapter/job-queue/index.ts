@@ -12,8 +12,11 @@ export const BUILDING_UPGRADE_FINISH_QUEUE = 'building.upgrade.finish'
 export const TECHNOLOGY_RESEARCH_FINISH_QUEUE = 'technology.research.finish'
 export const TROOP_RECRUIT_PROGRESS_QUEUE = 'troop.recruit.progress'
 export const TROOP_MOVEMENT_FINISH_QUEUE = 'troop.movement.finish'
+export const CITY_RESOURCES_GATHER_QUEUE = 'city.resources.gather'
 
 export const TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS = 5_000
+export const CITY_RESOURCES_GATHER_INTERVAL_MS = 5_000
+export const CITY_RESOURCES_GATHER_SINGLETON_KEY = 'global'
 
 export type BuildingUpgradeFinishJobData = {
   player_id: string
@@ -60,6 +63,13 @@ export type TroopMovementFinishJobData = {
 }
 
 export type PendingTroopMovementFinish = TroopMovementFinishJobData & {
+  execute_at: number
+  job_id: string
+}
+
+export type CityResourcesGatherJobData = Record<string, never>
+
+export type PendingCityResourcesGather = {
   execute_at: number
   job_id: string
 }
@@ -116,6 +126,7 @@ export class JobQueue {
     await this.boss.createQueue(TECHNOLOGY_RESEARCH_FINISH_QUEUE)
     await this.boss.createQueue(TROOP_RECRUIT_PROGRESS_QUEUE, { policy: 'stately' })
     await this.boss.createQueue(TROOP_MOVEMENT_FINISH_QUEUE)
+    await this.boss.createQueue(CITY_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     this.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
 
@@ -443,6 +454,58 @@ export class JobQueue {
       execute_at: job.startAfter.getTime(),
       job_id: job.id
     }
+  }
+
+  async scheduleCityResourcesGather({
+    execute_at
+  }: {
+    execute_at: number
+  }): Promise<string | null> {
+    const data: CityResourcesGatherJobData = {}
+
+    this.logger.info('schedule city resources gather', { execute_at })
+
+    return this.boss.send(CITY_RESOURCES_GATHER_QUEUE, data, {
+      startAfter: new Date(execute_at),
+      singletonKey: CITY_RESOURCES_GATHER_SINGLETON_KEY
+    })
+  }
+
+  async getPendingCityResourcesGather(): Promise<PendingCityResourcesGather | null> {
+    const jobs = await this.boss.findJobs<CityResourcesGatherJobData>(
+      CITY_RESOURCES_GATHER_QUEUE,
+      { key: CITY_RESOURCES_GATHER_SINGLETON_KEY }
+    )
+
+    const job = jobs.find(candidate => candidate.state === 'created')
+      ?? jobs.find(candidate => candidate.state === 'retry')
+      ?? jobs.find(candidate => candidate.state === 'active')
+
+    if (!job) {
+      return null
+    }
+
+    return {
+      execute_at: job.startAfter.getTime(),
+      job_id: job.id
+    }
+  }
+
+  async ensureCityResourcesGatherScheduled({
+    execute_at
+  }: {
+    execute_at: number
+  }): Promise<string | null> {
+    const pending = await this.getPendingCityResourcesGather()
+    if (pending) {
+      this.logger.info('city resources gather already scheduled', {
+        job_id: pending.job_id,
+        execute_at: pending.execute_at
+      })
+      return pending.job_id
+    }
+
+    return this.scheduleCityResourcesGather({ execute_at })
   }
 }
 

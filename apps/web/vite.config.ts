@@ -22,7 +22,6 @@ export default defineConfig({
       '#building': path.resolve(webSrc, 'modules/building'),
       '#city': path.resolve(webSrc, 'modules/city'),
       '#cost': path.resolve(webSrc, 'modules/cost'),
-      '#game': path.resolve(webSrc, 'modules/game'),
       '#communication': path.resolve(webSrc, 'modules/communication'),
       '#map': path.resolve(webSrc, 'modules/map'),
       '#movement': path.resolve(webSrc, 'modules/movement'),

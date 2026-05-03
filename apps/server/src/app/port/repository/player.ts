@@ -5,6 +5,4 @@ export type PlayerRepository = GenericRepository<PlayerEntity> & {
   exist(name: string): Promise<boolean>
   get(id: string): Promise<PlayerEntity>
   getByName(name: string): Promise<PlayerEntity>
-
-  getInactivePlayerIds(params: { lookup_time: number}): Promise<string[]>
 }

@@ -1,6 +1,8 @@
 import {
   BUILDING_UPGRADE_FINISH_QUEUE,
   BuildingUpgradeFinishJobData,
+  CITY_RESOURCES_GATHER_QUEUE,
+  CityResourcesGatherJobData,
   JobQueue,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
   TechnologyResearchFinishJobData,
@@ -13,6 +15,7 @@ import { sagaFinishUpgrade } from '#app/saga/finish/upgrade'
 import { sagaFinishResearch } from '#app/saga/finish/research'
 import { sagaFinishOneMovement } from '#app/saga/finish/movement'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
+import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { Factory } from '#adapter/factory'
 
 export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
@@ -125,6 +128,17 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
           movement_id: data.movement_id,
           arrived_at: job.startAfter.getTime(),
         })
+      }
+    }
+  )
+
+  await jobQueue.work<CityResourcesGatherJobData, void, { includeMetadata: true }>(
+    CITY_RESOURCES_GATHER_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        logger.info('processing city resources gather', { job_id: job.id })
+        await progressGatherAllCities()
       }
     }
   )

@@ -34,9 +34,6 @@
       "#cost/*": [
         "./src/modules/cost/*"
       ],
-      "#game/*": [
-        "./src/modules/game/*"
-      ],
       "#communication/*": [
         "./src/modules/communication/*"
       ],

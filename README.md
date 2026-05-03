@@ -163,10 +163,11 @@ Postgres (Kysely) under `apps/server/src/adapter/database/`:
 **Building upgrades** and **technology research** finish via delayed jobs:
 
 1. `upgradeBuilding` / `researchTechnology` debit resources and enqueue a delayed job (`building.upgrade.finish` with `singletonKey` = `city_id`, or `technology.research.finish` with `singletonKey` = `player_id`; `startAfter` = finish time)
-2. The worker runs `sagaFinishUpgrade` (level bump, production/warehouse gather, `building:upgrade-finished`) or `sagaFinishResearch` (level bump, `technology:research-finished`)
+2. The worker runs `sagaFinishUpgrade` (level bump, `building:upgrade-finished`) or `sagaFinishResearch` (level bump, `technology:research-finished`)
 3. Cancel cancels the pending job (buildings also refund resources; technology does not)
 4. In-progress state lives in the queue (no timer columns on the building/technology rows). List/get still expose `upgrade_at` / `research_at` (and started-at) for the UI by reading the pending job
-5. Client `PUT /game/refresh-state` does **not** finish building upgrades or technology research (movements and gather still run there)
+
+**City resource gathering** runs on a self-rescheduling `city.resources.gather` job (`singletonKey` = `global`, every 5 seconds). On each tick the worker gathers resources for all cities, then schedules the next run. The loop is ensured on server boot. City GET still applies a display-only virtual gather without writing the DB; the UI refreshes via `city:resources-gathered` WebSocket events.
 
 ### App
 
@@ -198,10 +199,6 @@ Domain logic and mostly pure functions. Each module is organized as:
 
 - `constant`, `value`, `entity`, `error`, `service`, `type` as needed for that bounded context
 
-### Cron
-
-Scheduled tasks that invoke app commands and queries (e.g. hourly player sync). Building upgrade and technology research completion are handled by pg-boss, not this cron.
-
 ### Shared
 
 Small helpers and types that avoid heavy port indirection.
@@ -214,7 +211,7 @@ Current events (`apps/server/src/core/events.ts`):
 
 | Event | Emitted by | Payload |
 | ----- | ---------- | ------- |
-| `city:resources-gathered` | `gather` command | `city_id`, `player_id` |
+| `city:resources-gathered` | `gather` command (via 5s `city.resources.gather` job) | `city_id`, `player_id` |
 | `building:upgrade-finished` | `finish-upgrade` command (via pg-boss worker / `sagaFinishUpgrade`) | `city_id`, `player_id` |
 | `technology:research-finished` | `finish-research` command (via pg-boss worker / `sagaFinishResearch`) | `player_id` |
 | `troop:movement-finished` | `finish/movement` saga | `player_id` |

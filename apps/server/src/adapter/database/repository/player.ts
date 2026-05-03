@@ -6,10 +6,8 @@ import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
-  Selectable,
-  sql
+  Selectable
 } from 'kysely'
-import { toTimestampRequired } from '#adapter/database/repository/shared/time'
 
 export class PostgresPlayerRepository
   extends PostgreSQLGenericRepository<'player', PlayerEntity>
@@ -45,22 +43,6 @@ export class PostgresPlayerRepository
     }
 
     return this.buildFromRow(row)
-  }
-
-  async getInactivePlayerIds({ lookup_time }: { lookup_time: number }): Promise<string[]> {
-    const lookup_date = toTimestampRequired(lookup_time)
-    const rows = await this.db
-      .selectFrom('player')
-      .select('player.id')
-      .where(({
-        not, exists, selectFrom 
-      }) => not(exists(selectFrom('auth')
-        .select(sql`1`.as('one'))
-        .whereRef('auth.player_id', '=', 'player.id')
-        .where('auth.last_action_at', '>', lookup_date))))
-      .execute()
-
-    return rows.map(row => row.id)
   }
 
   protected buildFromRow(row: Selectable<DB['player']>): PlayerEntity {

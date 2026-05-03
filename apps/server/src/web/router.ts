@@ -4,7 +4,6 @@ import { buildingCancelHandler } from '#web/handler/building/cancel'
 import { buildingGetHandler } from '#web/handler/building/get'
 import { buildingListHandler } from '#web/handler/building/list'
 import { buildingUpgradeHandler } from '#web/handler/building/upgrade'
-import { gameRefreshStateHandler } from '#web/handler/game/refresh-state'
 import { cityGetHandler } from '#web/handler/city/get'
 import { cityListHandler } from '#web/handler/city/list'
 import { communicationListReportHandler } from '#web/handler/communication/report/list'
@@ -49,7 +48,6 @@ export const router = (): Router => {
   r.get('/city', authMiddleware, cityListHandler)
   r.get('/city/:city_id', authMiddleware, cityGetHandler)
   r.post('/city', authMiddleware, citySettleHandler)
-  r.put('/game/refresh-state', authMiddleware, gameRefreshStateHandler)
 
   r.put('/building/cancel', authMiddleware, buildingCancelHandler)
   r.put('/building/upgrade', authMiddleware, buildingUpgradeHandler)
@@ -85,4 +83,3 @@ export const router = (): Router => {
 
   return r
 }
-

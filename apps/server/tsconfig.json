@@ -27,9 +27,6 @@
       "#core/*": [
         "./src/core/*"
       ],
-      "#cron/*": [
-        "./src/cron/*"
-      ],
       "#command/*": [
         "./src/app/command/*"
       ],
