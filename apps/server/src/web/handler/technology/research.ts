@@ -5,7 +5,7 @@ import {
   TechnologyResearchRequest, TechnologyResearchResponse
 } from '@eoneom/api-client/src/endpoints/technology/research'
 import { getPlayerIdFromContext } from '#web/helpers'
-import { sagaResearchTechnology } from '#app/saga/research-technology'
+import { researchTechnology } from '#app/command/technology/research'
 
 export const technologyResearchHandler = async (
   req: Request<TechnologyResearchRequest>,
@@ -30,7 +30,7 @@ export const technologyResearchHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    await sagaResearchTechnology({
+    await researchTechnology({
       city_id,
       player_id,
       technology_code

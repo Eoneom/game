@@ -163,7 +163,7 @@ Postgres (Kysely) under `apps/server/src/adapter/database/`:
 **Building upgrades** and **technology research** finish via delayed jobs:
 
 1. `upgradeBuilding` / `researchTechnology` debit resources and enqueue a delayed job (`building.upgrade.finish` with `singletonKey` = `city_id`, or `technology.research.finish` with `singletonKey` = `player_id`; `startAfter` = finish time)
-2. The worker runs `sagaFinishUpgrade` (level bump, `building:upgrade-finished`) or `sagaFinishResearch` (level bump, `technology:research-finished`)
+2. The worker runs `finishBuildingUpgrade` (level bump, `building:upgrade-finished`) or `finishTechnologyResearch` (level bump, `technology:research-finished`)
 3. Cancel cancels the pending job (buildings also refund resources; technology does not)
 4. In-progress state lives in the queue (no timer columns on the building/technology rows). List/get still expose `upgrade_at` / `research_at` (and started-at) for the UI by reading the pending job
 
@@ -212,8 +212,8 @@ Current events (`apps/server/src/core/events.ts`):
 | Event | Emitted by | Payload |
 | ----- | ---------- | ------- |
 | `city:resources-gathered` | `gather` command (via 5s `city.resources.gather` job) | `city_id`, `player_id` |
-| `building:upgrade-finished` | `finish-upgrade` command (via pg-boss worker / `sagaFinishUpgrade`) | `city_id`, `player_id` |
-| `technology:research-finished` | `finish-research` command (via pg-boss worker / `sagaFinishResearch`) | `player_id` |
+| `building:upgrade-finished` | `finish-upgrade` command (via pg-boss worker) | `city_id`, `player_id` |
+| `technology:research-finished` | `finish-research` command (via pg-boss worker) | `player_id` |
 | `troop:movement-finished` | `finish/movement` saga | `player_id` |
 | `outpost:created` | `finish/movement` saga | `player_id` |
 | `outpost:deleted` | `troop/movement/create` command | `player_id`, `outpost_id` |

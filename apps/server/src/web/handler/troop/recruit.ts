@@ -5,7 +5,7 @@ import {
   TroopRecruitRequest, TroopRecruitResponse
 } from '@eoneom/api-client/src/endpoints/troop/recruit'
 import { getPlayerIdFromContext } from '#web/helpers'
-import { sagaRecruitTroop } from '#app/saga/troop-recruit'
+import { recruitTroop } from '#app/command/troop/recruit'
 
 export const troopRecruitHandler = async (
   req: Request<TroopRecruitRequest>,
@@ -38,7 +38,7 @@ export const troopRecruitHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    await sagaRecruitTroop({
+    await recruitTroop({
       city_id,
       count,
       player_id,

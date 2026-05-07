@@ -5,7 +5,7 @@ import {
   BuildingUpgradeRequest, BuildingUpgradeResponse
 } from '@eoneom/api-client/src/endpoints/building/upgrade'
 import { getPlayerIdFromContext } from '#web/helpers'
-import { sagaUpgradeBuilding } from '#app/saga/upgrade-building'
+import { upgradeBuilding } from '#app/command/building/upgrade'
 
 export const buildingUpgradeHandler = async (
   req: Request<BuildingUpgradeRequest>,
@@ -30,7 +30,7 @@ export const buildingUpgradeHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    await sagaUpgradeBuilding({
+    await upgradeBuilding({
       player_id,
       city_id,
       building_code

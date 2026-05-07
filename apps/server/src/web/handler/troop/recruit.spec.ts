@@ -5,9 +5,9 @@ import {
   Request, Response, NextFunction 
 } from 'express'
 import { troopRecruitHandler } from './recruit'
-import { sagaRecruitTroop } from '#app/saga/troop-recruit'
+import { recruitTroop } from '#app/command/troop/recruit'
 
-vi.mock('#app/saga/troop-recruit')
+vi.mock('#app/command/troop/recruit')
 
 type MockRes = {
   status: MockInstance
@@ -36,7 +36,7 @@ describe('troopRecruitHandler', () => {
       locals: { player_id: 'p1' }
     }
     next = vi.fn()
-    ;(sagaRecruitTroop as MockInstance).mockResolvedValue(undefined)
+    ;(recruitTroop as MockInstance).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -82,16 +82,16 @@ describe('troopRecruitHandler', () => {
     })
   })
 
-  it('calls next with error when saga throws', async () => {
+  it('calls next with error when command throws', async () => {
     const error = new Error('recruit error')
-    ;(sagaRecruitTroop as MockInstance).mockRejectedValue(error)
+    ;(recruitTroop as MockInstance).mockRejectedValue(error)
     await troopRecruitHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(next).toHaveBeenCalledWith(error)
   })
 
-  it('calls saga with correct args and returns ok', async () => {
+  it('calls command with correct args and returns ok', async () => {
     await troopRecruitHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
-    expect(sagaRecruitTroop).toHaveBeenCalledWith({
+    expect(recruitTroop).toHaveBeenCalledWith({
       city_id: 'c1',
       count: 10,
       player_id: 'p1',

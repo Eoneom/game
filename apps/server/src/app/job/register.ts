@@ -11,8 +11,8 @@ import {
   TroopMovementFinishJobData,
   TroopRecruitProgressJobData
 } from '#adapter/job-queue'
-import { sagaFinishUpgrade } from '#app/saga/finish/upgrade'
-import { sagaFinishResearch } from '#app/saga/finish/research'
+import { finishBuildingUpgrade } from '#app/command/building/finish-upgrade'
+import { finishTechnologyResearch } from '#app/command/technology/finish-research'
 import { sagaFinishOneMovement } from '#app/saga/finish/movement'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
 import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
@@ -38,7 +38,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
           building_id: data.building_id
         })
 
-        await sagaFinishUpgrade({
+        await finishBuildingUpgrade({
           player_id: data.player_id,
           city_id: data.city_id,
           building_id: data.building_id,
@@ -66,7 +66,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
           technology_id: data.technology_id
         })
 
-        await sagaFinishResearch({
+        await finishTechnologyResearch({
           player_id: data.player_id,
           technology_id: data.technology_id,
           level: data.level,

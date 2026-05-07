@@ -5,9 +5,9 @@ import {
   Request, Response, NextFunction 
 } from 'express'
 import { technologyResearchHandler } from './research'
-import { sagaResearchTechnology } from '#app/saga/research-technology'
+import { researchTechnology } from '#app/command/technology/research'
 
-vi.mock('#app/saga/research-technology')
+vi.mock('#app/command/technology/research')
 
 type MockRes = {
   status: MockInstance
@@ -35,7 +35,7 @@ describe('technologyResearchHandler', () => {
       locals: { player_id: 'p1' }
     }
     next = vi.fn()
-    ;(sagaResearchTechnology as MockInstance).mockResolvedValue(undefined)
+    ;(researchTechnology as MockInstance).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -62,16 +62,16 @@ describe('technologyResearchHandler', () => {
     })
   })
 
-  it('calls next with error when saga throws', async () => {
+  it('calls next with error when command throws', async () => {
     const error = new Error('research error')
-    ;(sagaResearchTechnology as MockInstance).mockRejectedValue(error)
+    ;(researchTechnology as MockInstance).mockRejectedValue(error)
     await technologyResearchHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(next).toHaveBeenCalledWith(error)
   })
 
-  it('calls saga with correct args and returns ok', async () => {
+  it('calls command with correct args and returns ok', async () => {
     await technologyResearchHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
-    expect(sagaResearchTechnology).toHaveBeenCalledWith({
+    expect(researchTechnology).toHaveBeenCalledWith({
       city_id: 'c1',
       player_id: 'p1',
       technology_code: 'ARCHERY' 

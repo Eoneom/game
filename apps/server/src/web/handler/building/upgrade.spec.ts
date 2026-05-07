@@ -5,9 +5,9 @@ import {
   Request, Response, NextFunction 
 } from 'express'
 import { buildingUpgradeHandler } from './upgrade'
-import { sagaUpgradeBuilding } from '#app/saga/upgrade-building'
+import { upgradeBuilding } from '#app/command/building/upgrade'
 
-vi.mock('#app/saga/upgrade-building')
+vi.mock('#app/command/building/upgrade')
 
 type MockRes = {
   status: MockInstance
@@ -35,7 +35,7 @@ describe('buildingUpgradeHandler', () => {
       locals: { player_id: 'p1' }
     }
     next = vi.fn()
-    ;(sagaUpgradeBuilding as MockInstance).mockResolvedValue(undefined)
+    ;(upgradeBuilding as MockInstance).mockResolvedValue(undefined)
   })
 
   afterEach(() => {
@@ -62,16 +62,16 @@ describe('buildingUpgradeHandler', () => {
     })
   })
 
-  it('calls next with error when saga throws', async () => {
+  it('calls next with error when command throws', async () => {
     const error = new Error('upgrade error')
-    ;(sagaUpgradeBuilding as MockInstance).mockRejectedValue(error)
+    ;(upgradeBuilding as MockInstance).mockRejectedValue(error)
     await buildingUpgradeHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(next).toHaveBeenCalledWith(error)
   })
 
-  it('calls saga with correct args and returns ok', async () => {
+  it('calls command with correct args and returns ok', async () => {
     await buildingUpgradeHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
-    expect(sagaUpgradeBuilding).toHaveBeenCalledWith({
+    expect(upgradeBuilding).toHaveBeenCalledWith({
       player_id: 'p1',
       city_id: 'c1',
       building_code: 'SAWMILL' 
