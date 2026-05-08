@@ -6,5 +6,8 @@ import { technologyKeys } from '#technology/hooks'
 export function registerTechnologyWsListeners(): void {
   wsClient.on(AppEvent.TechnologyResearchFinished, () => {
     queryClient.invalidateQueries({ queryKey: technologyKeys.all })
+    queryClient.invalidateQueries({ queryKey: ['technology'] })
+    queryClient.invalidateQueries({ queryKey: ['building'] })
+    queryClient.invalidateQueries({ queryKey: ['troop'] })
   })
 }

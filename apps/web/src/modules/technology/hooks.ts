@@ -55,9 +55,11 @@ export const useResearchTechnology = (cityId: string) => {
       if (!token) throw new Error('no token')
       const res = await client.technology.research(token, { city_id: cityId, technology_code: code })
       if (isError(res)) throw new Error(res.error_code)
+      return code
     },
-    onSuccess: () => {
+    onSuccess: (code) => {
       queryClient.invalidateQueries({ queryKey: technologyKeys.all })
+      queryClient.invalidateQueries({ queryKey: technologyKeys.detail(cityId, code) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
     },
     onError: (err: Error) => toast.error(err.message),

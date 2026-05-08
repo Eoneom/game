@@ -19,7 +19,9 @@ beforeEach(() => {
     close: vi.fn(),
   }
 
-  global.WebSocket = vi.fn().mockImplementation(() => mockWsInstance) as unknown as typeof WebSocket
+  global.WebSocket = vi.fn().mockImplementation(function () {
+    return mockWsInstance
+  }) as unknown as typeof WebSocket
 
   wsClient.disconnect()
 })
