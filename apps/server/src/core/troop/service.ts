@@ -2,11 +2,13 @@ import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
+import { troop_earnings } from '#core/troop/constant/earnings'
 import { TroopEntity } from '#core/troop/entity'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { Coordinates } from '#core/world/value/coordinates'
-import { scaleGameDurationMs } from '#shared/game-time-scale'
+import { gameTimeScale, scaleGameDurationMs } from '#shared/game-time-scale'
 import { id } from '#shared/identification'
+import { Resource } from '#shared/resource'
 import {
   OngoingRecruitment,
   TroopCount
@@ -279,5 +281,26 @@ export class TroopService {
 
   static getOrder(code: TroopCode): number {
     return troop_order[code]
+  }
+
+  static getEarningsBySecond({
+    code,
+    count,
+    coefficients,
+  }: {
+    code: TroopCode.FARMER | TroopCode.RECYCLER
+    count: number
+    coefficients: Resource
+  }): number {
+    if (count <= 0) {
+      return 0
+    }
+
+    const base = troop_earnings[code]
+    const coefficient = code === TroopCode.FARMER
+      ? coefficients.mushroom
+      : coefficients.plastic
+    const per_game_second = Math.round(base * count * coefficient * 100) / 100
+    return Math.round(per_game_second * gameTimeScale * 100) / 100
   }
 }

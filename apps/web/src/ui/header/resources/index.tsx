@@ -2,6 +2,7 @@ import { City, Outpost } from '#types'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { HeaderResourcesItem } from '#ui/header/resources/item'
+import { OutpostType } from '@eoneom/api-client'
 import React from 'react'
 
 interface Props {
@@ -30,14 +31,17 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
   }
 
   if (outpost) {
+    const showEarnings = outpost.type === OutpostType.PERMANENT
     return <ul>
       <HeaderResourcesItem
         value={outpost.plastic}
         icon={<IconPlastic />}
+        earnings_per_second={showEarnings ? outpost.earnings_per_second.plastic : undefined}
       />
       <HeaderResourcesItem
         value={outpost.mushroom}
         icon={<IconMushroom />}
+        earnings_per_second={showEarnings ? outpost.earnings_per_second.mushroom : undefined}
       />
     </ul>
   }

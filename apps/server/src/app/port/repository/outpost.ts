@@ -11,4 +11,6 @@ export type OutpostRepository = GenericRepository<OutpostEntity> & {
   countForPlayer(query: { player_id: string }): Promise<number>
 
   list(query: { player_id: string }): Promise<OutpostEntity[]>
+
+  listPermanent(): Promise<OutpostEntity[]>
 }

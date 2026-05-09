@@ -226,4 +226,30 @@ describe('TroopService', () => {
       assert.strictEqual(merged_troop.count, movement_troop.count)
     })
   })
+
+  describe('getEarningsBySecond', () => {
+    it('returns 0 when count is 0', () => {
+      assert.strictEqual(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 0,
+        coefficients: { plastic: 1, mushroom: 1.5 }
+      }), 0)
+    })
+
+    it('scales farmer earnings by count and mushroom coefficient', () => {
+      assert.strictEqual(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 10,
+        coefficients: { plastic: 2, mushroom: 1.5 }
+      }), 1.5)
+    })
+
+    it('scales recycler earnings by count and plastic coefficient', () => {
+      assert.strictEqual(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 10,
+        coefficients: { plastic: 1.5, mushroom: 2 }
+      }), 1.8)
+    })
+  })
 })

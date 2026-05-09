@@ -33,6 +33,14 @@ export {
 } from '#adapter/job-queue/city/gather'
 
 export {
+  OUTPOST_RESOURCES_GATHER_QUEUE,
+  OUTPOST_RESOURCES_GATHER_INTERVAL_MS,
+  OUTPOST_RESOURCES_GATHER_SINGLETON_KEY,
+  type OutpostResourcesGatherJobData,
+  type PendingOutpostResourcesGather
+} from '#adapter/job-queue/outpost/gather'
+
+export {
   JobQueue,
   createJobQueue
 } from '#adapter/job-queue/job-queue'

@@ -247,6 +247,26 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
+  it('forwards OutpostResourcesGathered event with outpost_id to the connected player WebSocket', async () => {
+    const player_id = 'player-11'
+    const outpost_id = 'outpost-2'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    const eventHandler = capturedEventListeners.get(AppEvent.OutpostResourcesGathered)
+    eventHandler?.({
+      player_id,
+      outpost_id
+    })
+
+    expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.OutpostResourcesGathered,
+      outpost_id
+    }))
+  })
+
   it('does not forward an event to a different player WebSocket', async () => {
     const player_id = 'player-9'
     const other_player_id = 'player-10'

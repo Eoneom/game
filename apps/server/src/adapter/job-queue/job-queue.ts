@@ -45,6 +45,13 @@ import {
   scheduleCityResourcesGather,
   type PendingCityResourcesGather
 } from '#adapter/job-queue/city/gather'
+import {
+  OUTPOST_RESOURCES_GATHER_QUEUE,
+  ensureOutpostResourcesGatherScheduled,
+  getPendingOutpostResourcesGather,
+  scheduleOutpostResourcesGather,
+  type PendingOutpostResourcesGather
+} from '#adapter/job-queue/outpost/gather'
 
 export class JobQueue {
   private readonly ctx: JobQueueContext
@@ -79,6 +86,7 @@ export class JobQueue {
     await this.ctx.boss.createQueue(TROOP_RECRUIT_PROGRESS_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(TROOP_MOVEMENT_FINISH_QUEUE)
     await this.ctx.boss.createQueue(CITY_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
+    await this.ctx.boss.createQueue(OUTPOST_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     this.ctx.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
 
@@ -180,6 +188,22 @@ export class JobQueue {
     execute_at: number
   }): Promise<string | null> {
     return ensureCityResourcesGatherScheduled(this.ctx, args)
+  }
+
+  async scheduleOutpostResourcesGather(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleOutpostResourcesGather(this.ctx, args)
+  }
+
+  async getPendingOutpostResourcesGather(): Promise<PendingOutpostResourcesGather | null> {
+    return getPendingOutpostResourcesGather(this.ctx)
+  }
+
+  async ensureOutpostResourcesGatherScheduled(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return ensureOutpostResourcesGatherScheduled(this.ctx, args)
   }
 }
 

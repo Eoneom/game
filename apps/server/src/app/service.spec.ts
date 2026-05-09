@@ -8,9 +8,12 @@ import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingService } from '#core/building/service'
 import { CityService } from '#core/city/service'
+import { OutpostEntity } from '#core/outpost/entity'
+import { OutpostType } from '#core/outpost/constant/type'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import { TroopCode } from '#core/troop/constant/code'
+import { TroopService } from '#core/troop/service'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -100,6 +103,126 @@ describe('AppService', () => {
         level: 1,
         coefficients: resource_coefficient
       }))
+    })
+  })
+
+  describe('getOutpostProductionBreakdown', () => {
+    const outpost_id = id()
+    const player_id = id()
+    const cell_id = id()
+    const coordinates: Coordinates = {
+      x: 1,
+      y: 2,
+      sector: 3
+    }
+    const resource_coefficient = {
+      plastic: 0.85,
+      mushroom: 1.1
+    }
+    const cell = CellEntity.create({
+      id: cell_id,
+      coordinates,
+      type: CellType.LAKE,
+      resource_coefficient
+    })
+
+    const permanentOutpost = OutpostEntity.create({
+      id: outpost_id,
+      player_id,
+      cell_id,
+      type: OutpostType.PERMANENT
+    })
+
+    beforeEach(() => {
+      const repository = {
+        outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
+        cell: { getById: vi.fn().mockResolvedValue(cell) },
+        troop: {
+          listInCell: vi.fn().mockResolvedValue([
+            {
+              code: TroopCode.FARMER,
+              count: 10 
+            },
+            {
+              code: TroopCode.RECYCLER,
+              count: 5 
+            },
+          ])
+        }
+      } as unknown as Repository
+
+      setRepositoryMock(repository)
+    })
+
+    it('returns same earnings_per_second as getOutpostEarningsBySecond', async () => {
+      const [
+        breakdown,
+        earnings
+      ] = await Promise.all([
+        AppService.getOutpostProductionBreakdown({ outpost_id }),
+        AppService.getOutpostEarningsBySecond({ outpost_id })
+      ])
+
+      expect(breakdown.earnings_per_second).toEqual(earnings)
+    })
+
+    it('exposes cell coefficients and pre-cell rates from TroopService', async () => {
+      const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id })
+
+      expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
+      expect(breakdown.pre_cell_earnings_per_second.mushroom).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 10,
+        coefficients: NEUTRAL_CELL_COEFFICIENTS
+      }))
+      expect(breakdown.pre_cell_earnings_per_second.plastic).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 5,
+        coefficients: NEUTRAL_CELL_COEFFICIENTS
+      }))
+      expect(breakdown.earnings_per_second.mushroom).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 10,
+        coefficients: resource_coefficient
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 5,
+        coefficients: resource_coefficient
+      }))
+    })
+
+    it('returns zero earnings for temporary outposts', async () => {
+      const temporaryOutpost = OutpostEntity.create({
+        id: outpost_id,
+        player_id,
+        cell_id,
+        type: OutpostType.TEMPORARY
+      })
+      const repository = {
+        outpost: { getById: vi.fn().mockResolvedValue(temporaryOutpost) },
+        cell: { getById: vi.fn().mockResolvedValue(cell) },
+        troop: {
+          listInCell: vi.fn().mockResolvedValue([
+            {
+              code: TroopCode.FARMER,
+              count: 10 
+            },
+          ])
+        }
+      } as unknown as Repository
+      setRepositoryMock(repository)
+
+      const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id })
+      expect(breakdown.earnings_per_second).toEqual({
+        plastic: 0,
+        mushroom: 0 
+      })
+      expect(breakdown.pre_cell_earnings_per_second).toEqual({
+        plastic: 0,
+        mushroom: 0 
+      })
+      expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
     })
   })
   

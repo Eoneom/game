@@ -21,6 +21,7 @@ import { now } from '#shared/time'
   await jobQueue.start()
   await registerJobWorkers(jobQueue)
   await jobQueue.ensureCityResourcesGatherScheduled({ execute_at: now() })
+  await jobQueue.ensureOutpostResourcesGatherScheduled({ execute_at: now() })
 
   try {
     await generateWorld()

@@ -33,6 +33,18 @@ vi.mock('#outpost/settle', () => ({
 
 let queryClient: QueryClient
 
+const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
+  id: 'o1',
+  coordinates: { sector: 1, x: 1, y: 1 },
+  type: OutpostType.TEMPORARY,
+  plastic: 10,
+  mushroom: 20,
+  earnings_per_second: { plastic: 0, mushroom: 0 },
+  pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 },
+  cell_resource_coefficient: { plastic: 1, mushroom: 1 },
+  ...overrides,
+})
+
 function renderWithOutpost(outpost: Outpost | null) {
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -60,20 +72,19 @@ describe('OutpostPage', () => {
   })
 
   it('shows make permanent button only for temporary outpost', async () => {
-    const outpost: Outpost = {
-      id: 'o1',
-      coordinates: { sector: 1, x: 1, y: 1 },
-      type: OutpostType.TEMPORARY,
-      plastic: 0,
-      mushroom: 0
-    }
+    const outpost = minimalOutpost()
 
     renderWithOutpost(outpost)
     expect(screen.getByRole('button', { name: 'Rendre permanent' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Settle' })).toBeInTheDocument()
 
     act(() => {
-      queryClient.setQueryData(outpostKeys.detail(outpost.id), { ...outpost, type: OutpostType.PERMANENT })
+      queryClient.setQueryData(outpostKeys.detail(outpost.id), {
+        ...outpost,
+        type: OutpostType.PERMANENT,
+        earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+        pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+      })
     })
 
     await waitFor(() => {
@@ -82,15 +93,26 @@ describe('OutpostPage', () => {
     expect(screen.queryByRole('button', { name: 'Settle' })).not.toBeInTheDocument()
   })
 
+  it('shows production panel for permanent outpost', () => {
+    renderWithOutpost(minimalOutpost({
+      type: OutpostType.PERMANENT,
+      earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+      pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+      cell_resource_coefficient: { plastic: 1.2, mushroom: 0.8 },
+    }))
+
+    expect(screen.getByRole('heading', { name: 'Production et terrain' })).toBeInTheDocument()
+    expect(screen.getByText('Actuelle (avec terrain)')).toBeInTheDocument()
+    expect(screen.getByText('Base des unités (avant terrain)')).toBeInTheDocument()
+  })
+
+  it('hides production panel for temporary outpost', () => {
+    renderWithOutpost(minimalOutpost())
+    expect(screen.queryByRole('heading', { name: 'Production et terrain' })).not.toBeInTheDocument()
+  })
+
   it('dispatches setOutpostPermanent on button click', async () => {
-    const outpost: Outpost = {
-      id: 'o1',
-      coordinates: { sector: 1, x: 1, y: 1 },
-      type: OutpostType.TEMPORARY,
-      plastic: 0,
-      mushroom: 0
-    }
-    renderWithOutpost(outpost)
+    renderWithOutpost(minimalOutpost())
 
     await userEvent.click(screen.getByRole('button', { name: 'Rendre permanent' }))
     expect(mockSetPermanent).toHaveBeenCalledTimes(1)

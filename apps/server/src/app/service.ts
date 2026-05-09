@@ -4,6 +4,9 @@ import { BuildingService } from '#core/building/service'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { CityService } from '#core/city/service'
+import { OutpostEntity } from '#core/outpost/entity'
+import { OutpostError } from '#core/outpost/error'
+import { OutpostType } from '#core/outpost/constant/type'
 import {
   Levels,
   RequirementService
@@ -11,6 +14,7 @@ import {
 import { RequirementValue } from '#core/requirement/value/requirement'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
+import { TroopService } from '#core/troop/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { WorldError } from '#core/world/error'
@@ -21,6 +25,11 @@ import { Resource } from '#shared/resource'
 export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
   plastic: 1,
   mushroom: 1
+}
+
+export const UNLIMITED_RESOURCE_CAPACITY: Resource = {
+  plastic: Number.MAX_SAFE_INTEGER,
+  mushroom: Number.MAX_SAFE_INTEGER
 }
 
 export class AppService {
@@ -134,6 +143,95 @@ export class AppService {
         level: plastic_warehouse_level,
         code: BuildingCode.PLASTIC_WAREHOUSE
       })
+    }
+  }
+
+  static async getOutpostEarningsBySecond({ outpost_id }: { outpost_id: string }): Promise<Resource> {
+    const breakdown = await this.getOutpostProductionBreakdown({ outpost_id })
+    return breakdown.earnings_per_second
+  }
+
+  static async getOutpostProductionBreakdown({ outpost_id }: { outpost_id: string }): Promise<{
+    earnings_per_second: Resource
+    pre_cell_earnings_per_second: Resource
+    cell_resource_coefficient: Resource
+  }> {
+    const {
+      outpost,
+      cell,
+      farmer_count,
+      recycler_count
+    } = await this.loadOutpostProductionInputs(outpost_id)
+
+    if (outpost.type !== OutpostType.PERMANENT) {
+      return {
+        earnings_per_second: {
+          plastic: 0,
+          mushroom: 0 
+        },
+        pre_cell_earnings_per_second: {
+          plastic: 0,
+          mushroom: 0 
+        },
+        cell_resource_coefficient: cell.resource_coefficient
+      }
+    }
+
+    const cell_resource_coefficient = cell.resource_coefficient
+
+    const plastic = TroopService.getEarningsBySecond({
+      code: TroopCode.RECYCLER,
+      count: recycler_count,
+      coefficients: cell_resource_coefficient,
+    })
+
+    const mushroom = TroopService.getEarningsBySecond({
+      code: TroopCode.FARMER,
+      count: farmer_count,
+      coefficients: cell_resource_coefficient,
+    })
+
+    const pre_cell_plastic = TroopService.getEarningsBySecond({
+      code: TroopCode.RECYCLER,
+      count: recycler_count,
+      coefficients: NEUTRAL_CELL_COEFFICIENTS,
+    })
+
+    const pre_cell_mushroom = TroopService.getEarningsBySecond({
+      code: TroopCode.FARMER,
+      count: farmer_count,
+      coefficients: NEUTRAL_CELL_COEFFICIENTS,
+    })
+
+    return {
+      earnings_per_second: {
+        plastic,
+        mushroom
+      },
+      pre_cell_earnings_per_second: {
+        plastic: pre_cell_plastic,
+        mushroom: pre_cell_mushroom
+      },
+      cell_resource_coefficient
+    }
+  }
+
+  static assertOutpostResourceStockContext({
+    outpost,
+    cell,
+    stock,
+    player_id
+  }: {
+    outpost: OutpostEntity
+    cell: CellEntity
+    stock: ResourceStockEntity
+    player_id: string
+  }): void {
+    if (!outpost.isOwnedBy(player_id)) {
+      throw new Error(OutpostError.NOT_OWNER)
+    }
+    if (outpost.cell_id !== cell.id || stock.cell_id !== cell.id) {
+      throw new Error(WorldError.CELL_OUTPOST_MISMATCH)
     }
   }
 
@@ -265,6 +363,36 @@ export class AppService {
       city_cell,
       stock 
     })
+  }
+
+  private static async loadOutpostProductionInputs(outpost_id: string): Promise<{
+    outpost: OutpostEntity
+    cell: CellEntity
+    farmer_count: number
+    recycler_count: number
+  }> {
+    const repository = Factory.getRepository()
+    const outpost = await repository.outpost.getById(outpost_id)
+    const [
+      cell,
+      troops
+    ] = await Promise.all([
+      repository.cell.getById(outpost.cell_id),
+      repository.troop.listInCell({
+        cell_id: outpost.cell_id,
+        player_id: outpost.player_id
+      })
+    ])
+
+    const farmer_count = troops.find(troop => troop.code === TroopCode.FARMER)?.count ?? 0
+    const recycler_count = troops.find(troop => troop.code === TroopCode.RECYCLER)?.count ?? 0
+
+    return {
+      outpost,
+      cell,
+      farmer_count,
+      recycler_count
+    }
   }
 
   private static async loadCityProductionInputs(city_id: string): Promise<{

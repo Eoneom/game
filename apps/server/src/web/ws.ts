@@ -109,4 +109,16 @@ export function setupWebSocketServer(server: Server): void {
       }))
     }
   })
+
+  eventBus.on(AppEvent.OutpostResourcesGathered, ({
+    outpost_id, player_id
+  }) => {
+    const ws = connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.OutpostResourcesGathered,
+        outpost_id
+      }))
+    }
+  })
 }

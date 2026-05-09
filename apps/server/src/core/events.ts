@@ -6,4 +6,5 @@ export enum AppEvent {
   TroopRecruitmentUpdated = 'troop:recruitment-updated',
   OutpostCreated = 'outpost:created',
   OutpostDeleted = 'outpost:deleted',
+  OutpostResourcesGathered = 'outpost:resources-gathered',
 }

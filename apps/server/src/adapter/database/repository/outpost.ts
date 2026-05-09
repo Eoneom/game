@@ -62,6 +62,16 @@ export class PostgresOutpostRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async listPermanent(): Promise<OutpostEntity[]> {
+    const rows = await this.db
+      .selectFrom('outpost')
+      .selectAll()
+      .where('type', '=', OutpostType.PERMANENT)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   protected buildFromRow(row: Selectable<DB['outpost']>): OutpostEntity {
     return OutpostEntity.create({
       id: row.id,

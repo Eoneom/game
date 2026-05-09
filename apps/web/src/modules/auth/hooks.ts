@@ -10,6 +10,7 @@ import { registerCityWsListeners } from '#city/ws-listener'
 import { registerBuildingWsListeners } from '#building/ws-listener'
 import { registerTechnologyWsListeners } from '#technology/ws-listener'
 import { registerTroopWsListeners } from '#troop/ws-listener'
+import { registerOutpostWsListeners } from '#outpost/ws-listener'
 
 const doLogin = async (playerName: string): Promise<string> => {
   const res = await client.player.login({ player_name: playerName })
@@ -52,6 +53,7 @@ export const useLogin = () => {
       registerBuildingWsListeners()
       registerTechnologyWsListeners()
       registerTroopWsListeners()
+      registerOutpostWsListeners()
       wsClient.connect(token)
     },
     onError: (err: Error) => {
@@ -92,6 +94,7 @@ export const useInitStoredToken = () => {
     registerBuildingWsListeners()
     registerTechnologyWsListeners()
     registerTroopWsListeners()
+    registerOutpostWsListeners()
     wsClient.connect(token)
   }, [])
 }
