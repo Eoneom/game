@@ -192,7 +192,8 @@ export class TroopService {
     origin,
     destination,
     player_id,
-    action
+    action,
+    resources = { plastic: 0, mushroom: 0 },
   }: {
     troops: TroopCount[]
     start_at: number
@@ -201,6 +202,7 @@ export class TroopService {
     destination: Coordinates
     player_id: string
     action: MovementAction
+    resources?: Resource
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
@@ -214,9 +216,16 @@ export class TroopService {
       action,
       origin,
       destination,
+      resources,
     })
 
     return { movement, arrive_at }
+  }
+
+  static getTotalTransportCapacity({ troops }: { troops: TroopCount[] }): number {
+    return troops.reduce((total, troop) => {
+      return total + this.getTransportCapacity(troop.code) * troop.count
+    }, 0)
   }
 
   static sortTroops({ troops } : { troops: TroopEntity[] }): TroopEntity[] {

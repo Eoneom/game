@@ -43,6 +43,11 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
           {formatCoordinates(movement.destination)}
         </span>
       </span>
+      {(movement.resources.plastic > 0 || movement.resources.mushroom > 0) && (
+        <span className="movement-active-item__cargo">
+          {movement.resources.plastic} plastique · {movement.resources.mushroom} champignon
+        </span>
+      )}
     </>
   )
 

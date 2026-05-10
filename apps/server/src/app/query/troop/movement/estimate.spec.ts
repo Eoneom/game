@@ -60,7 +60,33 @@ describe('TroopMovementEstimateQuery', () => {
     expect(result.distance).toBe(distance)
     expect(result.speed).toBe(speed)
     expect(result.duration).toBe(duration_ms / 1000)
+    expect(result.transport_capacity).toBe(TroopService.getTransportCapacity(TroopCode.EXPLORER))
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: origin })
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: destination })
+  })
+
+  it('returns transport capacity from troop counts when provided', async () => {
+    const result = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+      troops: [
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ]
+    })
+
+    expect(result.transport_capacity).toBe(
+      TroopService.getTotalTransportCapacity({
+        troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 2
+          }
+        ]
+      })
+    )
   })
 })

@@ -6,6 +6,7 @@ import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
+import { outpostKeys } from '#outpost/hooks'
 
 export const troopKeys = {
   cityList: (cityId: string) => ['troops', 'city', cityId] as const,
@@ -151,6 +152,7 @@ export const useCreateMovement = () => {
       origin: Coordinates
       destination: Coordinates
       troops: { code: TroopCode; count: number }[]
+      resources?: { plastic: number; mushroom: number }
     }) => {
       if (!token) throw new Error('no token')
       const res = await client.troop.createMovement(token, params)
@@ -160,7 +162,10 @@ export const useCreateMovement = () => {
     onSuccess: () => {
       toast.success('Les troupes sont en route')
       queryClient.invalidateQueries({ queryKey: troopKeys.movements })
-      queryClient.invalidateQueries({ queryKey: ['outposts'] })
+      queryClient.invalidateQueries({ queryKey: outpostKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['outpost'] })
+      queryClient.invalidateQueries({ queryKey: cityKeys.all })
+      queryClient.invalidateQueries({ queryKey: ['city'] })
     },
     onError: (err: Error) => toast.error(err.message),
   })

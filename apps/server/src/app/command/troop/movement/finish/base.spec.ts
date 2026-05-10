@@ -362,4 +362,63 @@ describe('finishTroopBaseMovement', () => {
     assert.strictEqual(report_explorer.count, movement_troop_explorer.count)
     assert.strictEqual(report_settler.count, movement_troop_settler.count)
   })
+
+  it('should unload remaining cargo into owned city stock', async () => {
+    const { CityEntity } = await import('#core/city/entity')
+    const { ResourceStockEntity } = await import('#core/resources/resource-stock/entity')
+    const { AppService } = await import('#app/service')
+
+    movement = MovementEntity.create({
+      ...movement,
+      resources: {
+        plastic: 400,
+        mushroom: 100,
+      },
+    })
+
+    mountRepository({
+      city_exists: true,
+      outpost_exists: false,
+      existing_outposts_count: 0,
+    })
+
+    const stock = ResourceStockEntity.create({
+      id: id(),
+      cell_id: destination_cell_id,
+      plastic: 100,
+      mushroom: 50,
+      last_plastic_gather: now(),
+      last_mushroom_gather: now(),
+    })
+    const stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+
+    repository.city = {
+      get: vi.fn().mockResolvedValue(CityEntity.create({
+        id: city_id,
+        player_id,
+        name: 'Home',
+      })),
+    } as unknown as Repository['city']
+    repository.resource_stock = {
+      ensureWorldStockForCell,
+      getByCellId: vi.fn().mockResolvedValue(stock),
+      updateOne: stockUpdateOne,
+    } as unknown as Repository['resource_stock']
+    vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
+      plastic: 3000,
+      mushroom: 4000,
+    })
+
+    await finishTroopBaseMovement({
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+    const updated = stockUpdateOne.mock.calls[0][0]
+    assert.strictEqual(updated.plastic, 500)
+    assert.strictEqual(updated.mushroom, 150)
+  })
 })

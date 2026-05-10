@@ -47,7 +47,8 @@ describe('troopEstimateMovementHandler', () => {
     vi.spyOn(TroopMovementEstimateQuery.prototype, 'run').mockResolvedValue({
       distance: 5,
       speed: 2,
-      duration: 150
+      duration: 150,
+      transport_capacity: 200,
     } as any)
   })
 
@@ -109,7 +110,8 @@ describe('troopEstimateMovementHandler', () => {
       data: {
         distance: 5,
         speed: 2,
-        duration: 150 
+        duration: 150,
+        transport_capacity: 200,
       }
     })
   })

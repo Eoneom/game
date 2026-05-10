@@ -92,7 +92,11 @@ describe('troopListMovementHandler', () => {
               x: 3,
               y: 4
             },
-            arrive_at: 1_744_000_000_000
+            arrive_at: 1_744_000_000_000,
+            resources: {
+              plastic: 0,
+              mushroom: 0,
+            },
           }
         ]
       }

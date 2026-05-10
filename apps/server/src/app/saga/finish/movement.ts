@@ -2,6 +2,7 @@ import { Factory } from '#adapter/factory'
 import { TroopMovementGetActionQuery } from '#query/troop/movement/get-action'
 import { sagaFinishBase } from '#app/saga/finish/base'
 import { sagaFinishExplore } from '#app/saga/finish/explore'
+import { sagaFinishTransport } from '#app/saga/finish/transport'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
 import { AppEvent } from '#core/events'
@@ -36,6 +37,13 @@ export const sagaFinishOneMovement = async ({
         movement_id,
         arrived_at,
       }))
+      break
+    case MovementAction.TRANSPORT:
+      await sagaFinishTransport({
+        player_id,
+        movement_id,
+        arrived_at,
+      })
       break
     default:
       throw new Error(TroopError.MOVEMENT_ACTION_NOT_IMPLEMENTED)

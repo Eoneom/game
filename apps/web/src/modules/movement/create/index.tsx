@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Coordinates, MovementAction, OutpostType, TroopCode } from '@eoneom/api-client'
 
 import { MovementCreateAction } from './action'
 import { MovementCreateDestination } from './destination'
 import { MovementCreateEstimation } from './estimation'
+import { MovementCreateResources } from './resources'
 import { MovementCreateTroops } from './troops'
 import { MovementCreateWarning } from './warning'
 import { MovementEstimation } from '#types'
@@ -27,15 +28,54 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
 
   const [ selectedTroops, setSelectedTroops ] = useState<Partial<Record<TroopCode, number>>>({})
   const [ destination, setDestination ] = useState<Coordinates>({ x: 1, y: 1, sector: 1 })
-  const [ estimation, setEstimation ] = useState<MovementEstimation>({ speed: 0, duration: 0, distance: 0 })
+  const [ estimation, setEstimation ] = useState<MovementEstimation>({
+    speed: 0,
+    duration: 0,
+    distance: 0,
+    transport_capacity: 0,
+  })
   const [ action, setAction ] = useState<MovementAction>(MovementAction.BASE)
+  const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0 })
 
   const cityCoordinates = city?.coordinates ?? null
   const outpostCoordinates = outpost?.coordinates ?? null
+  const availablePlastic = city?.plastic ?? outpost?.plastic ?? 0
+  const availableMushroom = city?.mushroom ?? outpost?.mushroom ?? 0
+
+  const selectedTroopList = useMemo(() => {
+    return Object.keys(selectedTroops).reduce((acc, key) => {
+      const code = key as TroopCode
+      const count = selectedTroops[code] ?? 0
+      if (count > 0) {
+        return [ ...acc, { code, count } ]
+      }
+      return acc
+    }, new Array<{ code: TroopCode; count: number }>())
+  }, [selectedTroops])
+
+  const capacity = estimation.transport_capacity ?? 0
+  const usedCapacity = resources.plastic + resources.mushroom
+  const remainingCapacity = Math.max(0, capacity - usedCapacity)
+  const maxPlastic = Math.min(availablePlastic, resources.plastic + remainingCapacity)
+  const maxMushroom = Math.min(availableMushroom, resources.mushroom + remainingCapacity)
 
   useEffect(() => {
     launchMovementEstimation()
   }, [selectedTroops, destination])
+
+  useEffect(() => {
+    setResources(current => {
+      const nextPlastic = Math.min(current.plastic, maxPlastic)
+      const nextMushroom = Math.min(current.mushroom, maxMushroom)
+      if (nextPlastic === current.plastic && nextMushroom === current.mushroom) {
+        return current
+      }
+      return {
+        plastic: nextPlastic,
+        mushroom: nextMushroom,
+      }
+    })
+  }, [maxPlastic, maxMushroom])
 
   const launchMovementEstimation = async () => {
     if (!token) return
@@ -43,15 +83,24 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     const origin = cityCoordinates ?? outpostCoordinates
     if (!origin) return
 
-    const troopCodes: TroopCode[] = Object.keys(selectedTroops)
-      .filter(code => selectedTroops[code as TroopCode])
-      .map(code => code as TroopCode)
+    const troopCodes: TroopCode[] = selectedTroopList.map(troop => troop.code)
 
     if (!troopCodes.length) return
 
-    const result = await estimateMovement({ token, origin, destination, troopCodes })
+    const result = await estimateMovement({
+      token,
+      origin,
+      destination,
+      troopCodes,
+      troops: selectedTroopList,
+    })
     if (!result) {
-      setEstimation({ speed: 0, duration: 0, distance: 0 })
+      setEstimation({
+        speed: 0,
+        duration: 0,
+        distance: 0,
+        transport_capacity: 0,
+      })
       return
     }
 
@@ -63,18 +112,19 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     const origin = cityCoordinates ?? outpostCoordinates
     if (!origin) return
 
-    const moveTroops = Object.keys(selectedTroops).reduce((acc, key) => {
-      const code = key as TroopCode
-      if (selectedTroops[code]) {
-        return [...acc, { code, count: selectedTroops[code] ?? 0 }]
-      }
-      return acc
-    }, new Array<{ code: TroopCode, count: number }>())
+    if (!selectedTroopList.length) return
 
-    if (!moveTroops.length) return
-
-    createMovement.mutate({ action, origin, destination, troops: moveTroops })
+    createMovement.mutate({
+      action,
+      origin,
+      destination,
+      troops: selectedTroopList,
+      resources: action === MovementAction.TRANSPORT ? resources : undefined,
+    })
   }
+
+  const canSubmit = Boolean(estimation.distance)
+    && (action !== MovementAction.TRANSPORT || usedCapacity > 0)
 
   return (
     <form
@@ -100,6 +150,17 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
           <div id="movement-submit" className="movement-create-grid__col movement-create-grid__col--config">
             <div className="movement-config-stack">
               <MovementCreateAction action={action} onChange={setAction} />
+              {action === MovementAction.TRANSPORT && (
+                <MovementCreateResources
+                  plastic={resources.plastic}
+                  mushroom={resources.mushroom}
+                  maxPlastic={maxPlastic}
+                  maxMushroom={maxMushroom}
+                  capacity={capacity}
+                  usedCapacity={usedCapacity}
+                  onChange={setResources}
+                />
+              )}
               <MovementCreateDestination destination={destination} onChange={setDestination} />
               <MovementCreateEstimation estimation={estimation} />
             </div>
@@ -113,7 +174,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
           />
           <input
             className="movement-submit-button"
-            disabled={!estimation.distance}
+            disabled={!canSubmit}
             type="submit"
             value="Envoyer le déplacement"
           />

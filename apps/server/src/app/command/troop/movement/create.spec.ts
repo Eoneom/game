@@ -292,4 +292,192 @@ describe('createTroopMovement', () => {
     assert.strictEqual(troopDelete.mock.calls.length, 0)
     assert.strictEqual(troopUpdateOne.mock.calls.length, 1)
   })
+
+  describe('transport', () => {
+    let stockUpdateOne: MockInstance
+    let stock: ReturnType<typeof import('#core/resources/resource-stock/entity').ResourceStockEntity.create>
+
+    beforeEach(async () => {
+      const { ResourceStockEntity } = await import('#core/resources/resource-stock/entity')
+      const { now } = await import('#shared/time')
+      stock = ResourceStockEntity.create({
+        id: id(),
+        cell_id,
+        plastic: 5000,
+        mushroom: 5000,
+        last_plastic_gather: now(),
+        last_mushroom_gather: now(),
+      })
+      stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+      repository = {
+        ...repository,
+        resource_stock: {
+          getByCellId: vi.fn().mockResolvedValue(stock),
+          updateOne: stockUpdateOne,
+        },
+      } as unknown as typeof repository
+      vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    })
+
+    it('should reject transport without resources', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.LIGHT_TRANSPORTER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 0,
+            mushroom: 0
+          },
+        }),
+        new RegExp(TroopError.TRANSPORT_RESOURCES_REQUIRED)
+      )
+    })
+
+    it('should reject when cargo exceeds transport capacity', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.EXPLORER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 201,
+            mushroom: 0
+          },
+        }),
+        new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+      )
+    })
+
+    it('should reject resources on non-transport actions', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.EXPLORE,
+          move_troops: [
+            {
+              code: TroopCode.EXPLORER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 10,
+            mushroom: 0
+          },
+        }),
+        new RegExp(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
+      )
+    })
+
+    it('should deduct stock and store cargo on transport create', async () => {
+      origin_troop = TroopEntity.create({
+        ...origin_troop,
+        code: TroopCode.LIGHT_TRANSPORTER,
+        count: 1,
+      })
+      listInCell = vi.fn().mockResolvedValue([ origin_troop ])
+      repository.troop = {
+        ...repository.troop,
+        listInCell,
+      } as unknown as Repository['troop']
+
+      await createTroopMovement({
+        player_id,
+        origin,
+        destination,
+        action: MovementAction.TRANSPORT,
+        move_troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 1
+          }
+        ],
+        resources: {
+          plastic: 1000,
+          mushroom: 500
+        },
+      })
+
+      assert.strictEqual(movementCreate.mock.calls.length, 1)
+      const movement = movementCreate.mock.calls[0][0]
+      assert.strictEqual(movement.action, MovementAction.TRANSPORT)
+      assert.deepStrictEqual(movement.resources, {
+        plastic: 1000,
+        mushroom: 500
+      })
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+      const updated = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated.plastic, 4000)
+      assert.strictEqual(updated.mushroom, 4500)
+    })
+
+    it('should reject when origin stock is insufficient', async () => {
+      const { ResourceStockEntity } = await import('#core/resources/resource-stock/entity')
+      const { now } = await import('#shared/time')
+      const { CityError } = await import('#core/city/error')
+      stock = ResourceStockEntity.create({
+        id: id(),
+        cell_id,
+        plastic: 10,
+        mushroom: 10,
+        last_plastic_gather: now(),
+        last_mushroom_gather: now(),
+      })
+      repository = {
+        ...repository,
+        resource_stock: {
+          getByCellId: vi.fn().mockResolvedValue(stock),
+          updateOne: stockUpdateOne,
+        },
+      } as unknown as typeof repository
+      vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+
+      origin_troop = TroopEntity.create({
+        ...origin_troop,
+        code: TroopCode.LIGHT_TRANSPORTER,
+        count: 1,
+      })
+      listInCell = vi.fn().mockResolvedValue([ origin_troop ])
+      repository.troop = {
+        ...repository.troop,
+        listInCell,
+      } as unknown as Repository['troop']
+
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.LIGHT_TRANSPORTER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 100,
+            mushroom: 0
+          },
+        }),
+        new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
+    })
+  })
 })

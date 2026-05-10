@@ -47,6 +47,10 @@ export class PostgresMovementRepository
         y: row.destination_y,
         sector: row.destination_sector
       },
+      resources: {
+        plastic: row.plastic,
+        mushroom: row.mushroom,
+      },
     })
   }
 
@@ -61,6 +65,8 @@ export class PostgresMovementRepository
       destination_x: entity.destination.x,
       destination_y: entity.destination.y,
       destination_sector: entity.destination.sector,
+      plastic: entity.resources.plastic,
+      mushroom: entity.resources.mushroom,
     }
   }
 }

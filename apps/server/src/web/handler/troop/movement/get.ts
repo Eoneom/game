@@ -59,6 +59,10 @@ const response_mapper = ({
       y: movement.destination.y
     },
     arrive_at,
+    resources: {
+      plastic: movement.resources.plastic,
+      mushroom: movement.resources.mushroom,
+    },
     troops: troops.map((troop) => ({
       code: troop.code,
       count: troop.count

@@ -29,6 +29,11 @@ export const MovementDetails: React.FC<Props> = ({ movement }) => {
           Arrivée :{' '}
           <span className="details-coordinates">{formatCoordinates(movement.destination)}</span>
         </p>
+        {(movement.resources.plastic > 0 || movement.resources.mushroom > 0) && (
+          <p className="details-meta">
+            Cargo : {movement.resources.plastic} plastique, {movement.resources.mushroom} champignon
+          </p>
+        )}
       </div>
 
       <h3>Troupes</h3>

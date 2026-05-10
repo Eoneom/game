@@ -42,11 +42,13 @@ export const troopEstimateMovementHandler = async (
     const {
       distance,
       speed,
-      duration
+      duration,
+      transport_capacity,
     } = await new TroopMovementEstimateQuery().run({
       origin,
       destination,
-      troop_codes
+      troop_codes,
+      troops: req.body.troops,
     })
 
     const response: TroopMovementEstimateResponse = {
@@ -54,7 +56,8 @@ export const troopEstimateMovementHandler = async (
       data: {
         distance,
         speed,
-        duration
+        duration,
+        transport_capacity,
       }
     }
 

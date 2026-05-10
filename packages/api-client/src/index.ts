@@ -16,6 +16,7 @@ export { OutpostType } from '@server-core/outpost/constant/type'
 export { MovementAction } from '@server-core/troop/constant/movement-action'
 
 export * from './endpoints/shared/coordinates'
+export * from './endpoints/shared/resource'
 export * from './endpoints'
 export * from './events'
 export * from './response'

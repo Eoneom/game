@@ -118,6 +118,29 @@ export class ResourceStockEntity extends BaseEntity {
     return this.withState(next)
   }
 
+  depositUpToCapacity({
+    resource,
+    warehouses_capacity
+  }: {
+    resource: Resource
+    warehouses_capacity: Resource
+  }): {
+    stock: ResourceStockEntity
+    deposited: Resource
+    remaining: Resource
+  } {
+    const { next, deposited, remaining } = ResourcesService.depositUpToCapacity({
+      state: this.toState(),
+      resource,
+      warehouses_capacity
+    })
+    return {
+      stock: this.withState(next),
+      deposited,
+      remaining
+    }
+  }
+
   private toState(): ResourceStockState {
     return {
       plastic: this.plastic,

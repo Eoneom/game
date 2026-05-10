@@ -33,6 +33,10 @@ export const MovementCreateEstimation: React.FC<Props> = ({ estimation }) => {
           <span>{formatTime(Math.ceil(estimation.duration))}</span>
         </li>
         <li>
+          <span>Capacité de transport</span>
+          <span>{estimation.transport_capacity}</span>
+        </li>
+        <li>
           <span>Heure d&apos;arrivée</span>
           <span>{`${new Date(new Date().getTime() + estimation.duration).toLocaleString()}`}</span>
         </li>

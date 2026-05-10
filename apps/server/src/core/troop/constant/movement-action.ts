@@ -1,4 +1,5 @@
 export enum MovementAction {
   EXPLORE = 'explore',
-  BASE = 'base'
+  BASE = 'base',
+  TRANSPORT = 'transport'
 }

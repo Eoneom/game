@@ -11,6 +11,7 @@ import { TroopService } from '#core/troop/service'
 import { TroopCount } from '#core/troop/type'
 import { WorldService } from '#core/world/service'
 import { Coordinates } from '#core/world/value/coordinates'
+import { Resource } from '#shared/resource'
 import { now } from '#shared/time'
 
 export interface CreateTroopMovementParams {
@@ -19,10 +20,46 @@ export interface CreateTroopMovementParams {
   destination: Coordinates
   action: MovementAction
   move_troops: TroopCount[]
+  resources?: Resource
 }
 
 export interface CreateTroopMovementResult {
   deleted_outpost_id?: string
+}
+
+const EMPTY_RESOURCES: Resource = { plastic: 0, mushroom: 0 }
+
+function assertTransportResources({
+  action,
+  resources,
+  move_troops,
+}: {
+  action: MovementAction
+  resources: Resource
+  move_troops: TroopCount[]
+}): void {
+  const total = resources.plastic + resources.mushroom
+  const has_resources = total > 0
+  const has_negative = resources.plastic < 0 || resources.mushroom < 0
+
+  if (has_negative) {
+    throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
+  }
+
+  if (action === MovementAction.TRANSPORT) {
+    if (!has_resources) {
+      throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
+    }
+    const capacity = TroopService.getTotalTransportCapacity({ troops: move_troops })
+    if (total > capacity) {
+      throw new Error(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+    }
+    return
+  }
+
+  if (has_resources) {
+    throw new Error(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
+  }
 }
 
 export async function createTroopMovement({
@@ -31,10 +68,17 @@ export async function createTroopMovement({
   origin,
   destination,
   move_troops,
+  resources = EMPTY_RESOURCES,
 }: CreateTroopMovementParams): Promise<CreateTroopMovementResult> {
   return runCommand('troop:move', async () => {
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
+
+    assertTransportResources({
+      action,
+      resources,
+      move_troops,
+    })
 
     const origin_cell = await repository.cell.getCell({ coordinates: origin })
 
@@ -49,6 +93,12 @@ export async function createTroopMovement({
     })
     if (!have_enough_troops) {
       throw new Error(TroopError.NOT_ENOUGH_TROOPS)
+    }
+
+    let updated_stock = null
+    if (action === MovementAction.TRANSPORT) {
+      const stock = await repository.resource_stock.getByCellId({ cell_id: origin_cell.id })
+      updated_stock = stock.purchase({ resource: resources })
     }
 
     const distance = WorldService.getDistance({
@@ -72,6 +122,7 @@ export async function createTroopMovement({
       distance,
       troops: split_troops,
       start_at: now(),
+      resources,
     })
 
     const movement_troops = TroopService.assignToMovement({
@@ -115,6 +166,10 @@ export async function createTroopMovement({
     const promises: Promise<void | string>[] = [
       ...save.troops_to_create.map(troop => repository.troop.create(troop)),
     ]
+
+    if (updated_stock) {
+      promises.push(repository.resource_stock.updateOne(updated_stock))
+    }
 
     let deleted_outpost_id: string | undefined = undefined
 

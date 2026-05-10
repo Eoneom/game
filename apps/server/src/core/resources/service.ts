@@ -157,6 +157,45 @@ export class ResourcesService {
     }
   }
 
+  static depositUpToCapacity({
+    state,
+    resource,
+    warehouses_capacity
+  }: {
+    state: ResourceStockState
+    resource: Resource
+    warehouses_capacity: Resource
+  }): {
+    next: ResourceStockState
+    deposited: Resource
+    remaining: Resource
+  } {
+    const plastic_deposited = Math.min(
+      resource.plastic,
+      Math.max(0, warehouses_capacity.plastic - state.plastic)
+    )
+    const mushroom_deposited = Math.min(
+      resource.mushroom,
+      Math.max(0, warehouses_capacity.mushroom - state.mushroom)
+    )
+
+    return {
+      next: {
+        ...state,
+        plastic: state.plastic + plastic_deposited,
+        mushroom: state.mushroom + mushroom_deposited
+      },
+      deposited: {
+        plastic: plastic_deposited,
+        mushroom: mushroom_deposited
+      },
+      remaining: {
+        plastic: resource.plastic - plastic_deposited,
+        mushroom: resource.mushroom - mushroom_deposited
+      }
+    }
+  }
+
   private static getCappedEarnings({
     earnings,
     capacity,

@@ -54,7 +54,8 @@ export const troopCreateMovementHandler = async (
       action,
       origin,
       destination,
-      move_troops: troops
+      move_troops: troops,
+      resources: req.body.resources,
     })
     const response: TroopMovementCreateResponse = {
       status: 'ok',

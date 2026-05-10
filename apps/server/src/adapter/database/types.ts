@@ -58,9 +58,11 @@ export interface Movement {
   destination_x: number;
   destination_y: number;
   id: Generated<string>;
+  mushroom: number;
   origin_sector: number;
   origin_x: number;
   origin_y: number;
+  plastic: number;
   player_id: string;
 }
 
