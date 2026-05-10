@@ -47,6 +47,10 @@ export async function finishTroopTransportMovement({
     const destination_cell = await repository.cell.getCell({ coordinates: movement.destination })
 
     let remaining: Resource = { ...movement.resources }
+    let deposited: Resource = {
+      plastic: 0,
+      mushroom: 0,
+    }
 
     const city = destination_cell.city_id
       ? await repository.city.get(destination_cell.city_id)
@@ -64,12 +68,14 @@ export async function finishTroopTransportMovement({
 
       const {
         stock: updated_stock,
+        deposited: deposited_cargo,
         remaining: leftover,
       } = stock.depositUpToCapacity({
         resource: movement.resources,
         warehouses_capacity,
       })
 
+      deposited = deposited_cargo
       remaining = leftover
       await repository.resource_stock.updateOne(updated_stock)
     }
@@ -100,6 +106,8 @@ export async function finishTroopTransportMovement({
       movement,
       troops,
       recorded_at: arrived_at,
+      resources: deposited,
+      remaining_resources: remaining,
     })
 
     await repository.movement.create(base_movement)

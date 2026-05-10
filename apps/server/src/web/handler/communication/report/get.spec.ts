@@ -25,7 +25,15 @@ const queryResult = {
         code: 'WARRIOR',
         count: 5 
       } 
-    ]
+    ],
+    resources: {
+      plastic: 100,
+      mushroom: 50,
+    },
+    remaining_resources: {
+      plastic: 25,
+      mushroom: 0,
+    },
   }
 }
 
@@ -83,7 +91,15 @@ describe('communicationGetReportHandler', () => {
             code: 'WARRIOR',
             count: 5 
           } 
-        ]
+        ],
+        resources: {
+          plastic: 100,
+          mushroom: 50,
+        },
+        remaining_resources: {
+          plastic: 25,
+          mushroom: 0,
+        },
       }
     })
   })

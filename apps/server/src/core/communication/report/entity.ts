@@ -9,11 +9,18 @@ interface ReportTroop {
   count: number
 }
 
+const EMPTY_RESOURCES: Resource = {
+  plastic: 0,
+  mushroom: 0,
+}
+
 type ReportEntityProps = BaseEntity & {
   destination: Coordinates
   origin: Coordinates
   player_id: string
   resource_coefficient?: Resource
+  resources?: Resource
+  remaining_resources?: Resource
   troops: ReportTroop[]
   type: ReportType
   recorded_at: number
@@ -25,6 +32,8 @@ export class ReportEntity extends BaseEntity {
   readonly origin: Coordinates
   readonly player_id: string
   readonly resource_coefficient?: Resource
+  readonly resources: Resource
+  readonly remaining_resources: Resource
   readonly troops: ReportTroop[]
   readonly type: ReportType
   readonly recorded_at: number
@@ -36,17 +45,24 @@ export class ReportEntity extends BaseEntity {
     origin,
     player_id,
     resource_coefficient,
+    resources,
+    remaining_resources,
     troops,
     type,
     recorded_at,
     was_read
-  }: ReportEntityProps) {
+  }: ReportEntityProps & {
+    resources: Resource
+    remaining_resources: Resource
+  }) {
     super({ id })
 
     this.destination = destination
     this.origin = origin
     this.player_id = player_id
     this.resource_coefficient = resource_coefficient
+    this.resources = resources
+    this.remaining_resources = remaining_resources
     this.troops = troops
     this.type = type
     this.recorded_at = recorded_at
@@ -54,7 +70,11 @@ export class ReportEntity extends BaseEntity {
   }
 
   static create(props: ReportEntityProps): ReportEntity {
-    return new ReportEntity(props)
+    return new ReportEntity({
+      ...props,
+      resources: props.resources ?? EMPTY_RESOURCES,
+      remaining_resources: props.remaining_resources ?? EMPTY_RESOURCES,
+    })
   }
 
   markAs(read: boolean): ReportEntity {

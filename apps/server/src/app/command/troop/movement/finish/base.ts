@@ -64,6 +64,7 @@ function finishBaseMovementInLocation({
     movement,
     troops: movement_troops,
     recorded_at: arrived_at,
+    resources: movement.hasResources() ? movement.resources : undefined,
   })
 
   return {
@@ -110,6 +111,7 @@ function finishBaseMovementInTemporaryOutpost({
     movement,
     troops: movement_troops,
     recorded_at: arrived_at,
+    resources: movement.hasResources() ? movement.resources : undefined,
   })
 
   const outpost = OutpostEntity.create({

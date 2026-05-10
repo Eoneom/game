@@ -1,7 +1,7 @@
 import { LayoutPage } from '#ui/layout/page'
 import React, { useState } from 'react'
 import { ReportList } from '#communication/report/list'
-import { ReportExploration } from '#communication/report/exploration'
+import { ReportDetails } from '#communication/report/details'
 import { useListReports, useGetReport } from '#communication/report/hooks'
 
 export const ReportPage: React.FC = () => {
@@ -13,7 +13,7 @@ export const ReportPage: React.FC = () => {
 
   const reports = reportsData?.reports ?? []
 
-  return <LayoutPage details={report && <ReportExploration report={report}/>}>
+  return <LayoutPage details={report && <ReportDetails report={report}/>}>
     <ReportList
       reports={reports}
       currentPage={currentPage}

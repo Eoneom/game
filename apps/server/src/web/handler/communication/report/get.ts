@@ -54,7 +54,15 @@ const response_mapper = ({ report }: CommunicationGetReportQueryResponse): Commu
     troops: report.troops.map(troop => ({
       code:troop.code,
       count: troop.count
-    }))
+    })),
+    resources: {
+      plastic: report.resources.plastic,
+      mushroom: report.resources.mushroom,
+    },
+    remaining_resources: {
+      plastic: report.remaining_resources.plastic,
+      mushroom: report.remaining_resources.mushroom,
+    },
   }
 
   return report_response

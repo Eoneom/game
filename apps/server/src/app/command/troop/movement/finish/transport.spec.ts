@@ -166,6 +166,14 @@ describe('finishTroopTransportMovement', () => {
     })
     assert.strictEqual(result.base_movement.id, base_movement.id)
     assert.strictEqual(reportCreate.mock.calls[0][0].type, ReportType.TRANSPORT)
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
+      plastic: 100,
+      mushroom: 500,
+    })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
+      plastic: 900,
+      mushroom: 0,
+    })
   })
 
   it('should deposit full cargo into owned outpost', async () => {
@@ -196,6 +204,14 @@ describe('finishTroopTransportMovement', () => {
       plastic: 0,
       mushroom: 0,
     })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
+      plastic: 1000,
+      mushroom: 500,
+    })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
+      plastic: 0,
+      mushroom: 0,
+    })
   })
 
   it('should bounce full cargo when destination is empty', async () => {
@@ -218,6 +234,14 @@ describe('finishTroopTransportMovement', () => {
       plastic: 1000,
       mushroom: 500,
     })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
+      plastic: 0,
+      mushroom: 0,
+    })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
+      plastic: 1000,
+      mushroom: 500,
+    })
   })
 
   it('should bounce full cargo when destination is not owned', async () => {
@@ -236,6 +260,14 @@ describe('finishTroopTransportMovement', () => {
     assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
     const base_movement = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(base_movement.resources, {
+      plastic: 1000,
+      mushroom: 500,
+    })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
+      plastic: 0,
+      mushroom: 0,
+    })
+    assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
     })

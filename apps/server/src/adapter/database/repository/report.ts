@@ -121,7 +121,11 @@ export class PostgresReportRepository
               destination_y: row.destination_y,
               destination_sector: row.destination_sector,
               recorded_at: row.recorded_at,
-              was_read: row.was_read
+              was_read: row.was_read,
+              plastic: row.plastic,
+              mushroom: row.mushroom,
+              remaining_plastic: row.remaining_plastic,
+              remaining_mushroom: row.remaining_mushroom,
             }))
           .execute()
         report_id = with_id.id
@@ -167,7 +171,11 @@ export class PostgresReportRepository
               destination_y: row.destination_y,
               destination_sector: row.destination_sector,
               recorded_at: row.recorded_at,
-              was_read: row.was_read
+              was_read: row.was_read,
+              plastic: row.plastic,
+              mushroom: row.mushroom,
+              remaining_plastic: row.remaining_plastic,
+              remaining_mushroom: row.remaining_mushroom,
             }))
           .execute()
       } else {
@@ -183,7 +191,11 @@ export class PostgresReportRepository
             destination_y: row.destination_y,
             destination_sector: row.destination_sector,
             recorded_at: row.recorded_at,
-            was_read: row.was_read
+            was_read: row.was_read,
+            plastic: row.plastic,
+            mushroom: row.mushroom,
+            remaining_plastic: row.remaining_plastic,
+            remaining_mushroom: row.remaining_mushroom,
           })
           .where('id', '=', entity.id)
           .execute()
@@ -222,7 +234,15 @@ export class PostgresReportRepository
         sector: row.destination_sector
       },
       recorded_at: fromTimestampRequired(row.recorded_at),
-      was_read: row.was_read
+      was_read: row.was_read,
+      resources: {
+        plastic: row.plastic,
+        mushroom: row.mushroom,
+      },
+      remaining_resources: {
+        plastic: row.remaining_plastic,
+        mushroom: row.remaining_mushroom,
+      },
     })
   }
 
@@ -266,7 +286,15 @@ export class PostgresReportRepository
         sector: row.destination_sector
       },
       recorded_at: fromTimestampRequired(row.recorded_at),
-      was_read: row.was_read
+      was_read: row.was_read,
+      resources: {
+        plastic: row.plastic,
+        mushroom: row.mushroom,
+      },
+      remaining_resources: {
+        plastic: row.remaining_plastic,
+        mushroom: row.remaining_mushroom,
+      },
     })
   }
 
@@ -282,7 +310,11 @@ export class PostgresReportRepository
       destination_y: entity.destination.y,
       destination_sector: entity.destination.sector,
       recorded_at: toTimestampRequired(entity.recorded_at),
-      was_read: entity.was_read
+      was_read: entity.was_read,
+      plastic: entity.resources.plastic,
+      mushroom: entity.resources.mushroom,
+      remaining_plastic: entity.remaining_resources.plastic,
+      remaining_mushroom: entity.remaining_resources.mushroom,
     }
   }
 }

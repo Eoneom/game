@@ -83,11 +83,15 @@ export interface Report {
   destination_x: number;
   destination_y: number;
   id: Generated<string>;
+  mushroom: Generated<number>;
   origin_sector: number;
   origin_x: number;
   origin_y: number;
+  plastic: Generated<number>;
   player_id: string;
   recorded_at: Timestamp;
+  remaining_mushroom: Generated<number>;
+  remaining_plastic: Generated<number>;
   type: string;
   was_read: Generated<boolean>;
 }

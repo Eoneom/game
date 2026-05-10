@@ -420,5 +420,15 @@ describe('finishTroopBaseMovement', () => {
     const updated = stockUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated.plastic, 500)
     assert.strictEqual(updated.mushroom, 150)
+
+    const report = reportCreate.mock.calls[0][0]
+    assert.deepStrictEqual(report.resources, {
+      plastic: 400,
+      mushroom: 100,
+    })
+    assert.deepStrictEqual(report.remaining_resources, {
+      plastic: 0,
+      mushroom: 0,
+    })
   })
 })
