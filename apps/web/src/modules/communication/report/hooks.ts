@@ -45,7 +45,13 @@ export const useGetReport = (reportId: string | null | undefined) => {
       if (!res.data) throw new Error('no data')
 
       if (!res.data.was_read) {
-        queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
+        const markRes = await client.communication.markReport(token, {
+          report_id: reportId,
+          was_read: true,
+        })
+        if (isError(markRes)) throw new Error(markRes.error_code)
+        queryClient.invalidateQueries({ queryKey: ['reports'] })
+        return { ...res.data, was_read: true }
       }
 
       return res.data
