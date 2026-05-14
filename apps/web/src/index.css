@@ -942,6 +942,11 @@ li.unread {
   gap: 1.25rem;
 }
 
+.report-list__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .report-list__pagination {
   display: flex;
   flex-wrap: wrap;

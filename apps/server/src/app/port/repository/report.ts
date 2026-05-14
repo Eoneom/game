@@ -11,4 +11,6 @@ export type ReportRepository = GenericRepository<ReportEntity> & {
   getById(id: string): Promise<ReportEntity>
 
   count(query: { player_id: string, was_read: boolean }): Promise<number>
+
+  markAllAsRead(player_id: string): Promise<void>
 }

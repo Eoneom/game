@@ -71,6 +71,23 @@ export const useMarkReportAsRead = () => {
   })
 }
 
+export const useMarkAllReportsAsRead = () => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!token) throw new Error('empty token')
+      const res = await client.communication.markAllReports(token)
+      if (isError(res)) throw new Error(res.error_code)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] })
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
 export const useCountUnreadReports = () => {
   const { token } = useAuth()
 

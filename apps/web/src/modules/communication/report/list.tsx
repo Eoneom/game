@@ -9,8 +9,11 @@ interface Props {
   currentPage: number
   total: number
   pageSize: number
+  unreadCount: number
+  markAllPending: boolean
   onPageChange: (page: number) => void
   onReportSelect: (reportId: string) => void
+  onMarkAllAsRead: () => void
 }
 
 export const ReportList: React.FC<Props> = ({
@@ -18,8 +21,11 @@ export const ReportList: React.FC<Props> = ({
   currentPage,
   total,
   pageSize,
+  unreadCount,
+  markAllPending,
   onPageChange,
   onReportSelect,
+  onMarkAllAsRead,
 }) => {
   const totalPages = pageSize > 0 ? Math.ceil(total / pageSize) : 0
   const canPrev = currentPage > 1
@@ -27,6 +33,16 @@ export const ReportList: React.FC<Props> = ({
 
   return (
     <div className="report-list">
+      {unreadCount > 0 && (
+        <div className="report-list__actions">
+          <Button
+            disabled={markAllPending}
+            onClick={onMarkAllAsRead}
+          >
+            Tout marquer comme lu
+          </Button>
+        </div>
+      )}
       {totalPages > 1 && (
         <div className="report-list__pagination">
           <p className="report-list__page-label">

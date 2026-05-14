@@ -41,6 +41,15 @@ export class PostgresReportRepository
     return Number(result.count)
   }
 
+  async markAllAsRead(player_id: string): Promise<void> {
+    await this.db
+      .updateTable('report')
+      .set({ was_read: true })
+      .where('player_id', '=', player_id)
+      .where('was_read', '=', false)
+      .execute()
+  }
+
   async getById(id: string): Promise<ReportEntity> {
     return this.findByIdOrThrow(id)
   }

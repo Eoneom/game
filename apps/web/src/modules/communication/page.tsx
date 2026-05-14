@@ -2,7 +2,12 @@ import { LayoutPage } from '#ui/layout/page'
 import React, { useState } from 'react'
 import { ReportList } from '#communication/report/list'
 import { ReportDetails } from '#communication/report/details'
-import { useListReports, useGetReport } from '#communication/report/hooks'
+import {
+  useListReports,
+  useGetReport,
+  useCountUnreadReports,
+  useMarkAllReportsAsRead,
+} from '#communication/report/hooks'
 
 export const ReportPage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -10,6 +15,8 @@ export const ReportPage: React.FC = () => {
 
   const { data: reportsData } = useListReports(currentPage)
   const { data: report } = useGetReport(selectedReportId)
+  const { data: unreadCount = 0 } = useCountUnreadReports()
+  const markAllAsRead = useMarkAllReportsAsRead()
 
   const reports = reportsData?.reports ?? []
 
@@ -19,8 +26,11 @@ export const ReportPage: React.FC = () => {
       currentPage={currentPage}
       total={reportsData?.total ?? 0}
       pageSize={reportsData?.page_size ?? 0}
+      unreadCount={unreadCount}
+      markAllPending={markAllAsRead.isPending}
       onPageChange={setCurrentPage}
       onReportSelect={setSelectedReportId}
+      onMarkAllAsRead={() => markAllAsRead.mutate()}
     />
   </LayoutPage>
 }

@@ -25,6 +25,7 @@ import { outpostSetPermanentHandler } from '#web/handler/outpost/set-permanent'
 import { communicationGetReportHandler } from '#web/handler/communication/report/get'
 import { communicationCountUnreadReportHandler } from '#web/handler/communication/report/count-unread'
 import { communicationMarkReportHandler } from '#web/handler/communication/report/mark'
+import { communicationMarkAllReportsHandler } from '#web/handler/communication/report/mark-all'
 import { logoutHandler } from '#web/handler/player/logout'
 import { troopGetMovementHandler } from '#web/handler/troop/movement/get'
 import { troopEstimateMovementHandler } from '#web/handler/troop/movement/estimate'
@@ -78,6 +79,7 @@ export const router = (): Router => {
 
   r.get('/communication/report', authMiddleware, communicationListReportHandler)
   r.put('/communication/report/mark', authMiddleware, communicationMarkReportHandler)
+  r.put('/communication/report/mark-all', authMiddleware, communicationMarkAllReportsHandler)
   r.get('/communication/report/unread/count', authMiddleware, communicationCountUnreadReportHandler)
   r.get('/communication/report/:report_id', authMiddleware, communicationGetReportHandler)
 

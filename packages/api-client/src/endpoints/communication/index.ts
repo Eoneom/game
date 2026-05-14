@@ -11,6 +11,7 @@ import {
 import {
   CommunicationMarkReportRequest, CommunicationMarkReportResponse
 } from './report/mark'
+import { CommunicationMarkAllReportsResponse } from './report/mark-all'
 
 export class CommunicationEndpoint {
   private fetcher: Fetcher
@@ -37,6 +38,12 @@ export class CommunicationEndpoint {
   public markReport(token: string, body: CommunicationMarkReportRequest): Promise<CommunicationMarkReportResponse> {
     return this.fetcher.put('/communication/report/mark', {
       body,
+      token
+    })
+  }
+
+  public markAllReports(token: string): Promise<CommunicationMarkAllReportsResponse> {
+    return this.fetcher.put('/communication/report/mark-all', {
       token
     })
   }
