@@ -22,9 +22,15 @@ export class CommunicationEndpoint {
 
   public listReport(
     token: string,
-    { page = 1 }: CommunicationListReportRequest = {}
+    { page = 1, was_read }: CommunicationListReportRequest = {}
   ): Promise<CommunicationListReportResponse> {
-    return this.fetcher.get('/communication/report', { token, searchParams: { page } })
+    return this.fetcher.get('/communication/report', {
+      token,
+      searchParams: {
+        page,
+        ...(was_read !== undefined ? { was_read: was_read ? 'true' : 'false' } : {})
+      }
+    })
   }
 
   public getReport(token: string, { report_id }: CommunicationGetReportRequest): Promise<CommunicationGetReportResponse> {

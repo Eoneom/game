@@ -74,4 +74,19 @@ describe('CommunicationListReportQuery', () => {
       offset: 10 
     })
   })
+
+  it('forwards was_read filter to repository', async () => {
+    await new CommunicationListReportQuery().run({
+      player_id,
+      page: 1,
+      was_read: false
+    })
+
+    expect(repository.report.list).toHaveBeenCalledWith({
+      player_id,
+      limit: 10,
+      offset: 0,
+      was_read: false
+    })
+  })
 })

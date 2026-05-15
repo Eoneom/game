@@ -78,6 +78,35 @@ describe('communicationListReportHandler', () => {
     })
   })
 
+  it('parses was_read=true query param', async () => {
+    req.query = { was_read: 'true' }
+    await communicationListReportHandler(req as Request, res as unknown as Response, next as NextFunction)
+    expect(CommunicationListReportQuery.prototype.run).toHaveBeenCalledWith({
+      player_id: 'p1',
+      page: 1,
+      was_read: true
+    })
+  })
+
+  it('parses was_read=false query param', async () => {
+    req.query = { was_read: 'false' }
+    await communicationListReportHandler(req as Request, res as unknown as Response, next as NextFunction)
+    expect(CommunicationListReportQuery.prototype.run).toHaveBeenCalledWith({
+      player_id: 'p1',
+      page: 1,
+      was_read: false
+    })
+  })
+
+  it('ignores invalid was_read query param', async () => {
+    req.query = { was_read: 'maybe' }
+    await communicationListReportHandler(req as Request, res as unknown as Response, next as NextFunction)
+    expect(CommunicationListReportQuery.prototype.run).toHaveBeenCalledWith({
+      player_id: 'p1',
+      page: 1
+    })
+  })
+
   it('returns mapped report list on success', async () => {
     await communicationListReportHandler(req as Request, res as unknown as Response, next as NextFunction)
     expect(res.json).toHaveBeenCalledWith({

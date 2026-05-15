@@ -4,6 +4,7 @@ import { Coordinates } from '../../shared/coordinates'
 
 export interface CommunicationListReportRequest {
   page?: number
+  was_read?: boolean
 }
 
 export interface CommunicationListReportDataResponse {

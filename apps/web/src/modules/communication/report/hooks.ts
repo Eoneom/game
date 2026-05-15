@@ -6,19 +6,19 @@ import { isError } from '#helpers/assertion'
 import { useAuth } from '#auth/context'
 
 export const reportKeys = {
-  list: (page: number) => ['reports', page] as const,
+  list: (page: number, was_read?: boolean) => ['reports', page, was_read] as const,
   unreadCount: ['reports', 'unread-count'] as const,
   detail: (reportId: string) => ['report', reportId] as const,
 }
 
-export const useListReports = (page: number) => {
+export const useListReports = (page: number, was_read?: boolean) => {
   const { token } = useAuth()
 
   return useQuery({
-    queryKey: reportKeys.list(page),
+    queryKey: reportKeys.list(page, was_read),
     queryFn: async () => {
       if (!token) throw new Error('empty token')
-      const res = await client.communication.listReport(token, { page })
+      const res = await client.communication.listReport(token, { page, was_read })
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('no data')
       return {

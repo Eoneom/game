@@ -944,7 +944,29 @@ li.unread {
 
 .report-list__actions {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.report-list__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.report-list__filter {
+  background-color: transparent;
+  color: var(--dark-primary);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+}
+
+.report-list__filter--active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
 }
 
 .report-list__pagination {

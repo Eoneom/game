@@ -4,26 +4,38 @@ import { ReportItem } from '#types'
 import classNames from 'classnames'
 import React from 'react'
 
+export type ReportReadFilter = boolean | undefined
+
 interface Props {
   reports: ReportItem[]
   currentPage: number
   total: number
   pageSize: number
+  wasReadFilter: ReportReadFilter
   unreadCount: number
   markAllPending: boolean
   onPageChange: (page: number) => void
+  onFilterChange: (filter: ReportReadFilter) => void
   onReportSelect: (reportId: string) => void
   onMarkAllAsRead: () => void
 }
+
+const FILTERS: { label: string; value: ReportReadFilter }[] = [
+  { label: 'Tous', value: undefined },
+  { label: 'Non lus', value: false },
+  { label: 'Lus', value: true },
+]
 
 export const ReportList: React.FC<Props> = ({
   reports,
   currentPage,
   total,
   pageSize,
+  wasReadFilter,
   unreadCount,
   markAllPending,
   onPageChange,
+  onFilterChange,
   onReportSelect,
   onMarkAllAsRead,
 }) => {
@@ -33,16 +45,30 @@ export const ReportList: React.FC<Props> = ({
 
   return (
     <div className="report-list">
-      {unreadCount > 0 && (
-        <div className="report-list__actions">
+      <div className="report-list__actions">
+        <div className="report-list__filters">
+          {FILTERS.map(({ label, value }) => (
+            <button
+              key={label}
+              type="button"
+              className={classNames('report-list__filter', {
+                'report-list__filter--active': wasReadFilter === value
+              })}
+              onClick={() => onFilterChange(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {unreadCount > 0 && (
           <Button
             disabled={markAllPending}
             onClick={onMarkAllAsRead}
           >
             Tout marquer comme lu
           </Button>
-        </div>
-      )}
+        )}
+      </div>
       {totalPages > 1 && (
         <div className="report-list__pagination">
           <p className="report-list__page-label">

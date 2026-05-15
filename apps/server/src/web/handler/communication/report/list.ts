@@ -19,6 +19,12 @@ const parseListReportPage = (raw: Request['query']['page']): number => {
   return Number.isFinite(value) && value >= 1 ? value : 1
 }
 
+const parseListReportWasRead = (raw: Request['query']['was_read']): boolean | undefined => {
+  if (raw === 'true') return true
+  if (raw === 'false') return false
+  return undefined
+}
+
 export const communicationListReportHandler = async (
   req: Request,
   res: Response<CommunicationListReportResponse>,
@@ -27,9 +33,11 @@ export const communicationListReportHandler = async (
   try {
     const player_id = getPlayerIdFromContext(res)
     const page = parseListReportPage(req.query.page)
+    const was_read = parseListReportWasRead(req.query.was_read)
     const result = await new CommunicationListReportQuery().run({
       player_id,
-      page 
+      page,
+      ...(was_read !== undefined ? { was_read } : {})
     })
     const response = response_mapper(result)
 

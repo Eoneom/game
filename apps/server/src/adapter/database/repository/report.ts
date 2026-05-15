@@ -57,29 +57,39 @@ export class PostgresReportRepository
   async list({
     player_id,
     limit,
-    offset
+    offset,
+    was_read
   }: {
     player_id: string
     limit: number
     offset: number
+    was_read?: boolean
   }): Promise<{ reports: ReportEntity[]; total: number }> {
+    let select_query = this.db
+      .selectFrom('report')
+      .selectAll()
+      .where('player_id', '=', player_id)
+
+    let count_query = this.db
+      .selectFrom('report')
+      .select(({ fn }) => fn.countAll<number>().as('count'))
+      .where('player_id', '=', player_id)
+
+    if (was_read !== undefined) {
+      select_query = select_query.where('was_read', '=', was_read)
+      count_query = count_query.where('was_read', '=', was_read)
+    }
+
     const [
       rows,
       total_result
     ] = await Promise.all([
-      this.db
-        .selectFrom('report')
-        .selectAll()
-        .where('player_id', '=', player_id)
+      select_query
         .orderBy('recorded_at', 'desc')
         .offset(offset)
         .limit(limit)
         .execute(),
-      this.db
-        .selectFrom('report')
-        .select(({ fn }) => fn.countAll<number>().as('count'))
-        .where('player_id', '=', player_id)
-        .executeTakeFirstOrThrow()
+      count_query.executeTakeFirstOrThrow()
     ])
 
     const reports = await Promise.all(rows.map(row => this.loadEntity(row)))

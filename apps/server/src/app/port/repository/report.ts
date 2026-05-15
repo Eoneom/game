@@ -6,6 +6,7 @@ export type ReportRepository = GenericRepository<ReportEntity> & {
     player_id: string
     limit: number
     offset: number
+    was_read?: boolean
   }): Promise<{ reports: ReportEntity[]; total: number }>
 
   getById(id: string): Promise<ReportEntity>
