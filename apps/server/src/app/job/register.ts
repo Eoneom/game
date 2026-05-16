@@ -6,6 +6,8 @@ import {
   JobQueue,
   OUTPOST_RESOURCES_GATHER_QUEUE,
   OutpostResourcesGatherJobData,
+  REPORT_CLEANUP_QUEUE,
+  ReportCleanupJobData,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
   TechnologyResearchFinishJobData,
   TROOP_MOVEMENT_FINISH_QUEUE,
@@ -19,6 +21,7 @@ import { sagaFinishOneMovement } from '#app/saga/finish/movement'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
 import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progress-gather-all'
+import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
 import { Factory } from '#adapter/factory'
 
 export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
@@ -153,6 +156,17 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
       for (const job of jobs) {
         logger.info('processing outpost resources gather', { job_id: job.id })
         await progressGatherAllPermanentOutposts()
+      }
+    }
+  )
+
+  await jobQueue.work<ReportCleanupJobData, void, { includeMetadata: true }>(
+    REPORT_CLEANUP_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        logger.info('processing report cleanup', { job_id: job.id })
+        await cleanupOldReadReports()
       }
     }
   )

@@ -41,6 +41,14 @@ export {
 } from '#adapter/job-queue/outpost/gather'
 
 export {
+  REPORT_CLEANUP_QUEUE,
+  REPORT_CLEANUP_INTERVAL_MS,
+  REPORT_CLEANUP_SINGLETON_KEY,
+  type ReportCleanupJobData,
+  type PendingReportCleanup
+} from '#adapter/job-queue/communication/cleanup-old-read-reports'
+
+export {
   JobQueue,
   createJobQueue
 } from '#adapter/job-queue/job-queue'

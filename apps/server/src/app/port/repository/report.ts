@@ -14,4 +14,6 @@ export type ReportRepository = GenericRepository<ReportEntity> & {
   count(query: { player_id: string, was_read: boolean }): Promise<number>
 
   markAllAsRead(player_id: string): Promise<void>
+
+  deleteReadOlderThan(before: number): Promise<number>
 }

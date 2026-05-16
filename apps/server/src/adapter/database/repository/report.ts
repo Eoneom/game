@@ -50,6 +50,16 @@ export class PostgresReportRepository
       .execute()
   }
 
+  async deleteReadOlderThan(before: number): Promise<number> {
+    const result = await this.db
+      .deleteFrom('report')
+      .where('was_read', '=', true)
+      .where('recorded_at', '<', toTimestampRequired(before))
+      .executeTakeFirst()
+
+    return Number(result.numDeletedRows)
+  }
+
   async getById(id: string): Promise<ReportEntity> {
     return this.findByIdOrThrow(id)
   }
