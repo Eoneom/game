@@ -20,5 +20,4 @@ ignore:
 
 flag_management:
   default_rules:
-    - if: true
-      carryforward: true
+    carryforward: true
