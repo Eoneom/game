@@ -10,10 +10,11 @@ export const NavLocation: React.FC = () => {
 
   const cities = citiesData?.cities ?? []
   const cityCountLimit = citiesData?.count_limit ?? 0
-  const outposts = outpostsData ?? []
+  const outposts = outpostsData?.outposts ?? []
+  const outpostCountLimit = outpostsData?.count_limit ?? 0
 
   return <nav id="location">
     { Boolean(cities.length) && <NavLocationCities cities={cities} countLimit={cityCountLimit} /> }
-    { Boolean(outposts.length) && <NavLocationOutposts outposts={outposts} />}
+    { Boolean(outposts.length) && <NavLocationOutposts outposts={outposts} countLimit={outpostCountLimit} />}
   </nav>
 }

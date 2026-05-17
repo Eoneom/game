@@ -20,7 +20,7 @@ export const useListOutposts = () => {
       const res = await client.outpost.list(token)
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('data not found')
-      return res.data.outposts
+      return { outposts: res.data.outposts, count_limit: res.data.count_limit }
     },
     enabled: !!token,
   })

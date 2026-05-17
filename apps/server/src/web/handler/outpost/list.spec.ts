@@ -36,7 +36,8 @@ const queryResult = {
       plastic: 200,
       mushroom: 100 
     } 
-  ]
+  ],
+  count_limit: 15
 }
 
 describe('outpostListHandler', () => {
@@ -90,7 +91,8 @@ describe('outpostListHandler', () => {
             plastic: 200,
             mushroom: 100
           }
-        ]
+        ],
+        count_limit: 15
       }
     })
   })

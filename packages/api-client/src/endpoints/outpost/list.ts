@@ -10,6 +10,7 @@ export interface OutpostListDataResponse {
     plastic: number
     mushroom: number
   }[]
+  count_limit: number
 }
 
 export type OutpostListResponse = GenericResponse<OutpostListDataResponse>

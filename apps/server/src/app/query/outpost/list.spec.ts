@@ -32,6 +32,7 @@ describe('OutpostListQuery', () => {
     expect(result.outposts).toEqual([])
     expect(result.cells).toEqual([])
     expect(result.resource_stocks).toEqual([])
+    expect(result.count_limit).toBe(15)
     expect(repository.outpost.list).toHaveBeenCalledWith({ player_id })
   })
 
@@ -69,6 +70,7 @@ describe('OutpostListQuery', () => {
     expect(result.outposts).toEqual([ outpost ])
     expect(result.cells).toEqual([ cell ])
     expect(result.resource_stocks).toEqual([ stock ])
+    expect(result.count_limit).toBe(15)
     expect(repository.cell.getById).toHaveBeenCalledWith(cell.id)
   })
 })

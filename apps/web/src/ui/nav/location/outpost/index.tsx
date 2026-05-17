@@ -7,9 +7,10 @@ import { OutpostType } from '@eoneom/api-client'
 
 interface Props {
   outposts: OutpostItem[]
+  countLimit: number
 }
 
-export const NavLocationOutposts: React.FC<Props> = ({ outposts }) => {
+export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) => {
   const temporaries = useMemo(() => {
     return outposts
       .filter(outpost => outpost.type === OutpostType.TEMPORARY)
@@ -28,7 +29,7 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts }) => {
 
   return (
     <section className="nav-location-section">
-      <h3>Avant-postes</h3>
+      <h3>Avant-postes {outposts.length}/{countLimit}</h3>
       {Boolean(permanents.length) && (
         <>
           <h5>Permanents</h5>

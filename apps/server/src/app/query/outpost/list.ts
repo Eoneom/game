@@ -1,4 +1,5 @@
 import { OutpostEntity } from '#core/outpost/entity'
+import { OutpostService } from '#core/outpost/service'
 import { GenericQuery } from '#query/generic'
 import { CellEntity } from '#core/world/cell/entity'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
@@ -11,6 +12,7 @@ export interface OutpostListQueryResponse {
   outposts: OutpostEntity[]
   cells: CellEntity[]
   resource_stocks: ResourceStockEntity[]
+  count_limit: number
 }
 
 export class OutpostListQuery extends GenericQuery<OutpostListQueryRequest, OutpostListQueryResponse> {
@@ -30,7 +32,8 @@ export class OutpostListQuery extends GenericQuery<OutpostListQueryRequest, Outp
     return {
       outposts,
       cells,
-      resource_stocks
+      resource_stocks,
+      count_limit: OutpostService.getCountLimit()
     }
   }
 }

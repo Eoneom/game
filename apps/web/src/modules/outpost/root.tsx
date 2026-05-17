@@ -16,7 +16,8 @@ export const OutpostRoot: React.FC<Props> = ({ outpostId }) => {
   const navigate = useNavigate()
 
   const { data: outpost } = useGetOutpost(outpostId)
-  const { data: outposts } = useListOutposts()
+  const { data: outpostsData } = useListOutposts()
+  const outposts = outpostsData?.outposts
   const { data: citiesData } = useListCities()
   const firstCityId = citiesData?.cities[0]?.id
   useGetCity(firstCityId)

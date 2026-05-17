@@ -36,7 +36,8 @@ export const outpostListHandler = async (
 const response_mapper = ({
   outposts,
   cells,
-  resource_stocks
+  resource_stocks,
+  count_limit
 }: OutpostListQueryResponse): OutpostListDataResponse => {
   const outposts_response: OutpostListDataResponse['outposts'] = outposts.map(outpost => {
     const cell = cells.find(c => c.id === outpost.cell_id)
@@ -53,5 +54,8 @@ const response_mapper = ({
     }
   })
 
-  return { outposts: outposts_response }
+  return {
+    outposts: outposts_response,
+    count_limit
+  }
 }
