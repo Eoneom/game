@@ -1,10 +1,10 @@
 import assert from 'assert'
 import { Factory } from '#adapter/factory'
-import { runCommand } from '#command/run'
 import {
-  AppService,
-  UNLIMITED_RESOURCE_CAPACITY
-} from '#app/service'
+  resolveOwnedDepositTarget
+} from '#app/command/troop/movement/shared'
+import { runCommand } from '#command/run'
+import { UNLIMITED_RESOURCE_CAPACITY } from '#app/service'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
@@ -18,6 +18,7 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostService } from '#core/outpost/service'
 import { OutpostError } from '#core/outpost/error'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
+import { CellEntity } from '#core/world/cell/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
 
@@ -38,6 +39,7 @@ interface FinishBaseSave {
   report: ReportEntity
   outpost?: OutpostEntity
   updated_stock?: ResourceStockEntity
+  ensure_stock_cell_id?: string
 }
 
 function finishBaseMovementInLocation({
@@ -130,7 +132,7 @@ function finishBaseMovementInTemporaryOutpost({
   }
 }
 
-async function depositMovementCargo({
+async function planCargoDeposit({
   cell_id,
   resources,
   warehouses_capacity,
@@ -148,6 +150,136 @@ async function depositMovementCargo({
   return updated_stock
 }
 
+async function buildSettlePlan({
+  player_id,
+  movement,
+  destination_cell,
+  arrived_at,
+}: {
+  player_id: string
+  movement: MovementEntity
+  destination_cell: CellEntity
+  arrived_at: number
+}): Promise<FinishBaseSave> {
+  const repository = Factory.getRepository()
+  const city_exists = Boolean(destination_cell.city_id)
+  const outpost_exists = await repository.outpost.existsOnCell({ cell_id: destination_cell.id })
+  const should_build_temporary_outpost = OutpostService.shouldBuildTemporaryOutpost({
+    city_exists,
+    outpost_exists,
+  })
+
+  if (!should_build_temporary_outpost) {
+    const [
+      movement_troops,
+      existing_destination_troops
+    ] = await Promise.all([
+      repository.troop.listByMovement({ movement_id: movement.id }),
+      repository.troop.listInCell({
+        cell_id: destination_cell.id,
+        player_id,
+      }),
+    ])
+    return finishBaseMovementInLocation({
+      movement,
+      movement_troops,
+      destination_cell_id: destination_cell.id,
+      existing_destination_troops,
+      arrived_at,
+    })
+  }
+
+  const [
+    movement_troops,
+    existing_outposts_count
+  ] = await Promise.all([
+    repository.troop.listByMovement({ movement_id: movement.id }),
+    repository.outpost.countForPlayer({ player_id }),
+  ])
+  return finishBaseMovementInTemporaryOutpost({
+    destination_cell_id: destination_cell.id,
+    movement,
+    existing_outposts_count,
+    movement_troops,
+    player_id,
+    arrived_at,
+  })
+}
+
+async function attachCargoToSave({
+  finish_save,
+  movement,
+  destination_cell,
+  player_id,
+}: {
+  finish_save: FinishBaseSave
+  movement: MovementEntity
+  destination_cell: CellEntity
+  player_id: string
+}): Promise<FinishBaseSave> {
+  if (!movement.hasResources()) {
+    return finish_save
+  }
+
+  const repository = Factory.getRepository()
+
+  if (finish_save.outpost) {
+    await repository.resource_stock.ensureWorldStockForCell({
+      cell_id: finish_save.outpost.cell_id,
+    })
+    const updated_stock = await planCargoDeposit({
+      cell_id: finish_save.outpost.cell_id,
+      resources: movement.resources,
+      warehouses_capacity: UNLIMITED_RESOURCE_CAPACITY,
+    })
+    return {
+      ...finish_save,
+      updated_stock,
+      ensure_stock_cell_id: finish_save.outpost.cell_id,
+    }
+  }
+
+  const deposit_target = await resolveOwnedDepositTarget({
+    destination_cell,
+    player_id,
+  })
+  if (!deposit_target) {
+    return finish_save
+  }
+
+  const updated_stock = await planCargoDeposit({
+    cell_id: deposit_target.cell_id,
+    resources: movement.resources,
+    warehouses_capacity: deposit_target.warehouses_capacity,
+  })
+  return {
+    ...finish_save,
+    updated_stock,
+  }
+}
+
+async function persistFinishBaseSave(finish_save: FinishBaseSave): Promise<void> {
+  const repository = Factory.getRepository()
+  const save_promises: Promise<unknown>[] = [
+    repository.report.create(finish_save.report),
+    repository.movement.delete(finish_save.delete_movement_id),
+    ...finish_save.updated_troops.map(troop => repository.troop.updateOne(troop, { upsert: true })),
+    ...finish_save.delete_troop_ids.map(troop_id => repository.troop.delete(troop_id)),
+  ]
+  if (finish_save.updated_stock) {
+    save_promises.push(repository.resource_stock.updateOne(finish_save.updated_stock))
+  }
+  if (finish_save.outpost) {
+    save_promises.push(repository.outpost.create(finish_save.outpost))
+    if (!finish_save.ensure_stock_cell_id) {
+      save_promises.push(
+        repository.resource_stock.ensureWorldStockForCell({ cell_id: finish_save.outpost.cell_id }),
+      )
+    }
+  }
+  await Promise.all(save_promises)
+}
+
 export async function finishTroopBaseMovement({
   player_id,
   movement_id,
@@ -160,100 +292,27 @@ export async function finishTroopBaseMovement({
 
     assert.strictEqual(movement.action, MovementAction.BASE)
 
-    if (movement.player_id !== player_id) {
-      throw new Error(TroopError.NOT_OWNER)
+    if (!movement.isOwnedBy(player_id)) {
+      throw new Error(TroopError.MOVEMENT_NOT_OWNER)
     }
 
     const destination_cell = await repository.cell.getCell({ coordinates: movement.destination })
 
-    const city_exists = Boolean(destination_cell.city_id)
-    const outpost_exists = await repository.outpost.existsOnCell({ cell_id: destination_cell.id })
-    const does_location_exist = city_exists || outpost_exists
+    let finish_save = await buildSettlePlan({
+      player_id,
+      movement,
+      destination_cell,
+      arrived_at,
+    })
 
-    let finish_save: FinishBaseSave
-    if (does_location_exist) {
-      const [
-        movement_troops,
-        existing_destination_troops
-      ] = await Promise.all([
-        repository.troop.listByMovement({ movement_id }),
-        repository.troop.listInCell({
-          cell_id: destination_cell.id,
-          player_id,
-        }),
-      ])
-      finish_save = finishBaseMovementInLocation({
-        movement,
-        movement_troops,
-        destination_cell_id: destination_cell.id,
-        existing_destination_troops,
-        arrived_at,
-      })
+    finish_save = await attachCargoToSave({
+      finish_save,
+      movement,
+      destination_cell,
+      player_id,
+    })
 
-      if (movement.hasResources()) {
-        const city = destination_cell.city_id
-          ? await repository.city.get(destination_cell.city_id)
-          : null
-        const outpost = outpost_exists
-          ? await repository.outpost.searchByCell({ cell_id: destination_cell.id })
-          : null
-        const owned_city = city?.isOwnedBy(player_id) ? city : null
-        const owned_outpost = outpost?.isOwnedBy(player_id) ? outpost : null
-
-        if (owned_city || owned_outpost) {
-          const warehouses_capacity = owned_city
-            ? await AppService.getCityWarehousesCapacity({ city_id: owned_city.id })
-            : UNLIMITED_RESOURCE_CAPACITY
-          finish_save.updated_stock = await depositMovementCargo({
-            cell_id: destination_cell.id,
-            resources: movement.resources,
-            warehouses_capacity,
-          })
-        }
-      }
-    } else {
-      const [
-        movement_troops,
-        existing_outposts_count
-      ] = await Promise.all([
-        repository.troop.listByMovement({ movement_id }),
-        repository.outpost.countForPlayer({ player_id }),
-      ])
-      finish_save = finishBaseMovementInTemporaryOutpost({
-        destination_cell_id: destination_cell.id,
-        movement,
-        existing_outposts_count,
-        movement_troops,
-        player_id,
-        arrived_at,
-      })
-    }
-
-    const save_promises: Promise<unknown>[] = [
-      repository.report.create(finish_save.report),
-      repository.movement.delete(finish_save.delete_movement_id),
-      ...finish_save.updated_troops.map(troop => repository.troop.updateOne(troop, { upsert: true })),
-      ...finish_save.delete_troop_ids.map(troop_id => repository.troop.delete(troop_id)),
-    ]
-    if (finish_save.updated_stock) {
-      save_promises.push(repository.resource_stock.updateOne(finish_save.updated_stock))
-    }
-    if (finish_save.outpost) {
-      save_promises.push(
-        repository.outpost.create(finish_save.outpost),
-        repository.resource_stock.ensureWorldStockForCell({ cell_id: finish_save.outpost.cell_id }),
-      )
-    }
-    await Promise.all(save_promises)
-
-    if (finish_save.outpost && movement.hasResources()) {
-      const updated_stock = await depositMovementCargo({
-        cell_id: finish_save.outpost.cell_id,
-        resources: movement.resources,
-        warehouses_capacity: UNLIMITED_RESOURCE_CAPACITY,
-      })
-      await repository.resource_stock.updateOne(updated_stock)
-    }
+    await persistFinishBaseSave(finish_save)
 
     return { is_outpost_created: Boolean(finish_save.outpost) }
   })

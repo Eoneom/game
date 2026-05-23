@@ -93,7 +93,7 @@ describe('rebaseTroopMovement', () => {
         movement_id: initial_base_movement.id,
         arrived_at,
       }),
-      new RegExp(TroopError.NOT_OWNER)
+      new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
 

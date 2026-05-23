@@ -89,6 +89,7 @@ describe('finishTroopBaseMovement', () => {
       outpost: {
         existsOnCell: vi.fn().mockResolvedValue(outpost_exists),
         countForPlayer: vi.fn().mockResolvedValue(existing_outposts_count),
+        searchByCell: vi.fn().mockResolvedValue(null),
         create: outpostCreate,
       } as unknown as Repository['outpost'],
       report: { create: reportCreate } as unknown as Repository['report'],
@@ -156,7 +157,7 @@ describe('finishTroopBaseMovement', () => {
         movement_id,
         arrived_at,
       }),
-      new RegExp(TroopError.NOT_OWNER)
+      new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
 

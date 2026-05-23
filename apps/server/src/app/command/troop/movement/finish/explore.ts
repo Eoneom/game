@@ -1,14 +1,11 @@
 import { Factory } from '#adapter/factory'
+import { createReturnBaseTrip } from '#app/command/troop/movement/shared'
 import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
-import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
-import { TroopService } from '#core/troop/service'
-import { WorldService } from '#core/world/service'
-import { now } from '#shared/time'
 
 export interface FinishTroopExploreMovementParams {
   player_id: string
@@ -28,7 +25,6 @@ export async function finishTroopExploreMovement({
 }: FinishTroopExploreMovementParams): Promise<FinishTroopExploreMovementResult> {
   return runCommand('troop:finish:explore', async () => {
     const repository = Factory.getRepository()
-    const job_queue = Factory.getJobQueue()
 
     const movement = await repository.movement.getById(movement_id)
 
@@ -46,26 +42,6 @@ export async function finishTroopExploreMovement({
       AppService.getExploredCellIds({ coordinates: movement.destination }),
     ])
 
-    const distance = WorldService.getDistance({
-      origin: movement.destination,
-      destination: movement.origin,
-    })
-
-    const { movement: base_movement, arrive_at: base_arrive_at } = TroopService.createMovement({
-      troops,
-      start_at: arrived_at,
-      distance,
-      origin: movement.destination,
-      destination: movement.origin,
-      player_id,
-      action: MovementAction.BASE,
-    })
-
-    const base_troops = TroopService.assignToMovement({
-      troops,
-      movement_id: base_movement.id,
-    })
-
     const updated_exploration = exploration.exploreCells(explored_cell_ids)
 
     const report = ReportFactory.generateUnread({
@@ -75,22 +51,17 @@ export async function finishTroopExploreMovement({
       recorded_at: arrived_at,
     })
 
-    await repository.movement.create(base_movement)
+    const { base_movement, base_arrive_at } = await createReturnBaseTrip({
+      inbound_movement: movement,
+      troops,
+      arrived_at,
+      schedule: 'if_future',
+    })
 
     await Promise.all([
-      repository.movement.delete(movement.id),
-      ...base_troops.map(troop => repository.troop.updateOne(troop)),
       repository.exploration.updateOne(updated_exploration),
       repository.report.create(report),
     ])
-
-    if (base_arrive_at > now()) {
-      await job_queue.scheduleTroopMovementFinish({
-        player_id,
-        movement_id: base_movement.id,
-        execute_at: base_arrive_at,
-      })
-    }
 
     return { base_movement, base_arrive_at }
   })

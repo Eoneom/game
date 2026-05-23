@@ -1,18 +1,15 @@
 import { Factory } from '#adapter/factory'
-import { runCommand } from '#command/run'
 import {
-  AppService,
-  UNLIMITED_RESOURCE_CAPACITY
-} from '#app/service'
+  createReturnBaseTrip,
+  resolveOwnedDepositTarget
+} from '#app/command/troop/movement/shared'
+import { runCommand } from '#command/run'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
-import { TroopService } from '#core/troop/service'
-import { WorldService } from '#core/world/service'
 import { Resource } from '#shared/resource'
-import { now } from '#shared/time'
 import assert from 'assert'
 
 export interface FinishTroopTransportMovementParams {
@@ -33,7 +30,6 @@ export async function finishTroopTransportMovement({
 }: FinishTroopTransportMovementParams): Promise<FinishTroopTransportMovementResult> {
   return runCommand('troop:finish:transport', async () => {
     const repository = Factory.getRepository()
-    const job_queue = Factory.getJobQueue()
 
     const movement = await repository.movement.getById(movement_id)
 
@@ -52,54 +48,26 @@ export async function finishTroopTransportMovement({
       mushroom: 0,
     }
 
-    const city = destination_cell.city_id
-      ? await repository.city.get(destination_cell.city_id)
-      : null
-    const outpost = await repository.outpost.searchByCell({ cell_id: destination_cell.id })
+    const deposit_target = await resolveOwnedDepositTarget({
+      destination_cell,
+      player_id,
+    })
 
-    const owned_city = city?.isOwnedBy(player_id) ? city : null
-    const owned_outpost = outpost?.isOwnedBy(player_id) ? outpost : null
-
-    if (owned_city || owned_outpost) {
-      const stock = await repository.resource_stock.getByCellId({ cell_id: destination_cell.id })
-      const warehouses_capacity = owned_city
-        ? await AppService.getCityWarehousesCapacity({ city_id: owned_city.id })
-        : UNLIMITED_RESOURCE_CAPACITY
-
+    if (deposit_target) {
+      const stock = await repository.resource_stock.getByCellId({ cell_id: deposit_target.cell_id })
       const {
         stock: updated_stock,
         deposited: deposited_cargo,
         remaining: leftover,
       } = stock.depositUpToCapacity({
         resource: movement.resources,
-        warehouses_capacity,
+        warehouses_capacity: deposit_target.warehouses_capacity,
       })
 
       deposited = deposited_cargo
       remaining = leftover
       await repository.resource_stock.updateOne(updated_stock)
     }
-
-    const distance = WorldService.getDistance({
-      origin: movement.destination,
-      destination: movement.origin,
-    })
-
-    const { movement: base_movement, arrive_at: base_arrive_at } = TroopService.createMovement({
-      troops,
-      start_at: arrived_at,
-      distance,
-      origin: movement.destination,
-      destination: movement.origin,
-      player_id,
-      action: MovementAction.BASE,
-      resources: remaining,
-    })
-
-    const base_troops = TroopService.assignToMovement({
-      troops,
-      movement_id: base_movement.id,
-    })
 
     const report = ReportFactory.generateUnread({
       type: ReportType.TRANSPORT,
@@ -110,21 +78,15 @@ export async function finishTroopTransportMovement({
       remaining_resources: remaining,
     })
 
-    await repository.movement.create(base_movement)
+    const { base_movement, base_arrive_at } = await createReturnBaseTrip({
+      inbound_movement: movement,
+      troops,
+      arrived_at,
+      resources: remaining,
+      schedule: 'if_future',
+    })
 
-    await Promise.all([
-      repository.movement.delete(movement.id),
-      ...base_troops.map(troop => repository.troop.updateOne(troop)),
-      repository.report.create(report),
-    ])
-
-    if (base_arrive_at > now()) {
-      await job_queue.scheduleTroopMovementFinish({
-        player_id,
-        movement_id: base_movement.id,
-        execute_at: base_arrive_at,
-      })
-    }
+    await repository.report.create(report)
 
     return { base_movement, base_arrive_at }
   })
