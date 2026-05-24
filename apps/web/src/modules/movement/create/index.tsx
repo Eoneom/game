@@ -161,7 +161,12 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
                   onChange={setResources}
                 />
               )}
-              <MovementCreateDestination destination={destination} onChange={setDestination} />
+              <MovementCreateDestination
+                destination={destination}
+                onChange={setDestination}
+                excludeCityId={cityId}
+                excludeOutpostId={outpostId}
+              />
               <MovementCreateEstimation estimation={estimation} />
             </div>
           </div>
