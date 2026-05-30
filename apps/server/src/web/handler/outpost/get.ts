@@ -50,7 +50,9 @@ const response_mapper = ({
   resource_stock,
   earnings_per_second,
   pre_cell_earnings_per_second,
-  cell_resource_coefficient
+  cell_resource_coefficient,
+  warehouses_capacity,
+  warehouse_full_in_seconds
 }: OutpostGetQueryResponse): OutpostGetDataResponse => {
   return {
     id: outpost.id,
@@ -60,6 +62,8 @@ const response_mapper = ({
     mushroom: resource_stock.mushroom,
     earnings_per_second,
     pre_cell_earnings_per_second,
-    cell_resource_coefficient
+    cell_resource_coefficient,
+    warehouses_capacity,
+    warehouse_full_in_seconds
   }
 }

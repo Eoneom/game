@@ -37,21 +37,4 @@ export class CityService {
       player_id
     })
   }
-
-  static computeWarehouseFullInSeconds({
-    space_remaining,
-    earnings_per_second,
-  }: {
-    space_remaining: number
-    earnings_per_second: number
-  }): number {
-    const remaining = Math.max(0, space_remaining)
-    if (remaining === 0) {
-      return 0
-    }
-    if (earnings_per_second <= 0) {
-      return 0
-    }
-    return remaining / earnings_per_second
-  }
 }

@@ -1,8 +1,5 @@
 import { Factory } from '#adapter/factory'
-import {
-  AppService,
-  UNLIMITED_RESOURCE_CAPACITY
-} from '#app/service'
+import { AppService } from '#app/service'
 import { runCommand } from '#command/run'
 import { AppEvent } from '#core/events'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -28,10 +25,12 @@ export async function outpostGather({
 
     const [
       cell,
-      earnings_per_second
+      earnings_per_second,
+      warehouses_capacity
     ] = await Promise.all([
       repository.cell.getById(outpost.cell_id),
-      AppService.getOutpostEarningsBySecond({ outpost_id })
+      AppService.getOutpostEarningsBySecond({ outpost_id }),
+      AppService.getOutpostWarehousesCapacity({ player_id })
     ])
 
     const stock = await repository.resource_stock.getByCellId({ cell_id: cell.id })
@@ -49,7 +48,7 @@ export async function outpostGather({
     } = stock.gather({
       gather_at_time,
       earnings_per_second,
-      warehouses_capacity: UNLIMITED_RESOURCE_CAPACITY
+      warehouses_capacity
     })
 
     if (!updated) {

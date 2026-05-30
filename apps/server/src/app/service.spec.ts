@@ -10,6 +10,7 @@ import { BuildingService } from '#core/building/service'
 import { CityService } from '#core/city/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
+import { OutpostService } from '#core/outpost/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import { TroopCode } from '#core/troop/constant/code'
@@ -297,6 +298,24 @@ describe('AppService', () => {
         code: BuildingCode.PLASTIC_WAREHOUSE,
         level: 2
       }))
+    })
+  })
+
+  describe('getOutpostWarehousesCapacity', () => {
+    const player_id = id()
+
+    beforeEach(() => {
+      const repository = {
+        technology: {
+          getLevel: vi.fn().mockResolvedValue(2)
+        }
+      } as unknown as Repository
+      setRepositoryMock(repository)
+    })
+
+    it('matches OutpostService capacity for logistics technology level', async () => {
+      const capacity = await AppService.getOutpostWarehousesCapacity({ player_id })
+      expect(capacity).toEqual(OutpostService.getWarehousesCapacity({ logistics_level: 2 }))
     })
   })
   

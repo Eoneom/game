@@ -7,6 +7,7 @@ import { CityService } from '#core/city/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostError } from '#core/outpost/error'
 import { OutpostType } from '#core/outpost/constant/type'
+import { OutpostService } from '#core/outpost/service'
 import {
   Levels,
   RequirementService
@@ -25,11 +26,6 @@ import { Resource } from '#shared/resource'
 export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
   plastic: 1,
   mushroom: 1
-}
-
-export const UNLIMITED_RESOURCE_CAPACITY: Resource = {
-  plastic: Number.MAX_SAFE_INTEGER,
-  mushroom: Number.MAX_SAFE_INTEGER
 }
 
 export class AppService {
@@ -144,6 +140,16 @@ export class AppService {
         code: BuildingCode.PLASTIC_WAREHOUSE
       })
     }
+  }
+
+  static async getOutpostWarehousesCapacity({ player_id }: { player_id: string }): Promise<Resource> {
+    const repository = Factory.getRepository()
+    const logistics_level = await repository.technology.getLevel({
+      player_id,
+      code: TechnologyCode.OUTPOST_LOGISTICS
+    })
+
+    return OutpostService.getWarehousesCapacity({ logistics_level })
   }
 
   static async getOutpostEarningsBySecond({ outpost_id }: { outpost_id: string }): Promise<Resource> {

@@ -36,12 +36,16 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
       <HeaderResourcesItem
         value={outpost.plastic}
         icon={<IconPlastic />}
+        warehouse_capacity={outpost.warehouses_capacity.plastic}
         earnings_per_second={showEarnings ? outpost.earnings_per_second.plastic : undefined}
+        warehouse_full_in_seconds={showEarnings ? outpost.warehouse_full_in_seconds.plastic : undefined}
       />
       <HeaderResourcesItem
         value={outpost.mushroom}
         icon={<IconMushroom />}
+        warehouse_capacity={outpost.warehouses_capacity.mushroom}
         earnings_per_second={showEarnings ? outpost.earnings_per_second.mushroom : undefined}
+        warehouse_full_in_seconds={showEarnings ? outpost.warehouse_full_in_seconds.mushroom : undefined}
       />
     </ul>
   }

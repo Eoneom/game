@@ -73,6 +73,10 @@ describe('outpostGather', () => {
       plastic: 100,
       mushroom: 100
     })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 2000,
+      mushroom: 1500
+    })
   })
 
   afterEach(() => {
@@ -110,7 +114,7 @@ describe('outpostGather', () => {
     assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
   })
 
-  it('should gather outpost resources without capacity cap', async () => {
+  it('should gather outpost resources up to capacity', async () => {
     const time_elapsed = 2
     const plastic_earnings = 100
     const mushroom_earnings = 150
@@ -119,6 +123,10 @@ describe('outpostGather', () => {
     vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
       plastic: plastic_earnings,
       mushroom: mushroom_earnings
+    })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 2000,
+      mushroom: 1500
     })
 
     const seeded = testResourceStock({
@@ -140,6 +148,39 @@ describe('outpostGather', () => {
     const updated_stock = stockUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated_stock.plastic, 100 + time_elapsed * plastic_earnings)
     assert.strictEqual(updated_stock.mushroom, 200 + time_elapsed * mushroom_earnings)
+  })
+
+  it('should cap gather when capacity is reached', async () => {
+    const gather_at_time = now()
+
+    vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
+      plastic: 100,
+      mushroom: 100
+    })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 250,
+      mushroom: 300
+    })
+
+    const seeded = testResourceStock({
+      cell_id,
+      plastic: 200,
+      mushroom: 250,
+      last_plastic_gather: gather_at_time - 2 * 1000,
+      last_mushroom_gather: gather_at_time - 2 * 1000
+    })
+    repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(seeded)
+
+    await outpostGather({
+      outpost_id: outpost.id,
+      player_id,
+      gather_at_time
+    })
+
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+    const updated_stock = stockUpdateOne.mock.calls[0][0]
+    assert.strictEqual(updated_stock.plastic, 250)
+    assert.strictEqual(updated_stock.mushroom, 300)
   })
 
   it('should emit OutpostResourcesGathered event after a successful gather', async () => {

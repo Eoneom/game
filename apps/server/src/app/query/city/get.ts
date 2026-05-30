@@ -4,8 +4,8 @@ import { Resource } from '#shared/resource'
 import { now } from '#shared/time'
 import { CellEntity } from '#core/world/cell/entity'
 import { CityEntity } from '#core/city/entity'
-import { CityService } from '#core/city/service'
 import { CityError } from '#core/city/error'
+import { ResourcesService } from '#core/resources/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 
 export interface CityGetQueryRequest {
@@ -75,11 +75,11 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
     }
 
     const warehouse_full_in_seconds: Resource = {
-      plastic: CityService.computeWarehouseFullInSeconds({
+      plastic: ResourcesService.computeWarehouseFullInSeconds({
         space_remaining: warehouses_capacity.plastic - stock_as_of_now.plastic,
         earnings_per_second: production.earnings_per_second.plastic
       }),
-      mushroom: CityService.computeWarehouseFullInSeconds({
+      mushroom: ResourcesService.computeWarehouseFullInSeconds({
         space_remaining: warehouses_capacity.mushroom - stock_as_of_now.mushroom,
         earnings_per_second: production.earnings_per_second.mushroom
       })

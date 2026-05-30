@@ -123,6 +123,10 @@ describe('finishTroopTransportMovement', () => {
       plastic: 3000,
       mushroom: 4000,
     })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 10000,
+      mushroom: 10000,
+    })
   })
 
   afterEach(() => {

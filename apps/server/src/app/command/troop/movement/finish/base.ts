@@ -4,7 +4,7 @@ import {
   resolveOwnedDepositTarget
 } from '#app/command/troop/movement/shared'
 import { runCommand } from '#command/run'
-import { UNLIMITED_RESOURCE_CAPACITY } from '#app/service'
+import { AppService } from '#app/service'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
@@ -227,10 +227,11 @@ async function attachCargoToSave({
     await repository.resource_stock.ensureWorldStockForCell({
       cell_id: finish_save.outpost.cell_id,
     })
+    const warehouses_capacity = await AppService.getOutpostWarehousesCapacity({ player_id })
     const updated_stock = await planCargoDeposit({
       cell_id: finish_save.outpost.cell_id,
       resources: movement.resources,
-      warehouses_capacity: UNLIMITED_RESOURCE_CAPACITY,
+      warehouses_capacity,
     })
     return {
       ...finish_save,

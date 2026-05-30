@@ -42,6 +42,8 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   earnings_per_second: { plastic: 0, mushroom: 0 },
   pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 },
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
+  warehouses_capacity: { plastic: 2000, mushroom: 1500 },
+  warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
   ...overrides,
 })
 

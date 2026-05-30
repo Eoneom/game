@@ -31,5 +31,19 @@ export const technology_costs: Record<TechnologyCode, LevelCosts> = {
       base: 300,
       multiplier: 2.2
     }
+  },
+  [TechnologyCode.OUTPOST_LOGISTICS]: {
+    plastic: {
+      base: 10000,
+      multiplier: 1.6
+    },
+    mushroom: {
+      base: 8000,
+      multiplier: 1.6
+    },
+    duration: {
+      base: 180,
+      multiplier: 2
+    }
   }
 }

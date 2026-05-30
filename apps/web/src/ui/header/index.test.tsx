@@ -61,6 +61,8 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   earnings_per_second: { plastic: 0, mushroom: 0 },
   pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 },
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
+  warehouses_capacity: { plastic: 2000, mushroom: 1500 },
+  warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
   ...overrides,
 })
 
@@ -152,11 +154,11 @@ describe('Header', () => {
     expect(screen.getAllByRole('progressbar')).toHaveLength(2)
   })
 
-  it('with outpost, shows two resource items without progress bars', async () => {
+  it('with outpost, shows two resource items with progress bars', async () => {
     const outpost = minimalOutpost({ plastic: 100, mushroom: 200 })
     renderHeader({ outpost, outpostId: outpost.id })
     await act(async () => {})
     expect(screen.getAllByRole('listitem')).toHaveLength(2)
-    expect(screen.queryAllByRole('progressbar')).toHaveLength(0)
+    expect(screen.getAllByRole('progressbar')).toHaveLength(2)
   })
 })

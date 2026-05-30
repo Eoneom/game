@@ -1,12 +1,10 @@
 import { GenericQuery } from '#query/generic'
-import {
-  AppService,
-  UNLIMITED_RESOURCE_CAPACITY
-} from '#app/service'
+import { AppService } from '#app/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostError } from '#core/outpost/error'
 import { OutpostType } from '#core/outpost/constant/type'
 import { CellEntity } from '#core/world/cell/entity'
+import { ResourcesService } from '#core/resources/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { Resource } from '#shared/resource'
 import { now } from '#shared/time'
@@ -23,6 +21,8 @@ export interface OutpostGetQueryResponse {
   earnings_per_second: Resource
   pre_cell_earnings_per_second: Resource
   cell_resource_coefficient: Resource
+  warehouses_capacity: Resource
+  warehouse_full_in_seconds: Resource
 }
 
 export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, OutpostGetQueryResponse> {
@@ -42,11 +42,13 @@ export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, Outpos
     const [
       cell,
       production,
-      stock_row
+      stock_row,
+      warehouses_capacity
     ] = await Promise.all([
       this.repository.cell.getById(outpost.cell_id),
       AppService.getOutpostProductionBreakdown({ outpost_id }),
-      this.repository.resource_stock.getByCellId({ cell_id: outpost.cell_id })
+      this.repository.resource_stock.getByCellId({ cell_id: outpost.cell_id }),
+      AppService.getOutpostWarehousesCapacity({ player_id })
     ])
 
     let resource_stock = stock_row
@@ -54,9 +56,20 @@ export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, Outpos
       const { stock: stock_as_of_now } = stock_row.gather({
         gather_at_time: now(),
         earnings_per_second: production.earnings_per_second,
-        warehouses_capacity: UNLIMITED_RESOURCE_CAPACITY
+        warehouses_capacity
       })
       resource_stock = stock_as_of_now
+    }
+
+    const warehouse_full_in_seconds: Resource = {
+      plastic: ResourcesService.computeWarehouseFullInSeconds({
+        space_remaining: warehouses_capacity.plastic - resource_stock.plastic,
+        earnings_per_second: production.earnings_per_second.plastic
+      }),
+      mushroom: ResourcesService.computeWarehouseFullInSeconds({
+        space_remaining: warehouses_capacity.mushroom - resource_stock.mushroom,
+        earnings_per_second: production.earnings_per_second.mushroom
+      })
     }
 
     return {
@@ -65,7 +78,9 @@ export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, Outpos
       resource_stock,
       earnings_per_second: production.earnings_per_second,
       pre_cell_earnings_per_second: production.pre_cell_earnings_per_second,
-      cell_resource_coefficient: production.cell_resource_coefficient
+      cell_resource_coefficient: production.cell_resource_coefficient,
+      warehouses_capacity,
+      warehouse_full_in_seconds
     }
   }
 }

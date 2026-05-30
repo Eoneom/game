@@ -68,6 +68,10 @@ describe('OutpostGetQuery', () => {
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue(production)
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 2000,
+      mushroom: 1500
+    })
   })
 
   afterEach(() => {
@@ -99,6 +103,14 @@ describe('OutpostGetQuery', () => {
     expect(result.earnings_per_second).toEqual(production.earnings_per_second)
     expect(result.pre_cell_earnings_per_second).toEqual(production.pre_cell_earnings_per_second)
     expect(result.cell_resource_coefficient).toEqual(production.cell_resource_coefficient)
+    expect(result.warehouses_capacity).toEqual({
+      plastic: 2000,
+      mushroom: 1500
+    })
+    expect(result.warehouse_full_in_seconds).toEqual({
+      plastic: (2000 - 10) / 0.5,
+      mushroom: (1500 - 20) / 0.3
+    })
     expect(repository.cell.getById).toHaveBeenCalledWith(outpost.cell_id)
   })
 

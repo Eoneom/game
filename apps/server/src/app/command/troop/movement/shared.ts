@@ -1,8 +1,5 @@
 import { Factory } from '#adapter/factory'
-import {
-  AppService,
-  UNLIMITED_RESOURCE_CAPACITY
-} from '#app/service'
+import { AppService } from '#app/service'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopEntity } from '#core/troop/entity'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -91,7 +88,7 @@ export async function resolveOwnedDepositTarget({
 
   const warehouses_capacity = owned_city
     ? await AppService.getCityWarehousesCapacity({ city_id: owned_city.id })
-    : UNLIMITED_RESOURCE_CAPACITY
+    : await AppService.getOutpostWarehousesCapacity({ player_id })
 
   return {
     cell_id: destination_cell.id,
