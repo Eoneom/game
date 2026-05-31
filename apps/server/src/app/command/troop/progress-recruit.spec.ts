@@ -8,6 +8,7 @@ import {
 import { AppEventBus } from '#app/event-bus'
 import { Repository } from '#app/port/repository/generic'
 import { AppEvent } from '#core/events'
+import { PricingService } from '#core/pricing/service'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { now } from '#shared/time'
@@ -23,7 +24,9 @@ describe('progressTroopRecruitment', () => {
   let troopUpdateOne: MockInstance
   let scheduleTroopRecruitProgress: MockInstance
   let emit: MockInstance
-  let repository: Pick<Repository, 'troop'>
+  let buildingGetLevel: MockInstance
+  let technologyGetLevel: MockInstance
+  let repository: Pick<Repository, 'troop' | 'building' | 'technology'>
   let recruitment_time: number
 
   beforeEach(() => {
@@ -39,12 +42,20 @@ describe('progressTroopRecruitment', () => {
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     scheduleTroopRecruitProgress = vi.fn().mockResolvedValue('job-id')
     emit = vi.fn()
+    buildingGetLevel = vi.fn().mockResolvedValue(0)
+    technologyGetLevel = vi.fn().mockResolvedValue(0)
 
     repository = {
       troop: {
         getById: vi.fn().mockResolvedValue(troop),
         updateOne: troopUpdateOne,
       } as unknown as Repository['troop'],
+      building: {
+        getLevel: buildingGetLevel,
+      } as unknown as Repository['building'],
+      technology: {
+        getLevel: technologyGetLevel,
+      } as unknown as Repository['technology'],
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -89,7 +100,6 @@ describe('progressTroopRecruitment', () => {
     const scheduled = scheduleTroopRecruitProgress.mock.calls[0][0]
     assert.strictEqual(scheduled.city_id, city_id)
     assert.strictEqual(scheduled.troop_id, troop.id)
-    assert.strictEqual(scheduled.finish_at, recruitment_time + 10000)
     assert.ok(scheduled.execute_at <= scheduled.finish_at)
     assert.ok(
       scheduled.execute_at - recruitment_time >= TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS
@@ -118,5 +128,61 @@ describe('progressTroopRecruitment', () => {
     assert.strictEqual(updated_troop.count, 5)
     assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 0)
     assert.strictEqual(emit.mock.calls[0][0], AppEvent.TroopRecruitmentUpdated)
+  })
+
+  it('should recompute finish_at from current levels when units are delivered', async () => {
+    const cloning_factory_level = 2
+    const replication_catalyst_level = 1
+    buildingGetLevel.mockResolvedValue(cloning_factory_level)
+    technologyGetLevel.mockResolvedValue(replication_catalyst_level)
+
+    const last_progress = recruitment_time - 5000
+    const original_finish_at = recruitment_time + 5000
+    const remaining_count = 10
+
+    const result = await progressTroopRecruitment({
+      ...baseParams(),
+      remaining_count,
+      last_progress,
+      finish_at: original_finish_at,
+      started_at: last_progress,
+    })
+
+    assert.ok(result.recruit_count > 0)
+    assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 1)
+
+    const scheduled = scheduleTroopRecruitProgress.mock.calls[0][0]
+    const { duration } = PricingService.getTroopCost({
+      code: TroopCode.EXPLORER,
+      count: scheduled.remaining_count,
+      cloning_factory_level,
+      replication_catalyst_level,
+    })
+
+    assert.strictEqual(scheduled.finish_at, scheduled.last_progress + duration * 1000)
+    assert.notStrictEqual(scheduled.finish_at, original_finish_at)
+    assert.strictEqual(buildingGetLevel.mock.calls.length, 1)
+    assert.strictEqual(technologyGetLevel.mock.calls.length, 1)
+  })
+
+  it('should keep finish_at unchanged when no units are delivered', async () => {
+    const original_finish_at = recruitment_time + 3000
+
+    const result = await progressTroopRecruitment({
+      ...baseParams(),
+      remaining_count: 1,
+      last_progress: recruitment_time,
+      finish_at: original_finish_at,
+      started_at: recruitment_time,
+    })
+
+    assert.strictEqual(result.recruit_count, 0)
+    assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 1)
+
+    const scheduled = scheduleTroopRecruitProgress.mock.calls[0][0]
+    assert.strictEqual(scheduled.finish_at, original_finish_at)
+    assert.strictEqual(scheduled.remaining_count, 1)
+    assert.strictEqual(buildingGetLevel.mock.calls.length, 0)
+    assert.strictEqual(technologyGetLevel.mock.calls.length, 0)
   })
 })

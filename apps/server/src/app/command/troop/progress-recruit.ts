@@ -1,7 +1,10 @@
 import { Factory } from '#adapter/factory'
 import { nextTroopRecruitProgressAt } from '#adapter/job-queue'
 import { runCommand } from '#command/run'
+import { BuildingCode } from '#core/building/constant/code'
 import { AppEvent } from '#core/events'
+import { PricingService } from '#core/pricing/service'
+import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopService } from '#core/troop/service'
 import { now } from '#shared/time'
@@ -63,16 +66,43 @@ export async function progressTroopRecruitment({
     }))
 
     if (progressed.recruitment) {
+      let next_finish_at = progressed.recruitment.finish_at
+
+      if (recruit_count > 0) {
+        const [
+          cloning_factory_level,
+          replication_catalyst_level,
+        ] = await Promise.all([
+          repository.building.getLevel({
+            city_id,
+            code: BuildingCode.CLONING_FACTORY,
+          }),
+          repository.technology.getLevel({
+            player_id,
+            code: TechnologyCode.REPLICATION_CATALYST,
+          }),
+        ])
+
+        const { duration } = PricingService.getTroopCost({
+          code: troop.code,
+          count: progressed.recruitment.remaining_count,
+          cloning_factory_level,
+          replication_catalyst_level,
+        })
+
+        next_finish_at = progress_time + duration * 1000
+      }
+
       await job_queue.scheduleTroopRecruitProgress({
         player_id,
         city_id,
         troop_id,
         remaining_count: progressed.recruitment.remaining_count,
-        finish_at: progressed.recruitment.finish_at,
+        finish_at: next_finish_at,
         started_at: progressed.recruitment.started_at,
         last_progress: progressed.recruitment.last_progress,
         execute_at: nextTroopRecruitProgressAt({
-          finish_at: progressed.recruitment.finish_at,
+          finish_at: next_finish_at,
           remaining_count: progressed.recruitment.remaining_count,
           now: progress_time
         })
