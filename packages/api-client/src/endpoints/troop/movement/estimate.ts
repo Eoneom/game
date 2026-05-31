@@ -1,6 +1,7 @@
 import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../../response'
 import { Coordinates } from '../../shared/coordinates'
+import { Resource } from '../../shared/resource'
 
 export interface TroopMovementEstimateRequest {
   origin: Coordinates
@@ -10,6 +11,7 @@ export interface TroopMovementEstimateRequest {
     code: TroopCode
     count: number
   }[]
+  resources?: Resource
 }
 
 export interface TroopMovementEstimateDataResponse {
@@ -17,6 +19,7 @@ export interface TroopMovementEstimateDataResponse {
   duration: number
   speed: number
   transport_capacity: number
+  destination_capacity_exceeded: boolean
 }
 
 export type TroopMovementEstimateResponse = GenericResponse<TroopMovementEstimateDataResponse>

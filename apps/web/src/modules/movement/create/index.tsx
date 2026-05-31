@@ -33,6 +33,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     duration: 0,
     distance: 0,
     transport_capacity: 0,
+    destination_capacity_exceeded: false,
   })
   const [ action, setAction ] = useState<MovementAction>(MovementAction.BASE)
   const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0 })
@@ -58,10 +59,11 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   const remainingCapacity = Math.max(0, capacity - usedCapacity)
   const maxPlastic = Math.min(availablePlastic, resources.plastic + remainingCapacity)
   const maxMushroom = Math.min(availableMushroom, resources.mushroom + remainingCapacity)
+  const estimateResources = action === MovementAction.TRANSPORT ? resources : undefined
 
   useEffect(() => {
     launchMovementEstimation()
-  }, [selectedTroops, destination])
+  }, [selectedTroops, destination, estimateResources?.plastic, estimateResources?.mushroom])
 
   useEffect(() => {
     setResources(current => {
@@ -93,6 +95,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
       destination,
       troopCodes,
       troops: selectedTroopList,
+      resources: estimateResources,
     })
     if (!result) {
       setEstimation({
@@ -100,6 +103,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
         duration: 0,
         distance: 0,
         transport_capacity: 0,
+        destination_capacity_exceeded: false,
       })
       return
     }
@@ -176,6 +180,9 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
             isTemporaryOutpost={Boolean(outpost?.type === OutpostType.TEMPORARY)}
             troops={troops}
             selectedTroops={selectedTroops}
+            destinationCapacityExceeded={
+              action === MovementAction.TRANSPORT && estimation.destination_capacity_exceeded
+            }
           />
           <input
             className="movement-submit-button"

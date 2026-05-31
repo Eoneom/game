@@ -8,6 +8,7 @@ import {
   TroopMovementEstimateResponse
 } from '@eoneom/api-client/src/endpoints/troop/movement/estimate'
 import { TroopMovementEstimateQuery } from '#query/troop/movement/estimate'
+import { getPlayerIdFromContext } from '#web/helpers'
 
 export const troopEstimateMovementHandler = async (
   req: Request<TroopMovementEstimateRequest>,
@@ -39,16 +40,20 @@ export const troopEstimateMovementHandler = async (
   }
 
   try {
+    const player_id = getPlayerIdFromContext(res)
     const {
       distance,
       speed,
       duration,
       transport_capacity,
+      destination_capacity_exceeded,
     } = await new TroopMovementEstimateQuery().run({
       origin,
       destination,
       troop_codes,
       troops: req.body.troops,
+      player_id,
+      resources: req.body.resources,
     })
 
     const response: TroopMovementEstimateResponse = {
@@ -58,6 +63,7 @@ export const troopEstimateMovementHandler = async (
         speed,
         duration,
         transport_capacity,
+        destination_capacity_exceeded,
       }
     }
 
