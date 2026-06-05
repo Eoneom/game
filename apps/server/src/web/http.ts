@@ -3,9 +3,10 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { router } from '#web/router'
-import { errorMiddleware } from '#web/middleware/error'
-import { Factory } from '#adapter/factory'
+import { createErrorMiddleware } from '#web/middleware/error'
 import { setupWebSocketServer } from '#web/ws'
+import { AppEventBus } from '#app/event-bus'
+import { AppLogger } from '#app/port/logger'
 
 const http = express()
 const rawPort = Number.parseInt(
@@ -14,17 +15,25 @@ const rawPort = Number.parseInt(
 )
 const port =
   Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 3000
-const logger = Factory.getLogger('web:http')
 
 http.use(cors())
 http.use(bodyParser.json())
 
-export const launchServer = () => {
+export const launchServer = ({
+  logger,
+  eventBus
+}: {
+  logger: AppLogger
+  eventBus: AppEventBus
+}) => {
   http.use(router())
-  http.use(errorMiddleware)
+  http.use(createErrorMiddleware(logger.child({ component: 'middleware:error' })))
 
   const server = createServer(http)
-  setupWebSocketServer(server)
+  setupWebSocketServer(server, {
+    eventBus,
+    logger: logger.child({ component: 'web:ws' })
+  })
 
   server.listen(port, () => {
     logger.info('awesome server listening', { port })

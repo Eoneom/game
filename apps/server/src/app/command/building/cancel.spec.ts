@@ -5,7 +5,7 @@ import {
   STARTING_PLASTIC
 } from '#core/city/constant'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
@@ -75,7 +75,9 @@ describe('cancelBuilding', () => {
       execute_at: Date.now() + 60_000,
       job_id: 'job'
     })
-    cancelBuildingUpgradeFinish = vi.fn().mockResolvedValue(undefined)
+    cancelBuildingUpgradeFinish = vi.fn().mockImplementation(async () => {
+      getPendingBuildingUpgrade.mockResolvedValue(null)
+    })
     scheduleBuildingUpgradeFinish = vi.fn().mockResolvedValue('job-id')
     queueListByCity = vi.fn().mockResolvedValue([])
     queueDelete = vi.fn().mockResolvedValue(undefined)

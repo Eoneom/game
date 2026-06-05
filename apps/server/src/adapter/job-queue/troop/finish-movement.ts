@@ -1,4 +1,5 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingTroopMovementFinish } from '#app/port/job-queue'
 
 export const TROOP_MOVEMENT_FINISH_QUEUE = 'troop.movement.finish'
 
@@ -7,10 +8,7 @@ export type TroopMovementFinishJobData = {
   movement_id: string
 }
 
-export type PendingTroopMovementFinish = TroopMovementFinishJobData & {
-  execute_at: number
-  job_id: string
-}
+export type { PendingTroopMovementFinish }
 
 export const scheduleTroopMovementFinish = async (
   ctx: JobQueueContext,

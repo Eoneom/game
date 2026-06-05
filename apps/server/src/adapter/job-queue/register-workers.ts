@@ -1,20 +1,21 @@
 import {
   BUILDING_UPGRADE_FINISH_QUEUE,
-  BuildingUpgradeFinishJobData,
+  type BuildingUpgradeFinishJobData,
   CITY_RESOURCES_GATHER_QUEUE,
-  CityResourcesGatherJobData,
-  JobQueue,
+  type CityResourcesGatherJobData,
+  JobQueue as PgBossJobQueue,
   OUTPOST_RESOURCES_GATHER_QUEUE,
-  OutpostResourcesGatherJobData,
+  type OutpostResourcesGatherJobData,
   REPORT_CLEANUP_QUEUE,
-  ReportCleanupJobData,
+  type ReportCleanupJobData,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
-  TechnologyResearchFinishJobData,
+  type TechnologyResearchFinishJobData,
   TROOP_MOVEMENT_FINISH_QUEUE,
   TROOP_RECRUIT_PROGRESS_QUEUE,
-  TroopMovementFinishJobData,
-  TroopRecruitProgressJobData
+  type TroopMovementFinishJobData,
+  type TroopRecruitProgressJobData
 } from '#adapter/job-queue'
+import type { JobQueue } from '#app/port/job-queue'
 import { finishBuildingUpgrade } from '#app/command/building/finish-upgrade'
 import { finishTechnologyResearch } from '#app/command/technology/finish-research'
 import { sagaFinishOneMovement } from '#app/saga/finish/movement'
@@ -24,10 +25,18 @@ import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progres
 import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
 import { Factory } from '#adapter/factory'
 
-export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
-  const logger = Factory.getLogger('app:job:register')
+const asPgBossJobQueue = (queue: JobQueue): PgBossJobQueue => {
+  if (!(queue instanceof PgBossJobQueue)) {
+    throw new Error('expected pg-boss JobQueue adapter')
+  }
+  return queue
+}
 
-  await jobQueue.work<BuildingUpgradeFinishJobData, void, { includeMetadata: true }>(
+export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueue()): Promise<void> => {
+  const queue = asPgBossJobQueue(jobQueue)
+  const logger = Factory.getLogger('adapter:job-queue:register-workers')
+
+  await queue.work<BuildingUpgradeFinishJobData, void, { includeMetadata: true }>(
     BUILDING_UPGRADE_FINISH_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -55,7 +64,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<TechnologyResearchFinishJobData, void, { includeMetadata: true }>(
+  await queue.work<TechnologyResearchFinishJobData, void, { includeMetadata: true }>(
     TECHNOLOGY_RESEARCH_FINISH_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -81,7 +90,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<TroopRecruitProgressJobData, void, { includeMetadata: true }>(
+  await queue.work<TroopRecruitProgressJobData, void, { includeMetadata: true }>(
     TROOP_RECRUIT_PROGRESS_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -112,7 +121,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<TroopMovementFinishJobData, void, { includeMetadata: true }>(
+  await queue.work<TroopMovementFinishJobData, void, { includeMetadata: true }>(
     TROOP_MOVEMENT_FINISH_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -138,7 +147,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<CityResourcesGatherJobData, void, { includeMetadata: true }>(
+  await queue.work<CityResourcesGatherJobData, void, { includeMetadata: true }>(
     CITY_RESOURCES_GATHER_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -149,7 +158,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<OutpostResourcesGatherJobData, void, { includeMetadata: true }>(
+  await queue.work<OutpostResourcesGatherJobData, void, { includeMetadata: true }>(
     OUTPOST_RESOURCES_GATHER_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
@@ -160,7 +169,7 @@ export const registerJobWorkers = async (jobQueue: JobQueue): Promise<void> => {
     }
   )
 
-  await jobQueue.work<ReportCleanupJobData, void, { includeMetadata: true }>(
+  await queue.work<ReportCleanupJobData, void, { includeMetadata: true }>(
     REPORT_CLEANUP_QUEUE,
     { includeMetadata: true },
     async (jobs) => {

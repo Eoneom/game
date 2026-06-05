@@ -1,5 +1,5 @@
 import { Factory } from '#adapter/factory'
-import { REPORT_CLEANUP_INTERVAL_MS } from '#adapter/job-queue'
+import { REPORT_CLEANUP_INTERVAL_MS } from '#app/scheduling/intervals'
 import { runCommand } from '#command/run'
 import { now } from '#shared/time'
 

@@ -38,7 +38,7 @@ describe('TroopGetQuery', () => {
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
       getPendingTroopRecruitProgress: vi.fn().mockResolvedValue(null)
-    } as unknown as import('#adapter/job-queue').JobQueue)
+    } as unknown as import('#app/port/job-queue').JobQueue)
   })
 
   afterEach(() => {

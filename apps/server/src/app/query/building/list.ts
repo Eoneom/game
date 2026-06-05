@@ -1,17 +1,39 @@
 import { Factory } from '#adapter/factory'
 import { GenericQuery } from '#query/generic'
+import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
 import { BuildingService } from '#core/building/service'
 import { PricingService } from '#core/pricing/service'
 import { TechnologyCode } from '#core/technology/constant/code'
-import { BuildingListDataResponse } from '@eoneom/api-client/src/endpoints/building/list'
 
 export interface ListBuildingRequest {
-  city_id: string,
+  city_id: string
   player_id: string
 }
 
-export type ListBuildingQueryResponse = BuildingListDataResponse
+export type BuildingListEntry =
+  | {
+      id: string
+      code: BuildingCode
+      level: number
+      upgrade_at: number
+      upgrade_started_at: number
+    }
+  | {
+      id: string
+      code: BuildingCode
+      level: number
+    }
+
+export interface BuildingUpgradeQueueEntry {
+  id: string
+  building_code: BuildingCode
+}
+
+export interface ListBuildingQueryResponse {
+  buildings: BuildingListEntry[]
+  upgrade_queue: BuildingUpgradeQueueEntry[]
+}
 
 export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBuildingQueryResponse> {
   constructor() {
@@ -43,7 +65,7 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
     ])
 
     const sorted = BuildingService.sortBuildings({ buildings })
-    const response_buildings: BuildingListDataResponse['buildings'] = sorted.map(building => {
+    const response_buildings: BuildingListEntry[] = sorted.map(building => {
       if (!pending_upgrade || pending_upgrade.building_id !== building.id) {
         return {
           id: building.id,

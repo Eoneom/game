@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { createTroopMovement } from '#app/command/troop/movement/create'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'

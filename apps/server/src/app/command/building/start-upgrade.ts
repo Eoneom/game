@@ -45,7 +45,8 @@ export async function startBuildingUpgrade({
     city,
     city_cell,
     building,
-    levels
+    levels,
+    pending_upgrade
   ] = await Promise.all([
     repository.city.get(city_id),
     repository.cell.getCityCell({ city_id }),
@@ -57,8 +58,11 @@ export async function startBuildingUpgrade({
       city_id,
       player_id,
       building_code
-    })
+    }),
+    job_queue.getPendingBuildingUpgrade({ city_id })
   ])
+
+  building.assertCanUpgrade({ is_building_in_progress: pending_upgrade !== null })
 
   RequirementService.checkBuildingRequirement({
     building_code: building.code,

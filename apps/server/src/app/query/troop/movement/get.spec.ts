@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { TroopMovementGetQuery } from '#app/query/troop/movement/get'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'

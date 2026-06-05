@@ -1,15 +1,12 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingReportCleanup } from '#app/port/job-queue'
 
 export const REPORT_CLEANUP_QUEUE = 'communication.report.cleanup-old-read'
-export const REPORT_CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000
 export const REPORT_CLEANUP_SINGLETON_KEY = 'global'
 
 export type ReportCleanupJobData = Record<string, never>
 
-export type PendingReportCleanup = {
-  execute_at: number
-  job_id: string
-}
+export type { PendingReportCleanup }
 
 export const scheduleReportCleanup = async (
   ctx: JobQueueContext,

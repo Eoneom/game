@@ -1,5 +1,5 @@
 import { Factory } from '#adapter/factory'
-import { nextTroopRecruitProgressAt } from '#adapter/job-queue'
+import { nextTroopRecruitProgressAt } from '#app/scheduling/troop-recruit'
 import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { BuildingCode } from '#core/building/constant/code'

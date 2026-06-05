@@ -6,6 +6,7 @@ import {
 import { BuildingListResponse } from '@eoneom/api-client/src/endpoints/building/list'
 import { getPlayerIdFromContext } from '#web/helpers'
 import { BuildingListQuery } from '#query/building/list'
+import { buildingListResponseMapper } from '#web/handler/building/list.mapper'
 
 export const buildingListHandler = async (
   req: Request,
@@ -22,14 +23,14 @@ export const buildingListHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    const data = await new BuildingListQuery().run({
+    const result = await new BuildingListQuery().run({
       city_id,
       player_id
     })
 
     return res.json({
       status: 'ok',
-      data
+      data: buildingListResponseMapper(result)
     })
   } catch (err) {
     next(err)

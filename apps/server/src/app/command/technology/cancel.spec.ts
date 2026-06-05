@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { cancelTechnology } from './cancel'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { TechnologyError } from '#core/technology/error'
 import assert from 'assert'
 import { id } from '#shared/identification'

@@ -1,15 +1,12 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingOutpostResourcesGather } from '#app/port/job-queue'
 
 export const OUTPOST_RESOURCES_GATHER_QUEUE = 'outpost.resources.gather'
-export const OUTPOST_RESOURCES_GATHER_INTERVAL_MS = 5_000
 export const OUTPOST_RESOURCES_GATHER_SINGLETON_KEY = 'global'
 
 export type OutpostResourcesGatherJobData = Record<string, never>
 
-export type PendingOutpostResourcesGather = {
-  execute_at: number
-  job_id: string
-}
+export type { PendingOutpostResourcesGather }
 
 export const scheduleOutpostResourcesGather = async (
   ctx: JobQueueContext,

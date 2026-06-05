@@ -1,17 +1,17 @@
-import { Factory } from '#adapter/factory'
 import { ErrorResponse } from '@eoneom/api-client/src/response'
 import {
   NextFunction, Request, Response
 } from 'express'
+import { AppLogger } from '#app/port/logger'
 
-const log = Factory.getLogger('middleware:error')
+export const createErrorMiddleware = (log: AppLogger) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  return (err: Error, _req: Request, res: Response<ErrorResponse>, _next: NextFunction) => {
+    log.error(err.message, { stack: err.stack })
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const errorMiddleware = (err: Error, _req: Request, res: Response<ErrorResponse>, _next: NextFunction) => {
-  log.error(err.message, { stack: err.stack })
-
-  return res.status(200).json({
-    status: 'nok',
-    error_code: err.message
-  })
+    return res.status(200).json({
+      status: 'nok',
+      error_code: err.message
+    })
+  }
 }

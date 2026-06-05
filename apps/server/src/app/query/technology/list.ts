@@ -3,13 +3,29 @@ import { GenericQuery } from '#query/generic'
 import { TechnologyService } from '#core/technology/service'
 import { PricingService } from '#core/pricing/service'
 import { BuildingCode } from '#core/building/constant/code'
-import { TechnologyListDataResponse } from '@eoneom/api-client/src/endpoints/technology/list'
+import { TechnologyCode } from '#core/technology/constant/code'
 
 interface TechnologyListRequest {
   player_id: string
 }
 
-export type TechnologyListQueryResponse = TechnologyListDataResponse
+export type TechnologyListEntry =
+  | {
+      id: string
+      code: TechnologyCode
+      level: number
+      research_at: number
+      research_started_at: number
+    }
+  | {
+      id: string
+      code: TechnologyCode
+      level: number
+    }
+
+export interface TechnologyListQueryResponse {
+  technologies: TechnologyListEntry[]
+}
 
 export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, TechnologyListQueryResponse> {
   constructor() {
@@ -36,7 +52,7 @@ export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, Tec
       })
     }
 
-    const response_technologies: TechnologyListDataResponse['technologies'] = sorted.map(technology => {
+    const response_technologies: TechnologyListEntry[] = sorted.map(technology => {
       if (!pending_research || pending_research.technology_id !== technology.id) {
         return {
           id: technology.id,

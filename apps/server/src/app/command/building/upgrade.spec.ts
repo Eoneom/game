@@ -5,7 +5,7 @@ import {
 } from '../../test-support/resource-stock'
 import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BUILDING_UPGRADE_QUEUE_LIMIT } from '#core/building/constant/upgrade-queue'

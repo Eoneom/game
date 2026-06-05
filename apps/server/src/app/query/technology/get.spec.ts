@@ -1,6 +1,6 @@
 import { TechnologyGetQuery } from '#app/query/technology/get'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { TechnologyCode } from '#core/technology/constant/code'

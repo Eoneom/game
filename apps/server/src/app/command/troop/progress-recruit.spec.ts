@@ -1,10 +1,8 @@
 import type { MockInstance } from 'vitest'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
 import { Factory } from '#adapter/factory'
-import {
-  JobQueue,
-  TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS
-} from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
+import { TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS } from '#app/scheduling/troop-recruit'
 import { AppEventBus } from '#app/event-bus'
 import { Repository } from '#app/port/repository/generic'
 import { AppEvent } from '#core/events'

@@ -4,6 +4,7 @@ import { troop_order } from '#core/troop/constant/order'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
 import { troop_earnings } from '#core/troop/constant/earnings'
 import { TroopEntity } from '#core/troop/entity'
+import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { gameTimeScale, scaleGameDurationMs } from '#shared/game-time-scale'
@@ -226,6 +227,39 @@ export class TroopService {
     return troops.reduce((total, troop) => {
       return total + this.getTransportCapacity(troop.code) * troop.count
     }, 0)
+  }
+
+  static assertTransportResources({
+    action,
+    resources,
+    move_troops,
+  }: {
+    action: MovementAction
+    resources: Resource
+    move_troops: TroopCount[]
+  }): void {
+    const total = resources.plastic + resources.mushroom
+    const has_resources = total > 0
+    const has_negative = resources.plastic < 0 || resources.mushroom < 0
+
+    if (has_negative) {
+      throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
+    }
+
+    if (action === MovementAction.TRANSPORT) {
+      if (!has_resources) {
+        throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
+      }
+      const capacity = this.getTotalTransportCapacity({ troops: move_troops })
+      if (total > capacity) {
+        throw new Error(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+      }
+      return
+    }
+
+    if (has_resources) {
+      throw new Error(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
+    }
   }
 
   static sortTroops({ troops } : { troops: TroopEntity[] }): TroopEntity[] {

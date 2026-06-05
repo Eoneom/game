@@ -29,39 +29,6 @@ export interface CreateTroopMovementResult {
 
 const EMPTY_RESOURCES: Resource = { plastic: 0, mushroom: 0 }
 
-function assertTransportResources({
-  action,
-  resources,
-  move_troops,
-}: {
-  action: MovementAction
-  resources: Resource
-  move_troops: TroopCount[]
-}): void {
-  const total = resources.plastic + resources.mushroom
-  const has_resources = total > 0
-  const has_negative = resources.plastic < 0 || resources.mushroom < 0
-
-  if (has_negative) {
-    throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
-  }
-
-  if (action === MovementAction.TRANSPORT) {
-    if (!has_resources) {
-      throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
-    }
-    const capacity = TroopService.getTotalTransportCapacity({ troops: move_troops })
-    if (total > capacity) {
-      throw new Error(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
-    }
-    return
-  }
-
-  if (has_resources) {
-    throw new Error(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
-  }
-}
-
 export async function createTroopMovement({
   player_id,
   action,
@@ -74,7 +41,7 @@ export async function createTroopMovement({
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
-    assertTransportResources({
+    TroopService.assertTransportResources({
       action,
       resources,
       move_troops,

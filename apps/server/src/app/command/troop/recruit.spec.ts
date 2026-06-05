@@ -2,10 +2,8 @@ import type { MockInstance } from 'vitest'
 import { recruitTroop } from '#app/command/troop/recruit'
 import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
-import {
-  JobQueue,
-  TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS
-} from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
+import { TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS } from '#app/scheduling/troop-recruit'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityEntity } from '#core/city/entity'

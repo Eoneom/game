@@ -1,15 +1,12 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingCityResourcesGather } from '#app/port/job-queue'
 
 export const CITY_RESOURCES_GATHER_QUEUE = 'city.resources.gather'
-export const CITY_RESOURCES_GATHER_INTERVAL_MS = 5_000
 export const CITY_RESOURCES_GATHER_SINGLETON_KEY = 'global'
 
 export type CityResourcesGatherJobData = Record<string, never>
 
-export type PendingCityResourcesGather = {
-  execute_at: number
-  job_id: string
-}
+export type { PendingCityResourcesGather }
 
 export const scheduleCityResourcesGather = async (
   ctx: JobQueueContext,

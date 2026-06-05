@@ -4,6 +4,17 @@ import {
   type WorkOptions
 } from 'pg-boss'
 import { AppLogger } from '#app/port/logger'
+import type {
+  JobQueue as JobQueuePort,
+  PendingBuildingUpgrade,
+  PendingCityResourcesGather,
+  PendingOutpostResourcesGather,
+  PendingReportCleanup,
+  PendingTechnologyResearch,
+  PendingTroopMovementFinish,
+  PendingTroopRecruitProgress,
+  TroopRecruitProgressJobData
+} from '#app/port/job-queue'
 import {
   PGBOSS_SCHEMA,
   resolveDatabaseUrl,
@@ -13,54 +24,46 @@ import {
   BUILDING_UPGRADE_FINISH_QUEUE,
   cancelBuildingUpgradeFinish,
   getPendingBuildingUpgrade,
-  scheduleBuildingUpgradeFinish,
-  type PendingBuildingUpgrade
+  scheduleBuildingUpgradeFinish
 } from '#adapter/job-queue/building/finish-upgrade'
 import {
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
   cancelTechnologyResearchFinish,
   getPendingTechnologyResearch,
-  scheduleTechnologyResearchFinish,
-  type PendingTechnologyResearch
+  scheduleTechnologyResearchFinish
 } from '#adapter/job-queue/technology/finish-research'
 import {
   TROOP_RECRUIT_PROGRESS_QUEUE,
   cancelTroopRecruitProgress,
   getPendingTroopRecruitProgress,
-  scheduleTroopRecruitProgress,
-  type PendingTroopRecruitProgress,
-  type TroopRecruitProgressJobData
+  scheduleTroopRecruitProgress
 } from '#adapter/job-queue/troop/recruit'
 import {
   TROOP_MOVEMENT_FINISH_QUEUE,
   cancelTroopMovementFinish,
   getPendingTroopMovementFinish,
-  scheduleTroopMovementFinish,
-  type PendingTroopMovementFinish
+  scheduleTroopMovementFinish
 } from '#adapter/job-queue/troop/finish-movement'
 import {
   CITY_RESOURCES_GATHER_QUEUE,
   ensureCityResourcesGatherScheduled,
   getPendingCityResourcesGather,
-  scheduleCityResourcesGather,
-  type PendingCityResourcesGather
+  scheduleCityResourcesGather
 } from '#adapter/job-queue/city/gather'
 import {
   OUTPOST_RESOURCES_GATHER_QUEUE,
   ensureOutpostResourcesGatherScheduled,
   getPendingOutpostResourcesGather,
-  scheduleOutpostResourcesGather,
-  type PendingOutpostResourcesGather
+  scheduleOutpostResourcesGather
 } from '#adapter/job-queue/outpost/gather'
 import {
   REPORT_CLEANUP_QUEUE,
   ensureReportCleanupScheduled,
   getPendingReportCleanup,
-  scheduleReportCleanup,
-  type PendingReportCleanup
+  scheduleReportCleanup
 } from '#adapter/job-queue/communication/cleanup-old-read-reports'
 
-export class JobQueue {
+export class JobQueue implements JobQueuePort {
   private readonly ctx: JobQueueContext
 
   constructor({

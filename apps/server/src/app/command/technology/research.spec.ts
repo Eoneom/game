@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { researchTechnology } from './research'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { AppService } from '#app/service'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'

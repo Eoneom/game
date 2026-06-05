@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { cancelTroop } from '#app/command/troop/cancel'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'

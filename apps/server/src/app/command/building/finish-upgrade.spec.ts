@@ -4,7 +4,7 @@ import {
   testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
@@ -128,7 +128,8 @@ describe('finishBuildingUpgrade', () => {
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as unknown as AppEventBus)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
-      scheduleBuildingUpgradeFinish
+      scheduleBuildingUpgradeFinish,
+      getPendingBuildingUpgrade: vi.fn().mockResolvedValue(null)
     } as unknown as JobQueue)
   })
 

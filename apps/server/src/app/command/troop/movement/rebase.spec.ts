@@ -1,7 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { rebaseTroopMovement } from '#app/command/troop/movement/rebase'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'

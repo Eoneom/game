@@ -1,4 +1,5 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingBuildingUpgrade } from '#app/port/job-queue'
 
 export const BUILDING_UPGRADE_FINISH_QUEUE = 'building.upgrade.finish'
 
@@ -9,10 +10,7 @@ export type BuildingUpgradeFinishJobData = {
   level: number
 }
 
-export type PendingBuildingUpgrade = BuildingUpgradeFinishJobData & {
-  execute_at: number
-  job_id: string
-}
+export type { PendingBuildingUpgrade }
 
 export const scheduleBuildingUpgradeFinish = async (
   ctx: JobQueueContext,

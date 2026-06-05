@@ -1,4 +1,5 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type { PendingTechnologyResearch } from '#app/port/job-queue'
 
 export const TECHNOLOGY_RESEARCH_FINISH_QUEUE = 'technology.research.finish'
 
@@ -9,10 +10,7 @@ export type TechnologyResearchFinishJobData = {
   level: number
 }
 
-export type PendingTechnologyResearch = TechnologyResearchFinishJobData & {
-  execute_at: number
-  job_id: string
-}
+export type { PendingTechnologyResearch }
 
 export const scheduleTechnologyResearchFinish = async (
   ctx: JobQueueContext,

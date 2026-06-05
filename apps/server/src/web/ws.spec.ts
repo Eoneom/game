@@ -14,7 +14,6 @@ import { setupWebSocketServer } from './ws'
 import {
   WebSocketServer, WebSocket 
 } from 'ws'
-import { Factory } from '#adapter/factory'
 import { AppEvent } from '#core/events'
 import { authorizeAuth } from '#app/command/auth/authorize'
 import { Server } from 'http'
@@ -54,16 +53,17 @@ describe('setupWebSocketServer', () => {
       child: vi.fn(),
     }
 
-    vi.spyOn(Factory, 'getEventBus').mockReturnValue({
+    const eventBus = {
       emit: vi.fn(),
       on: vi.fn((event: string, handler: (payload: unknown) => void) => {
         capturedEventListeners.set(event, handler)
       }),
-    } as any)
+    }
 
-    vi.spyOn(Factory, 'getLogger').mockReturnValue(mockLogger as any)
-
-    setupWebSocketServer({} as Server)
+    setupWebSocketServer({} as Server, {
+      eventBus: eventBus as any,
+      logger: mockLogger as any
+    })
 
     wssInstance = (WebSocketServer as unknown as MockInstance).mock.results[
       (WebSocketServer as unknown as MockInstance).mock.results.length - 1

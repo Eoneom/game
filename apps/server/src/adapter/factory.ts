@@ -5,9 +5,9 @@ import { loggerAdapter } from '#adapter/logger'
 import { Lock } from '#app/port/lock'
 import { LockInMemory } from '#adapter/lock'
 import { AppEventBus } from '#app/event-bus'
-import {
-  createJobQueue, JobQueue 
-} from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
+import { createJobQueue } from '#adapter/job-queue'
+import { withTransaction } from '#adapter/database/context'
 
 export class Factory {
   private static repository: Repository
@@ -49,5 +49,9 @@ export class Factory {
     }
 
     return this.jobQueue
+  }
+
+  static runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
+    return withTransaction(fn)
   }
 }

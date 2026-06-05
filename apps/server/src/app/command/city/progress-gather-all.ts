@@ -1,5 +1,5 @@
 import { Factory } from '#adapter/factory'
-import { CITY_RESOURCES_GATHER_INTERVAL_MS } from '#adapter/job-queue'
+import { CITY_RESOURCES_GATHER_INTERVAL_MS } from '#app/scheduling/intervals'
 import { cityGather } from '#app/command/city/gather'
 import { runCommand } from '#command/run'
 import { now } from '#shared/time'

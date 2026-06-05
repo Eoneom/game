@@ -6,7 +6,7 @@ import { migrateToLatest } from '#adapter/database/migrate'
 import { WorldError } from '#core/world/error'
 import { gameTimeScale } from '#shared/game-time-scale'
 import { launchServer } from '#web/http'
-import { registerJobWorkers } from '#app/job/register'
+import { registerJobWorkers } from '#adapter/job-queue/register-workers'
 import { now } from '#shared/time'
 
 (async () => {
@@ -33,7 +33,10 @@ import { now } from '#shared/time'
     }
   }
 
-  launchServer()
+  launchServer({
+    logger: Factory.getLogger('web:http'),
+    eventBus: Factory.getEventBus()
+  })
 
   let shutting_down = false
   const shutdown = async () => {

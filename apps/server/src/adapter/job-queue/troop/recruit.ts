@@ -1,40 +1,14 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import type {
+  PendingTroopRecruitProgress,
+  TroopRecruitProgressJobData
+} from '#app/port/job-queue'
 
 export const TROOP_RECRUIT_PROGRESS_QUEUE = 'troop.recruit.progress'
-export const TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS = 5_000
 
-export type TroopRecruitProgressJobData = {
-  player_id: string
-  city_id: string
-  troop_id: string
-  remaining_count: number
-  finish_at: number
-  started_at: number
-  last_progress: number
-}
-
-export type PendingTroopRecruitProgress = TroopRecruitProgressJobData & {
-  execute_at: number
-  job_id: string
-}
-
-export const nextTroopRecruitProgressAt = ({
-  finish_at,
-  remaining_count,
-  now: now_ms
-}: {
-  finish_at: number
-  remaining_count: number
-  now: number
-}): number => {
-  const remaining_ms = Math.max(0, finish_at - now_ms)
-  if (remaining_ms === 0 || remaining_count <= 0) {
-    return finish_at
-  }
-
-  const ms_per_unit = remaining_ms / remaining_count
-  const delay = Math.min(remaining_ms, Math.max(TROOP_RECRUIT_PROGRESS_MIN_INTERVAL_MS, ms_per_unit))
-  return now_ms + delay
+export type {
+  TroopRecruitProgressJobData,
+  PendingTroopRecruitProgress
 }
 
 export const scheduleTroopRecruitProgress = async (

@@ -1,5 +1,5 @@
 import { Factory } from '#adapter/factory'
-import { OUTPOST_RESOURCES_GATHER_INTERVAL_MS } from '#adapter/job-queue'
+import { OUTPOST_RESOURCES_GATHER_INTERVAL_MS } from '#app/scheduling/intervals'
 import { outpostGather } from '#app/command/outpost/gather'
 import { runCommand } from '#command/run'
 import { now } from '#shared/time'

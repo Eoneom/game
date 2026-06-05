@@ -1,6 +1,6 @@
 import { TroopMovementListQuery } from '#app/query/troop/movement/list'
 import { Factory } from '#adapter/factory'
-import { JobQueue } from '#adapter/job-queue'
+import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'

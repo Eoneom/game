@@ -64,7 +64,7 @@ describe('TroopListQuery', () => {
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
       getPendingTroopRecruitProgress: vi.fn().mockResolvedValue(null)
-    } as unknown as import('#adapter/job-queue').JobQueue)
+    } as unknown as import('#app/port/job-queue').JobQueue)
   })
 
   afterEach(() => {
@@ -122,7 +122,7 @@ describe('TroopListQuery', () => {
         execute_at: 5_000,
         job_id: 'job-1'
       })
-    } as unknown as import('#adapter/job-queue').JobQueue)
+    } as unknown as import('#app/port/job-queue').JobQueue)
 
     const result = await new TroopListQuery().run({
       location: {
