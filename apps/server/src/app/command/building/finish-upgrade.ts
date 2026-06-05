@@ -1,5 +1,6 @@
 import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
+import { processBuildingUpgradeQueue } from '#app/command/building/start-upgrade'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
 import { AppEvent } from '#core/events'
@@ -56,6 +57,12 @@ export async function finishBuildingUpgrade({
     Factory.getEventBus().emit(AppEvent.BuildingUpgradeFinished, {
       city_id,
       player_id
+    })
+
+    await processBuildingUpgradeQueue({
+      player_id,
+      city_id,
+      started_at: upgraded_at
     })
 
     return {

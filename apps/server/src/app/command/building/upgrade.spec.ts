@@ -8,8 +8,10 @@ import { Factory } from '#adapter/factory'
 import { JobQueue } from '#adapter/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
+import { BUILDING_UPGRADE_QUEUE_LIMIT } from '#core/building/constant/upgrade-queue'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingError } from '#core/building/error'
+import { BuildingUpgradeQueueEntity } from '#core/building/upgrade-queue-entity'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { RequirementError } from '#core/requirement/error'
@@ -29,7 +31,12 @@ describe('upgradeBuilding', () => {
   let stockUpdateOne: MockInstance
   let scheduleBuildingUpgradeFinish: MockInstance
   let getPendingBuildingUpgrade: MockInstance
-  let repository: Pick<Repository, 'building' | 'city' | 'technology' | 'cell' | 'resource_stock'>
+  let queueCreate: MockInstance
+  let queueCountByCity: MockInstance
+  let repository: Pick<
+    Repository,
+    'building' | 'city' | 'technology' | 'cell' | 'resource_stock' | 'building_upgrade_queue'
+  >
 
   beforeEach(() => {
     city = CityEntity.initCity({
@@ -58,6 +65,8 @@ describe('upgradeBuilding', () => {
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
     scheduleBuildingUpgradeFinish = vi.fn().mockResolvedValue('job-id')
     getPendingBuildingUpgrade = vi.fn().mockResolvedValue(null)
+    queueCreate = vi.fn().mockResolvedValue(id())
+    queueCountByCity = vi.fn().mockResolvedValue(0)
 
     repository = {
       building: {
@@ -84,7 +93,12 @@ describe('upgradeBuilding', () => {
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
         updateOne: stockUpdateOne
-      } as unknown as Repository['resource_stock']
+      } as unknown as Repository['resource_stock'],
+      building_upgrade_queue: {
+        create: queueCreate,
+        countByCity: queueCountByCity,
+        listByCity: vi.fn().mockResolvedValue([])
+      } as unknown as Repository['building_upgrade_queue']
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -127,7 +141,7 @@ describe('upgradeBuilding', () => {
     )
   })
 
-  it('should prevent a player to upgrade if another building is in progress', async () => {
+  it('should enqueue when another building upgrade is in progress', async () => {
     getPendingBuildingUpgrade.mockResolvedValue({
       player_id,
       city_id: city.id,
@@ -137,13 +151,38 @@ describe('upgradeBuilding', () => {
       job_id: 'job'
     })
 
+    await upgradeBuilding({
+      player_id,
+      city_id: city.id,
+      building_code: BuildingCode.CLONING_FACTORY
+    })
+
+    assert.strictEqual(queueCreate.mock.calls.length, 1)
+    const queued = queueCreate.mock.calls[0][0] as BuildingUpgradeQueueEntity
+    assert.strictEqual(queued.city_id, city.id)
+    assert.strictEqual(queued.building_code, BuildingCode.CLONING_FACTORY)
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 0)
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+  })
+
+  it('should reject enqueue when the queue is full', async () => {
+    getPendingBuildingUpgrade.mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      building_id: id(),
+      level: 0,
+      execute_at: Date.now() + 1000,
+      job_id: 'job'
+    })
+    queueCountByCity.mockResolvedValue(BUILDING_UPGRADE_QUEUE_LIMIT)
+
     await assert.rejects(
       () => upgradeBuilding({
         player_id,
         city_id: city.id,
         building_code: BuildingCode.CLONING_FACTORY
       }),
-      new RegExp(BuildingError.ALREADY_IN_PROGRESS)
+      new RegExp(BuildingError.QUEUE_FULL)
     )
   })
 

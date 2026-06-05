@@ -10,7 +10,8 @@ interface Props {
 }
 
 export const RequirementBuilding: React.FC<Props> = ({ cityId, requirement }) => {
-  const { data: buildings = [] } = useListBuildings(cityId)
+  const { data } = useListBuildings(cityId)
+  const buildings = data?.buildings ?? []
   const requiredBuildingLevel = buildings.find(building => building.code === requirement.code)?.level ?? 0
   const isMetClassName = requiredBuildingLevel >= requirement.level ? 'success' : 'danger'
 

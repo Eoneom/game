@@ -25,6 +25,13 @@ export interface Building {
   level: number;
 }
 
+export interface BuildingUpgradeQueue {
+  building_code: string;
+  city_id: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+}
+
 export interface Cell {
   city_id: string | null;
   id: Generated<string>;
@@ -131,6 +138,7 @@ export interface Troop {
 export interface DB {
   auth: Auth;
   building: Building;
+  building_upgrade_queue: BuildingUpgradeQueue;
   cell: Cell;
   city: City;
   exploration: Exploration;

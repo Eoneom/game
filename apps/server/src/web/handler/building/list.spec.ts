@@ -12,12 +12,15 @@ type MockRes = {
   locals: Record<string, unknown>
 }
 
-const queryData = [
-  {
-    code: 'SAWMILL',
-    level: 1 
-  } 
-]
+const queryData = {
+  buildings: [
+    {
+      code: 'SAWMILL',
+      level: 1
+    }
+  ],
+  upgrade_queue: []
+}
 
 describe('buildingListHandler', () => {
   let req: Partial<Request>

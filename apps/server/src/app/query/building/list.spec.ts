@@ -22,7 +22,7 @@ describe('BuildingListQuery', () => {
   let architecture: TechnologyEntity
   let b_idle: BuildingEntity
   let b_upgrade: BuildingEntity
-  let repository: Pick<Repository, 'city' | 'building' | 'technology'>
+  let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'building_upgrade_queue'>
   let getPendingBuildingUpgrade: MockInstance
 
   beforeEach(() => {
@@ -66,7 +66,10 @@ describe('BuildingListQuery', () => {
           b_idle
         ])
       } as unknown as Repository['building'],
-      technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology']
+      technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology'],
+      building_upgrade_queue: {
+        listByCity: vi.fn().mockResolvedValue([])
+      } as unknown as Repository['building_upgrade_queue']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade } as unknown as JobQueue)
@@ -96,6 +99,7 @@ describe('BuildingListQuery', () => {
     })
 
     expect(result.buildings).toHaveLength(2)
+    expect(result.upgrade_queue).toEqual([])
     const upgrading = result.buildings.find((b): b is Extract<BuildingListEntry, { upgrade_at: number }> => b.id === b_upgrade.id && 'upgrade_at' in b)
     expect(upgrading).toBeDefined()
     expect(upgrading!.upgrade_at).toBe(10_000)
@@ -103,5 +107,27 @@ describe('BuildingListQuery', () => {
     const idle = result.buildings.find(b => b.id === b_idle.id)
     expect(idle).toBeDefined()
     expect(idle && !('upgrade_at' in idle)).toBe(true)
+  })
+
+  it('returns upgrade queue entries in FIFO order', async () => {
+    const queue_item = {
+      id: id(),
+      city_id: city.id,
+      building_code: BuildingCode.RESEARCH_LAB,
+      created_at: 1
+    }
+    ;(repository.building_upgrade_queue.listByCity as unknown as MockInstance).mockResolvedValue([queue_item])
+
+    const result = await new BuildingListQuery().run({
+      city_id: city.id,
+      player_id
+    })
+
+    expect(result.upgrade_queue).toEqual([
+      {
+        id: queue_item.id,
+        building_code: BuildingCode.RESEARCH_LAB
+      }
+    ])
   })
 })

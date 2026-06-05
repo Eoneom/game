@@ -1,0 +1,1 @@
+export const BUILDING_UPGRADE_QUEUE_LIMIT = 3

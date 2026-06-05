@@ -1,4 +1,5 @@
 export * from './building/cancel'
+export * from './building/cancel-queued'
 export * from './building/get'
 export * from './building/list'
 export * from './building/upgrade'

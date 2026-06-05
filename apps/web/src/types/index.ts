@@ -22,6 +22,7 @@ export type CityItem = CityListDataResponse['cities'][number]
 
 export type Building = BuildingGetDataResponse
 export type BuildingItem = BuildingListDataResponse['buildings'][number]
+export type BuildingUpgradeQueueItem = BuildingListDataResponse['upgrade_queue'][number]
 
 export type Technology = TechnologyGetDataResponse
 export type TechnologyItem = TechnologyListDataResponse['technologies'][number]

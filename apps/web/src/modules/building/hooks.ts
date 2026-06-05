@@ -18,11 +18,16 @@ export const useListBuildings = (cityId: string) => {
   return useQuery({
     queryKey: buildingKeys.list(cityId ?? ''),
     queryFn: async () => {
-      if (!token || !cityId) return []
+      if (!token || !cityId) {
+        return {
+          buildings: [],
+          upgrade_queue: []
+        }
+      }
       const res = await client.building.list(token, { city_id: cityId })
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('empty response')
-      return res.data.buildings
+      return res.data
     },
     enabled: !!token && !!cityId,
   })
@@ -80,6 +85,26 @@ export const useCancelBuildingUpgrade = (cityId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: buildingKeys.list(cityId) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
+export const useCancelQueuedBuildingUpgrade = (cityId: string) => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (queueItemId: string) => {
+      if (!token) throw new Error('no token')
+      const res = await client.building.cancelQueued(token, {
+        city_id: cityId,
+        queue_item_id: queueItemId
+      })
+      if (isError(res)) throw new Error(res.error_code)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: buildingKeys.list(cityId) })
     },
     onError: (err: Error) => toast.error(err.message),
   })

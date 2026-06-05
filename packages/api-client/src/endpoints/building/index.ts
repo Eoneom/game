@@ -4,6 +4,10 @@ import {
   BuildingCancelResponse
 } from './cancel'
 import {
+  BuildingCancelQueuedRequest,
+  BuildingCancelQueuedResponse
+} from './cancel-queued'
+import {
   BuildingGetRequest,
   BuildingGetResponse
 } from './get'
@@ -43,6 +47,16 @@ export class BuildingEndpoint {
 
   public async cancel(token: string, body: BuildingCancelRequest): Promise<BuildingCancelResponse> {
     return this.fetcher.put('/building/cancel', {
+      body,
+      token
+    })
+  }
+
+  public async cancelQueued(
+    token: string,
+    body: BuildingCancelQueuedRequest
+  ): Promise<BuildingCancelQueuedResponse> {
+    return this.fetcher.put('/building/queue/cancel', {
       body,
       token
     })

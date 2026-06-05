@@ -19,8 +19,14 @@ export type BuildingListEntry =
       level: number
     }
 
+export interface BuildingUpgradeQueueEntry {
+  id: string
+  building_code: BuildingCode
+}
+
 export interface BuildingListDataResponse {
   buildings: BuildingListEntry[]
+  upgrade_queue: BuildingUpgradeQueueEntry[]
 }
 
 export type BuildingListResponse = GenericResponse<BuildingListDataResponse>

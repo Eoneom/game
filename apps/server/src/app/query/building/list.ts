@@ -30,7 +30,8 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
     const [
       buildings,
       architecture,
-      pending_upgrade
+      pending_upgrade,
+      upgrade_queue
     ] = await Promise.all([
       this.repository.building.list({ city_id }),
       this.repository.technology.get({
@@ -38,6 +39,7 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
         code: TechnologyCode.ARCHITECTURE
       }),
       Factory.getJobQueue().getPendingBuildingUpgrade({ city_id }),
+      this.repository.building_upgrade_queue.listByCity({ city_id }),
     ])
 
     const sorted = BuildingService.sortBuildings({ buildings })
@@ -64,6 +66,12 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
       }
     })
 
-    return { buildings: response_buildings }
+    return {
+      buildings: response_buildings,
+      upgrade_queue: upgrade_queue.map(item => ({
+        id: item.id,
+        building_code: item.building_code
+      }))
+    }
   }
 }

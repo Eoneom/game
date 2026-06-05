@@ -7,6 +7,7 @@ import type { DB } from '#adapter/database/types'
 import { Repository } from '#app/port/repository/generic'
 import { AuthRepository } from '#app/port/repository/auth'
 import { BuildingRepository } from '#app/port/repository/building'
+import { BuildingUpgradeQueueRepository } from '#app/port/repository/building-upgrade-queue'
 import { CityRepository } from '#app/port/repository/city'
 import { PlayerRepository } from '#app/port/repository/player'
 import { TechnologyRepository } from '#app/port/repository/technology'
@@ -19,6 +20,7 @@ import { OutpostRepository } from '#app/port/repository/outpost'
 import { ResourceStockRepository } from '#app/port/repository/resource-stock'
 import { PostgresAuthRepository } from '#adapter/database/repository/auth'
 import { PostgresBuildingRepository } from '#adapter/database/repository/building'
+import { PostgresBuildingUpgradeQueueRepository } from '#adapter/database/repository/building-upgrade-queue'
 import { PostgresCellRepository } from '#adapter/database/repository/cell'
 import { PostgresCityRepository } from '#adapter/database/repository/city'
 import { PostgresExplorationRepository } from '#adapter/database/repository/exploration'
@@ -37,6 +39,7 @@ import {
 export class PostgresRepository implements Repository {
   auth: AuthRepository
   building: BuildingRepository
+  building_upgrade_queue: BuildingUpgradeQueueRepository
   cell: CellRepository
   resource_stock: ResourceStockRepository
   city: CityRepository
@@ -57,6 +60,7 @@ export class PostgresRepository implements Repository {
     this.db = getRootDatabase()
     this.auth = new PostgresAuthRepository(this.db)
     this.building = new PostgresBuildingRepository(this.db)
+    this.building_upgrade_queue = new PostgresBuildingUpgradeQueueRepository(this.db)
     this.cell = new PostgresCellRepository(this.db)
     this.resource_stock = new PostgresResourceStockRepository(this.db)
     this.city = new PostgresCityRepository(this.db)

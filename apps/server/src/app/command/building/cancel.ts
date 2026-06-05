@@ -1,5 +1,6 @@
 import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
+import { processBuildingUpgradeQueue } from '#app/command/building/start-upgrade'
 import { AppService } from '#app/service'
 import { BuildingError } from '#core/building/error'
 import { PricingService } from '#core/pricing/service'
@@ -51,5 +52,10 @@ export async function cancelBuilding({
       repository.resource_stock.updateOne(updated_stock),
       job_queue.cancelBuildingUpgradeFinish({ city_id })
     ])
+
+    await processBuildingUpgradeQueue({
+      player_id,
+      city_id
+    })
   })
 }
