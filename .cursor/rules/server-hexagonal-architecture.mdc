@@ -1,0 +1,90 @@
+---
+description: Hexagonal architecture for apps/server — ports/adapters, dependency rule, core entities vs domain services
+globs: apps/server/**/*
+alwaysApply: false
+---
+
+# Server hexagonal architecture (ports & adapters)
+
+Dependencies point **inward**. Inner layers never name outer types (Express, Kysely, pg-boss, SDKs). See README Architecture for infra details.
+
+## Layer map
+
+| Concept | Location |
+| --- | --- |
+| Domain | `core/` — entities, domain services, errors, constants, values |
+| Use cases | `app/command`, `app/query`, `app/saga` |
+| Driven ports | `app/port` — `*Repository`, `AppLogger`, `Lock` |
+| Driving adapters | `web/` (HTTP/WS); job workers that invoke commands |
+| Driven adapters | `adapter/` — Postgres repos, job queue, logger, lock |
+| Composition root | `index.ts` + `adapter/factory.ts` |
+| Shared | `shared/` — inward-only helpers |
+
+Handlers call exported commands/queries (no separate inbound-port interfaces).
+
+## Hard rules
+
+- **`core/` / `shared/`**: no `#web`, `#adapter`, `#app`, Express, Kysely, pg-boss, or I/O.
+- **`app/`**: no `#web`, SQL/Kysely, or concrete `Postgres*`; depend on port types + domain; thin orchestration only.
+- **`web/`**: validate → command/query → map `@eoneom/api-client`; no repos, domain policy, or SQL.
+- **`adapter/`**: implement ports; map to/from entities; no domain business rules.
+- New outbound need → port in `app/port` → `adapter` impl → wire in Factory / `index.ts`.
+- Ports use domain language (`BuildingUpgradeQueueRepository`), not tech (`SqlQuery`).
+
+## Core: entities vs domain services
+
+Do not conflate domain service, application use case, and adapter.
+
+**Entity** (`*Entity` extends `BaseEntity`): identity + state + invariants for that concept. Prefer methods on the entity when the rule is about *this* object's state. Style: private constructor, `static create()`, `readonly` fields, methods return new instances. No I/O / Factory / ports. Avoid anemic bags—don't push single-entity invariants into commands or domain services.
+
+**Domain service** (`core/*/service.ts`): use when logic does not belong on one entity, spans multiple concepts/constants, or is stateless pure calculation (`PricingService`, `BuildingService.getEarningsBySecond`). Pure + stateless (static methods); no DB/ports/Factory. Don't dump all logic here. Commands call domain code; don't re-implement pricing/requirements/upgrade rules inline.
+
+```
+One entity's own state/invariants? → Entity method
+Pure/stateless spanning concepts/constants? → Domain service
+Orchestration (load, persist, jobs, events, tx)? → app/ command/query/saga
+Else → value / constant / error
+```
+
+## Where new work goes
+
+- Domain → `core/<context>/` (`entity`, `service`, `error`, `constant`, `value`)
+- Writes → `app/command/...` + `runCommand`
+- Reads → `*Query` extending `GenericQuery`
+- HTTP → `web/handler/...` + `router.ts`
+- Persistence → port + `Postgres*` + Factory wiring
+- Names: `*Entity`, `*Service`, `*Repository` / `Postgres*Repository`, kebab commands, `*Handler`, `*Query`, logs like `'building:cancel-queued-upgrade'`
+
+## Factory (accepted shortcut)
+
+Use `Factory.getRepository()` / `getLogger()` / etc. in commands (returns port types). Do **not** import concrete adapters (`Postgres*`, Kysely, Express) from `app/` or `core/`. Prefer new ports + Factory wiring over new `#adapter/...` implementation imports. Wire only in `index.ts` / Factory—not in handlers.
+
+## Examples
+
+```typescript
+// BAD — core → adapter
+import { PostgresBuildingRepository } from '#adapter/database/repository/building'
+
+// BAD — handler owns persistence
+await db.insertInto('building').values(...).execute()
+
+// BAD — anemic: command owns entity invariant
+if (building.level >= MAX) throw ...
+building.level += 1
+
+// BAD — domain service does I/O
+static async upgrade(repo: Repository) { await repo.building.update(...) }
+
+// GOOD — driving adapter → use case
+await cancelQueuedBuildingUpgrade({ city_id, queue_id })
+
+// GOOD — use case via Factory (port type)
+const repository = Factory.getRepository()
+
+// GOOD — entity owns transition
+building.assertCanUpgrade({ is_building_in_progress })
+const next = building.finishUpgrade()
+
+// GOOD — pure domain service; command orchestrates
+PricingService.getBuildingCost({ code, level, ... })
+```
