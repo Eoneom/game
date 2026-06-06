@@ -13,8 +13,15 @@ export const NavLocation: React.FC = () => {
   const outposts = outpostsData?.outposts ?? []
   const outpostCountLimit = outpostsData?.count_limit ?? 0
 
-  return <nav id="location">
-    { Boolean(cities.length) && <NavLocationCities cities={cities} countLimit={cityCountLimit} /> }
-    { Boolean(outposts.length) && <NavLocationOutposts outposts={outposts} countLimit={outpostCountLimit} />}
-  </nav>
+  return (
+    <aside className="locations surface-chrome flex w-44 shrink-0 flex-col gap-4 overflow-y-auto border-l border-rust/70 p-3">
+      <h2 className="m-0 text-[0.65rem] uppercase tracking-[0.18em] text-label">Emplacements</h2>
+      {Boolean(cities.length) && (
+        <NavLocationCities cities={cities} countLimit={cityCountLimit} />
+      )}
+      {Boolean(outposts.length) && (
+        <NavLocationOutposts outposts={outposts} countLimit={outpostCountLimit} />
+      )}
+    </aside>
+  )
 }

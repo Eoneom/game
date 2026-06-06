@@ -14,6 +14,7 @@ import { useListTroops } from '#troop/hooks'
 import { estimateMovement } from '../api/estimate'
 import { useAuth } from '#auth/context'
 import { useCreateMovement } from '#troop/hooks'
+import { Button } from '#ui/button'
 
 type MovementCreateProps =
   | { cityId: string; outpostId?: never }
@@ -133,65 +134,60 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   return (
     <form
       id="movement-creation"
-      className="movement-create-form"
+      className="surface-chrome mb-4 rounded-sm p-4"
       onSubmit={event => onSubmit(event)}
     >
-      <section className="movement-panel movement-panel--create">
-        <h2 className="movement-panel__title">Nouveau déplacement</h2>
-        <p className="movement-panel__lede">
-          Choisissez les troupes, l&apos;ordre et la case cible : l&apos;estimation se met à jour
-          automatiquement avant l&apos;envoi.
-        </p>
-        <div className="movement-create-grid">
-          <div id="troop-selection" className="movement-create-grid__col movement-create-grid__col--troops">
-            <h3 className="movement-subsection__title">Troupes à envoyer</h3>
-            <MovementCreateTroops
-              troops={troops}
-              selectedTroops={selectedTroops}
-              onChange={setSelectedTroops}
-            />
-          </div>
-          <div id="movement-submit" className="movement-create-grid__col movement-create-grid__col--config">
-            <div className="movement-config-stack">
-              <MovementCreateAction action={action} onChange={setAction} />
-              {action === MovementAction.TRANSPORT && (
-                <MovementCreateResources
-                  plastic={resources.plastic}
-                  mushroom={resources.mushroom}
-                  maxPlastic={maxPlastic}
-                  maxMushroom={maxMushroom}
-                  capacity={capacity}
-                  usedCapacity={usedCapacity}
-                  onChange={setResources}
-                />
-              )}
-              <MovementCreateDestination
-                destination={destination}
-                onChange={setDestination}
-                excludeCityId={cityId}
-                excludeOutpostId={outpostId}
-              />
-              <MovementCreateEstimation estimation={estimation} />
-            </div>
-          </div>
-        </div>
-        <div className="movement-submit-footer">
-          <MovementCreateWarning
-            isTemporaryOutpost={Boolean(outpost?.type === OutpostType.TEMPORARY)}
+      <h2 className="m-0 text-base uppercase tracking-wider text-amber">Nouveau déplacement</h2>
+      <p className="mt-1 text-sm text-amber-dim">
+        Choisissez les troupes, l&apos;ordre et la case cible : l&apos;estimation se met à jour
+        automatiquement avant l&apos;envoi.
+      </p>
+
+      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+        <div id="troop-selection">
+          <h3 className="mb-2 text-sm uppercase tracking-wider text-label">Troupes à envoyer</h3>
+          <MovementCreateTroops
             troops={troops}
             selectedTroops={selectedTroops}
-            destinationCapacityExceeded={
-              action === MovementAction.TRANSPORT && estimation.destination_capacity_exceeded
-            }
-          />
-          <input
-            className="movement-submit-button"
-            disabled={!canSubmit}
-            type="submit"
-            value="Envoyer le déplacement"
+            onChange={setSelectedTroops}
           />
         </div>
-      </section>
+
+        <div id="movement-submit" className="flex flex-col gap-4">
+          <MovementCreateAction action={action} onChange={setAction} />
+          <MovementCreateDestination
+            destination={destination}
+            onChange={setDestination}
+            excludeCityId={cityId}
+            excludeOutpostId={outpostId}
+          />
+          {action === MovementAction.TRANSPORT && (
+            <MovementCreateResources
+              plastic={resources.plastic}
+              mushroom={resources.mushroom}
+              maxPlastic={maxPlastic}
+              maxMushroom={maxMushroom}
+              capacity={capacity}
+              usedCapacity={usedCapacity}
+              onChange={setResources}
+            />
+          )}
+          <MovementCreateEstimation estimation={estimation} />
+          <div className="space-y-3 border-t border-rust/50 pt-3">
+            <MovementCreateWarning
+              isTemporaryOutpost={Boolean(outpost?.type === OutpostType.TEMPORARY)}
+              troops={troops}
+              selectedTroops={selectedTroops}
+              destinationCapacityExceeded={
+                action === MovementAction.TRANSPORT && estimation.destination_capacity_exceeded
+              }
+            />
+            <Button type="submit" disabled={!canSubmit} className="w-full">
+              Envoyer le déplacement
+            </Button>
+          </div>
+        </div>
+      </div>
     </form>
   )
 }

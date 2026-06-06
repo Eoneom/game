@@ -1,5 +1,6 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
@@ -12,7 +13,7 @@ const serverCore = path.join(repoRoot, 'apps', 'server', 'src', 'core')
 const webSrc = path.join(__dirname, 'src')
 
 export default defineConfig({
-  plugins: [ react() ],
+  plugins: [ react(), tailwindcss() ],
   resolve: {
     alias: {
       '#helpers': path.resolve(webSrc, 'helpers'),

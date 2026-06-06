@@ -17,13 +17,23 @@ export const NavLocationItem: React.FC<Props> = (props) => {
   const { pathname } = useLocation()
   const href =
     props.kind === 'city'
-      ? `/city/${props.cityId}`
+      ? `/city/${props.cityId}/base`
       : `/outpost/${props.outpostId}`
   const className = classNames(
-    getActiveClassName({ isActive: pathname === href || pathname.startsWith(`${href}/`) }),
-    'nav-location-link',
-    linkClassName
+    getActiveClassName({
+      isActive:
+        props.kind === 'city'
+          ? pathname.startsWith(`/city/${props.cityId}`)
+          : pathname === href || pathname.startsWith(`${href}/`),
+    }),
+    'block rounded-sm border border-transparent px-2 py-1 text-sm text-amber-dim transition hover:border-rust/50 hover:text-amber',
+    linkClassName,
+    (props.kind === 'city'
+      ? pathname.startsWith(`/city/${props.cityId}`)
+      : pathname === href || pathname.startsWith(`${href}/`)) &&
+      'neon-amber motion-safe-neon border-amber/40 bg-chrome text-amber'
   )
+
 
   const RouterLink = Link as React.ComponentType<{
     to: string
@@ -35,7 +45,7 @@ export const NavLocationItem: React.FC<Props> = (props) => {
   return (
     <li>
       {props.kind === 'city' ? (
-        <RouterLink to="/city/$cityId" params={{ cityId: props.cityId }} className={className}>
+        <RouterLink to="/city/$cityId/base/" params={{ cityId: props.cityId }} className={className}>
           {text}
         </RouterLink>
       ) : (

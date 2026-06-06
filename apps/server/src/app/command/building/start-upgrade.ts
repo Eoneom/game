@@ -19,12 +19,15 @@ export async function startBuildingUpgrade({
   player_id,
   city_id,
   building_code,
-  started_at
+  started_at,
+  skip_in_progress_check = false
 }: {
   player_id: string
   city_id: string
   building_code: BuildingCode
   started_at?: number
+  /** When advancing the queue from an active finish worker, the finish job is still pending. */
+  skip_in_progress_check?: boolean
 }): Promise<void> {
   const repository = Factory.getRepository()
   const job_queue = Factory.getJobQueue()
@@ -59,7 +62,9 @@ export async function startBuildingUpgrade({
       player_id,
       building_code
     }),
-    job_queue.getPendingBuildingUpgrade({ city_id })
+    skip_in_progress_check
+      ? Promise.resolve(null)
+      : job_queue.getPendingBuildingUpgrade({ city_id })
   ])
 
   building.assertCanUpgrade({ is_building_in_progress: pending_upgrade !== null })
@@ -107,19 +112,22 @@ export async function tryStartBuildingUpgrade({
   player_id,
   city_id,
   building_code,
-  started_at
+  started_at,
+  skip_in_progress_check = false
 }: {
   player_id: string
   city_id: string
   building_code: BuildingCode
   started_at?: number
+  skip_in_progress_check?: boolean
 }): Promise<boolean> {
   try {
     await startBuildingUpgrade({
       player_id,
       city_id,
       building_code,
-      started_at
+      started_at,
+      skip_in_progress_check
     })
     return true
   } catch (error) {
@@ -153,7 +161,8 @@ export async function processBuildingUpgradeQueue({
       player_id,
       city_id,
       building_code: next.building_code,
-      started_at
+      started_at,
+      skip_in_progress_check: true
     })
 
     await repository.building_upgrade_queue.delete(next.id)

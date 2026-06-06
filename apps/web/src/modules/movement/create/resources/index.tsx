@@ -23,18 +23,19 @@ export const MovementCreateResources: React.FC<Props> = ({
   onChange,
 }) => {
   return (
-    <fieldset className="movement-fieldset">
-      <legend className="movement-fieldset__legend">Ressources à transporter</legend>
-      <p className="movement-panel__lede">
+    <fieldset className="m-0 space-y-3 border-0 p-0">
+      <legend className="mb-0 px-0 field-label">Ressources à transporter</legend>
+      <p className="m-0 font-mono text-sm text-amber">
         Capacité : {usedCapacity} / {capacity}
       </p>
-      <ul className="app-list app-list--kv">
-        <li>
-          <span className="movement-resource-label">
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        <li className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
             <IconPlastic /> Plastique
           </span>
           <input
             type="number"
+            className="field-input field-input--number w-28"
             min={0}
             max={maxPlastic}
             value={plastic}
@@ -47,12 +48,13 @@ export const MovementCreateResources: React.FC<Props> = ({
             }}
           />
         </li>
-        <li>
-          <span className="movement-resource-label">
+        <li className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
             <IconMushroom /> Champignon
           </span>
           <input
             type="number"
+            className="field-input field-input--number w-28"
             min={0}
             max={maxMushroom}
             value={mushroom}

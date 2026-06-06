@@ -17,7 +17,7 @@ export const HeaderTitle: React.FC<Props> = ({ text, cityId, outpostId }) => {
   return (
     <h1>
       {cityId && (
-        <RouterLink to="/city/$cityId" params={{ cityId }}>{text}</RouterLink>
+        <RouterLink to="/city/$cityId/base/" params={{ cityId }}>{text}</RouterLink>
       )}
       {!cityId && outpostId && (
         <RouterLink to="/outpost/$outpostId" params={{ outpostId }}>{text}</RouterLink>

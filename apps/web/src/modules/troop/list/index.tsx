@@ -14,14 +14,23 @@ interface Props {
 export const TroopList: React.FC<Props> = ({ cityId, selectedTroopId, onSelect }) => {
   const { data: troops = [] } = useListCityTroops(cityId)
 
+  const recruitingId = useMemo(
+    () => troops.find(t => t.ongoing_recruitment)?.id,
+    [troops]
+  )
+
   const items = useMemo(() => {
-    return troops.map(troop => <TroopListItem
-      active={selectedTroopId === troop.id}
-      key={troop.id}
-      troop={troop}
-      onSelect={onSelect}
-    />)
-  }, [selectedTroopId, troops, onSelect])
+    return troops.map(troop => (
+      <TroopListItem
+        active={selectedTroopId === troop.id}
+        key={troop.id}
+        troop={troop}
+        onSelect={onSelect}
+        badge={troop.id === recruitingId ? 'En cours' : undefined}
+        busy={troop.id === recruitingId}
+      />
+    ))
+  }, [selectedTroopId, troops, onSelect, recruitingId])
 
   return <List
     inProgress={<TroopListInProgress cityId={cityId} />}

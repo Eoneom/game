@@ -47,6 +47,12 @@ export async function finishBuildingUpgrade({
         expected_level: level,
         actual_level: building_to_finish.level
       })
+      // Recover stuck queue rows if a prior finish partially applied or retried.
+      await processBuildingUpgradeQueue({
+        player_id,
+        city_id,
+        started_at: upgraded_at
+      })
       return null
     }
 

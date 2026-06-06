@@ -7,6 +7,8 @@ import { isError } from '#helpers/assertion'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
 import { outpostKeys } from '#outpost/hooks'
+import { activityKeys } from '#location/activity-hooks'
+import { triggerFxBurst } from '#ui/fx'
 
 export const troopKeys = {
   cityList: (cityId: string) => ['troops', 'city', cityId] as const,
@@ -87,6 +89,8 @@ export const useRecruitTroop = (cityId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: troopKeys.cityList(cityId ?? '') })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId ?? '') })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
+      triggerFxBurst()
     },
     onError: (err: Error) => toast.error(err.message),
   })
@@ -166,6 +170,8 @@ export const useCreateMovement = () => {
       queryClient.invalidateQueries({ queryKey: ['outpost'] })
       queryClient.invalidateQueries({ queryKey: cityKeys.all })
       queryClient.invalidateQueries({ queryKey: ['city'] })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
+      triggerFxBurst()
     },
     onError: (err: Error) => toast.error(err.message),
   })

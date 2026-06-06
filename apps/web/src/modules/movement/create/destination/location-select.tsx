@@ -84,10 +84,10 @@ export const MovementCreateDestinationLocationSelect: React.FC<Props> = ({
   }
 
   return (
-    <label className="movement-coord-field movement-destination-location">
-      <span className="movement-coord-field__label">Ville ou avant-poste</span>
+    <label className="flex flex-col gap-1">
+      <span className="field-label">Ville ou avant-poste</span>
       <select
-        className="movement-destination-location__select"
+        className="field-input"
         value={selectedKey}
         disabled={loading}
         onChange={event => {

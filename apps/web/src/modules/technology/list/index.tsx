@@ -3,9 +3,12 @@ import { TechnologyCode } from '@eoneom/api-client'
 
 import { TechnologyListItem } from '#technology/list/item'
 import { TechnologyTranslations } from '#technology/translations'
+import { technologyImageSrc } from '#technology/image'
 import { Button } from '#ui/button'
 import { CountdownProgress } from '#ui/countdown-progress'
+import { EntityThumb } from '#ui/entity-thumb'
 import { List } from '#ui/list'
+import { QueuePanel } from '#ui/queue-panel'
 import { useCountdownProgress } from '#hook/countdown-progress'
 import { useListTechnologies, useCancelTechnology } from '#technology/hooks'
 import { TechnologyItem } from '#types'
@@ -29,23 +32,48 @@ export const TechnologyList: React.FC<Props> = ({ selectedCode, onSelect }) => {
     startAt: inProgress?.research_started_at
   })
 
-  const inProgressComponent = inProgress && <>
-    <CountdownProgress
-      summary={<>En cours: {TechnologyTranslations[inProgress.code].name}</>}
-      elapsedProgress={elapsedProgress}
-      remainingSeconds={remainingSeconds}
+  const inProgressComponent = (
+    <QueuePanel
+      title="Recherche"
+      empty={!inProgress ? 'Aucune recherche en cours' : undefined}
+      active={inProgress ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <EntityThumb
+            size="md"
+            src={technologyImageSrc(inProgress.code)}
+            alt=""
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <p className="m-0 text-sm text-amber">
+              {TechnologyTranslations[inProgress.code].name}{' '}
+              <span className="text-label">→ niveau {inProgress.level + 1}</span>
+            </p>
+            <CountdownProgress
+              summary={<>Recherche en cours</>}
+              elapsedProgress={elapsedProgress}
+              remainingSeconds={remainingSeconds}
+            />
+            <Button variant="danger" onClick={() => cancelTechnology.mutate()}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      ) : undefined}
     />
-    <Button onClick={() => cancelTechnology.mutate()}>Annuler</Button>
-  </>
+  )
 
   const items = useMemo(() => {
-    return technologies.map(technologyItem => <TechnologyListItem
-      active={technologyItem.code === selectedCode}
-      key={technologyItem.id}
-      technologyItem={technologyItem}
-      onSelect={onSelect}
-    />)
-  }, [selectedCode, technologies, onSelect])
+    return technologies.map(technologyItem => (
+      <TechnologyListItem
+        active={technologyItem.code === selectedCode}
+        key={technologyItem.id}
+        technologyItem={technologyItem}
+        onSelect={onSelect}
+        badge={inProgress?.code === technologyItem.code ? 'En cours' : undefined}
+        busy={inProgress?.code === technologyItem.code}
+      />
+    ))
+  }, [selectedCode, technologies, onSelect, inProgress])
 
   return <List
     inProgress={inProgressComponent}

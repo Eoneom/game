@@ -50,27 +50,39 @@ export const MapDetailsActionBase: React.FC<Props & CoordinatesInput> = ({ cityI
   }
 
   return (
-    <div className="details-block">
-      <h3>Troupes à baser</h3>
-      <ul className="details-troop-list">
+    <div className="space-y-3">
+      <h3 className="m-0 field-label">Troupes à baser</h3>
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {troops.map(troop => {
           const { name } = TroopTranslations[troop.code]
+          const value = troopsToBase[troop.code] ?? 0
           return (
-            <li key={troop.code}>
-              <span>{name}</span>
-              <input
-                type="number"
-                min={0}
-                max={troop.count}
-                placeholder="0"
-                onChange={event =>
-                  setTroopsToBase({
-                    ...troopsToBase,
-                    [troop.code]: event.target.value,
-                  })
-                }
-              />
-              <span className="details-meta">/ {troop.count}</span>
+            <li
+              key={troop.code}
+              className="flex items-center justify-between gap-3 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5"
+            >
+              <span className="min-w-0 flex-1 text-sm text-amber-dim">{name}</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  className="field-input field-input--number w-20"
+                  min={0}
+                  max={troop.count}
+                  value={value}
+                  onChange={event => {
+                    const next = Number.parseInt(event.target.value, 10)
+                    setTroopsToBase({
+                      ...troopsToBase,
+                      [troop.code]: Number.isNaN(next)
+                        ? 0
+                        : Math.min(Math.max(0, next), troop.count),
+                    })
+                  }}
+                />
+                <span className="inline-block w-10 text-right font-mono text-xs tabular-nums text-label">
+                  / {troop.count}
+                </span>
+              </div>
             </li>
           )
         })}

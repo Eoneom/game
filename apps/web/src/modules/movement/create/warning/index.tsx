@@ -21,7 +21,7 @@ export const MovementCreateWarning: React.FC<Props> = ({
 
   if (destinationCapacityExceeded) {
     warnings.push(
-      <p key="capacity" className="movement-warning" role="status">
+      <p key="capacity" className="m-0 text-sm font-semibold text-danger" role="status">
         Attention : les ressources dépassent la capacité de stockage de la destination. L&apos;excédent sera renvoyé.
       </p>
     )
@@ -34,7 +34,7 @@ export const MovementCreateWarning: React.FC<Props> = ({
 
     if (isAllTroopsTaken) {
       warnings.push(
-        <p key="temporary" className="movement-warning" role="status">
+        <p key="temporary" className="m-0 text-sm font-semibold text-danger" role="status">
           Attention : ce déplacement va supprimer l&apos;avant-poste temporaire.
         </p>
       )
@@ -45,5 +45,5 @@ export const MovementCreateWarning: React.FC<Props> = ({
     return null
   }
 
-  return <>{warnings}</>
+  return <div className="space-y-2 rounded-sm border border-danger/50 bg-danger-deep/25 p-2">{warnings}</div>
 }

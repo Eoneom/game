@@ -1,13 +1,10 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-
-import { TroopPage } from '#troop/page'
-
-const TroopRoute: React.FC = () => {
-  const { cityId } = Route.useParams()
-  return <TroopPage cityId={cityId} />
-}
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/city/$cityId/troop')({
-  component: TroopRoute,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/city/$cityId/base/troop',
+      params: { cityId: params.cityId },
+    })
+  },
 })

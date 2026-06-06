@@ -6,6 +6,8 @@ import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
+import { activityKeys } from '#location/activity-hooks'
+import { triggerFxBurst } from '#ui/fx'
 
 export const technologyKeys = {
   all: ['technologies'] as const,
@@ -61,6 +63,8 @@ export const useResearchTechnology = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: technologyKeys.all })
       queryClient.invalidateQueries({ queryKey: technologyKeys.detail(cityId, code) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
+      triggerFxBurst()
     },
     onError: (err: Error) => toast.error(err.message),
   })

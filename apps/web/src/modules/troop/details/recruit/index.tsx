@@ -27,19 +27,24 @@ export const TroopDetailsRecruit: React.FC<Props> = ({ cityId, troop, onChange, 
   }
 
   return (
-    <>
-      <input
-        type="number"
-        onChange={event => {
-          const value = Number.parseInt(event.target.value)
-          if (Number.isNaN(value) || value <= 0) {
-            onChange(1)
-            return
-          }
-          onChange(value)
-        }}
-        min={1}
-      />
+    <div className="flex flex-wrap items-end gap-3">
+      <label className="flex min-w-[7rem] flex-col gap-1">
+        <span className="field-label">Quantité</span>
+        <input
+          type="number"
+          className="field-input field-input--number w-28"
+          value={count}
+          min={1}
+          onChange={event => {
+            const value = Number.parseInt(event.target.value, 10)
+            if (Number.isNaN(value) || value <= 0) {
+              onChange(1)
+              return
+            }
+            onChange(value)
+          }}
+        />
+      </label>
 
       <Button
         disabled={!canRecruit}
@@ -50,6 +55,6 @@ export const TroopDetailsRecruit: React.FC<Props> = ({ cityId, troop, onChange, 
       >
         Recruter
       </Button>
-    </>
+    </div>
   )
 }

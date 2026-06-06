@@ -36,7 +36,7 @@ export const OutpostRoot: React.FC<Props> = ({ outpostId }) => {
       if (!cityId) return
       toast.warn('L\'avant poste temporaire a été supprimé')
       setCity(cityId)
-      navigate({ to: `/city/${cityId}` })
+      navigate({ to: `/city/${cityId}/base` })
     }
   }, [outposts, outpostId, outpost, citiesData, setCity, navigate])
 

@@ -11,10 +11,12 @@ interface Props {
     src: string
     alt: string
   }
+  badge?: string
+  busy?: boolean
 }
 
 export const ListItemCount: React.FC<Props> = ({ count, ...props }) => {
   return <ListItem {...props}>
-    <p>Nombre {count}</p>
+    <p className="m-0 text-xs text-amber-dim">× {count}</p>
   </ListItem>
 }

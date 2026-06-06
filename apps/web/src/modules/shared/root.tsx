@@ -18,7 +18,7 @@ export const SharedRoot: React.FC<Props> = ({ children }) => {
     const firstCity = citiesData?.cities[0]
     if (!firstCity) return
     setCity(firstCity.id)
-    navigate({ to: `/city/${firstCity.id}` })
+    navigate({ to: `/city/${firstCity.id}/base` })
   }, [cityId, outpostId, citiesData, setCity, navigate])
 
   return children ? <>{children}</> : <Outlet />

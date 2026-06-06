@@ -28,49 +28,46 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
   const actionLabel = MovementActionLabels[movement.action]
   const movementRouteContent = (
     <>
-      <span className="movement-active-item__row movement-active-item__row--top">
-        <span className="movement-active-item__action">{actionLabel}</span>
-        <span className="movement-active-item__timer">{formatTime(remainingTime)}</span>
+      <span className="flex items-center justify-between gap-2">
+        <span className="text-sm uppercase tracking-wide text-amber">{actionLabel}</span>
+        <span className="font-mono text-sm text-terminal">{formatTime(remainingTime)}</span>
       </span>
-      <span className="movement-active-item__route">
-        <span className="movement-active-item__coord" title="Départ">
-          {formatCoordinates(movement.origin)}
-        </span>
-        <span className="movement-active-item__arrow" aria-hidden>
-          →
-        </span>
-        <span className="movement-active-item__coord" title="Arrivée">
-          {formatCoordinates(movement.destination)}
-        </span>
+      <span className="mt-1 flex items-center gap-2 font-mono text-xs text-amber-dim">
+        <span title="Départ">{formatCoordinates(movement.origin)}</span>
+        <span aria-hidden>→</span>
+        <span title="Arrivée">{formatCoordinates(movement.destination)}</span>
       </span>
       {(movement.resources.plastic > 0 || movement.resources.mushroom > 0) && (
-        <span className="movement-active-item__cargo">
+        <span className="mt-1 block text-xs text-label">
           {movement.resources.plastic} plastique · {movement.resources.mushroom} champignon
         </span>
       )}
     </>
   )
 
+  const linkClass =
+    'block rounded-sm border border-rust/50 bg-chrome/70 px-3 py-2 transition hover:border-amber/50 hover:text-amber'
+
   return (
     <li>
       {cityId ? (
         <RouterLink
-          className="movement-active-item__link"
-          to="/city/$cityId/movement/$movementId"
+          className={linkClass}
+          to="/city/$cityId/world/movement/$movementId"
           params={{ cityId, movementId: movement.id }}
         >
           {movementRouteContent}
         </RouterLink>
       ) : outpostId ? (
         <RouterLink
-          className="movement-active-item__link"
-          to="/outpost/$outpostId/movement/$movementId"
+          className={linkClass}
+          to="/outpost/$outpostId/world/movement/$movementId"
           params={{ outpostId, movementId: movement.id }}
         >
           {movementRouteContent}
         </RouterLink>
       ) : (
-        <span className="movement-active-item__link">{movementRouteContent}</span>
+        <span className={linkClass}>{movementRouteContent}</span>
       )}
     </li>
   )

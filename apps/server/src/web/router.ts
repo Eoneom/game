@@ -33,6 +33,7 @@ import { troopEstimateMovementHandler } from '#web/handler/troop/movement/estima
 import { troopCreateMovementHandler } from '#web/handler/troop/movement/create'
 import { troopGetHandler } from '#web/handler/troop/get'
 import { citySettleHandler } from '#web/handler/city/settle'
+import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
 
 export const router = (): Router => {
   const r = Router()
@@ -49,6 +50,7 @@ export const router = (): Router => {
   // Authenticated routes
   r.get('/city', authMiddleware, cityListHandler)
   r.get('/city/:city_id', authMiddleware, cityGetHandler)
+  r.get('/city/:city_id/activity', authMiddleware, cityActivityHandler)
   r.post('/city', authMiddleware, citySettleHandler)
 
   r.put('/building/cancel', authMiddleware, buildingCancelHandler)
@@ -75,6 +77,7 @@ export const router = (): Router => {
 
   r.get('/outpost', authMiddleware, outpostListHandler)
   r.get('/outpost/:outpost_id', authMiddleware, outpostGetHandler)
+  r.get('/outpost/:outpost_id/activity', authMiddleware, outpostActivityHandler)
   r.put('/outpost/permanent', authMiddleware, outpostSetPermanentHandler)
 
   r.get('/sector/:sector', authMiddleware, worldGetSectorHandler)

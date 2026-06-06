@@ -10,15 +10,25 @@ interface Props {
   buildingItem: BuildingItem
   active: boolean
   onSelect: (code: BuildingCode) => void
+  badge?: string
+  busy?: boolean
 }
 
-export const BuildingListItem: React.FC<Props> = ({ buildingItem, active, onSelect }) => {
+export const BuildingListItem: React.FC<Props> = ({
+  buildingItem,
+  active,
+  onSelect,
+  badge,
+  busy,
+}) => {
   const { name } = BuildingTranslations[buildingItem.code]
 
   return <ListItemLevel
     name={name}
     active={active}
     level={buildingItem.level}
+    badge={badge}
+    busy={busy}
     image={{
       src: buildingImageSrc(buildingItem.code),
       alt: '',

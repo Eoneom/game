@@ -221,6 +221,69 @@ describe('finishBuildingUpgrade', () => {
     assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
   })
 
+  it('should start the next queued upgrade even while the finish job is still pending', async () => {
+    const getPendingBuildingUpgrade = vi.fn().mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      building_id: building_to_finish.id,
+      level: 0,
+      execute_at: upgraded_at,
+      job_id: 'active-finish-job'
+    })
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
+      scheduleBuildingUpgradeFinish,
+      getPendingBuildingUpgrade
+    } as unknown as JobQueue)
+
+    const queued = BuildingUpgradeQueueEntity.create({
+      id: id(),
+      city_id: city.id,
+      building_code: BuildingCode.RECYCLING_PLANT,
+      created_at: now()
+    })
+    queueListByCity
+      .mockResolvedValueOnce([queued])
+      .mockResolvedValueOnce([])
+
+    await finishBuildingUpgrade({
+      city_id: city.id,
+      player_id,
+      building_id: building_to_finish.id,
+      level: 0,
+      upgraded_at
+    })
+
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 1)
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls[0][0].building_id, next_building.id)
+    assert.strictEqual(queueDelete.mock.calls[0][0], queued.id)
+    assert.strictEqual(buildingUpdateOne.mock.calls.length, 1)
+  })
+
+  it('should process the queue on level mismatch to recover stuck items', async () => {
+    const queued = BuildingUpgradeQueueEntity.create({
+      id: id(),
+      city_id: city.id,
+      building_code: BuildingCode.RECYCLING_PLANT,
+      created_at: now()
+    })
+    queueListByCity
+      .mockResolvedValueOnce([queued])
+      .mockResolvedValueOnce([])
+
+    const result = await finishBuildingUpgrade({
+      city_id: city.id,
+      player_id,
+      building_id: building_to_finish.id,
+      level: 1,
+      upgraded_at
+    })
+
+    assert.ok(result === null)
+    assert.strictEqual(buildingUpdateOne.mock.calls.length, 0)
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 1)
+    assert.strictEqual(queueDelete.mock.calls[0][0], queued.id)
+  })
+
   it('should drop queued upgrades that cannot start and try the next', async () => {
     const failing = BuildingUpgradeQueueEntity.create({
       id: id(),

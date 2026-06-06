@@ -1,6 +1,7 @@
 import { BuildingEndpoint } from './endpoints/building'
 import { CityEndpoint } from './endpoints/city'
 import { CommunicationEndpoint } from './endpoints/communication'
+import { LocationEndpoint } from './endpoints/location'
 import { OutpostEndpoint } from './endpoints/outpost'
 import { PlayerEndpoint } from './endpoints/player'
 import { TechnologyEndpoint } from './endpoints/technology'
@@ -26,6 +27,7 @@ export class Client {
   private fetcher: Fetcher
   public city: CityEndpoint
   public communication: CommunicationEndpoint
+  public location: LocationEndpoint
   public outpost: OutpostEndpoint
   public player: PlayerEndpoint
   public building: BuildingEndpoint
@@ -38,6 +40,7 @@ export class Client {
 
     this.city = new CityEndpoint({ fetcher: this.fetcher })
     this.communication = new CommunicationEndpoint({ fetcher: this.fetcher })
+    this.location = new LocationEndpoint({ fetcher: this.fetcher })
     this.outpost = new OutpostEndpoint({ fetcher: this.fetcher })
     this.player = new PlayerEndpoint({ fetcher: this.fetcher })
     this.building = new BuildingEndpoint({ fetcher: this.fetcher })

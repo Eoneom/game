@@ -1,13 +1,10 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-
-import { TechnologyPage } from '#technology/page'
-
-const TechnologyRoute: React.FC = () => {
-  const { cityId } = Route.useParams()
-  return <TechnologyPage cityId={cityId} />
-}
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/city/$cityId/technology')({
-  component: TechnologyRoute,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/city/$cityId/base/technology',
+      params: { cityId: params.cityId },
+    })
+  },
 })

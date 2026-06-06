@@ -72,8 +72,8 @@ export const MapMarkers: React.FC<Props> = ({
           x={c.x + ox}
           y={c.y + oy}
           radius={12}
-          fill="rgba(230,126,34,0.4)"
-          stroke="#e67e22"
+          fill="rgba(212,137,74,0.4)"
+          stroke="#D4894A"
           strokeWidth={2}
           listening={false}
         />,
@@ -86,7 +86,7 @@ export const MapMarkers: React.FC<Props> = ({
           text="Avant-poste"
           fontSize={12}
           fontFamily="Munson, system-ui, sans-serif"
-          fill="#e67e22"
+          fill="#D4894A"
           listening={false}
         />,
       )

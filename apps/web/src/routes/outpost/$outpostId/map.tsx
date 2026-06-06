@@ -1,13 +1,10 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-
-import { MapPage } from '#map/page'
-
-const OutpostMapRoute: React.FC = () => {
-  const { outpostId } = Route.useParams()
-  return <MapPage outpostId={outpostId} />
-}
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/outpost/$outpostId/map')({
-  component: OutpostMapRoute,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/outpost/$outpostId/world/map',
+      params: { outpostId: params.outpostId },
+    })
+  },
 })

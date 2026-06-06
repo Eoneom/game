@@ -8,23 +8,23 @@ export const MovementList: React.FC = () => {
 
   return (
     <section
-      className="movement-section movement-section--active"
+      className="surface-chrome rounded-sm p-4"
       aria-labelledby="movements-active-heading"
     >
-      <h2 id="movements-active-heading" className="movement-section__title">
+      <h2 id="movements-active-heading" className="m-0 text-base uppercase tracking-wider text-amber">
         Déplacements en cours
       </h2>
-      <p className="movement-section__lede">
+      <p className="mt-1 text-sm text-amber-dim">
         Temps restant jusqu&apos;à l&apos;arrivée sur la case indiquée.
       </p>
       {movements.length ? (
-        <ul className="app-list app-list--link movement-active-list">
+        <ul className="mt-3 m-0 flex list-none flex-col gap-2 p-0">
           {movements.map(movement => (
             <MovementListItem key={movement.id} movement={movement} />
           ))}
         </ul>
       ) : (
-        <p className="movement-empty">Aucun déplacement en cours.</p>
+        <p className="mt-3 m-0 text-sm text-amber-dim">Aucun déplacement en cours.</p>
       )}
     </section>
   )

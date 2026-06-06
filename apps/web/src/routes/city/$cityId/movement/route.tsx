@@ -1,13 +1,10 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-
-import { MovementPage } from '#movement/page'
-
-const CityMovementRoute: React.FC = () => {
-  const { cityId } = Route.useParams()
-  return <MovementPage cityId={cityId} />
-}
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/city/$cityId/movement')({
-  component: CityMovementRoute,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/city/$cityId/world/movement',
+      params: { cityId: params.cityId },
+    })
+  },
 })

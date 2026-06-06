@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 
 import { TroopTranslations } from '#troop/translations'
+import { troopImageSrc } from '#troop/image'
 import { TroopDetailsRecruit } from '#troop/details/recruit'
 import { Requirement } from '#requirement/index'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
@@ -10,6 +11,7 @@ import { useRequirement } from '#requirement/hook'
 import { useGetCity } from '#city/hooks'
 import { useListCityTroops } from '#troop/hooks'
 import { Troop, TroopItem } from '#types'
+import { EntityThumb } from '#ui/entity-thumb'
 
 type TroopWithRecruitment = TroopItem & { ongoing_recruitment: NonNullable<TroopItem['ongoing_recruitment']> }
 
@@ -46,8 +48,13 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
 
   return <>
     <LayoutDetailsContent>
-      <h2>{name}</h2>
-      <p>{effect}</p>
+      <div className="flex gap-4">
+        <EntityThumb src={troopImageSrc(troop.code)} alt="" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <h2>{name}</h2>
+          <p>{effect}</p>
+        </div>
+      </div>
 
       <TroopDetailsRecruit
         cityId={cityId}
@@ -59,7 +66,7 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
       <p className='description'>{description}</p>
     </LayoutDetailsContent>
 
-    <aside id="requirement">
+    <aside className="mt-4 space-y-3 border-t border-rust/50 pt-3">
       <Requirement cityId={cityId} requirements={troop.requirement} />
       <Cost
         cityId={cityId}

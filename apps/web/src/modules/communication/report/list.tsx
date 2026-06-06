@@ -44,16 +44,19 @@ export const ReportList: React.FC<Props> = ({
   const canNext = totalPages > 0 && currentPage < totalPages
 
   return (
-    <div className="report-list">
-      <div className="report-list__actions">
-        <div className="report-list__filters">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-1">
           {FILTERS.map(({ label, value }) => (
             <button
               key={label}
               type="button"
-              className={classNames('report-list__filter', {
-                'report-list__filter--active': wasReadFilter === value
-              })}
+              className={classNames(
+                'rounded-sm border px-2 py-1 text-xs uppercase tracking-wider transition',
+                wasReadFilter === value
+                  ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
+                  : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
+              )}
               onClick={() => onFilterChange(value)}
             >
               {label}
@@ -61,60 +64,48 @@ export const ReportList: React.FC<Props> = ({
           ))}
         </div>
         {unreadCount > 0 && (
-          <Button
-            disabled={markAllPending}
-            onClick={onMarkAllAsRead}
-          >
+          <Button disabled={markAllPending} onClick={onMarkAllAsRead} variant="ghost">
             Tout marquer comme lu
           </Button>
         )}
       </div>
       {totalPages > 1 && (
-        <div className="report-list__pagination">
-          <p className="report-list__page-label">
+        <div className="flex items-center justify-between gap-2 text-xs text-amber-dim">
+          <p className="m-0">
             Page {currentPage}/{totalPages}
           </p>
-          <div className="report-list__pagination-actions">
-            <Button
-              disabled={!canPrev}
-              onClick={() => onPageChange(currentPage - 1)}
-            >
+          <div className="flex gap-1">
+            <Button disabled={!canPrev} onClick={() => onPageChange(currentPage - 1)} variant="ghost">
               Précédente
             </Button>
-            <Button
-              disabled={!canNext}
-              onClick={() => onPageChange(currentPage + 1)}
-            >
+            <Button disabled={!canNext} onClick={() => onPageChange(currentPage + 1)} variant="ghost">
               Suivante
             </Button>
           </div>
         </div>
       )}
-      <ul className="report-list__items">
+      <ul className="m-0 list-none space-y-2 p-0">
         {reports.map(report => (
           <li
             key={report.id}
-            className={classNames('report-list__item', {
-              'report-list__item--unread': !report.was_read
-            })}
+            className={classNames(
+              'cursor-pointer rounded-sm border p-2 transition hover:border-amber/50',
+              report.was_read
+                ? 'border-rust/30 bg-chrome/40 text-amber-dim'
+                : 'neon-amber motion-safe-neon border-amber/40 bg-chrome text-amber'
+            )}
             onClick={() => onReportSelect(report.id)}
           >
-            <div className="report-list__meta">
-              <span className="report-list__type">{report.type}</span>
+            <div className="flex justify-between gap-2 text-xs">
+              <span className="uppercase tracking-wider text-label">{report.type}</span>
               <time dateTime={new Date(report.recorded_at).toISOString()}>
                 {formatDate(report.recorded_at)}
               </time>
             </div>
-            <div className="report-list__route">
-              <span className="report-list__coords" title="Origine">
-                {formatCoordinates(report.origin)}
-              </span>
-              <span className="report-list__arrow" aria-hidden>
-                →
-              </span>
-              <span className="report-list__coords" title="Destination">
-                {formatCoordinates(report.destination)}
-              </span>
+            <div className="mt-1 flex items-center gap-2 font-mono text-sm">
+              <span>{formatCoordinates(report.origin)}</span>
+              <span aria-hidden>→</span>
+              <span>{formatCoordinates(report.destination)}</span>
             </div>
           </li>
         ))}

@@ -28,39 +28,45 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
   }
 
   return (
-    <section className="nav-location-section">
-      <h3>Avant-postes {outposts.length}/{countLimit}</h3>
+    <section className="space-y-2">
+      <h3 className="m-0 text-xs text-amber-dim">
+        Avant-postes {outposts.length}/{countLimit}
+      </h3>
       {Boolean(permanents.length) && (
-        <>
-          <h5>Permanents</h5>
-          <ul>
+        <div>
+          <h5 className="m-0 mb-1 text-[0.65rem] uppercase tracking-wider text-label">
+            Permanents
+          </h5>
+          <ul className="m-0 list-none space-y-1 p-0">
             {permanents.map(outpost => (
               <NavLocationItem
                 key={outpost.id}
                 kind="outpost"
                 outpostId={outpost.id}
                 text={formatCoordinates(outpost.coordinates)}
-                linkClassName="nav-location-link--coords"
+                linkClassName="font-mono"
               />
             ))}
           </ul>
-        </>
+        </div>
       )}
       {Boolean(temporaries.length) && (
-        <>
-          <h5>Temporaires</h5>
-          <ul>
+        <div>
+          <h5 className="m-0 mb-1 text-[0.65rem] uppercase tracking-wider text-label">
+            Temporaires
+          </h5>
+          <ul className="m-0 list-none space-y-1 p-0">
             {temporaries.map(outpost => (
               <NavLocationItem
                 key={outpost.id}
                 kind="outpost"
                 outpostId={outpost.id}
                 text={formatCoordinates(outpost.coordinates)}
-                linkClassName="nav-location-link--coords"
+                linkClassName="font-mono"
               />
             ))}
           </ul>
-        </>
+        </div>
       )}
     </section>
   )

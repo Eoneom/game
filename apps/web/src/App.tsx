@@ -6,6 +6,8 @@ import { AuthLoginForm } from '#auth/login-form'
 import { Header } from '#ui/header'
 import { NavMenu } from '#ui/nav/menu'
 import { NavLocation } from '#ui/nav/location'
+import { ActivityStrip } from '#ui/activity'
+import { FxLayer } from '#ui/fx'
 import { useAuth } from '#auth/context'
 import { useInitStoredToken } from '#auth/hooks'
 import { useListCities } from '#city/hooks'
@@ -21,25 +23,32 @@ const App: React.FC = () => {
   }
 
   if (!citiesData?.cities.length) {
-    return <>Loading</>
+    return (
+      <div className="flex min-h-screen items-center justify-center text-amber">
+        Chargement du terminal…
+      </div>
+    )
   }
 
-  return <>
-    <Header />
-    <div id="main">
-      <NavMenu />
-      <main>
-        <Outlet />
-      </main>
-
-      <NavLocation />
+  return (
+    <div className="app-shell relative flex min-h-screen flex-col animate-boot-sweep motion-reduce:animate-none">
+      <Header />
+      <ActivityStrip />
+      <div className="app-body relative z-10 flex min-h-0 flex-1">
+        <NavMenu />
+        <main className="workspace relative min-w-0 flex-1 overflow-auto surface-inset scanlines p-3">
+          <Outlet />
+        </main>
+        <NavLocation />
+      </div>
+      <FxLayer />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={3000}
+        theme="dark"
+      />
     </div>
-
-    <ToastContainer
-      position='bottom-right'
-      autoClose={3000}
-    />
-  </>
+  )
 }
 
 export default App

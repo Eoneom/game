@@ -18,7 +18,7 @@ export const MovementPage: React.FC<MovementPageProps> = ({ cityId, outpostId, m
 
   return (
     <LayoutPage details={movement && <MovementDetails movement={movement} />}>
-      <div className="movement-page">
+      <div className="space-y-4">
         {cityId
           ? <MovementCreate cityId={cityId} />
           : outpostId

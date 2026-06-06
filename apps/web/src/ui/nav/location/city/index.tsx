@@ -10,9 +10,11 @@ interface Props {
 
 export const NavLocationCities: React.FC<Props> = ({ cities, countLimit }) => {
   return (
-    <section className="nav-location-section">
-      <h3>Villes {cities.length}/{countLimit}</h3>
-      <ul>
+    <section>
+      <h3 className="m-0 mb-2 text-xs text-amber-dim">
+        Villes {cities.length}/{countLimit}
+      </h3>
+      <ul className="m-0 list-none space-y-1 p-0">
         {cities.map(city => (
           <NavLocationItem key={city.id} kind="city" cityId={city.id} text={city.name} />
         ))}

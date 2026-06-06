@@ -24,8 +24,8 @@ export const MovementCreateDestination: React.FC<Props> = ({
   }
 
   return (
-    <div className="movement-destination" id="destination">
-      <h3 className="movement-block-heading">Destination</h3>
+    <div id="destination" className="space-y-3">
+      <h3 className="m-0 field-label">Destination</h3>
       <MovementCreateDestinationLocationSelect
         excludeCityId={excludeCityId}
         excludeOutpostId={excludeOutpostId}
@@ -33,25 +33,25 @@ export const MovementCreateDestination: React.FC<Props> = ({
         onSelectedKeyChange={setSelectedKey}
         onChange={onChange}
       />
-      <div className="movement-coords-grid" id="coordinates">
-        <label className="movement-coord-field">
-          <span className="movement-coord-field__label">Secteur</span>
+      <div id="coordinates" className="grid grid-cols-3 gap-2">
+        <label className="flex flex-col gap-1">
+          <span className="field-label">Secteur</span>
           <MovementCreateDestinationCoordinate
             value={destination.sector}
             placeholder="Secteur"
             onChange={sector => handleManualChange({ ...destination, sector })}
           />
         </label>
-        <label className="movement-coord-field">
-          <span className="movement-coord-field__label">X</span>
+        <label className="flex flex-col gap-1">
+          <span className="field-label">X</span>
           <MovementCreateDestinationCoordinate
             value={destination.x}
             placeholder="X"
             onChange={x => handleManualChange({ ...destination, x })}
           />
         </label>
-        <label className="movement-coord-field">
-          <span className="movement-coord-field__label">Y</span>
+        <label className="flex flex-col gap-1">
+          <span className="field-label">Y</span>
           <MovementCreateDestinationCoordinate
             value={destination.y}
             placeholder="Y"

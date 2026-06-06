@@ -11,10 +11,12 @@ interface Props {
     src: string
     alt: string
   }
+  badge?: string
+  busy?: boolean
 }
 
 export const ListItemLevel: React.FC<Props> = ({ level, ...props }) => {
   return <ListItem {...props}>
-    <p>Niveau {level}</p>
+    <p className="m-0 text-xs text-amber-dim">Niv. {level}</p>
   </ListItem>
 }

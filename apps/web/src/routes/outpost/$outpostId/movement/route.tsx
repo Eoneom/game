@@ -1,13 +1,10 @@
-import React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-
-import { MovementPage } from '#movement/page'
-
-const OutpostMovementRoute: React.FC = () => {
-  const { outpostId } = Route.useParams()
-  return <MovementPage outpostId={outpostId} />
-}
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/outpost/$outpostId/movement')({
-  component: OutpostMovementRoute,
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: '/outpost/$outpostId/world/movement',
+      params: { outpostId: params.outpostId },
+    })
+  },
 })

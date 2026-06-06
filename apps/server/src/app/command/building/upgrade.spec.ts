@@ -241,6 +241,57 @@ describe('upgradeBuilding', () => {
     assert.ok(typeof args.execute_at === 'number')
   })
 
+  it('should drain a stuck queue before starting a new upgrade when nothing is in progress', async () => {
+    const next_building = BuildingEntity.create({
+      id: id(),
+      code: BuildingCode.RECYCLING_PLANT,
+      level: 0,
+      city_id: city.id
+    })
+    const queued = BuildingUpgradeQueueEntity.create({
+      id: id(),
+      city_id: city.id,
+      building_code: BuildingCode.RECYCLING_PLANT,
+      created_at: Date.now()
+    })
+
+    repository.building.get = vi.fn().mockImplementation(async ({ code }: { code: BuildingCode }) => {
+      if (code === BuildingCode.RECYCLING_PLANT) {
+        return next_building
+      }
+      return building
+    })
+    repository.building_upgrade_queue.listByCity = vi.fn()
+      .mockResolvedValueOnce([queued])
+      .mockResolvedValueOnce([])
+    repository.building_upgrade_queue.delete = vi.fn().mockResolvedValue(undefined)
+
+    getPendingBuildingUpgrade
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        player_id,
+        city_id: city.id,
+        building_id: next_building.id,
+        level: 0,
+        execute_at: Date.now() + 1000,
+        job_id: 'queued-started'
+      })
+
+    await upgradeBuilding({
+      player_id,
+      city_id: city.id,
+      building_code: BuildingCode.CLONING_FACTORY
+    })
+
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 1)
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls[0][0].building_id, next_building.id)
+    assert.strictEqual(queueCreate.mock.calls.length, 1)
+    assert.strictEqual(
+      (queueCreate.mock.calls[0][0] as BuildingUpgradeQueueEntity).building_code,
+      BuildingCode.CLONING_FACTORY
+    )
+  })
+
   it('should take less time to upgrade with an increase architecture level', async () => {
     repository.technology.get = vi
       .fn()

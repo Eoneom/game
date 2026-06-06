@@ -9,13 +9,23 @@ interface Props {
   active: boolean
   troop: TroopItem
   onSelect: (id: string) => void
+  badge?: string
+  busy?: boolean
 }
 
-export const TroopListItem: React.FC<Props> = ({ active, troop, onSelect }) => {
+export const TroopListItem: React.FC<Props> = ({
+  active,
+  troop,
+  onSelect,
+  badge,
+  busy,
+}) => {
   return <ListItemCount
     active={active}
     name={TroopTranslations[troop.code].name}
     count={troop.count}
+    badge={badge}
+    busy={busy}
     image={{
       src: troopImageSrc(troop.code),
       alt: '',

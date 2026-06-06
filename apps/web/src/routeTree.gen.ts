@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SharedRouteRouteImport } from './routes/_shared/route'
 import { Route as SharedIndexRouteImport } from './routes/_shared/index'
+import { Route as InboxReportRouteImport } from './routes/inbox/report'
 import { Route as SharedReportRouteImport } from './routes/_shared/report'
 import { Route as OutpostOutpostIdRouteRouteImport } from './routes/outpost/$outpostId/route'
 import { Route as CityCityIdRouteRouteImport } from './routes/city/$cityId/route'
@@ -23,8 +24,19 @@ import { Route as CityCityIdMapRouteImport } from './routes/city/$cityId/map'
 import { Route as CityCityIdBuildingRouteImport } from './routes/city/$cityId/building'
 import { Route as OutpostOutpostIdMovementRouteRouteImport } from './routes/outpost/$outpostId/movement/route'
 import { Route as CityCityIdMovementRouteRouteImport } from './routes/city/$cityId/movement/route'
+import { Route as CityCityIdWorldIndexRouteImport } from './routes/city/$cityId/world/index'
+import { Route as CityCityIdBaseIndexRouteImport } from './routes/city/$cityId/base/index'
+import { Route as OutpostOutpostIdWorldMapRouteImport } from './routes/outpost/$outpostId/world/map'
 import { Route as OutpostOutpostIdMovementMovementIdRouteImport } from './routes/outpost/$outpostId/movement/$movementId'
+import { Route as CityCityIdWorldMapRouteImport } from './routes/city/$cityId/world/map'
 import { Route as CityCityIdMovementMovementIdRouteImport } from './routes/city/$cityId/movement/$movementId'
+import { Route as CityCityIdBaseTroopRouteImport } from './routes/city/$cityId/base/troop'
+import { Route as CityCityIdBaseTechnologyRouteImport } from './routes/city/$cityId/base/technology'
+import { Route as CityCityIdBaseBuildingRouteImport } from './routes/city/$cityId/base/building'
+import { Route as OutpostOutpostIdWorldMovementRouteRouteImport } from './routes/outpost/$outpostId/world/movement/route'
+import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/$cityId/world/movement/route'
+import { Route as OutpostOutpostIdWorldMovementMovementIdRouteImport } from './routes/outpost/$outpostId/world/movement/$movementId'
+import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/city/$cityId/world/movement/$movementId'
 
 const SharedRouteRoute = SharedRouteRouteImport.update({
   id: '/_shared',
@@ -34,6 +46,11 @@ const SharedIndexRoute = SharedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => SharedRouteRoute,
+} as any)
+const InboxReportRoute = InboxReportRouteImport.update({
+  id: '/inbox/report',
+  path: '/inbox/report',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const SharedReportRoute = SharedReportRouteImport.update({
   id: '/report',
@@ -96,17 +113,78 @@ const CityCityIdMovementRouteRoute = CityCityIdMovementRouteRouteImport.update({
   path: '/movement',
   getParentRoute: () => CityCityIdRouteRoute,
 } as any)
+const CityCityIdWorldIndexRoute = CityCityIdWorldIndexRouteImport.update({
+  id: '/world/',
+  path: '/world/',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
+const CityCityIdBaseIndexRoute = CityCityIdBaseIndexRouteImport.update({
+  id: '/base/',
+  path: '/base/',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
+const OutpostOutpostIdWorldMapRoute =
+  OutpostOutpostIdWorldMapRouteImport.update({
+    id: '/world/map',
+    path: '/world/map',
+    getParentRoute: () => OutpostOutpostIdRouteRoute,
+  } as any)
 const OutpostOutpostIdMovementMovementIdRoute =
   OutpostOutpostIdMovementMovementIdRouteImport.update({
     id: '/$movementId',
     path: '/$movementId',
     getParentRoute: () => OutpostOutpostIdMovementRouteRoute,
   } as any)
+const CityCityIdWorldMapRoute = CityCityIdWorldMapRouteImport.update({
+  id: '/world/map',
+  path: '/world/map',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
 const CityCityIdMovementMovementIdRoute =
   CityCityIdMovementMovementIdRouteImport.update({
     id: '/$movementId',
     path: '/$movementId',
     getParentRoute: () => CityCityIdMovementRouteRoute,
+  } as any)
+const CityCityIdBaseTroopRoute = CityCityIdBaseTroopRouteImport.update({
+  id: '/base/troop',
+  path: '/base/troop',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
+const CityCityIdBaseTechnologyRoute =
+  CityCityIdBaseTechnologyRouteImport.update({
+    id: '/base/technology',
+    path: '/base/technology',
+    getParentRoute: () => CityCityIdRouteRoute,
+  } as any)
+const CityCityIdBaseBuildingRoute = CityCityIdBaseBuildingRouteImport.update({
+  id: '/base/building',
+  path: '/base/building',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
+const OutpostOutpostIdWorldMovementRouteRoute =
+  OutpostOutpostIdWorldMovementRouteRouteImport.update({
+    id: '/world/movement',
+    path: '/world/movement',
+    getParentRoute: () => OutpostOutpostIdRouteRoute,
+  } as any)
+const CityCityIdWorldMovementRouteRoute =
+  CityCityIdWorldMovementRouteRouteImport.update({
+    id: '/world/movement',
+    path: '/world/movement',
+    getParentRoute: () => CityCityIdRouteRoute,
+  } as any)
+const OutpostOutpostIdWorldMovementMovementIdRoute =
+  OutpostOutpostIdWorldMovementMovementIdRouteImport.update({
+    id: '/$movementId',
+    path: '/$movementId',
+    getParentRoute: () => OutpostOutpostIdWorldMovementRouteRoute,
+  } as any)
+const CityCityIdWorldMovementMovementIdRoute =
+  CityCityIdWorldMovementMovementIdRouteImport.update({
+    id: '/$movementId',
+    path: '/$movementId',
+    getParentRoute: () => CityCityIdWorldMovementRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -114,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/report': typeof SharedReportRoute
+  '/inbox/report': typeof InboxReportRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -123,11 +202,23 @@ export interface FileRoutesByFullPath {
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
   '/city/$cityId/': typeof CityCityIdIndexRoute
   '/outpost/$outpostId/': typeof OutpostOutpostIdIndexRoute
+  '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
+  '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
+  '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
+  '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
+  '/city/$cityId/world/map': typeof CityCityIdWorldMapRoute
   '/outpost/$outpostId/movement/$movementId': typeof OutpostOutpostIdMovementMovementIdRoute
+  '/outpost/$outpostId/world/map': typeof OutpostOutpostIdWorldMapRoute
+  '/city/$cityId/base/': typeof CityCityIdBaseIndexRoute
+  '/city/$cityId/world/': typeof CityCityIdWorldIndexRoute
+  '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRoutesByTo {
   '/report': typeof SharedReportRoute
+  '/inbox/report': typeof InboxReportRoute
   '/': typeof SharedIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
@@ -138,8 +229,19 @@ export interface FileRoutesByTo {
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
   '/city/$cityId': typeof CityCityIdIndexRoute
   '/outpost/$outpostId': typeof OutpostOutpostIdIndexRoute
+  '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
+  '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
+  '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
+  '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
+  '/city/$cityId/world/map': typeof CityCityIdWorldMapRoute
   '/outpost/$outpostId/movement/$movementId': typeof OutpostOutpostIdMovementMovementIdRoute
+  '/outpost/$outpostId/world/map': typeof OutpostOutpostIdWorldMapRoute
+  '/city/$cityId/base': typeof CityCityIdBaseIndexRoute
+  '/city/$cityId/world': typeof CityCityIdWorldIndexRoute
+  '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,6 +249,7 @@ export interface FileRoutesById {
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/_shared/report': typeof SharedReportRoute
+  '/inbox/report': typeof InboxReportRoute
   '/_shared/': typeof SharedIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
@@ -157,8 +260,19 @@ export interface FileRoutesById {
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
   '/city/$cityId/': typeof CityCityIdIndexRoute
   '/outpost/$outpostId/': typeof OutpostOutpostIdIndexRoute
+  '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
+  '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
+  '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
+  '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
+  '/city/$cityId/world/map': typeof CityCityIdWorldMapRoute
   '/outpost/$outpostId/movement/$movementId': typeof OutpostOutpostIdMovementMovementIdRoute
+  '/outpost/$outpostId/world/map': typeof OutpostOutpostIdWorldMapRoute
+  '/city/$cityId/base/': typeof CityCityIdBaseIndexRoute
+  '/city/$cityId/world/': typeof CityCityIdWorldIndexRoute
+  '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +281,7 @@ export interface FileRouteTypes {
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/report'
+    | '/inbox/report'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -176,11 +291,23 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/map'
     | '/city/$cityId/'
     | '/outpost/$outpostId/'
+    | '/city/$cityId/world/movement'
+    | '/outpost/$outpostId/world/movement'
+    | '/city/$cityId/base/building'
+    | '/city/$cityId/base/technology'
+    | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
+    | '/city/$cityId/world/map'
     | '/outpost/$outpostId/movement/$movementId'
+    | '/outpost/$outpostId/world/map'
+    | '/city/$cityId/base/'
+    | '/city/$cityId/world/'
+    | '/city/$cityId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/$movementId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/report'
+    | '/inbox/report'
     | '/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
@@ -191,14 +318,26 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/map'
     | '/city/$cityId'
     | '/outpost/$outpostId'
+    | '/city/$cityId/world/movement'
+    | '/outpost/$outpostId/world/movement'
+    | '/city/$cityId/base/building'
+    | '/city/$cityId/base/technology'
+    | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
+    | '/city/$cityId/world/map'
     | '/outpost/$outpostId/movement/$movementId'
+    | '/outpost/$outpostId/world/map'
+    | '/city/$cityId/base'
+    | '/city/$cityId/world'
+    | '/city/$cityId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/$movementId'
   id:
     | '__root__'
     | '/_shared'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/_shared/report'
+    | '/inbox/report'
     | '/_shared/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
@@ -209,14 +348,26 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/map'
     | '/city/$cityId/'
     | '/outpost/$outpostId/'
+    | '/city/$cityId/world/movement'
+    | '/outpost/$outpostId/world/movement'
+    | '/city/$cityId/base/building'
+    | '/city/$cityId/base/technology'
+    | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
+    | '/city/$cityId/world/map'
     | '/outpost/$outpostId/movement/$movementId'
+    | '/outpost/$outpostId/world/map'
+    | '/city/$cityId/base/'
+    | '/city/$cityId/world/'
+    | '/city/$cityId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/$movementId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   SharedRouteRoute: typeof SharedRouteRouteWithChildren
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
+  InboxReportRoute: typeof InboxReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -234,6 +385,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof SharedIndexRouteImport
       parentRoute: typeof SharedRouteRoute
+    }
+    '/inbox/report': {
+      id: '/inbox/report'
+      path: '/inbox/report'
+      fullPath: '/inbox/report'
+      preLoaderRoute: typeof InboxReportRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_shared/report': {
       id: '/_shared/report'
@@ -319,6 +477,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CityCityIdMovementRouteRouteImport
       parentRoute: typeof CityCityIdRouteRoute
     }
+    '/city/$cityId/world/': {
+      id: '/city/$cityId/world/'
+      path: '/world'
+      fullPath: '/city/$cityId/world/'
+      preLoaderRoute: typeof CityCityIdWorldIndexRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/city/$cityId/base/': {
+      id: '/city/$cityId/base/'
+      path: '/base'
+      fullPath: '/city/$cityId/base/'
+      preLoaderRoute: typeof CityCityIdBaseIndexRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/outpost/$outpostId/world/map': {
+      id: '/outpost/$outpostId/world/map'
+      path: '/world/map'
+      fullPath: '/outpost/$outpostId/world/map'
+      preLoaderRoute: typeof OutpostOutpostIdWorldMapRouteImport
+      parentRoute: typeof OutpostOutpostIdRouteRoute
+    }
     '/outpost/$outpostId/movement/$movementId': {
       id: '/outpost/$outpostId/movement/$movementId'
       path: '/$movementId'
@@ -326,12 +505,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutpostOutpostIdMovementMovementIdRouteImport
       parentRoute: typeof OutpostOutpostIdMovementRouteRoute
     }
+    '/city/$cityId/world/map': {
+      id: '/city/$cityId/world/map'
+      path: '/world/map'
+      fullPath: '/city/$cityId/world/map'
+      preLoaderRoute: typeof CityCityIdWorldMapRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
     '/city/$cityId/movement/$movementId': {
       id: '/city/$cityId/movement/$movementId'
       path: '/$movementId'
       fullPath: '/city/$cityId/movement/$movementId'
       preLoaderRoute: typeof CityCityIdMovementMovementIdRouteImport
       parentRoute: typeof CityCityIdMovementRouteRoute
+    }
+    '/city/$cityId/base/troop': {
+      id: '/city/$cityId/base/troop'
+      path: '/base/troop'
+      fullPath: '/city/$cityId/base/troop'
+      preLoaderRoute: typeof CityCityIdBaseTroopRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/city/$cityId/base/technology': {
+      id: '/city/$cityId/base/technology'
+      path: '/base/technology'
+      fullPath: '/city/$cityId/base/technology'
+      preLoaderRoute: typeof CityCityIdBaseTechnologyRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/city/$cityId/base/building': {
+      id: '/city/$cityId/base/building'
+      path: '/base/building'
+      fullPath: '/city/$cityId/base/building'
+      preLoaderRoute: typeof CityCityIdBaseBuildingRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/outpost/$outpostId/world/movement': {
+      id: '/outpost/$outpostId/world/movement'
+      path: '/world/movement'
+      fullPath: '/outpost/$outpostId/world/movement'
+      preLoaderRoute: typeof OutpostOutpostIdWorldMovementRouteRouteImport
+      parentRoute: typeof OutpostOutpostIdRouteRoute
+    }
+    '/city/$cityId/world/movement': {
+      id: '/city/$cityId/world/movement'
+      path: '/world/movement'
+      fullPath: '/city/$cityId/world/movement'
+      preLoaderRoute: typeof CityCityIdWorldMovementRouteRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/outpost/$outpostId/world/movement/$movementId': {
+      id: '/outpost/$outpostId/world/movement/$movementId'
+      path: '/$movementId'
+      fullPath: '/outpost/$outpostId/world/movement/$movementId'
+      preLoaderRoute: typeof OutpostOutpostIdWorldMovementMovementIdRouteImport
+      parentRoute: typeof OutpostOutpostIdWorldMovementRouteRoute
+    }
+    '/city/$cityId/world/movement/$movementId': {
+      id: '/city/$cityId/world/movement/$movementId'
+      path: '/$movementId'
+      fullPath: '/city/$cityId/world/movement/$movementId'
+      preLoaderRoute: typeof CityCityIdWorldMovementMovementIdRouteImport
+      parentRoute: typeof CityCityIdWorldMovementRouteRoute
     }
   }
 }
@@ -364,6 +599,21 @@ const CityCityIdMovementRouteRouteWithChildren =
     CityCityIdMovementRouteRouteChildren,
   )
 
+interface CityCityIdWorldMovementRouteRouteChildren {
+  CityCityIdWorldMovementMovementIdRoute: typeof CityCityIdWorldMovementMovementIdRoute
+}
+
+const CityCityIdWorldMovementRouteRouteChildren: CityCityIdWorldMovementRouteRouteChildren =
+  {
+    CityCityIdWorldMovementMovementIdRoute:
+      CityCityIdWorldMovementMovementIdRoute,
+  }
+
+const CityCityIdWorldMovementRouteRouteWithChildren =
+  CityCityIdWorldMovementRouteRoute._addFileChildren(
+    CityCityIdWorldMovementRouteRouteChildren,
+  )
+
 interface CityCityIdRouteRouteChildren {
   CityCityIdMovementRouteRoute: typeof CityCityIdMovementRouteRouteWithChildren
   CityCityIdBuildingRoute: typeof CityCityIdBuildingRoute
@@ -371,6 +621,13 @@ interface CityCityIdRouteRouteChildren {
   CityCityIdTechnologyRoute: typeof CityCityIdTechnologyRoute
   CityCityIdTroopRoute: typeof CityCityIdTroopRoute
   CityCityIdIndexRoute: typeof CityCityIdIndexRoute
+  CityCityIdWorldMovementRouteRoute: typeof CityCityIdWorldMovementRouteRouteWithChildren
+  CityCityIdBaseBuildingRoute: typeof CityCityIdBaseBuildingRoute
+  CityCityIdBaseTechnologyRoute: typeof CityCityIdBaseTechnologyRoute
+  CityCityIdBaseTroopRoute: typeof CityCityIdBaseTroopRoute
+  CityCityIdWorldMapRoute: typeof CityCityIdWorldMapRoute
+  CityCityIdBaseIndexRoute: typeof CityCityIdBaseIndexRoute
+  CityCityIdWorldIndexRoute: typeof CityCityIdWorldIndexRoute
 }
 
 const CityCityIdRouteRouteChildren: CityCityIdRouteRouteChildren = {
@@ -380,6 +637,14 @@ const CityCityIdRouteRouteChildren: CityCityIdRouteRouteChildren = {
   CityCityIdTechnologyRoute: CityCityIdTechnologyRoute,
   CityCityIdTroopRoute: CityCityIdTroopRoute,
   CityCityIdIndexRoute: CityCityIdIndexRoute,
+  CityCityIdWorldMovementRouteRoute:
+    CityCityIdWorldMovementRouteRouteWithChildren,
+  CityCityIdBaseBuildingRoute: CityCityIdBaseBuildingRoute,
+  CityCityIdBaseTechnologyRoute: CityCityIdBaseTechnologyRoute,
+  CityCityIdBaseTroopRoute: CityCityIdBaseTroopRoute,
+  CityCityIdWorldMapRoute: CityCityIdWorldMapRoute,
+  CityCityIdBaseIndexRoute: CityCityIdBaseIndexRoute,
+  CityCityIdWorldIndexRoute: CityCityIdWorldIndexRoute,
 }
 
 const CityCityIdRouteRouteWithChildren = CityCityIdRouteRoute._addFileChildren(
@@ -401,10 +666,27 @@ const OutpostOutpostIdMovementRouteRouteWithChildren =
     OutpostOutpostIdMovementRouteRouteChildren,
   )
 
+interface OutpostOutpostIdWorldMovementRouteRouteChildren {
+  OutpostOutpostIdWorldMovementMovementIdRoute: typeof OutpostOutpostIdWorldMovementMovementIdRoute
+}
+
+const OutpostOutpostIdWorldMovementRouteRouteChildren: OutpostOutpostIdWorldMovementRouteRouteChildren =
+  {
+    OutpostOutpostIdWorldMovementMovementIdRoute:
+      OutpostOutpostIdWorldMovementMovementIdRoute,
+  }
+
+const OutpostOutpostIdWorldMovementRouteRouteWithChildren =
+  OutpostOutpostIdWorldMovementRouteRoute._addFileChildren(
+    OutpostOutpostIdWorldMovementRouteRouteChildren,
+  )
+
 interface OutpostOutpostIdRouteRouteChildren {
   OutpostOutpostIdMovementRouteRoute: typeof OutpostOutpostIdMovementRouteRouteWithChildren
   OutpostOutpostIdMapRoute: typeof OutpostOutpostIdMapRoute
   OutpostOutpostIdIndexRoute: typeof OutpostOutpostIdIndexRoute
+  OutpostOutpostIdWorldMovementRouteRoute: typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
+  OutpostOutpostIdWorldMapRoute: typeof OutpostOutpostIdWorldMapRoute
 }
 
 const OutpostOutpostIdRouteRouteChildren: OutpostOutpostIdRouteRouteChildren = {
@@ -412,6 +694,9 @@ const OutpostOutpostIdRouteRouteChildren: OutpostOutpostIdRouteRouteChildren = {
     OutpostOutpostIdMovementRouteRouteWithChildren,
   OutpostOutpostIdMapRoute: OutpostOutpostIdMapRoute,
   OutpostOutpostIdIndexRoute: OutpostOutpostIdIndexRoute,
+  OutpostOutpostIdWorldMovementRouteRoute:
+    OutpostOutpostIdWorldMovementRouteRouteWithChildren,
+  OutpostOutpostIdWorldMapRoute: OutpostOutpostIdWorldMapRoute,
 }
 
 const OutpostOutpostIdRouteRouteWithChildren =
@@ -423,6 +708,7 @@ const rootRouteChildren: RootRouteChildren = {
   SharedRouteRoute: SharedRouteRouteWithChildren,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,
+  InboxReportRoute: InboxReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

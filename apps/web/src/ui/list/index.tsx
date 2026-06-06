@@ -8,7 +8,7 @@ interface Props {
 export const List: React.FC<Props> = ({ inProgress, items }) => {
   return <>
     {inProgress}
-    <div className='list'>
+    <div className="list grid grid-cols-2 gap-2 sm:grid-cols-3">
       {items}
     </div>
   </>
