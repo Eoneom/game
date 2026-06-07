@@ -118,9 +118,11 @@ export class AppService {
 
   static async getCityEnergyBreakdown({
     city_id,
+    player_id,
     solar_panel_level
   }: {
     city_id: string
+    player_id: string
     solar_panel_level: number
   }): Promise<{
     energy: number
@@ -128,17 +130,29 @@ export class AppService {
     cell_solar_coefficient: number
   }> {
     const repository = Factory.getRepository()
-    const city_cell = await repository.cell.getCityCell({ city_id })
+    const [
+      city_cell,
+      photovoltaic_optimization
+    ] = await Promise.all([
+      repository.cell.getCityCell({ city_id }),
+      repository.technology.get({
+        player_id,
+        code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION
+      })
+    ])
     const cell_solar_coefficient = city_cell.solar_coefficient
+    const efficiency_level = photovoltaic_optimization.level
 
     const energy = BuildingService.getEnergy({
       level: solar_panel_level,
-      coefficient: cell_solar_coefficient
+      coefficient: cell_solar_coefficient,
+      efficiency_level
     })
 
     const pre_cell_energy = BuildingService.getEnergy({
       level: solar_panel_level,
-      coefficient: NEUTRAL_SOLAR_COEFFICIENT
+      coefficient: NEUTRAL_SOLAR_COEFFICIENT,
+      efficiency_level
     })
 
     return {

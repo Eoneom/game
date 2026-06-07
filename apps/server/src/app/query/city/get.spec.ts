@@ -5,6 +5,8 @@ import { Repository } from '#app/port/repository/generic'
 import { CityEntity } from '#core/city/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
+import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyEntity } from '#core/technology/entity'
 import * as time from '#shared/time'
 import { testResourceStock } from '../../test-support/resource-stock'
 import type { MockInstance } from 'vitest'
@@ -15,7 +17,7 @@ describe('CityGetQuery', () => {
   const cell_id = id()
   let city: CityEntity
   let cell: CellEntity
-  let repository: Pick<Repository, 'building' | 'city' | 'cell' | 'resource_stock'>
+  let repository: Pick<Repository, 'building' | 'city' | 'cell' | 'resource_stock' | 'technology'>
   let nowSpy: MockInstance
 
   beforeEach(() => {
@@ -54,6 +56,14 @@ describe('CityGetQuery', () => {
           mushroom: 0 
         })),
       } as unknown as Repository['resource_stock'],
+      technology: {
+        get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+          id: id(),
+          player_id,
+          code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+          level: 0
+        }))
+      } as unknown as Repository['technology'],
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -116,5 +126,22 @@ describe('CityGetQuery', () => {
     expect(result.energy).toBe(15)
     expect(result.pre_cell_energy).toBe(15)
     expect(result.cell_solar_coefficient).toBe(1)
+  })
+
+  it('returns boosted energy when photovoltaic optimization is researched', async () => {
+    ;(repository.technology.get as MockInstance).mockResolvedValue(TechnologyEntity.create({
+      id: id(),
+      player_id,
+      code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+      level: 1
+    }))
+
+    const result = await new CityGetQuery().run({
+      city_id: city.id,
+      player_id
+    })
+
+    expect(result.energy).toBe(17)
+    expect(result.pre_cell_energy).toBe(17)
   })
 })

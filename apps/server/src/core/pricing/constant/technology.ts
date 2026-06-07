@@ -45,5 +45,19 @@ export const technology_costs: Record<TechnologyCode, LevelCosts> = {
       base: 180,
       multiplier: 2
     }
+  },
+  [TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION]: {
+    plastic: {
+      base: 15000,
+      multiplier: 1.6
+    },
+    mushroom: {
+      base: 12000,
+      multiplier: 1.6
+    },
+    duration: {
+      base: 240,
+      multiplier: 2
+    }
   }
 }

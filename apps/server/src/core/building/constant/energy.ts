@@ -11,3 +11,5 @@ export const building_energy: Record<BuildingCode.SOLAR_PANEL, Energy> = {
     multiplier: 1.5
   }
 }
+
+export const SOLAR_EFFICIENCY_MULTIPLIER_PER_LEVEL = 1.15

@@ -21,5 +21,10 @@ export const TechnologyTranslations: Record<TechnologyCode, TechnologyTranslatio
     name: 'Logistique des avant-postes',
     description: 'Optimiser le stockage et le ravitaillement des avant-postes permet d\'y entreposer davantage de ressources',
     effect: 'Augmente la capacité de stockage des avant-postes de 40% par niveau (base 2000 plastique / 1500 champignons)'
+  },
+  [TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION]: {
+    name: 'Optimisation photovoltaïque',
+    description: 'Améliorer le rendement des cellules solaires permet d\'extraire davantage d\'énergie des panneaux',
+    effect: 'Augmente la production d\'énergie des panneaux solaires de 15% par niveau'
   }
 }

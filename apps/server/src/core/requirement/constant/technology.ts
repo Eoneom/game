@@ -29,5 +29,14 @@ export const TechnologyRequirement: Record<TechnologyCode, RequirementValue> = {
       }
     ],
     technologies: []
+  },
+  [TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 6
+      }
+    ],
+    technologies: []
   }
 }

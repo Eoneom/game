@@ -96,6 +96,7 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
 
     const energy_breakdown = await AppService.getCityEnergyBreakdown({
       city_id: city.id,
+      player_id,
       solar_panel_level,
     })
 

@@ -61,7 +61,10 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       Factory.getJobQueue().getPendingBuildingUpgrade({ city_id }),
     ])
 
-    const metadata = await this.getMetadata({ building })
+    const metadata = await this.getMetadata({
+      building,
+      player_id
+    })
     const requirement = RequirementService.getBuildingRequirement({ building_code })
     const cost = PricingService.getBuildingLevelCost({
       code: building.code,
@@ -83,7 +86,13 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
   }
 
-  private async getMetadata({ building }: { building: BuildingEntity}): Promise<Record<string, unknown>> {
+  private async getMetadata({
+    building,
+    player_id
+  }: {
+    building: BuildingEntity
+    player_id: string
+  }): Promise<Record<string, unknown>> {
     if (isWarehouseBuildingCode(building.code)) {
       const current_capacity = BuildingService.getWarehouseCapacity({
         level: building.level,
@@ -127,16 +136,28 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     if (isEnergyBuildingCode(building.code)) {
-      const city_cell = await this.repository.cell.getCityCell({ city_id: building.city_id })
+      const [
+        city_cell,
+        photovoltaic_optimization
+      ] = await Promise.all([
+        this.repository.cell.getCityCell({ city_id: building.city_id }),
+        this.repository.technology.get({
+          player_id,
+          code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION
+        })
+      ])
       const coefficient = city_cell.solar_coefficient
+      const efficiency_level = photovoltaic_optimization.level
 
       const current_energy = BuildingService.getEnergy({
         level: building.level,
-        coefficient
+        coefficient,
+        efficiency_level
       })
       const next_energy = BuildingService.getEnergy({
         level: building.level + 1,
-        coefficient
+        coefficient,
+        efficiency_level
       })
 
       return {

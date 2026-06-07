@@ -18,6 +18,7 @@ describe('BuildingGetQuery', () => {
   let city: CityEntity
   let building: BuildingEntity
   let architecture: TechnologyEntity
+  let photovoltaic_optimization: TechnologyEntity
   let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'cell'>
 
   beforeEach(() => {
@@ -37,11 +38,27 @@ describe('BuildingGetQuery', () => {
       code: TechnologyCode.ARCHITECTURE,
       level: 2
     })
+    photovoltaic_optimization = TechnologyEntity.create({
+      id: id(),
+      player_id,
+      code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+      level: 0
+    })
 
     repository = {
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       building: { getInCity: vi.fn().mockResolvedValue(building) } as unknown as Repository['building'],
-      technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology'],
+      technology: {
+        get: vi.fn().mockImplementation(({ code }: { code: TechnologyCode }) => {
+          if (code === TechnologyCode.ARCHITECTURE) {
+            return Promise.resolve(architecture)
+          }
+          if (code === TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION) {
+            return Promise.resolve(photovoltaic_optimization)
+          }
+          return Promise.reject(new Error(`unexpected technology code: ${code}`))
+        })
+      } as unknown as Repository['technology'],
       cell: {
         getCityCell: vi.fn().mockResolvedValue(CellEntity.create({
           id: id(),
@@ -116,6 +133,33 @@ describe('BuildingGetQuery', () => {
     expect(result.metadata).toEqual({
       current_energy: 15,
       next_energy: 23
+    })
+  })
+
+  it('returns boosted energy metadata when photovoltaic optimization is researched', async () => {
+    photovoltaic_optimization = TechnologyEntity.create({
+      id: id(),
+      player_id,
+      code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+      level: 2
+    })
+    const solar_panel = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.SOLAR_PANEL,
+      level: 2
+    })
+    ;(repository.building.getInCity as MockInstance).mockResolvedValue(solar_panel)
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.SOLAR_PANEL,
+      player_id
+    })
+
+    expect(result.metadata).toEqual({
+      current_energy: 20,
+      next_energy: 30
     })
   })
 })

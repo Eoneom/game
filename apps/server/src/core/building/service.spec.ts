@@ -27,4 +27,20 @@ describe('BuildingService.getEnergy', () => {
       coefficient: 1.5
     }), 0)
   })
+
+  it('applies efficiency level bonus at level 1', () => {
+    assert.strictEqual(BuildingService.getEnergy({
+      level: 1,
+      coefficient: 1,
+      efficiency_level: 1
+    }), 12)
+  })
+
+  it('applies efficiency level bonus at level 2', () => {
+    assert.strictEqual(BuildingService.getEnergy({
+      level: 2,
+      coefficient: 1,
+      efficiency_level: 2
+    }), 20)
+  })
 })

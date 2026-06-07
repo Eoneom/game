@@ -1,6 +1,6 @@
 import { BuildingCode } from '#core/building/constant/code'
 import { building_earnings } from '#core/building/constant/earnings'
-import { building_energy } from '#core/building/constant/energy'
+import { building_energy, SOLAR_EFFICIENCY_MULTIPLIER_PER_LEVEL } from '#core/building/constant/energy'
 import { building_order } from '#core/building/constant/order'
 import { warehouses_capacity } from '#core/building/constant/warehouse-capacity'
 import { BuildingEntity } from '#core/building/entity'
@@ -46,7 +46,15 @@ export class BuildingService {
     return Math.round(per_game_second * gameTimeScale * 100) / 100
   }
 
-  static getEnergy({ level, coefficient = 1 }: { level: number; coefficient?: number }): number {
+  static getEnergy({
+    level,
+    coefficient = 1,
+    efficiency_level = 0
+  }: {
+    level: number
+    coefficient?: number
+    efficiency_level?: number
+  }): number {
     if (level === 0) {
       return 0
     }
@@ -56,7 +64,10 @@ export class BuildingService {
       multiplier
     } = building_energy[BuildingCode.SOLAR_PANEL]
 
-    return Math.round(Math.pow(multiplier, level - 1) * base * coefficient)
+    const raw = Math.pow(multiplier, level - 1) * base * coefficient
+    const with_efficiency = raw * Math.pow(SOLAR_EFFICIENCY_MULTIPLIER_PER_LEVEL, efficiency_level)
+
+    return Math.round(with_efficiency)
   }
 
   static getWarehouseCapacity({
