@@ -26,7 +26,8 @@ describe('WorldGetSectorQuery', () => {
         resource_coefficient: {
           plastic: 1,
           mushroom: 1 
-        }
+        },
+        solar_coefficient: 1
       })
     ]
     repository = {

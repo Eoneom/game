@@ -14,7 +14,17 @@ describe('BuildingService.getEnergy', () => {
     assert.strictEqual(BuildingService.getEnergy({ level: 2 }), 15)
   })
 
-  it('returns exponential value at level 3', () => {
-    assert.strictEqual(BuildingService.getEnergy({ level: 3 }), 23)
+  it('returns coefficient-scaled energy at level 1', () => {
+    assert.strictEqual(BuildingService.getEnergy({
+      level: 1,
+      coefficient: 1.5
+    }), 15)
+  })
+
+  it('returns 0 at level 0 regardless of coefficient', () => {
+    assert.strictEqual(BuildingService.getEnergy({
+      level: 0,
+      coefficient: 1.5
+    }), 0)
   })
 })

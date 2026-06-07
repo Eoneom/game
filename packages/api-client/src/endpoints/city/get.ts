@@ -38,6 +38,8 @@ export interface CityGetDataResponse {
     mushroom: number
   }
   energy: number
+  pre_cell_energy: number
+  cell_solar_coefficient: number
 }
 
 export type CityGetResponse = GenericResponse<CityGetDataResponse>

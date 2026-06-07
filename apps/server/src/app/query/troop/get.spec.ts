@@ -83,6 +83,7 @@ describe('TroopGetQuery', () => {
         plastic: 1,
         mushroom: 1 
       },
+      solar_coefficient: 1,
       city_id
     })
     const troop_in_city = TroopEntity.create({

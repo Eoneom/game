@@ -74,7 +74,8 @@ const cell_mapper = ({
     resource_coefficient: {
       plastic: cell.resource_coefficient.plastic,
       mushroom: cell.resource_coefficient.mushroom
-    }
+    },
+    solar_coefficient: cell.solar_coefficient
   } : undefined
 
   return {

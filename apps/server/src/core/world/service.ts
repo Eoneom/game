@@ -14,6 +14,7 @@ export class WorldService {
   static generate () {
     const mushroom_perlin_service = new PerlinService()
     const plastic_perlin_service = new PerlinService()
+    const solar_perlin_service = new PerlinService()
     const world: CellEntity[] = []
 
     for (let sector_y = 1; sector_y <= REGION_SIZE ; sector_y++) {
@@ -21,6 +22,7 @@ export class WorldService {
         const sector_cells = this.generateSector({
           mushroom_perlin_service,
           plastic_perlin_service,
+          solar_perlin_service,
           sector_x,
           sector_y
         })
@@ -30,6 +32,24 @@ export class WorldService {
     }
 
     return world
+  }
+
+  static getSolarCoefficient({
+    perlin,
+    coordinates
+  }: {
+    perlin: PerlinService
+    coordinates: Coordinates
+  }): number {
+    const { sector_x, sector_y } = this.getSectorCoordinates({ sector: coordinates.sector })
+
+    return this.getCoefficient({
+      perlin,
+      x: coordinates.x,
+      y: coordinates.y,
+      sector_x,
+      sector_y
+    })
   }
 
   static getRandomCoordinates(): Coordinates {
@@ -64,14 +84,26 @@ export class WorldService {
     }
   }
 
+  private static getSectorCoordinates({ sector }: { sector: number }): {
+    sector_x: number
+    sector_y: number
+  } {
+    return {
+      sector_x: (sector - 1) % SECTOR_SIZE + 1,
+      sector_y: Math.floor((sector - 1) / SECTOR_SIZE) + 1
+    }
+  }
+
   private static generateSector({
     mushroom_perlin_service,
     plastic_perlin_service,
+    solar_perlin_service,
     sector_x,
     sector_y
   }: {
     mushroom_perlin_service: PerlinService
     plastic_perlin_service: PerlinService
+    solar_perlin_service: PerlinService
     sector_x: number
     sector_y: number
   }): CellEntity[] {
@@ -96,16 +128,24 @@ export class WorldService {
           sector_y
         })
 
+        const coordinates = {
+          x,
+          y,
+          sector: sector_id
+        }
+
+        const solar_coefficient = this.getSolarCoefficient({
+          perlin: solar_perlin_service,
+          coordinates
+        })
+
         const generated_cell = CellEntity.generate({
-          coordinates: {
-            x,
-            y,
-            sector: sector_id
-          },
+          coordinates,
           coefficient: {
             plastic: plastic_coefficient,
             mushroom: mushroom_coefficient
-          }
+          },
+          solar_coefficient
         })
 
         sector.push(generated_cell)

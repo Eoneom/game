@@ -36,6 +36,7 @@ describe('CityGetQuery', () => {
         plastic: 1,
         mushroom: 1 
       },
+      solar_coefficient: 1,
       city_id: city.id
     })
 
@@ -113,5 +114,7 @@ describe('CityGetQuery', () => {
     })
 
     expect(result.energy).toBe(15)
+    expect(result.pre_cell_energy).toBe(15)
+    expect(result.cell_solar_coefficient).toBe(1)
   })
 })

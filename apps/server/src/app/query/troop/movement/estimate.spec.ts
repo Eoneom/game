@@ -33,7 +33,8 @@ describe('TroopMovementEstimateQuery', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1
-      }
+      },
+      solar_coefficient: 1
     })
     destination_cell = CellEntity.create({
       id: destination_cell_id,
@@ -42,7 +43,8 @@ describe('TroopMovementEstimateQuery', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1
-      }
+      },
+      solar_coefficient: 1
     })
     repository = {
       cell: {

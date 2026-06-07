@@ -8,6 +8,7 @@ type CellEntityProps = BaseEntity & {
   coordinates: Coordinates
   type: CellType
   resource_coefficient: Resource
+  solar_coefficient: number
   city_id?: string
 }
 
@@ -15,6 +16,7 @@ export class CellEntity extends BaseEntity {
   readonly coordinates: Coordinates
   readonly type: CellType
   readonly resource_coefficient: Resource
+  readonly solar_coefficient: number
   readonly city_id?: string
 
   private constructor({
@@ -22,6 +24,7 @@ export class CellEntity extends BaseEntity {
     coordinates,
     type,
     resource_coefficient,
+    solar_coefficient,
     city_id,
   }: CellEntityProps) {
     super({ id })
@@ -29,6 +32,7 @@ export class CellEntity extends BaseEntity {
     this.coordinates = coordinates
     this.type = type
     this.resource_coefficient = resource_coefficient
+    this.solar_coefficient = solar_coefficient
     this.city_id = city_id
   }
 
@@ -38,17 +42,20 @@ export class CellEntity extends BaseEntity {
 
   static generate({
     coordinates,
-    coefficient
+    coefficient,
+    solar_coefficient,
   }: {
     coordinates: Coordinates
-    coefficient: Resource,
+    coefficient: Resource
+    solar_coefficient: number
   }): CellEntity {
     const type = this.getType({ coefficient })
     return CellEntity.create({
       id: id(),
       coordinates: coordinates,
       type,
-      resource_coefficient: coefficient
+      resource_coefficient: coefficient,
+      solar_coefficient,
     })
   }
 

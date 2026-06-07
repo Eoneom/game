@@ -28,6 +28,8 @@ export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
   mushroom: 1
 }
 
+export const NEUTRAL_SOLAR_COEFFICIENT = 1
+
 export class AppService {
   static async getExploredCellIds({ coordinates }: { coordinates: Coordinates }): Promise<string[]> {
     const repository = Factory.getRepository()
@@ -111,6 +113,38 @@ export class AppService {
         mushroom: pre_cell_mushroom
       },
       cell_resource_coefficient
+    }
+  }
+
+  static async getCityEnergyBreakdown({
+    city_id,
+    solar_panel_level
+  }: {
+    city_id: string
+    solar_panel_level: number
+  }): Promise<{
+    energy: number
+    pre_cell_energy: number
+    cell_solar_coefficient: number
+  }> {
+    const repository = Factory.getRepository()
+    const city_cell = await repository.cell.getCityCell({ city_id })
+    const cell_solar_coefficient = city_cell.solar_coefficient
+
+    const energy = BuildingService.getEnergy({
+      level: solar_panel_level,
+      coefficient: cell_solar_coefficient
+    })
+
+    const pre_cell_energy = BuildingService.getEnergy({
+      level: solar_panel_level,
+      coefficient: NEUTRAL_SOLAR_COEFFICIENT
+    })
+
+    return {
+      energy,
+      pre_cell_energy,
+      cell_solar_coefficient
     }
   }
 

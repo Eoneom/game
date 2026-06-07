@@ -127,8 +127,17 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     if (isEnergyBuildingCode(building.code)) {
-      const current_energy = BuildingService.getEnergy({ level: building.level })
-      const next_energy = BuildingService.getEnergy({ level: building.level + 1 })
+      const city_cell = await this.repository.cell.getCityCell({ city_id: building.city_id })
+      const coefficient = city_cell.solar_coefficient
+
+      const current_energy = BuildingService.getEnergy({
+        level: building.level,
+        coefficient
+      })
+      const next_energy = BuildingService.getEnergy({
+        level: building.level + 1,
+        coefficient
+      })
 
       return {
         current_energy,

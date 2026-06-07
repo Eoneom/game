@@ -54,7 +54,9 @@ const queryResult = {
     plastic: 1000,
     mushroom: 850 
   },
-  energy: 15
+  energy: 15,
+  pre_cell_energy: 15,
+  cell_solar_coefficient: 1
 }
 
 describe('cityGetHandler', () => {
@@ -131,6 +133,8 @@ describe('cityGetHandler', () => {
           mushroom: 850 
         },
         energy: 15,
+        pre_cell_energy: 15,
+        cell_solar_coefficient: 1,
         coordinates: {
           x: 1,
           y: 2,

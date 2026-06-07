@@ -21,6 +21,8 @@ const minimalCity = (overrides: Partial<City> = {}): City => ({
   warehouse_space_remaining: { plastic: 900, mushroom: 800 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
   energy: 0,
+  pre_cell_energy: 0,
+  cell_solar_coefficient: 1,
   ...overrides,
 })
 

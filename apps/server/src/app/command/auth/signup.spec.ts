@@ -30,7 +30,8 @@ describe('signupAuth', () => {
     resource_coefficient: {
       plastic: 1,
       mushroom: 1
-    }
+    },
+    solar_coefficient: 1
   }
   const city_first_cell = CellEntity.create({
     ...default_cell_params,

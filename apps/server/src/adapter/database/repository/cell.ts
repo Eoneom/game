@@ -99,7 +99,8 @@ export class PostgresCellRepository
       resource_coefficient: {
         plastic: row.plastic_coefficient,
         mushroom: row.mushroom_coefficient
-      }
+      },
+      solar_coefficient: row.solar_coefficient
     })
   }
 
@@ -112,6 +113,7 @@ export class PostgresCellRepository
       type: entity.type,
       plastic_coefficient: entity.resource_coefficient.plastic,
       mushroom_coefficient: entity.resource_coefficient.mushroom,
+      solar_coefficient: entity.solar_coefficient,
       city_id: entity.city_id ?? null
     }
   }

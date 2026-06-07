@@ -58,6 +58,8 @@ const response_mapper = ({
   warehouse_space_remaining,
   warehouse_full_in_seconds,
   energy,
+  pre_cell_energy,
+  cell_solar_coefficient,
 }: CityGetQueryResponse): CityGetDataResponse => {
   return {
     id: city.id,
@@ -65,6 +67,8 @@ const response_mapper = ({
     plastic: resource_stock.plastic,
     mushroom: resource_stock.mushroom,
     energy,
+    pre_cell_energy,
+    cell_solar_coefficient,
     maximum_building_levels,
     building_levels_used,
     earnings_per_second: {

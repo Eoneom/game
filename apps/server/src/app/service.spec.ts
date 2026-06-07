@@ -49,7 +49,8 @@ describe('AppService', () => {
       id: id(),
       coordinates,
       type: CellType.LAKE,
-      resource_coefficient
+      resource_coefficient,
+      solar_coefficient: 1
     })
   
     beforeEach(() => {
@@ -124,7 +125,8 @@ describe('AppService', () => {
       id: cell_id,
       coordinates,
       type: CellType.LAKE,
-      resource_coefficient
+      resource_coefficient,
+      solar_coefficient: 1
     })
 
     const permanentOutpost = OutpostEntity.create({
@@ -240,7 +242,8 @@ describe('AppService', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1 
-      }
+      },
+      solar_coefficient: 1
     })
   
     beforeEach(() => {
@@ -473,7 +476,8 @@ describe('AppService', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 0.5 
-      }
+      },
+      solar_coefficient: 1
     }).assign({ city_id: id() })
     const free_cell = CellEntity.create({
       id: id(),
@@ -482,7 +486,8 @@ describe('AppService', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1 
-      }
+      },
+      solar_coefficient: 1
     })
   
     beforeEach(() => {
@@ -539,7 +544,8 @@ describe('AppService', () => {
         resource_coefficient: {
           plastic: 1,
           mushroom: 1 
-        }
+        },
+        solar_coefficient: 1
       })))
       const repository = { cell: { getCell } } as unknown as Repository
       setRepositoryMock(repository)

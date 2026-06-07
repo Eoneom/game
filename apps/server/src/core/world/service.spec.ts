@@ -145,7 +145,9 @@ describe('WorldService', () => {
         expect(mushroom).toBe(Math.round(mushroom * 1000) / 1000)
         expect(Number.isFinite(plastic)).toBe(true)
         expect(Number.isFinite(mushroom)).toBe(true)
+        expect(cell.solar_coefficient).toBe(Math.round(cell.solar_coefficient * 1000) / 1000)
+        expect(Number.isFinite(cell.solar_coefficient)).toBe(true)
       }
-    }, 10000)
+    }, 15000)
   })
 })

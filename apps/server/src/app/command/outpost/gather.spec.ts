@@ -45,7 +45,8 @@ describe('outpostGather', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1
-      }
+      },
+      solar_coefficient: 1
     })
     stock = testResourceStock({
       cell_id,

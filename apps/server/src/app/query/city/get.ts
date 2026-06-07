@@ -8,7 +8,6 @@ import { CityError } from '#core/city/error'
 import { ResourcesService } from '#core/resources/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { BuildingCode } from '#core/building/constant/code'
-import { BuildingService } from '#core/building/service'
 
 export interface CityGetQueryRequest {
   city_id: string
@@ -28,6 +27,8 @@ export interface CityGetQueryResponse {
   warehouse_space_remaining: Resource
   warehouse_full_in_seconds: Resource
   energy: number
+  pre_cell_energy: number
+  cell_solar_coefficient: number
 }
 
 export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQueryResponse> {
@@ -93,7 +94,10 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       })
     }
 
-    const energy = BuildingService.getEnergy({ level: solar_panel_level })
+    const energy_breakdown = await AppService.getCityEnergyBreakdown({
+      city_id: city.id,
+      solar_panel_level,
+    })
 
     return {
       city,
@@ -107,7 +111,9 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       warehouses_capacity,
       warehouse_space_remaining,
       warehouse_full_in_seconds,
-      energy,
+      energy: energy_breakdown.energy,
+      pre_cell_energy: energy_breakdown.pre_cell_energy,
+      cell_solar_coefficient: energy_breakdown.cell_solar_coefficient,
     }
   }
 }

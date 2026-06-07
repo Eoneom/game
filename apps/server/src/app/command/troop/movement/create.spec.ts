@@ -59,6 +59,7 @@ describe('createTroopMovement', () => {
         plastic: 0.1,
         mushroom: 0.1
       },
+      solar_coefficient: 1,
     })
 
     troopCreate = vi.fn().mockResolvedValue(undefined)

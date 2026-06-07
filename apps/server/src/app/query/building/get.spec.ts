@@ -8,6 +8,8 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { CellEntity } from '#core/world/cell/entity'
+import { CellType } from '#core/world/value/cell-type'
 import { id } from '#shared/identification'
 
 describe('BuildingGetQuery', () => {
@@ -16,7 +18,7 @@ describe('BuildingGetQuery', () => {
   let city: CityEntity
   let building: BuildingEntity
   let architecture: TechnologyEntity
-  let repository: Pick<Repository, 'city' | 'building' | 'technology'>
+  let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'cell'>
 
   beforeEach(() => {
     city = CityEntity.initCity({
@@ -39,7 +41,23 @@ describe('BuildingGetQuery', () => {
     repository = {
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       building: { getInCity: vi.fn().mockResolvedValue(building) } as unknown as Repository['building'],
-      technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology']
+      technology: { get: vi.fn().mockResolvedValue(architecture) } as unknown as Repository['technology'],
+      cell: {
+        getCityCell: vi.fn().mockResolvedValue(CellEntity.create({
+          id: id(),
+          coordinates: {
+            x: 1,
+            y: 1,
+            sector: 1
+          },
+          type: CellType.FOREST,
+          resource_coefficient: {
+            plastic: 1,
+            mushroom: 1
+          },
+          solar_coefficient: 1
+        }))
+      } as unknown as Repository['cell']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade: vi.fn().mockResolvedValue(null) } as unknown as import('#app/port/job-queue').JobQueue)

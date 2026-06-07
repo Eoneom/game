@@ -59,7 +59,8 @@ describe('OutpostGetQuery', () => {
       resource_coefficient: {
         plastic: 0.85,
         mushroom: 1.1
-      }
+      },
+      solar_coefficient: 1
     })
     repository = {
       outpost: { getById: vi.fn().mockResolvedValue(outpost) } as unknown as Repository['outpost'],

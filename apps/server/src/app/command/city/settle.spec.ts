@@ -33,7 +33,8 @@ describe('citySettle', () => {
     resource_coefficient: {
       plastic: 1,
       mushroom: 1
-    }
+    },
+    solar_coefficient: 1
   }
 
   let exploration: ExplorationEntity
@@ -78,7 +79,8 @@ describe('citySettle', () => {
       resource_coefficient: {
         plastic: 1,
         mushroom: 1
-      }
+      },
+      solar_coefficient: 1
     })
 
     exploration = ExplorationEntity.init({

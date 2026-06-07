@@ -18,6 +18,7 @@ export interface WorldGetSectorDataResponse {
         plastic: number
         mushroom: number
       }
+      solar_coefficient: number
     }
   }[]
 }

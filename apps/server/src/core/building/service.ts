@@ -46,7 +46,7 @@ export class BuildingService {
     return Math.round(per_game_second * gameTimeScale * 100) / 100
   }
 
-  static getEnergy({ level }: { level: number }): number {
+  static getEnergy({ level, coefficient = 1 }: { level: number; coefficient?: number }): number {
     if (level === 0) {
       return 0
     }
@@ -56,7 +56,7 @@ export class BuildingService {
       multiplier
     } = building_energy[BuildingCode.SOLAR_PANEL]
 
-    return Math.round(Math.pow(multiplier, level - 1) * base)
+    return Math.round(Math.pow(multiplier, level - 1) * base * coefficient)
   }
 
   static getWarehouseCapacity({

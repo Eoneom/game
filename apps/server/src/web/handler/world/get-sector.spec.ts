@@ -24,7 +24,8 @@ const queryResult = {
       resource_coefficient: {
         plastic: 1.2,
         mushroom: 0.8 
-      }
+      },
+      solar_coefficient: 1.4
     },
     {
       id: 'cell2',
@@ -36,7 +37,8 @@ const queryResult = {
       resource_coefficient: {
         plastic: 0.5,
         mushroom: 1.5 
-      }
+      },
+      solar_coefficient: 1.1
     }
   ],
   explored_cell_ids: [ 'cell1' ]
@@ -96,7 +98,8 @@ describe('worldGetSectorHandler', () => {
               resource_coefficient: {
                 plastic: 1.2,
                 mushroom: 0.8 
-              }
+              },
+              solar_coefficient: 1.4
             }
           },
           {

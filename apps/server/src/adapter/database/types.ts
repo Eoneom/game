@@ -38,6 +38,7 @@ export interface Cell {
   mushroom_coefficient: number;
   plastic_coefficient: number;
   sector: number;
+  solar_coefficient: number;
   type: string;
   x: number;
   y: number;

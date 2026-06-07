@@ -39,6 +39,7 @@ describe('TroopListQuery', () => {
         plastic: 1,
         mushroom: 1 
       },
+      solar_coefficient: 1,
       city_id: city.id
     })
     troop = TroopEntity.create({
