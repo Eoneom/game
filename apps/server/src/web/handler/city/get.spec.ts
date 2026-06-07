@@ -53,7 +53,8 @@ const queryResult = {
   warehouse_full_in_seconds: {
     plastic: 1000,
     mushroom: 850 
-  }
+  },
+  energy: 15
 }
 
 describe('cityGetHandler', () => {
@@ -129,6 +130,7 @@ describe('cityGetHandler', () => {
           plastic: 1000,
           mushroom: 850 
         },
+        energy: 15,
         coordinates: {
           x: 1,
           y: 2,

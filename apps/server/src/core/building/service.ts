@@ -1,5 +1,6 @@
 import { BuildingCode } from '#core/building/constant/code'
 import { building_earnings } from '#core/building/constant/earnings'
+import { building_energy } from '#core/building/constant/energy'
 import { building_order } from '#core/building/constant/order'
 import { warehouses_capacity } from '#core/building/constant/warehouse-capacity'
 import { BuildingEntity } from '#core/building/entity'
@@ -43,6 +44,19 @@ export class BuildingService {
 
     const per_game_second = Math.round(coefficient_value * 100) / 100
     return Math.round(per_game_second * gameTimeScale * 100) / 100
+  }
+
+  static getEnergy({ level }: { level: number }): number {
+    if (level === 0) {
+      return 0
+    }
+
+    const {
+      base,
+      multiplier
+    } = building_energy[BuildingCode.SOLAR_PANEL]
+
+    return Math.round(Math.pow(multiplier, level - 1) * base)
   }
 
   static getWarehouseCapacity({

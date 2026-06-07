@@ -32,6 +32,11 @@ export const isProductionBuilding = (b: BaseBuilding): b is ProductionBuilding =
   return b.code === BuildingCode.RECYCLING_PLANT || b.code === BuildingCode.MUSHROOM_FARM
 }
 
-export type BuildingGetDataResponse = WarehouseBuilding | BaseBuilding
+export type EnergyBuilding = BaseBuilding & { metadata: { current_energy: number, next_energy: number } }
+export const isEnergyBuilding = (b: BaseBuilding): b is EnergyBuilding => {
+  return b.code === BuildingCode.SOLAR_PANEL
+}
+
+export type BuildingGetDataResponse = WarehouseBuilding | ProductionBuilding | EnergyBuilding | BaseBuilding
 
 export type BuildingGetResponse = GenericResponse<BuildingGetDataResponse>

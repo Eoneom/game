@@ -9,6 +9,7 @@ import { RequirementValue } from '#core/requirement/value/requirement'
 import { RequirementService } from '#core/requirement/service'
 import { CityError } from '#core/city/error'
 import {
+  isEnergyBuildingCode,
   isProductionBuildingCode,
   isWarehouseBuildingCode
 } from '#core/building/helper'
@@ -122,6 +123,16 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       return {
         current_production,
         next_production
+      }
+    }
+
+    if (isEnergyBuildingCode(building.code)) {
+      const current_energy = BuildingService.getEnergy({ level: building.level })
+      const next_energy = BuildingService.getEnergy({ level: building.level + 1 })
+
+      return {
+        current_energy,
+        next_energy
       }
     }
 

@@ -40,7 +40,10 @@ describe('CityGetQuery', () => {
     })
 
     repository = {
-      building: { getTotalLevels: vi.fn().mockResolvedValue(7) } as unknown as Repository['building'],
+      building: {
+        getTotalLevels: vi.fn().mockResolvedValue(7),
+        getLevel: vi.fn().mockResolvedValue(2),
+      } as unknown as Repository['building'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       cell: { getCityCell: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
       resource_stock: {
@@ -101,5 +104,14 @@ describe('CityGetQuery', () => {
       plastic: 50,
       mushroom: 0 
     })
+  })
+
+  it('returns energy from solar panel level', async () => {
+    const result = await new CityGetQuery().run({
+      city_id: city.id,
+      player_id
+    })
+
+    expect(result.energy).toBe(15)
   })
 })

@@ -20,6 +20,7 @@ const minimalCity = (overrides: Partial<City> = {}): City => ({
   warehouses_capacity: { plastic: 1000, mushroom: 1000 },
   warehouse_space_remaining: { plastic: 900, mushroom: 800 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
+  energy: 0,
   ...overrides,
 })
 
@@ -44,9 +45,9 @@ describe('HeaderResources', () => {
     expect(screen.queryAllByRole('listitem')).toHaveLength(0)
   })
 
-  it('renders two resource rows with progress bars when city is set', () => {
+  it('renders three resource rows when city is set (two with progress bars)', () => {
     render(<HeaderResources city={minimalCity()} outpost={null} />)
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
     expect(screen.getAllByRole('progressbar')).toHaveLength(2)
   })
 
@@ -58,6 +59,7 @@ describe('HeaderResources', () => {
 
   it('prefers city over outpost', () => {
     render(<HeaderResources city={minimalCity()} outpost={minimalOutpost()} />)
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
     expect(screen.getAllByRole('progressbar')).toHaveLength(2)
   })
 })

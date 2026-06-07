@@ -37,6 +37,7 @@ export interface CityGetDataResponse {
     plastic: number
     mushroom: number
   }
+  energy: number
 }
 
 export type CityGetResponse = GenericResponse<CityGetDataResponse>

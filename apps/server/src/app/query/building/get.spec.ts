@@ -79,4 +79,25 @@ describe('BuildingGetQuery', () => {
       code: BuildingCode.RESEARCH_LAB
     })
   })
+
+  it('returns energy metadata for solar panel building', async () => {
+    const solar_panel = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.SOLAR_PANEL,
+      level: 2
+    })
+    ;(repository.building.getInCity as MockInstance).mockResolvedValue(solar_panel)
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.SOLAR_PANEL,
+      player_id
+    })
+
+    expect(result.metadata).toEqual({
+      current_energy: 15,
+      next_energy: 23
+    })
+  })
 })

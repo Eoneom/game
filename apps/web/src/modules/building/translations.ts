@@ -37,5 +37,10 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
     name: 'Usine de clonage',
     description: 'La reproduction sexuée est trop complexe et trop longue ce qui rendrait les humains vulnérables. La solution la plus pratique reste le clonage.',
     effect: 'Débloque les troupes et réduit le temps de recrutement de 10% par niveau'
+  },
+  [BuildingCode.SOLAR_PANEL]: {
+    name: 'Panneau solaire',
+    description: 'Dans un monde où les ressources fossiles se sont épuisées, le soleil reste la source d\'énergie la plus fiable pour alimenter la colonie.',
+    effect: 'Produit de l\'énergie'
   }
 }

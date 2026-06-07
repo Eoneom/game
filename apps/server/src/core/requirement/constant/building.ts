@@ -31,5 +31,9 @@ export const BuildingRequirement: Record<BuildingCode, RequirementValue> = {
         level: 2
       }
     ]
+  },
+  [BuildingCode.SOLAR_PANEL]: {
+    buildings: [],
+    technologies: []
   }
 }

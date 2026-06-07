@@ -87,5 +87,19 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
       base: 150,
       multiplier: 1.5
     }
+  },
+  [BuildingCode.SOLAR_PANEL]: {
+    plastic: {
+      base: 100,
+      multiplier: 1.3
+    },
+    mushroom: {
+      base: 200,
+      multiplier: 1.5
+    },
+    duration: {
+      base: 0.35,
+      multiplier: 2
+    }
   }
 }

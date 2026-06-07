@@ -7,6 +7,8 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { ResourcesService } from '#core/resources/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
+import { BuildingCode } from '#core/building/constant/code'
+import { BuildingService } from '#core/building/service'
 
 export interface CityGetQueryRequest {
   city_id: string
@@ -25,6 +27,7 @@ export interface CityGetQueryResponse {
   warehouses_capacity: Resource
   warehouse_space_remaining: Resource
   warehouse_full_in_seconds: Resource
+  energy: number
 }
 
 export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQueryResponse> {
@@ -47,12 +50,17 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       maximum_building_levels,
       warehouses_capacity,
       building_levels_used,
+      solar_panel_level,
     ] = await Promise.all([
       AppService.getCityProductionBreakdown({ city_id: city.id }),
       this.repository.cell.getCityCell({ city_id: city.id }),
       AppService.getCityMaximumBuildingLevels({ city_id: city.id }),
       AppService.getCityWarehousesCapacity({ city_id: city.id }),
       this.repository.building.getTotalLevels({ city_id: city.id }),
+      this.repository.building.getLevel({
+        city_id: city.id,
+        code: BuildingCode.SOLAR_PANEL,
+      }),
     ])
 
     const stock_row = await this.repository.resource_stock.getByCellId({ cell_id: cell.id })
@@ -85,6 +93,8 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       })
     }
 
+    const energy = BuildingService.getEnergy({ level: solar_panel_level })
+
     return {
       city,
       earnings_per_second: production.earnings_per_second,
@@ -96,7 +106,8 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       resource_stock: stock_as_of_now,
       warehouses_capacity,
       warehouse_space_remaining,
-      warehouse_full_in_seconds
+      warehouse_full_in_seconds,
+      energy,
     }
   }
 }
