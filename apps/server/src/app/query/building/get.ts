@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { GenericQuery } from '#query/generic'
 import { BuildingEntity } from '#core/building/entity'
 import { PricingService } from '#core/pricing/service'
@@ -9,7 +10,9 @@ import { RequirementValue } from '#core/requirement/value/requirement'
 import { RequirementService } from '#core/requirement/service'
 import { CityError } from '#core/city/error'
 import {
+  isConsumingBuildingCode,
   isEnergyBuildingCode,
+  isNonProductionConsumingBuildingCode,
   isProductionBuildingCode,
   isWarehouseBuildingCode
 } from '#core/building/helper'
@@ -110,28 +113,62 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     if (isProductionBuildingCode(building.code)) {
-      const level = await this.repository.building.getLevel({
-        city_id: building.city_id,
-        code: building.code
-      })
       const city_cell = await this.repository.cell.getCityCell({ city_id: building.city_id })
       const coefficients = city_cell.resource_coefficient
+      const { production_energy_ratio } = await AppService.getCityEnergyConsumptionBreakdown({
+        city_id: building.city_id,
+        player_id
+      })
 
-      const current_production = BuildingService.getEarningsBySecond({
-        level,
+      const base_current_production = BuildingService.getEarningsBySecond({
+        level: building.level,
+        code: building.code,
+        coefficients
+      })
+      const base_next_production = BuildingService.getEarningsBySecond({
+        level: building.level + 1,
         code: building.code,
         coefficients
       })
 
-      const next_production = BuildingService.getEarningsBySecond({
-        level: level + 1,
-        code: building.code,
-        coefficients
+      const energy_upgrade_warning = await this.getEnergyUpgradeWarning({
+        building,
+        player_id
       })
 
       return {
-        current_production,
-        next_production
+        current_production: Math.round(base_current_production * production_energy_ratio * 100) / 100,
+        next_production: Math.round(base_next_production * production_energy_ratio * 100) / 100,
+        current_consumption: BuildingService.getEnergyConsumption({
+          code: building.code,
+          level: building.level
+        }),
+        next_consumption: BuildingService.getEnergyConsumption({
+          code: building.code,
+          level: building.level + 1
+        }),
+        energy_upgrade_warning
+      }
+    }
+
+    if (isNonProductionConsumingBuildingCode(building.code)) {
+      const current_consumption = BuildingService.getEnergyConsumption({
+        code: building.code,
+        level: building.level
+      })
+      const next_consumption = BuildingService.getEnergyConsumption({
+        code: building.code,
+        level: building.level + 1
+      })
+      const energy_upgrade_warning = await this.getEnergyUpgradeWarning({
+        building,
+        player_id
+      })
+
+      return {
+        current_consumption,
+        next_consumption,
+        energy_upgrade_warning
       }
     }
 
@@ -167,5 +204,46 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     return {}
+  }
+
+  private async getEnergyUpgradeWarning({
+    building,
+    player_id
+  }: {
+    building: BuildingEntity
+    player_id: string
+  }): Promise<boolean> {
+    if (!isConsumingBuildingCode(building.code)) {
+      return false
+    }
+
+    const [
+      {
+        energy_consumption,
+        energy_supply
+      },
+      current_building_consumption,
+      next_building_consumption
+    ] = await Promise.all([
+      AppService.getCityEnergyConsumptionBreakdown({
+        city_id: building.city_id,
+        player_id
+      }),
+      Promise.resolve(BuildingService.getEnergyConsumption({
+        code: building.code,
+        level: building.level
+      })),
+      Promise.resolve(BuildingService.getEnergyConsumption({
+        code: building.code,
+        level: building.level + 1
+      }))
+    ])
+
+    return BuildingService.wouldUpgradeExceedEnergySupply({
+      supply: energy_supply,
+      total_consumption: energy_consumption,
+      current_building_consumption,
+      next_building_consumption
+    })
   }
 }

@@ -59,7 +59,11 @@ const response_mapper = ({
   warehouse_full_in_seconds,
   energy,
   pre_cell_energy,
+  neutral_photovoltaic_energy,
   cell_solar_coefficient,
+  photovoltaic_optimization_level,
+  energy_consumption,
+  production_energy_ratio,
 }: CityGetQueryResponse): CityGetDataResponse => {
   return {
     id: city.id,
@@ -68,7 +72,11 @@ const response_mapper = ({
     mushroom: resource_stock.mushroom,
     energy,
     pre_cell_energy,
+    neutral_photovoltaic_energy,
     cell_solar_coefficient,
+    photovoltaic_optimization_level,
+    energy_consumption,
+    production_energy_ratio,
     maximum_building_levels,
     building_levels_used,
     earnings_per_second: {

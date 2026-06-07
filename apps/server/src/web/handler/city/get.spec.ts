@@ -56,7 +56,11 @@ const queryResult = {
   },
   energy: 15,
   pre_cell_energy: 15,
-  cell_solar_coefficient: 1
+  neutral_photovoltaic_energy: 15,
+  cell_solar_coefficient: 1,
+  photovoltaic_optimization_level: 0,
+  energy_consumption: 4,
+  production_energy_ratio: 1
 }
 
 describe('cityGetHandler', () => {
@@ -134,7 +138,11 @@ describe('cityGetHandler', () => {
         },
         energy: 15,
         pre_cell_energy: 15,
+        neutral_photovoltaic_energy: 15,
         cell_solar_coefficient: 1,
+        photovoltaic_optimization_level: 0,
+        energy_consumption: 4,
+        production_energy_ratio: 1,
         coordinates: {
           x: 1,
           y: 2,

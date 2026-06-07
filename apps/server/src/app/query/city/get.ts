@@ -28,7 +28,11 @@ export interface CityGetQueryResponse {
   warehouse_full_in_seconds: Resource
   energy: number
   pre_cell_energy: number
+  neutral_photovoltaic_energy: number
   cell_solar_coefficient: number
+  photovoltaic_optimization_level: number
+  energy_consumption: number
+  production_energy_ratio: number
 }
 
 export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQueryResponse> {
@@ -52,8 +56,12 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       warehouses_capacity,
       building_levels_used,
       solar_panel_level,
+      energy_consumption_breakdown,
     ] = await Promise.all([
-      AppService.getCityProductionBreakdown({ city_id: city.id }),
+      AppService.getCityProductionBreakdown({
+        city_id: city.id,
+        player_id
+      }),
       this.repository.cell.getCityCell({ city_id: city.id }),
       AppService.getCityMaximumBuildingLevels({ city_id: city.id }),
       AppService.getCityWarehousesCapacity({ city_id: city.id }),
@@ -62,7 +70,17 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
         city_id: city.id,
         code: BuildingCode.SOLAR_PANEL,
       }),
+      AppService.getCityEnergyConsumptionBreakdown({
+        city_id: city.id,
+        player_id
+      }),
     ])
+
+    const energy_breakdown = await AppService.getCityEnergyBreakdown({
+      city_id: city.id,
+      player_id,
+      solar_panel_level,
+    })
 
     const stock_row = await this.repository.resource_stock.getByCellId({ cell_id: cell.id })
 
@@ -94,12 +112,6 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       })
     }
 
-    const energy_breakdown = await AppService.getCityEnergyBreakdown({
-      city_id: city.id,
-      player_id,
-      solar_panel_level,
-    })
-
     return {
       city,
       earnings_per_second: production.earnings_per_second,
@@ -114,7 +126,11 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       warehouse_full_in_seconds,
       energy: energy_breakdown.energy,
       pre_cell_energy: energy_breakdown.pre_cell_energy,
+      neutral_photovoltaic_energy: energy_breakdown.neutral_photovoltaic_energy,
       cell_solar_coefficient: energy_breakdown.cell_solar_coefficient,
+      photovoltaic_optimization_level: energy_breakdown.photovoltaic_optimization_level,
+      energy_consumption: energy_consumption_breakdown.energy_consumption,
+      production_energy_ratio: energy_consumption_breakdown.production_energy_ratio,
     }
   }
 }

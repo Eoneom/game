@@ -58,34 +58,62 @@ describe('AppService', () => {
         building: {
           getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
             if (code === BuildingCode.MUSHROOM_FARM) {
-              return 2
+              return Promise.resolve(2)
             }
             if (code === BuildingCode.RECYCLING_PLANT) {
-              return 1
+              return Promise.resolve(1)
             }
-            return 0
+            if (code === BuildingCode.RESEARCH_LAB) {
+              return Promise.resolve(0)
+            }
+            if (code === BuildingCode.CLONING_FACTORY) {
+              return Promise.resolve(0)
+            }
+            if (code === BuildingCode.SOLAR_PANEL) {
+              return Promise.resolve(5)
+            }
+            return Promise.resolve(0)
           })
         },
-        cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) }
+        cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) },
+        technology: {
+          get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+            id: id(),
+            player_id: id(),
+            code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+            level: 0
+          }))
+        }
       } as unknown as Repository
   
       setRepositoryMock(repository)
     })
   
     it('returns same earnings_per_second as getCityEarningsBySecond', async () => {
+      const player_id = id()
       const [
         breakdown,
         earnings 
       ] = await Promise.all([
-        AppService.getCityProductionBreakdown({ city_id }),
-        AppService.getCityEarningsBySecond({ city_id })
+        AppService.getCityProductionBreakdown({
+          city_id,
+          player_id
+        }),
+        AppService.getCityEarningsBySecond({
+          city_id,
+          player_id
+        })
       ])
   
       expect(breakdown.earnings_per_second).toEqual(earnings)
     })
   
     it('exposes cell coefficients and pre-cell rates from BuildingService', async () => {
-      const breakdown = await AppService.getCityProductionBreakdown({ city_id })
+      const player_id = id()
+      const breakdown = await AppService.getCityProductionBreakdown({
+        city_id,
+        player_id
+      })
   
       expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
   
@@ -105,6 +133,62 @@ describe('AppService', () => {
         level: 1,
         coefficients: resource_coefficient
       }))
+    })
+
+    it('reduces earnings when energy supply is insufficient for production', async () => {
+      const player_id = id()
+      const repository = {
+        building: {
+          getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
+            if (code === BuildingCode.MUSHROOM_FARM) {
+              return Promise.resolve(3)
+            }
+            if (code === BuildingCode.RECYCLING_PLANT) {
+              return Promise.resolve(3)
+            }
+            if (code === BuildingCode.RESEARCH_LAB) {
+              return Promise.resolve(1)
+            }
+            if (code === BuildingCode.CLONING_FACTORY) {
+              return Promise.resolve(0)
+            }
+            if (code === BuildingCode.SOLAR_PANEL) {
+              return Promise.resolve(1)
+            }
+            return Promise.resolve(0)
+          })
+        },
+        cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) },
+        technology: {
+          get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+            id: id(),
+            player_id,
+            code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+            level: 0
+          }))
+        }
+      } as unknown as Repository
+
+      setRepositoryMock(repository)
+
+      const earnings = await AppService.getCityEarningsBySecond({
+        city_id,
+        player_id
+      })
+
+      const base_plastic = BuildingService.getEarningsBySecond({
+        code: BuildingCode.RECYCLING_PLANT,
+        level: 3,
+        coefficients: resource_coefficient
+      })
+      const base_mushroom = BuildingService.getEarningsBySecond({
+        code: BuildingCode.MUSHROOM_FARM,
+        level: 3,
+        coefficients: resource_coefficient
+      })
+
+      expect(earnings.plastic).toBeLessThan(base_plastic)
+      expect(earnings.mushroom).toBeLessThan(base_mushroom)
     })
   })
 

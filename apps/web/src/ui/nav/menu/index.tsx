@@ -31,7 +31,7 @@ export const NavMenu: React.FC = () => {
     )
 
   return (
-    <nav className="primary-nav surface-chrome flex w-44 shrink-0 flex-col overflow-y-auto border-r border-rust/70 p-3">
+    <nav className="primary-nav surface-chrome flex h-full min-h-0 w-44 shrink-0 flex-col overflow-y-auto border-r border-rust/70 p-3">
       <ul className="m-0 flex list-none flex-col gap-1 p-0">
         {cityId ? (
           <li>

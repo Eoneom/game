@@ -43,53 +43,84 @@ export class AppService {
     return CityService.getMaximumBuildingLevels({ city_cells_count })
   }
 
-  static async getCityEarningsBySecond({ city_id }: { city_id: string }): Promise<Resource> {
+  static async getCityEarningsBySecond({
+    city_id,
+    player_id
+  }: {
+    city_id: string
+    player_id: string
+  }): Promise<Resource> {
     const {
       mushroom_farm_level,
       recycling_plant_level,
       city_cell
-    } = await this.loadCityProductionInputs(city_id)
+    } = await this.loadCityBuildingLevels(city_id)
 
-    const coefficients = city_cell.resource_coefficient
+    const [
+      coefficients,
+      { production_energy_ratio }
+    ] = await Promise.all([
+      Promise.resolve(city_cell.resource_coefficient),
+      this.getCityEnergyConsumptionBreakdown({
+        city_id,
+        player_id
+      })
+    ])
+
+    const plastic = BuildingService.getEarningsBySecond({
+      code: BuildingCode.RECYCLING_PLANT,
+      level: recycling_plant_level,
+      coefficients,
+    }) * production_energy_ratio
+
+    const mushroom = BuildingService.getEarningsBySecond({
+      level: mushroom_farm_level,
+      code: BuildingCode.MUSHROOM_FARM,
+      coefficients,
+    }) * production_energy_ratio
 
     return {
-      plastic: BuildingService.getEarningsBySecond({
-        code: BuildingCode.RECYCLING_PLANT,
-        level: recycling_plant_level,
-        coefficients,
-      }),
-      mushroom: BuildingService.getEarningsBySecond({
-        level: mushroom_farm_level,
-        code: BuildingCode.MUSHROOM_FARM,
-        coefficients,
-      })
+      plastic: Math.round(plastic * 100) / 100,
+      mushroom: Math.round(mushroom * 100) / 100
     }
   }
 
-  static async getCityProductionBreakdown({ city_id }: { city_id: string }): Promise<{
+  static async getCityProductionBreakdown({
+    city_id,
+    player_id
+  }: {
+    city_id: string
+    player_id: string
+  }): Promise<{
     earnings_per_second: Resource
     pre_cell_earnings_per_second: Resource
     cell_resource_coefficient: Resource
+    production_energy_ratio: number
   }> {
     const {
       mushroom_farm_level,
       recycling_plant_level,
       city_cell
-    } = await this.loadCityProductionInputs(city_id)
+    } = await this.loadCityBuildingLevels(city_id)
 
     const cell_resource_coefficient = city_cell.resource_coefficient
+
+    const { production_energy_ratio } = await this.getCityEnergyConsumptionBreakdown({
+      city_id,
+      player_id
+    })
 
     const plastic = BuildingService.getEarningsBySecond({
       code: BuildingCode.RECYCLING_PLANT,
       level: recycling_plant_level,
       coefficients: cell_resource_coefficient,
-    })
+    }) * production_energy_ratio
 
     const mushroom = BuildingService.getEarningsBySecond({
       level: mushroom_farm_level,
       code: BuildingCode.MUSHROOM_FARM,
       coefficients: cell_resource_coefficient,
-    })
+    }) * production_energy_ratio
 
     const pre_cell_plastic = BuildingService.getEarningsBySecond({
       code: BuildingCode.RECYCLING_PLANT,
@@ -105,14 +136,48 @@ export class AppService {
 
     return {
       earnings_per_second: {
-        plastic,
-        mushroom
+        plastic: Math.round(plastic * 100) / 100,
+        mushroom: Math.round(mushroom * 100) / 100
       },
       pre_cell_earnings_per_second: {
         plastic: pre_cell_plastic,
         mushroom: pre_cell_mushroom
       },
-      cell_resource_coefficient
+      cell_resource_coefficient,
+      production_energy_ratio
+    }
+  }
+
+  static async getCityEnergyConsumptionBreakdown({
+    city_id,
+    player_id
+  }: {
+    city_id: string
+    player_id: string
+  }): Promise<{
+    energy_consumption: number
+    non_production_consumption: number
+    production_consumption: number
+    production_energy_ratio: number
+    energy_supply: number
+  }> {
+    const levels = await this.loadCityBuildingLevels(city_id)
+    const consumption = this.computeEnergyConsumptionFromLevels(levels)
+    const energy_breakdown = await this.getCityEnergyBreakdown({
+      city_id,
+      player_id,
+      solar_panel_level: levels.solar_panel_level
+    })
+    const production_energy_ratio = BuildingService.getProductionEnergyRatio({
+      supply: energy_breakdown.energy,
+      non_production_consumption: consumption.non_production_consumption,
+      production_consumption: consumption.production_consumption
+    })
+
+    return {
+      ...consumption,
+      production_energy_ratio,
+      energy_supply: energy_breakdown.energy
     }
   }
 
@@ -127,7 +192,9 @@ export class AppService {
   }): Promise<{
     energy: number
     pre_cell_energy: number
+    neutral_photovoltaic_energy: number
     cell_solar_coefficient: number
+    photovoltaic_optimization_level: number
   }> {
     const repository = Factory.getRepository()
     const [
@@ -155,10 +222,18 @@ export class AppService {
       efficiency_level
     })
 
+    const neutral_photovoltaic_energy = BuildingService.getEnergy({
+      level: solar_panel_level,
+      coefficient: NEUTRAL_SOLAR_COEFFICIENT,
+      efficiency_level: 0
+    })
+
     return {
       energy,
       pre_cell_energy,
-      cell_solar_coefficient
+      neutral_photovoltaic_energy,
+      cell_solar_coefficient,
+      photovoltaic_optimization_level: efficiency_level
     }
   }
 
@@ -449,15 +524,63 @@ export class AppService {
     }
   }
 
-  private static async loadCityProductionInputs(city_id: string): Promise<{
+  private static computeEnergyConsumptionFromLevels({
+    recycling_plant_level,
+    mushroom_farm_level,
+    research_lab_level,
+    cloning_factory_level
+  }: {
+    recycling_plant_level: number
+    mushroom_farm_level: number
+    research_lab_level: number
+    cloning_factory_level: number
+  }): {
+    energy_consumption: number
+    non_production_consumption: number
+    production_consumption: number
+  } {
+    const recycling_plant = BuildingService.getEnergyConsumption({
+      code: BuildingCode.RECYCLING_PLANT,
+      level: recycling_plant_level
+    })
+    const mushroom_farm = BuildingService.getEnergyConsumption({
+      code: BuildingCode.MUSHROOM_FARM,
+      level: mushroom_farm_level
+    })
+    const research_lab = BuildingService.getEnergyConsumption({
+      code: BuildingCode.RESEARCH_LAB,
+      level: research_lab_level
+    })
+    const cloning_factory = BuildingService.getEnergyConsumption({
+      code: BuildingCode.CLONING_FACTORY,
+      level: cloning_factory_level
+    })
+
+    const production_consumption = recycling_plant + mushroom_farm
+    const non_production_consumption = research_lab + cloning_factory
+
+    return {
+      energy_consumption: production_consumption + non_production_consumption,
+      non_production_consumption,
+      production_consumption
+    }
+  }
+
+  private static async loadCityBuildingLevels(city_id: string): Promise<{
     mushroom_farm_level: number
     recycling_plant_level: number
+    research_lab_level: number
+    cloning_factory_level: number
+    solar_panel_level: number
     city_cell: CellEntity
   }> {
     const repository = Factory.getRepository()
     const [
       mushroom_farm_level,
       recycling_plant_level,
+      research_lab_level,
+      cloning_factory_level,
+      solar_panel_level,
       city_cell
     ] = await Promise.all([
       repository.building.getLevel({
@@ -468,12 +591,27 @@ export class AppService {
         city_id,
         code: BuildingCode.RECYCLING_PLANT
       }),
+      repository.building.getLevel({
+        city_id,
+        code: BuildingCode.RESEARCH_LAB
+      }),
+      repository.building.getLevel({
+        city_id,
+        code: BuildingCode.CLONING_FACTORY
+      }),
+      repository.building.getLevel({
+        city_id,
+        code: BuildingCode.SOLAR_PANEL
+      }),
       repository.cell.getCityCell({ city_id })
     ])
 
     return {
       mushroom_farm_level,
       recycling_plant_level,
+      research_lab_level,
+      cloning_factory_level,
+      solar_panel_level,
       city_cell
     }
   }

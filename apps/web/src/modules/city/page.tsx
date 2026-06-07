@@ -9,6 +9,7 @@ import { useGetCity } from '#city/hooks'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { ProductionTerrainReadout } from '#ui/production-terrain-readout'
+import { EnergyReadout } from '#ui/energy-readout'
 
 interface Props {
   cityId: string
@@ -133,12 +134,22 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
           </p>
         </Panel>
 
-        <Panel title="Production et terrain">
+        <Panel title="Production, énergie et terrain">
           <ProductionTerrainReadout
             current={city.earnings_per_second}
             base={city.pre_cell_earnings_per_second}
             terrain={city.cell_resource_coefficient}
           />
+          <div className="border-t border-rust/50 pt-3">
+            <EnergyReadout
+              consumption={city.energy_consumption}
+              production={city.energy}
+              baseProduction={city.neutral_photovoltaic_energy}
+              photovoltaicOptimizationLevel={city.photovoltaic_optimization_level}
+              solarCoefficient={city.cell_solar_coefficient}
+              productionEnergyRatio={city.production_energy_ratio}
+            />
+          </div>
         </Panel>
       </div>
     </section>

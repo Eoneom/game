@@ -1,4 +1,5 @@
 import { transformApproximateTimeUntilSeconds, transformDailyEarnings, transformDecimals, transformHourlyEarnings } from '#helpers/transform'
+import { getEnergyDisplayStatus, getEnergyUsagePercent } from '#helpers/energy'
 import { ResourceItem } from '#ui/resource-item'
 import { Tooltip } from '#ui/tooltip'
 import React from 'react'
@@ -10,22 +11,55 @@ interface Props {
   warehouse_capacity?: number
   earnings_per_second?: number
   warehouse_full_in_seconds?: number
+  secondary_value?: number
+  energy_production?: number
 }
 
-export const HeaderResourcesItem: React.FC<Props> = ({ value, warehouse_capacity, earnings_per_second, warehouse_full_in_seconds, icon }) => {
+export const HeaderResourcesItem: React.FC<Props> = ({
+  value,
+  warehouse_capacity,
+  earnings_per_second,
+  warehouse_full_in_seconds,
+  secondary_value,
+  energy_production,
+  icon
+}) => {
   const warnCapacity = 70 / 100
-  const className = warehouse_capacity !== undefined && value >= warehouse_capacity ? 'danger' : ''
+  const energyStatus = energy_production !== undefined
+    ? getEnergyDisplayStatus(value, energy_production)
+    : undefined
+  const className = energyStatus !== undefined
+    ? energyStatus === 'warn' ? undefined : energyStatus
+    : warehouse_capacity !== undefined && value >= warehouse_capacity
+      ? 'danger'
+      : ''
+  const displayValue = secondary_value !== undefined ? `${transformDecimals(value)} / ${transformDecimals(secondary_value)}` : transformDecimals(value)
 
   const resourceItem = (
     <ResourceItem
       className={className}
       icon={icon}
-      value={transformDecimals(value)}
+      value={displayValue}
     />
   )
 
   const hasWarehouse = warehouse_capacity !== undefined
+  const hasEnergy = energy_production !== undefined
   const hasEarnings = earnings_per_second !== undefined
+
+  const energyUsagePercent = hasEnergy ? getEnergyUsagePercent(value, energy_production) : 0
+  const energyProgressClass = energyStatus === 'danger'
+    ? '[&::-webkit-progress-value]:bg-danger [&::-moz-progress-bar]:bg-danger'
+    : energyStatus === 'warn'
+      ? '[&::-webkit-progress-value]:bg-amber [&::-moz-progress-bar]:bg-amber'
+      : '[&::-webkit-progress-value]:bg-terminal [&::-moz-progress-bar]:bg-terminal'
+  const energyTooltipContent = hasEnergy ? (
+    <>
+      {Math.round(energyUsagePercent)}%
+      <br />
+      {transformDecimals(value)} / {transformDecimals(energy_production)}
+    </>
+  ) : null
 
   const earningsTooltipContent = hasEarnings ? (
     <>
@@ -69,6 +103,18 @@ export const HeaderResourcesItem: React.FC<Props> = ({ value, warehouse_capacity
             )}
             value={value}
             max={warehouse_capacity}
+          />
+        </Tooltip>
+      )}
+      {hasEnergy && energyTooltipContent && (
+        <Tooltip content={energyTooltipContent} position="bottom">
+          <progress
+            className={classNames(
+              'h-1.5 w-full overflow-hidden rounded-sm border border-rust/40 bg-chrome [&::-webkit-progress-bar]:bg-chrome',
+              energyProgressClass
+            )}
+            value={energyUsagePercent}
+            max={100}
           />
         </Tooltip>
       )}

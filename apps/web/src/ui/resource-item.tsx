@@ -22,7 +22,9 @@ export const ResourceItem: React.FC<Props> = ({ className, icon, value }) => {
         className={
           className === 'danger'
             ? 'inline-flex h-5 w-5 shrink-0 items-center justify-center text-danger'
-            : 'inline-flex h-5 w-5 shrink-0 items-center justify-center text-label'
+            : className === 'success'
+              ? 'inline-flex h-5 w-5 shrink-0 items-center justify-center text-terminal'
+              : 'inline-flex h-5 w-5 shrink-0 items-center justify-center text-label'
         }
       >
         {icon}

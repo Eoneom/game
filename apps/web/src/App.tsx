@@ -31,12 +31,12 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="app-shell relative flex min-h-screen flex-col animate-boot-sweep motion-reduce:animate-none">
+    <div className="app-shell relative flex h-full flex-col overflow-hidden animate-boot-sweep motion-reduce:animate-none">
       <Header />
       <ActivityStrip />
-      <div className="app-body relative z-10 flex min-h-0 flex-1">
+      <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
         <NavMenu />
-        <main className="workspace relative min-w-0 flex-1 overflow-auto surface-inset scanlines p-3">
+        <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden surface-inset scanlines p-3">
           <Outlet />
         </main>
         <NavLocation />

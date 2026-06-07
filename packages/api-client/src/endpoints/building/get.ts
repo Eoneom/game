@@ -27,9 +27,28 @@ export const isWarehouseBuilding = (b: BaseBuilding): b is WarehouseBuilding => 
   return b.code === BuildingCode.PLASTIC_WAREHOUSE || b.code === BuildingCode.MUSHROOM_WAREHOUSE
 }
 
-export type ProductionBuilding = BaseBuilding & { metadata: { current_production: number, next_production: number } }
+export type ProductionBuilding = BaseBuilding & {
+  metadata: {
+    current_production: number
+    next_production: number
+    current_consumption: number
+    next_consumption: number
+    energy_upgrade_warning: boolean
+  }
+}
 export const isProductionBuilding = (b: BaseBuilding): b is ProductionBuilding => {
   return b.code === BuildingCode.RECYCLING_PLANT || b.code === BuildingCode.MUSHROOM_FARM
+}
+
+export type ConsumingBuilding = BaseBuilding & {
+  metadata: {
+    current_consumption: number
+    next_consumption: number
+    energy_upgrade_warning: boolean
+  }
+}
+export const isConsumingBuilding = (b: BaseBuilding): b is ConsumingBuilding => {
+  return b.code === BuildingCode.RESEARCH_LAB || b.code === BuildingCode.CLONING_FACTORY
 }
 
 export type EnergyBuilding = BaseBuilding & { metadata: { current_energy: number, next_energy: number } }
@@ -37,6 +56,6 @@ export const isEnergyBuilding = (b: BaseBuilding): b is EnergyBuilding => {
   return b.code === BuildingCode.SOLAR_PANEL
 }
 
-export type BuildingGetDataResponse = WarehouseBuilding | ProductionBuilding | EnergyBuilding | BaseBuilding
+export type BuildingGetDataResponse = WarehouseBuilding | ProductionBuilding | EnergyBuilding | ConsumingBuilding | BaseBuilding
 
 export type BuildingGetResponse = GenericResponse<BuildingGetDataResponse>

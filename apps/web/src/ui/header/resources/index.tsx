@@ -29,8 +29,10 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
         warehouse_full_in_seconds={city.warehouse_full_in_seconds.mushroom}
       />
       <HeaderResourcesItem
-        value={city.energy}
+        value={city.energy_consumption}
         icon={<IconEnergy />}
+        secondary_value={city.energy}
+        energy_production={city.energy}
       />
     </ul>
   }

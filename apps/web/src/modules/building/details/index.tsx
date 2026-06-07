@@ -7,9 +7,12 @@ import { Requirement } from '#requirement/index'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
 import { Cost } from '#cost/index'
 import { BuildingDetailsMetadata } from '#building/details/metadata'
+import { BuildingDetailsSection } from '#building/details/section'
 import { BuildingDetailsUpgrade } from '#building/details/upgrade'
+import { BuildingDetailsWarning } from '#building/details/warning'
 import { useGetCity } from '#city/hooks'
 import { EntityThumb } from '#ui/entity-thumb'
+import { isConsumingBuilding, isProductionBuilding } from '@eoneom/api-client'
 
 interface Props {
   cityId: string
@@ -19,6 +22,10 @@ interface Props {
 export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
   const { data: city } = useGetCity(cityId)
   const { name, description, effect } = BuildingTranslations[building.code]
+  const energyUpgradeWarning =
+    isProductionBuilding(building) || isConsumingBuilding(building)
+      ? building.metadata.energy_upgrade_warning
+      : false
 
   return <>
     <LayoutDetailsContent>
@@ -30,8 +37,11 @@ export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
         </div>
       </div>
       <BuildingDetailsUpgrade cityId={cityId} building={building} />
+      <BuildingDetailsWarning energyUpgradeWarning={energyUpgradeWarning} />
       <BuildingDetailsMetadata building={building} />
-      <p className='description'>{description}</p>
+      <BuildingDetailsSection>
+        <p className="description">{description}</p>
+      </BuildingDetailsSection>
     </LayoutDetailsContent>
 
     <aside className="mt-4 space-y-3 border-t border-rust/50 pt-3">

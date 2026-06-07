@@ -39,7 +39,11 @@ export interface CityGetDataResponse {
   }
   energy: number
   pre_cell_energy: number
+  neutral_photovoltaic_energy: number
   cell_solar_coefficient: number
+  photovoltaic_optimization_level: number
+  energy_consumption: number
+  production_energy_ratio: number
 }
 
 export type CityGetResponse = GenericResponse<CityGetDataResponse>

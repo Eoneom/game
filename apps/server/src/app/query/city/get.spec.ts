@@ -79,7 +79,15 @@ describe('CityGetQuery', () => {
       cell_resource_coefficient: {
         plastic: 1,
         mushroom: 1 
-      }
+      },
+      production_energy_ratio: 1
+    })
+    vi.spyOn(AppService, 'getCityEnergyConsumptionBreakdown').mockResolvedValue({
+      energy_consumption: 4,
+      non_production_consumption: 0,
+      production_consumption: 4,
+      production_energy_ratio: 1,
+      energy_supply: 15
     })
     vi.spyOn(AppService, 'getCityMaximumBuildingLevels').mockResolvedValue(42)
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
@@ -125,7 +133,11 @@ describe('CityGetQuery', () => {
 
     expect(result.energy).toBe(15)
     expect(result.pre_cell_energy).toBe(15)
+    expect(result.neutral_photovoltaic_energy).toBe(15)
+    expect(result.photovoltaic_optimization_level).toBe(0)
     expect(result.cell_solar_coefficient).toBe(1)
+    expect(result.energy_consumption).toBe(4)
+    expect(result.production_energy_ratio).toBe(1)
   })
 
   it('returns boosted energy when photovoltaic optimization is researched', async () => {
@@ -143,5 +155,7 @@ describe('CityGetQuery', () => {
 
     expect(result.energy).toBe(17)
     expect(result.pre_cell_energy).toBe(17)
+    expect(result.neutral_photovoltaic_energy).toBe(15)
+    expect(result.photovoltaic_optimization_level).toBe(1)
   })
 })

@@ -1,5 +1,6 @@
 import type { MockInstance } from 'vitest'
 import { BuildingGetQuery } from '#app/query/building/get'
+import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingEntity } from '#core/building/entity'
@@ -78,6 +79,13 @@ describe('BuildingGetQuery', () => {
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade: vi.fn().mockResolvedValue(null) } as unknown as import('#app/port/job-queue').JobQueue)
+    vi.spyOn(AppService, 'getCityEnergyConsumptionBreakdown').mockResolvedValue({
+      energy_consumption: 60,
+      non_production_consumption: 60,
+      production_consumption: 0,
+      production_energy_ratio: 1,
+      energy_supply: 200
+    })
   })
 
   afterEach(() => {
@@ -98,7 +106,7 @@ describe('BuildingGetQuery', () => {
     })).rejects.toThrow(CityError.NOT_OWNER)
   })
 
-  it('returns building, cost, requirement and empty metadata for non-production building', async () => {
+  it('returns consumption metadata for research lab building', async () => {
     const result = await new BuildingGetQuery().run({
       city_id: city.id,
       building_code: BuildingCode.RESEARCH_LAB,
@@ -106,12 +114,36 @@ describe('BuildingGetQuery', () => {
     })
 
     expect(result.building).toBe(building)
-    expect(result.metadata).toEqual({})
+    expect(result.metadata).toEqual({
+      current_consumption: 60,
+      next_consumption: 78,
+      energy_upgrade_warning: false
+    })
     expect(result.requirement).toBeDefined()
     expect(result.cost).toBeDefined()
     expect(repository.building.getInCity).toHaveBeenCalledWith({
       city_id: city.id,
       code: BuildingCode.RESEARCH_LAB
+    })
+  })
+
+  it('returns energy upgrade warning when projected consumption exceeds supply', async () => {
+    vi.spyOn(AppService, 'getCityEnergyConsumptionBreakdown').mockResolvedValue({
+      energy_consumption: 60,
+      non_production_consumption: 60,
+      production_consumption: 0,
+      production_energy_ratio: 1,
+      energy_supply: 70
+    })
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.RESEARCH_LAB,
+      player_id
+    })
+
+    expect(result.metadata).toMatchObject({
+      energy_upgrade_warning: true
     })
   })
 
