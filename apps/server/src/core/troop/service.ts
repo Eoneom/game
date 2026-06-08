@@ -3,6 +3,7 @@ import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
 import { troop_earnings } from '#core/troop/constant/earnings'
+import { resource_transport_weight } from '#core/troop/constant/transport-weight'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -229,6 +230,14 @@ export class TroopService {
     }, 0)
   }
 
+  static getTransportLoad({ resources }: { resources: Resource }): number {
+    return (
+      resources.plastic * resource_transport_weight.plastic
+      + resources.mushroom * resource_transport_weight.mushroom
+      + resources.plasma * resource_transport_weight.plasma
+    )
+  }
+
   static assertTransportResources({
     action,
     resources,
@@ -239,6 +248,7 @@ export class TroopService {
     move_troops: TroopCount[]
   }): void {
     const total = resources.plastic + resources.mushroom + resources.plasma
+    const load = this.getTransportLoad({ resources })
     const has_resources = total > 0
     const has_negative = resources.plastic < 0 || resources.mushroom < 0 || resources.plasma < 0
 
@@ -251,7 +261,7 @@ export class TroopService {
         throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
       }
       const capacity = this.getTotalTransportCapacity({ troops: move_troops })
-      if (total > capacity) {
+      if (load > capacity) {
         throw new Error(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       }
       return

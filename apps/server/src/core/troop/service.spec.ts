@@ -1,5 +1,7 @@
 import { TroopCode } from '#core/troop/constant/code'
+import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopEntity } from '#core/troop/entity'
+import { TroopError } from '#core/troop/error'
 import { TroopService } from '#core/troop/service'
 import assert from 'assert'
 
@@ -250,6 +252,35 @@ describe('TroopService', () => {
         count: 10,
         coefficients: { plastic: 1.5, mushroom: 2 , plasma: 0}
       }), 1.8)
+    })
+  })
+
+  describe('getTransportLoad', () => {
+    it('counts plasma as 100 times heavier than plastic or mushroom', () => {
+      assert.strictEqual(TroopService.getTransportLoad({
+        resources: { plastic: 10, mushroom: 5, plasma: 2 }
+      }), 215)
+    })
+  })
+
+  describe('assertTransportResources', () => {
+    it('rejects when weighted plasma load exceeds capacity', () => {
+      assert.throws(
+        () => TroopService.assertTransportResources({
+          action: MovementAction.TRANSPORT,
+          resources: { plastic: 0, mushroom: 0, plasma: 3 },
+          move_troops: [{ code: TroopCode.EXPLORER, count: 1 }],
+        }),
+        new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+      )
+    })
+
+    it('allows plasma that fits within weighted capacity', () => {
+      assert.doesNotThrow(() => TroopService.assertTransportResources({
+        action: MovementAction.TRANSPORT,
+        resources: { plastic: 0, mushroom: 0, plasma: 2 },
+        move_troops: [{ code: TroopCode.EXPLORER, count: 1 }],
+      }))
     })
   })
 })

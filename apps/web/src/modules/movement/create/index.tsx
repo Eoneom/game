@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Coordinates, MovementAction, OutpostType, TroopCode } from '@eoneom/api-client'
+import { Coordinates, MovementAction, OutpostType, TroopCode, resource_transport_weight } from '@eoneom/api-client'
 
 import { MovementCreateAction } from './action'
 import { MovementCreateDestination } from './destination'
@@ -57,11 +57,17 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   }, [selectedTroops])
 
   const capacity = estimation.transport_capacity ?? 0
-  const usedCapacity = resources.plastic + resources.mushroom + resources.plasma
+  const usedCapacity =
+    resources.plastic * resource_transport_weight.plastic
+    + resources.mushroom * resource_transport_weight.mushroom
+    + resources.plasma * resource_transport_weight.plasma
   const remainingCapacity = Math.max(0, capacity - usedCapacity)
   const maxPlastic = Math.min(availablePlastic, resources.plastic + remainingCapacity)
   const maxMushroom = Math.min(availableMushroom, resources.mushroom + remainingCapacity)
-  const maxPlasma = Math.min(availablePlasma, resources.plasma + remainingCapacity)
+  const maxPlasma = Math.min(
+    availablePlasma,
+    resources.plasma + Math.floor(remainingCapacity / resource_transport_weight.plasma)
+  )
   const estimateResources = action === MovementAction.TRANSPORT ? resources : undefined
 
   useEffect(() => {

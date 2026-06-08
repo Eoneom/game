@@ -307,9 +307,10 @@ describe('createTroopMovement', () => {
         cell_id,
         plastic: 5000,
         mushroom: 5000,
-        plasma: 0,
+        plasma: 10,
         last_plastic_gather: now(),
         last_mushroom_gather: now(),
+        last_plasma_gather: now(),
       })
       stockUpdateOne = vi.fn().mockResolvedValue(undefined)
       repository = {
@@ -366,6 +367,60 @@ describe('createTroopMovement', () => {
         }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
+    })
+
+    it('should reject when weighted plasma load exceeds transport capacity', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.EXPLORER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 0,
+            mushroom: 0,
+            plasma: 3
+          },
+        }),
+        new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+      )
+    })
+
+    it('should allow plasma that fits within weighted transport capacity', async () => {
+      await createTroopMovement({
+        player_id,
+        origin,
+        destination,
+        action: MovementAction.TRANSPORT,
+        move_troops: [
+          {
+            code: TroopCode.EXPLORER,
+            count: 1
+          }
+        ],
+        resources: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 2
+        },
+      })
+
+      assert.strictEqual(movementCreate.mock.calls.length, 1)
+      const movement = movementCreate.mock.calls[0][0]
+      assert.deepStrictEqual(movement.resources, {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 2
+      })
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+      const updated = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated.plasma, 8)
     })
 
     it('should reject resources on non-transport actions', async () => {

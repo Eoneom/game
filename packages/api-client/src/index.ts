@@ -16,6 +16,7 @@ export { TroopCode } from '@server-core/troop/constant/code'
 export { ReportType } from '@server-core/communication/value/report-type'
 export { OutpostType } from '@server-core/outpost/constant/type'
 export { MovementAction } from '@server-core/troop/constant/movement-action'
+export { resource_transport_weight } from '@server-core/troop/constant/transport-weight'
 
 export * from './endpoints/shared/coordinates'
 export * from './endpoints/shared/resource'
