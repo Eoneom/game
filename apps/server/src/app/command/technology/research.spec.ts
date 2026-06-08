@@ -40,7 +40,8 @@ describe('researchTechnology', () => {
     stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: 100000,
-      mushroom: 100000
+      mushroom: 100000,
+      plasma: 0
     })
     technology = TechnologyEntity.init({
       player_id,
@@ -103,7 +104,8 @@ describe('researchTechnology', () => {
     const broke = testResourceStock({
       cell_id: city_cell.id,
       plastic: 0,
-      mushroom: 0
+      mushroom: 0,
+      plasma: 0
     })
     repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(broke)
 

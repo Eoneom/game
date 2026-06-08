@@ -49,6 +49,7 @@ const response_mapper = ({ movements }: TroopMovementListQueryResponse): TroopLi
       resources: {
         plastic: movement.resources.plastic,
         mushroom: movement.resources.mushroom,
+        plasma: movement.resources.plasma,
       },
     }
   })

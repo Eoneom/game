@@ -374,6 +374,7 @@ describe('finishTroopBaseMovement', () => {
       resources: {
         plastic: 400,
         mushroom: 100,
+        plasma: 0,
       },
     })
 
@@ -388,6 +389,7 @@ describe('finishTroopBaseMovement', () => {
       cell_id: destination_cell_id,
       plastic: 100,
       mushroom: 50,
+      plasma: 0,
       last_plastic_gather: now(),
       last_mushroom_gather: now(),
     })
@@ -409,6 +411,7 @@ describe('finishTroopBaseMovement', () => {
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 3000,
       mushroom: 4000,
+      plasma: 0,
     })
 
     await finishTroopBaseMovement({
@@ -426,10 +429,12 @@ describe('finishTroopBaseMovement', () => {
     assert.deepStrictEqual(report.resources, {
       plastic: 400,
       mushroom: 100,
+      plasma: 0,
     })
     assert.deepStrictEqual(report.remaining_resources, {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     })
   })
 })

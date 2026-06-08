@@ -232,7 +232,7 @@ describe('TroopService', () => {
       assert.strictEqual(TroopService.getEarningsBySecond({
         code: TroopCode.FARMER,
         count: 0,
-        coefficients: { plastic: 1, mushroom: 1.5 }
+        coefficients: { plastic: 1, mushroom: 1.5 , plasma: 0}
       }), 0)
     })
 
@@ -240,7 +240,7 @@ describe('TroopService', () => {
       assert.strictEqual(TroopService.getEarningsBySecond({
         code: TroopCode.FARMER,
         count: 10,
-        coefficients: { plastic: 2, mushroom: 1.5 }
+        coefficients: { plastic: 2, mushroom: 1.5 , plasma: 0}
       }), 1.5)
     })
 
@@ -248,7 +248,7 @@ describe('TroopService', () => {
       assert.strictEqual(TroopService.getEarningsBySecond({
         code: TroopCode.RECYCLER,
         count: 10,
-        coefficients: { plastic: 1.5, mushroom: 2 }
+        coefficients: { plastic: 1.5, mushroom: 2 , plasma: 0}
       }), 1.8)
     })
   })

@@ -21,15 +21,18 @@ const queryResult = {
   building_levels_used: 3,
   earnings_per_second: {
     plastic: 1.5,
-    mushroom: 2.0 
+    mushroom: 2.0 ,
+    plasma: 0
   },
   pre_cell_earnings_per_second: {
     plastic: 1.0,
-    mushroom: 1.5 
+    mushroom: 1.5 ,
+    plasma: 0
   },
   cell_resource_coefficient: {
     plastic: 1.2,
-    mushroom: 1.0 
+    mushroom: 1.0 ,
+    plasma: 0
   },
   cell: {
     coordinates: {
@@ -40,19 +43,20 @@ const queryResult = {
   },
   resource_stock: {
     plastic: 500,
-    mushroom: 300 
+    mushroom: 300 ,
+    plasma: 0
   },
   warehouses_capacity: {
     plastic: 2000,
-    mushroom: 2000 
+    mushroom: 2000
   },
   warehouse_space_remaining: {
     plastic: 1500,
-    mushroom: 1700 
+    mushroom: 1700
   },
   warehouse_full_in_seconds: {
     plastic: 1000,
-    mushroom: 850 
+    mushroom: 850
   },
   energy: 15,
   pre_cell_energy: 15,
@@ -110,31 +114,34 @@ describe('cityGetHandler', () => {
         name: 'Aliceton',
         plastic: 500,
         mushroom: 300,
+        plasma: 0,
         maximum_building_levels: 10,
         building_levels_used: 3,
         earnings_per_second: {
           plastic: 1.5,
-          mushroom: 2.0 
+          mushroom: 2.0 ,
+          plasma: 0
         },
         pre_cell_earnings_per_second: {
           plastic: 1.0,
-          mushroom: 1.5 
+          mushroom: 1.5 ,
+          plasma: 0
         },
         cell_resource_coefficient: {
           plastic: 1.2,
-          mushroom: 1.0 
+          mushroom: 1.0
         },
         warehouses_capacity: {
           plastic: 2000,
-          mushroom: 2000 
+          mushroom: 2000
         },
         warehouse_space_remaining: {
           plastic: 1500,
-          mushroom: 1700 
+          mushroom: 1700
         },
         warehouse_full_in_seconds: {
           plastic: 1000,
-          mushroom: 850 
+          mushroom: 850
         },
         energy: 15,
         pre_cell_energy: 15,

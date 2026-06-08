@@ -50,7 +50,8 @@ describe('cancelBuilding', () => {
     stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
-      mushroom: STARTING_MUSHROOM
+      mushroom: STARTING_MUSHROOM,
+      plasma: 0
     })
 
     building = BuildingEntity.create({
@@ -178,7 +179,8 @@ describe('cancelBuilding', () => {
     const rich_stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: 30000,
-      mushroom: 30000
+      mushroom: 30000,
+      plasma: 0
     })
     repository.resource_stock.getByCellId = vi.fn()
       .mockResolvedValueOnce(stock)

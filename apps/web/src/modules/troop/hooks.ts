@@ -156,7 +156,7 @@ export const useCreateMovement = () => {
       origin: Coordinates
       destination: Coordinates
       troops: { code: TroopCode; count: number }[]
-      resources?: { plastic: number; mushroom: number }
+      resources?: { plastic: number; mushroom: number; plasma: number }
     }) => {
       if (!token) throw new Error('no token')
       const res = await client.troop.createMovement(token, params)

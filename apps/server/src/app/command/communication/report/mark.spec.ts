@@ -24,7 +24,8 @@ describe('markCommunicationReport', () => {
   }
   const resource_coefficient = {
     plastic: 1,
-    mushroom: 2
+    mushroom: 2,
+    plasma: 0
   }
   let report: ReportEntity
   let reportUpdateOne: MockInstance

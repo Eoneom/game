@@ -29,10 +29,12 @@ const queryResult = {
     resources: {
       plastic: 100,
       mushroom: 50,
+      plasma: 0,
     },
     remaining_resources: {
       plastic: 25,
       mushroom: 0,
+      plasma: 0,
     },
   }
 }
@@ -95,10 +97,12 @@ describe('communicationGetReportHandler', () => {
         resources: {
           plastic: 100,
           mushroom: 50,
+          plasma: 0,
         },
         remaining_resources: {
           plastic: 25,
           mushroom: 0,
+          plasma: 0,
         },
       }
     })

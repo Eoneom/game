@@ -68,7 +68,8 @@ describe('finishBuildingUpgrade', () => {
     stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: 30000,
-      mushroom: 30000
+      mushroom: 30000,
+      plasma: 0
     })
 
     buildingUpdateOne = vi.fn().mockResolvedValue(undefined)

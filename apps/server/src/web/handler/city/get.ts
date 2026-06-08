@@ -70,6 +70,7 @@ const response_mapper = ({
     name: city.name,
     plastic: resource_stock.plastic,
     mushroom: resource_stock.mushroom,
+    plasma: resource_stock.plasma,
     energy,
     pre_cell_energy,
     neutral_photovoltaic_energy,
@@ -81,11 +82,13 @@ const response_mapper = ({
     building_levels_used,
     earnings_per_second: {
       plastic: earnings_per_second.plastic,
-      mushroom: earnings_per_second.mushroom
+      mushroom: earnings_per_second.mushroom,
+      plasma: earnings_per_second.plasma
     },
     pre_cell_earnings_per_second: {
       plastic: pre_cell_earnings_per_second.plastic,
-      mushroom: pre_cell_earnings_per_second.mushroom
+      mushroom: pre_cell_earnings_per_second.mushroom,
+      plasma: pre_cell_earnings_per_second.plasma
     },
     cell_resource_coefficient: {
       plastic: cell_resource_coefficient.plastic,

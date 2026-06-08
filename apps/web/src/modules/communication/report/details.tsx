@@ -9,11 +9,17 @@ interface Props {
   report?: Report
 }
 
-const hasResources = (resources: { plastic: number; mushroom: number }) =>
-  resources.plastic > 0 || resources.mushroom > 0
+const hasResources = (resources: { plastic: number; mushroom: number; plasma: number }) =>
+  resources.plastic > 0 || resources.mushroom > 0 || resources.plasma > 0
 
-const formatResources = (resources: { plastic: number; mushroom: number }) =>
-  `${resources.plastic} plastique, ${resources.mushroom} champignon`
+const formatResources = (resources: { plastic: number; mushroom: number; plasma: number }) => {
+  const parts = [
+    resources.plastic > 0 ? `${resources.plastic} plastique` : null,
+    resources.mushroom > 0 ? `${resources.mushroom} champignon` : null,
+    resources.plasma > 0 ? `${resources.plasma} plasma` : null,
+  ].filter(Boolean)
+  return parts.join(', ')
+}
 
 export const ReportDetails: React.FC<Props> = ({ report }) => {
   if (!report) {

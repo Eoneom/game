@@ -3,7 +3,7 @@ import {
   ResourcesService
 } from '#core/resources/service'
 import { id } from '#shared/identification'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 import {
   BaseEntity,
   BaseEntityProps
@@ -17,16 +17,20 @@ export class ResourceStockEntity extends BaseEntity {
   readonly cell_id: string
   readonly plastic: number
   readonly mushroom: number
+  readonly plasma: number
   readonly last_plastic_gather: number
   readonly last_mushroom_gather: number
+  readonly last_plasma_gather: number
 
   private constructor(props: ResourceStockEntityProps) {
     super({ id: props.id })
     this.cell_id = props.cell_id
     this.plastic = props.plastic
     this.mushroom = props.mushroom
+    this.plasma = props.plasma
     this.last_plastic_gather = props.last_plastic_gather
     this.last_mushroom_gather = props.last_mushroom_gather
+    this.last_plasma_gather = props.last_plasma_gather
   }
 
   static create(props: ResourceStockEntityProps): ResourceStockEntity {
@@ -83,7 +87,7 @@ export class ResourceStockEntity extends BaseEntity {
   }: {
     gather_at_time: number
     earnings_per_second: Resource
-    warehouses_capacity: Resource
+    warehouses_capacity: WarehouseCapacity
   }): {
     stock: ResourceStockEntity
     updated: boolean
@@ -123,7 +127,7 @@ export class ResourceStockEntity extends BaseEntity {
     warehouses_capacity
   }: {
     resource: Resource
-    warehouses_capacity: Resource
+    warehouses_capacity: WarehouseCapacity
   }): {
     stock: ResourceStockEntity
     deposited: Resource
@@ -145,8 +149,10 @@ export class ResourceStockEntity extends BaseEntity {
     return {
       plastic: this.plastic,
       mushroom: this.mushroom,
+      plasma: this.plasma,
       last_plastic_gather: this.last_plastic_gather,
-      last_mushroom_gather: this.last_mushroom_gather
+      last_mushroom_gather: this.last_mushroom_gather,
+      last_plasma_gather: this.last_plasma_gather
     }
   }
 }

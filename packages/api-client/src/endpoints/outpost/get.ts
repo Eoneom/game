@@ -12,13 +12,16 @@ export interface OutpostGetDataResponse {
   type: OutpostType
   plastic: number
   mushroom: number
+  plasma: number
   earnings_per_second: {
     plastic: number
     mushroom: number
+    plasma: number
   }
   pre_cell_earnings_per_second: {
     plastic: number
     mushroom: number
+    plasma: number
   }
   cell_resource_coefficient: {
     plastic: number

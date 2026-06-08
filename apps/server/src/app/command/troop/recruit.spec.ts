@@ -45,7 +45,8 @@ describe('recruitTroop', () => {
     stock = testResourceStock({
       cell_id,
       plastic: 100000,
-      mushroom: 100000
+      mushroom: 100000,
+      plasma: 0
     })
     troop = TroopEntity.init({
       player_id,
@@ -102,7 +103,8 @@ describe('recruitTroop', () => {
     const broke = testResourceStock({
       cell_id,
       plastic: 0,
-      mushroom: 0
+      mushroom: 0,
+      plasma: 0
     })
     repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(broke)
 

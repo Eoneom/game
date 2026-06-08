@@ -29,7 +29,8 @@ describe('signupAuth', () => {
     type: CellType.FOREST,
     resource_coefficient: {
       plastic: 1,
-      mushroom: 1
+      mushroom: 1,
+      plasma: 0
     },
     solar_coefficient: 1
   }
@@ -108,7 +109,8 @@ describe('signupAuth', () => {
     resourceStockGetByCellId = vi.fn().mockImplementation(({ cell_id }: { cell_id: string }) => Promise.resolve(testResourceStock({
       cell_id,
       plastic: 123,
-      mushroom: 456
+      mushroom: 456,
+      plasma: 0
     })))
     resourceStockUpdateOne = vi.fn().mockResolvedValue(undefined)
 

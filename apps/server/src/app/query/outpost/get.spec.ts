@@ -24,15 +24,18 @@ describe('OutpostGetQuery', () => {
   const production = {
     earnings_per_second: {
       plastic: 0.5,
-      mushroom: 0.3
+      mushroom: 0.3,
+      plasma: 0
     },
     pre_cell_earnings_per_second: {
       plastic: 0.6,
-      mushroom: 0.4
+      mushroom: 0.4,
+      plasma: 0
     },
     cell_resource_coefficient: {
       plastic: 0.85,
-      mushroom: 1.1
+      mushroom: 1.1,
+      plasma: 0
     }
   }
 
@@ -46,7 +49,8 @@ describe('OutpostGetQuery', () => {
     stock = testResourceStock({
       cell_id,
       plastic: 10,
-      mushroom: 20
+      mushroom: 20,
+      plasma: 0
     })
     cell = CellEntity.create({
       id: cell_id,
@@ -58,7 +62,8 @@ describe('OutpostGetQuery', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 0.85,
-        mushroom: 1.1
+        mushroom: 1.1,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -128,6 +133,7 @@ describe('OutpostGetQuery', () => {
       cell_id,
       plastic: 10,
       mushroom: 20,
+      plasma: 0,
       last_plastic_gather: 0,
       last_mushroom_gather: 0
     })
@@ -137,7 +143,8 @@ describe('OutpostGetQuery', () => {
       ...production,
       earnings_per_second: {
         plastic: 1,
-        mushroom: 2
+        mushroom: 2,
+        plasma: 0
       }
     })
 

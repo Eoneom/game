@@ -143,7 +143,8 @@ export class WorldService {
           coordinates,
           coefficient: {
             plastic: plastic_coefficient,
-            mushroom: mushroom_coefficient
+            mushroom: mushroom_coefficient,
+            plasma: 1
           },
           solar_coefficient
         })

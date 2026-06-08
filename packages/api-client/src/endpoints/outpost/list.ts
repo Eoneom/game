@@ -9,6 +9,7 @@ export interface OutpostListDataResponse {
     type: OutpostType
     plastic: number
     mushroom: number
+    plasma: number
   }[]
   count_limit: number
 }

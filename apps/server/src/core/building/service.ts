@@ -30,7 +30,7 @@ export class BuildingService {
     level,
     coefficients,
   }: {
-    code: BuildingCode.MUSHROOM_FARM | BuildingCode.RECYCLING_PLANT
+    code: BuildingCode.MUSHROOM_FARM | BuildingCode.RECYCLING_PLANT | BuildingCode.CENTRAL_INDUCTOR
     level: number
     coefficients: Resource
   }): number {
@@ -44,7 +44,11 @@ export class BuildingService {
     } = building_earnings[code]
     const base_value = Math.pow(multiplier, level - 1) * base
 
-    const coefficient = code === BuildingCode.MUSHROOM_FARM ? coefficients.mushroom : coefficients.plastic
+    const coefficient = code === BuildingCode.MUSHROOM_FARM
+      ? coefficients.mushroom
+      : code === BuildingCode.RECYCLING_PLANT
+        ? coefficients.plastic
+        : 1
     const coefficient_value = base_value * coefficient
 
     const per_game_second = Math.round(coefficient_value * 100) / 100

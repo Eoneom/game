@@ -15,6 +15,7 @@ export const building_energy: Record<BuildingCode.SOLAR_PANEL, Energy> = {
 export type ConsumingBuildingCode =
   | BuildingCode.RECYCLING_PLANT
   | BuildingCode.MUSHROOM_FARM
+  | BuildingCode.CENTRAL_INDUCTOR
   | BuildingCode.RESEARCH_LAB
   | BuildingCode.CLONING_FACTORY
 
@@ -26,6 +27,10 @@ export const building_energy_consumption: Record<ConsumingBuildingCode, Energy> 
   [BuildingCode.MUSHROOM_FARM]: {
     base: 20,
     multiplier: 1.20
+  },
+  [BuildingCode.CENTRAL_INDUCTOR]: {
+    base: 180,
+    multiplier: 1.25
   },
   [BuildingCode.RESEARCH_LAB]: {
     base: 60,

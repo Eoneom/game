@@ -8,6 +8,7 @@ import { Resource } from '#shared/resource'
 const EMPTY_RESOURCES: Resource = {
   plastic: 0,
   mushroom: 0,
+  plasma: 0,
 }
 
 type GenerateUnreadParams = {

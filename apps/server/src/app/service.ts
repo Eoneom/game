@@ -21,11 +21,12 @@ import { CellEntity } from '#core/world/cell/entity'
 import { WorldError } from '#core/world/error'
 import { WorldService } from '#core/world/service'
 import { Coordinates } from '#core/world/value/coordinates'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 
 export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
   plastic: 1,
-  mushroom: 1
+  mushroom: 1,
+  plasma: 1
 }
 
 export const NEUTRAL_SOLAR_COEFFICIENT = 1
@@ -53,6 +54,7 @@ export class AppService {
     const {
       mushroom_farm_level,
       recycling_plant_level,
+      central_inductor_level,
       city_cell
     } = await this.loadCityBuildingLevels(city_id)
 
@@ -79,9 +81,16 @@ export class AppService {
       coefficients,
     }) * production_energy_ratio
 
+    const plasma = BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: central_inductor_level,
+      coefficients,
+    }) * production_energy_ratio
+
     return {
       plastic: Math.round(plastic * 100) / 100,
-      mushroom: Math.round(mushroom * 100) / 100
+      mushroom: Math.round(mushroom * 100) / 100,
+      plasma: Math.round(plasma * 100) / 100
     }
   }
 
@@ -100,6 +109,7 @@ export class AppService {
     const {
       mushroom_farm_level,
       recycling_plant_level,
+      central_inductor_level,
       city_cell
     } = await this.loadCityBuildingLevels(city_id)
 
@@ -122,6 +132,12 @@ export class AppService {
       coefficients: cell_resource_coefficient,
     }) * production_energy_ratio
 
+    const plasma = BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: central_inductor_level,
+      coefficients: cell_resource_coefficient,
+    }) * production_energy_ratio
+
     const pre_cell_plastic = BuildingService.getEarningsBySecond({
       code: BuildingCode.RECYCLING_PLANT,
       level: recycling_plant_level,
@@ -134,14 +150,22 @@ export class AppService {
       coefficients: NEUTRAL_CELL_COEFFICIENTS,
     })
 
+    const pre_cell_plasma = BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: central_inductor_level,
+      coefficients: NEUTRAL_CELL_COEFFICIENTS,
+    })
+
     return {
       earnings_per_second: {
         plastic: Math.round(plastic * 100) / 100,
-        mushroom: Math.round(mushroom * 100) / 100
+        mushroom: Math.round(mushroom * 100) / 100,
+        plasma: Math.round(plasma * 100) / 100
       },
       pre_cell_earnings_per_second: {
         plastic: pre_cell_plastic,
-        mushroom: pre_cell_mushroom
+        mushroom: pre_cell_mushroom,
+        plasma: pre_cell_plasma
       },
       cell_resource_coefficient,
       production_energy_ratio
@@ -237,7 +261,7 @@ export class AppService {
     }
   }
 
-  static async getCityWarehousesCapacity({ city_id }: { city_id: string }): Promise<Resource> {
+  static async getCityWarehousesCapacity({ city_id }: { city_id: string }): Promise<WarehouseCapacity> {
     const repository = Factory.getRepository()
     const [
       mushroom_warehouse_level,
@@ -265,7 +289,7 @@ export class AppService {
     }
   }
 
-  static async getOutpostWarehousesCapacity({ player_id }: { player_id: string }): Promise<Resource> {
+  static async getOutpostWarehousesCapacity({ player_id }: { player_id: string }): Promise<WarehouseCapacity> {
     const repository = Factory.getRepository()
     const logistics_level = await repository.technology.getLevel({
       player_id,
@@ -296,11 +320,13 @@ export class AppService {
       return {
         earnings_per_second: {
           plastic: 0,
-          mushroom: 0 
+          mushroom: 0,
+          plasma: 0
         },
         pre_cell_earnings_per_second: {
           plastic: 0,
-          mushroom: 0 
+          mushroom: 0,
+          plasma: 0
         },
         cell_resource_coefficient: cell.resource_coefficient
       }
@@ -335,11 +361,13 @@ export class AppService {
     return {
       earnings_per_second: {
         plastic,
-        mushroom
+        mushroom,
+        plasma: 0
       },
       pre_cell_earnings_per_second: {
         plastic: pre_cell_plastic,
-        mushroom: pre_cell_mushroom
+        mushroom: pre_cell_mushroom,
+        plasma: 0
       },
       cell_resource_coefficient
     }
@@ -527,11 +555,13 @@ export class AppService {
   private static computeEnergyConsumptionFromLevels({
     recycling_plant_level,
     mushroom_farm_level,
+    central_inductor_level,
     research_lab_level,
     cloning_factory_level
   }: {
     recycling_plant_level: number
     mushroom_farm_level: number
+    central_inductor_level: number
     research_lab_level: number
     cloning_factory_level: number
   }): {
@@ -547,6 +577,10 @@ export class AppService {
       code: BuildingCode.MUSHROOM_FARM,
       level: mushroom_farm_level
     })
+    const central_inductor = BuildingService.getEnergyConsumption({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: central_inductor_level
+    })
     const research_lab = BuildingService.getEnergyConsumption({
       code: BuildingCode.RESEARCH_LAB,
       level: research_lab_level
@@ -556,7 +590,7 @@ export class AppService {
       level: cloning_factory_level
     })
 
-    const production_consumption = recycling_plant + mushroom_farm
+    const production_consumption = recycling_plant + mushroom_farm + central_inductor
     const non_production_consumption = research_lab + cloning_factory
 
     return {
@@ -569,6 +603,7 @@ export class AppService {
   private static async loadCityBuildingLevels(city_id: string): Promise<{
     mushroom_farm_level: number
     recycling_plant_level: number
+    central_inductor_level: number
     research_lab_level: number
     cloning_factory_level: number
     solar_panel_level: number
@@ -578,6 +613,7 @@ export class AppService {
     const [
       mushroom_farm_level,
       recycling_plant_level,
+      central_inductor_level,
       research_lab_level,
       cloning_factory_level,
       solar_panel_level,
@@ -590,6 +626,10 @@ export class AppService {
       repository.building.getLevel({
         city_id,
         code: BuildingCode.RECYCLING_PLANT
+      }),
+      repository.building.getLevel({
+        city_id,
+        code: BuildingCode.CENTRAL_INDUCTOR
       }),
       repository.building.getLevel({
         city_id,
@@ -609,6 +649,7 @@ export class AppService {
     return {
       mushroom_farm_level,
       recycling_plant_level,
+      central_inductor_level,
       research_lab_level,
       cloning_factory_level,
       solar_panel_level,

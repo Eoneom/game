@@ -71,6 +71,7 @@ export interface Movement {
   origin_x: number;
   origin_y: number;
   plastic: number;
+  plasma: number;
   player_id: string;
 }
 
@@ -96,10 +97,12 @@ export interface Report {
   origin_x: number;
   origin_y: number;
   plastic: Generated<number>;
+  plasma: Generated<number>;
   player_id: string;
   recorded_at: Timestamp;
   remaining_mushroom: Generated<number>;
   remaining_plastic: Generated<number>;
+  remaining_plasma: Generated<number>;
   type: string;
   was_read: Generated<boolean>;
 }
@@ -116,8 +119,10 @@ export interface ResourceStock {
   id: Generated<string>;
   last_mushroom_gather: Timestamp;
   last_plastic_gather: Timestamp;
+  last_plasma_gather: Timestamp;
   mushroom: number;
   plastic: number;
+  plasma: number;
 }
 
 export interface Technology {

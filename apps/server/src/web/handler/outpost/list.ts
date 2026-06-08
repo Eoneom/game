@@ -50,7 +50,8 @@ const response_mapper = ({
       coordinates: cell.coordinates,
       type: outpost.type,
       plastic: stock.plastic,
-      mushroom: stock.mushroom
+      mushroom: stock.mushroom,
+      plasma: stock.plasma
     }
   })
 

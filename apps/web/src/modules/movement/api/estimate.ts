@@ -15,7 +15,7 @@ export const estimateMovement = async ({
   destination: Coordinates
   troopCodes: TroopCode[]
   troops?: { code: TroopCode; count: number }[]
-  resources?: { plastic: number; mushroom: number }
+  resources?: { plastic: number; mushroom: number; plasma: number }
 }): Promise<TroopMovementEstimateDataResponse | null> => {
   const res = await client.troop.estimateMovement(token, {
     origin,

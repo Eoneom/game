@@ -62,6 +62,7 @@ const response_mapper = ({
     resources: {
       plastic: movement.resources.plastic,
       mushroom: movement.resources.mushroom,
+      plasma: movement.resources.plasma,
     },
     troops: troops.map((troop) => ({
       code: troop.code,

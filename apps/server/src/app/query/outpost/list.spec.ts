@@ -47,7 +47,8 @@ describe('OutpostListQuery', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1 
+        mushroom: 1 ,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -60,7 +61,8 @@ describe('OutpostListQuery', () => {
     const stock = testResourceStock({
       cell_id: cell.id,
       plastic: 1,
-      mushroom: 2
+      mushroom: 2,
+      plasma: 0
     })
     ;(repository.outpost.list as MockInstance).mockResolvedValue([ outpost ])
     ;(repository.cell.getById as MockInstance).mockResolvedValue(cell)

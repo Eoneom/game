@@ -26,19 +26,23 @@ const queryResult = {
   },
   resource_stock: {
     plastic: 150,
-    mushroom: 75
+    mushroom: 75,
+    plasma: 0
   },
   earnings_per_second: {
     plastic: 0.12,
-    mushroom: 0.1
+    mushroom: 0.1,
+    plasma: 0
   },
   pre_cell_earnings_per_second: {
     plastic: 0.12,
-    mushroom: 0.1
+    mushroom: 0.1,
+    plasma: 0
   },
   cell_resource_coefficient: {
     plastic: 1,
-    mushroom: 1
+    mushroom: 1,
+    plasma: 0
   },
   warehouses_capacity: {
     plastic: 2000,
@@ -102,13 +106,16 @@ describe('outpostGetHandler', () => {
         type: 'permanent',
         plastic: 150,
         mushroom: 75,
+        plasma: 0,
         earnings_per_second: {
           plastic: 0.12,
-          mushroom: 0.1
+          mushroom: 0.1,
+          plasma: 0
         },
         pre_cell_earnings_per_second: {
           plastic: 0.12,
-          mushroom: 0.1
+          mushroom: 0.1,
+          plasma: 0
         },
         cell_resource_coefficient: {
           plastic: 1,

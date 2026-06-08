@@ -23,7 +23,8 @@ const queryResult = {
       type: 'PLAIN',
       resource_coefficient: {
         plastic: 1.2,
-        mushroom: 0.8 
+        mushroom: 0.8 ,
+        plasma: 0
       },
       solar_coefficient: 1.4
     },
@@ -36,7 +37,8 @@ const queryResult = {
       type: 'FOREST',
       resource_coefficient: {
         plastic: 0.5,
-        mushroom: 1.5 
+        mushroom: 1.5 ,
+        plasma: 0
       },
       solar_coefficient: 1.1
     }
@@ -97,7 +99,7 @@ describe('worldGetSectorHandler', () => {
               type: 'PLAIN',
               resource_coefficient: {
                 plastic: 1.2,
-                mushroom: 0.8 
+                mushroom: 0.8
               },
               solar_coefficient: 1.4
             }

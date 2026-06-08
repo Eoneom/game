@@ -37,8 +37,10 @@ describe('ResourcesService', () => {
   const base_state = {
     plastic: STARTING_PLASTIC,
     mushroom: STARTING_MUSHROOM,
+    plasma: 0,
     last_plastic_gather: 1_000,
-    last_mushroom_gather: 1_000
+    last_mushroom_gather: 1_000,
+    last_plasma_gather: 1_000
   }
 
   describe('purchaseResourceStock', () => {
@@ -47,7 +49,8 @@ describe('ResourcesService', () => {
         state: base_state,
         resource: {
           plastic: 999_999,
-          mushroom: 0 
+          mushroom: 0,
+          plasma: 0
         }
       }), new RegExp(CityError.NOT_ENOUGH_RESOURCES))
     })
@@ -57,7 +60,8 @@ describe('ResourcesService', () => {
         state: base_state,
         resource: {
           plastic: 10,
-          mushroom: 20 
+          mushroom: 20,
+          plasma: 0
         }
       })
       assert.strictEqual(next.plastic, STARTING_PLASTIC - 10)
@@ -71,11 +75,13 @@ describe('ResourcesService', () => {
         state: base_state,
         resource: {
           plastic: 5,
-          mushroom: 7 
+          mushroom: 7,
+          plasma: 3
         }
       })
       assert.strictEqual(next.plastic, STARTING_PLASTIC + 5)
       assert.strictEqual(next.mushroom, STARTING_MUSHROOM + 7)
+      assert.strictEqual(next.plasma, 3)
     })
   })
 
@@ -88,11 +94,12 @@ describe('ResourcesService', () => {
         gather_at_time: base_state.last_plastic_gather + 1000,
         earnings_per_second: {
           plastic: 0,
-          mushroom: 0 
+          mushroom: 0,
+          plasma: 0
         },
         warehouses_capacity: {
           plastic: 100_000,
-          mushroom: 100_000 
+          mushroom: 100_000
         }
       })
       assert.strictEqual(updated, false)
@@ -110,16 +117,42 @@ describe('ResourcesService', () => {
         gather_at_time: base_state.last_plastic_gather + seconds * 1000,
         earnings_per_second: {
           plastic: plastic_eps,
-          mushroom: mushroom_eps 
+          mushroom: mushroom_eps,
+          plasma: 0
         },
         warehouses_capacity: {
           plastic: 1_000_000,
-          mushroom: 1_000_000 
+          mushroom: 1_000_000
         }
       })
       assert.strictEqual(updated, true)
       assert.strictEqual(next.plastic, base_state.plastic + seconds * plastic_eps)
       assert.strictEqual(next.mushroom, base_state.mushroom + seconds * mushroom_eps)
+    })
+
+    it('gathers plasma without warehouse cap', () => {
+      const state = {
+        ...base_state,
+        plasma: 10_000
+      }
+      const {
+        next, updated
+      } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: state.last_plasma_gather + 5_000,
+        earnings_per_second: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 100
+        },
+        warehouses_capacity: {
+          plastic: 1,
+          mushroom: 1
+        }
+      })
+      assert.strictEqual(updated, true)
+      assert.strictEqual(next.plasma, 10_000 + 500)
+      assert.strictEqual(next.last_plasma_gather, state.last_plasma_gather + 5_000)
     })
   })
 

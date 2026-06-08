@@ -1,6 +1,6 @@
 import { OUTPOST_COUNT_LIMIT } from '#core/outpost/constant/limit'
 import { outpost_capacity } from '#core/outpost/constant/capacity'
-import { Resource } from '#shared/resource'
+import { WarehouseCapacity } from '#shared/resource'
 
 export class OutpostService {
   static getCountLimit(): number {
@@ -21,7 +21,7 @@ export class OutpostService {
     return !city_exists && !outpost_exists
   }
 
-  static getWarehousesCapacity({ logistics_level }: { logistics_level: number }): Resource {
+  static getWarehousesCapacity({ logistics_level }: { logistics_level: number }): WarehouseCapacity {
     return {
       plastic: Math.pow(outpost_capacity.plastic.multiplier, logistics_level) * outpost_capacity.plastic.base,
       mushroom: Math.pow(outpost_capacity.mushroom.multiplier, logistics_level) * outpost_capacity.mushroom.base

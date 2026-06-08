@@ -112,7 +112,8 @@ describe('troopEstimateMovementHandler', () => {
       troop_codes,
       resources: {
         plastic: 10,
-        mushroom: 5
+        mushroom: 5,
+        plasma: 0
       },
       troops: [
         {
@@ -136,7 +137,8 @@ describe('troopEstimateMovementHandler', () => {
       player_id: 'p1',
       resources: {
         plastic: 10,
-        mushroom: 5
+        mushroom: 5,
+        plasma: 0
       },
     })
     expect(res.status).toHaveBeenCalledWith(200)

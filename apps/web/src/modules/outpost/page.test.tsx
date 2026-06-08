@@ -15,6 +15,29 @@ import { OutpostPage } from './page'
 const mockSettleCity = vi.fn()
 const mockSetPermanent = vi.fn()
 
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    to,
+    params,
+    children,
+    ...props
+  }: {
+    to: string
+    params?: Record<string, string>
+    children: React.ReactNode
+  }) => (
+    <a
+      href={Object.entries(params ?? {}).reduce(
+        (href, [key, value]) => href.replace(`$${key}`, value),
+        to
+      )}
+      {...props}
+    >
+      {children}
+    </a>
+  ),
+}))
+
 vi.mock('#outpost/hooks', async () => ({
   ...(await vi.importActual<typeof import('#outpost/hooks')>('#outpost/hooks')),
   useSetOutpostPermanent: () => ({ mutate: mockSetPermanent }),
@@ -39,8 +62,9 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   type: OutpostType.TEMPORARY,
   plastic: 10,
   mushroom: 20,
-  earnings_per_second: { plastic: 0, mushroom: 0 },
-  pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 },
+  plasma: 0,
+  earnings_per_second: { plastic: 0, mushroom: 0 , plasma: 0},
+  pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 , plasma: 0},
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
   warehouses_capacity: { plastic: 2000, mushroom: 1500 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
@@ -84,8 +108,8 @@ describe('OutpostPage', () => {
       queryClient.setQueryData(outpostKeys.detail(outpost.id), {
         ...outpost,
         type: OutpostType.PERMANENT,
-        earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
-        pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+        earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
+        pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
       })
     })
 
@@ -98,14 +122,15 @@ describe('OutpostPage', () => {
   it('shows production panel for permanent outpost', () => {
     renderWithOutpost(minimalOutpost({
       type: OutpostType.PERMANENT,
-      earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
-      pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 },
+      earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
+      pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
       cell_resource_coefficient: { plastic: 1.2, mushroom: 0.8 },
     }))
 
     expect(screen.getByRole('heading', { name: 'Production et terrain' })).toBeInTheDocument()
-    expect(screen.getByText('Actuelle (avec terrain)')).toBeInTheDocument()
-    expect(screen.getByText('Base des unités (avant terrain)')).toBeInTheDocument()
+    expect(screen.getByText('Actuelle')).toBeInTheDocument()
+    expect(screen.getByText('Terrain')).toBeInTheDocument()
+    expect(screen.getByText('Plasma')).toBeInTheDocument()
   })
 
   it('hides production panel for temporary outpost', () => {

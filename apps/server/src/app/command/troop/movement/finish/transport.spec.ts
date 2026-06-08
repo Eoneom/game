@@ -56,6 +56,7 @@ describe('finishTroopTransportMovement', () => {
       resources: {
         plastic: 1000,
         mushroom: 500,
+        plasma: 0,
       },
     })
 
@@ -73,6 +74,7 @@ describe('finishTroopTransportMovement', () => {
       cell_id: destination_cell_id,
       plastic: 2900,
       mushroom: 0,
+      plasma: 0,
       last_plastic_gather: now(),
       last_mushroom_gather: now(),
     })
@@ -122,10 +124,12 @@ describe('finishTroopTransportMovement', () => {
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 3000,
       mushroom: 4000,
+      plasma: 0,
     })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 10000,
       mushroom: 10000,
+      plasma: 0,
     })
   })
 
@@ -167,16 +171,19 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 900,
       mushroom: 0,
+      plasma: 0,
     })
     assert.strictEqual(result.base_movement.id, base_movement.id)
     assert.strictEqual(reportCreate.mock.calls[0][0].type, ReportType.TRANSPORT)
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 100,
       mushroom: 500,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 900,
       mushroom: 0,
+      plasma: 0,
     })
   })
 
@@ -207,14 +214,17 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 1000,
       mushroom: 500,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     })
   })
 
@@ -237,14 +247,17 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
+      plasma: 0,
     })
   })
 
@@ -266,14 +279,17 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
+      plasma: 0,
     })
   })
 })

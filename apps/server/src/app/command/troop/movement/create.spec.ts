@@ -57,7 +57,8 @@ describe('createTroopMovement', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 0.1,
-        mushroom: 0.1
+        mushroom: 0.1,
+        plasma: 0
       },
       solar_coefficient: 1,
     })
@@ -306,6 +307,7 @@ describe('createTroopMovement', () => {
         cell_id,
         plastic: 5000,
         mushroom: 5000,
+        plasma: 0,
         last_plastic_gather: now(),
         last_mushroom_gather: now(),
       })
@@ -335,7 +337,8 @@ describe('createTroopMovement', () => {
           ],
           resources: {
             plastic: 0,
-            mushroom: 0
+            mushroom: 0,
+            plasma: 0
           },
         }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_REQUIRED)
@@ -357,7 +360,8 @@ describe('createTroopMovement', () => {
           ],
           resources: {
             plastic: 201,
-            mushroom: 0
+            mushroom: 0,
+            plasma: 0
           },
         }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
@@ -379,7 +383,8 @@ describe('createTroopMovement', () => {
           ],
           resources: {
             plastic: 10,
-            mushroom: 0
+            mushroom: 0,
+            plasma: 0
           },
         }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
@@ -411,7 +416,8 @@ describe('createTroopMovement', () => {
         ],
         resources: {
           plastic: 1000,
-          mushroom: 500
+          mushroom: 500,
+          plasma: 0
         },
       })
 
@@ -420,7 +426,8 @@ describe('createTroopMovement', () => {
       assert.strictEqual(movement.action, MovementAction.TRANSPORT)
       assert.deepStrictEqual(movement.resources, {
         plastic: 1000,
-        mushroom: 500
+        mushroom: 500,
+        plasma: 0
       })
       assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
       const updated = stockUpdateOne.mock.calls[0][0]
@@ -437,6 +444,7 @@ describe('createTroopMovement', () => {
         cell_id,
         plastic: 10,
         mushroom: 10,
+        plasma: 0,
         last_plastic_gather: now(),
         last_mushroom_gather: now(),
       })
@@ -474,7 +482,8 @@ describe('createTroopMovement', () => {
           ],
           resources: {
             plastic: 100,
-            mushroom: 0
+            mushroom: 0,
+            plasma: 0
           },
         }),
         new RegExp(CityError.NOT_ENOUGH_RESOURCES)

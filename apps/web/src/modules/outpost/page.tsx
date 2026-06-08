@@ -12,6 +12,7 @@ import { Button } from '#ui/button'
 import { OutpostType } from '@eoneom/api-client'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
+import { IconPlasma } from '#ui/icon/plasma'
 import { ProductionTerrainReadout } from '#ui/production-terrain-readout'
 import { Link } from '@tanstack/react-router'
 
@@ -114,6 +115,12 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
                 <IconMushroom /> Champignon
               </span>
               <span className="font-mono text-amber">{transformDecimals(outpost.mushroom)}</span>
+            </li>
+            <li className="flex justify-between">
+              <span className="flex items-center gap-1 text-amber-dim">
+                <IconPlasma /> Plasma
+              </span>
+              <span className="font-mono text-amber">{transformDecimals(outpost.plasma)}</span>
             </li>
           </ul>
 

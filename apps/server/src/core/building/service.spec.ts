@@ -81,6 +81,31 @@ describe('BuildingService.getEnergyConsumption', () => {
       level: 1
     }), 100)
   })
+
+  it('returns high consumption for central inductor', () => {
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: 1
+    }), 180)
+  })
+})
+
+describe('BuildingService.getEarningsBySecond', () => {
+  it('returns low plasma earnings for central inductor at level 1', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: 1,
+      coefficients: { plastic: 1, mushroom: 1, plasma: 1 }
+    }), 0.05)
+  })
+
+  it('ignores cell coefficients for central inductor', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: 1,
+      coefficients: { plastic: 9, mushroom: 9, plasma: 9 }
+    }), 0.05)
+  })
 })
 
 describe('BuildingService.getProductionEnergyRatio', () => {

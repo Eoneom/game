@@ -36,7 +36,8 @@ describe('CityGetQuery', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1 
+        mushroom: 1,
+        plasma: 1
       },
       solar_coefficient: 1,
       city_id: city.id
@@ -53,7 +54,8 @@ describe('CityGetQuery', () => {
         getByCellId: vi.fn().mockResolvedValue(testResourceStock({
           cell_id: cell.id,
           plastic: 0,
-          mushroom: 0 
+          mushroom: 0,
+          plasma: 0
         })),
       } as unknown as Repository['resource_stock'],
       technology: {
@@ -70,15 +72,18 @@ describe('CityGetQuery', () => {
     vi.spyOn(AppService, 'getCityProductionBreakdown').mockResolvedValue({
       earnings_per_second: {
         plastic: 1,
-        mushroom: 2 
+        mushroom: 2 ,
+        plasma: 0
       },
       pre_cell_earnings_per_second: {
         plastic: 1,
-        mushroom: 2 
+        mushroom: 2 ,
+        plasma: 0
       },
       cell_resource_coefficient: {
         plastic: 1,
-        mushroom: 1 
+        mushroom: 1,
+        plasma: 1
       },
       production_energy_ratio: 1
     })
@@ -121,7 +126,7 @@ describe('CityGetQuery', () => {
 
     expect(result.warehouse_full_in_seconds).toEqual({
       plastic: 50,
-      mushroom: 0 
+      mushroom: 0
     })
   })
 

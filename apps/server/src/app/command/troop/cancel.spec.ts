@@ -58,7 +58,8 @@ describe('cancelTroop', () => {
     stock = testResourceStock({
       cell_id,
       plastic: STARTING_PLASTIC,
-      mushroom: STARTING_MUSHROOM
+      mushroom: STARTING_MUSHROOM,
+      plasma: 0
     })
 
     const current_time = now()

@@ -6,7 +6,7 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { CellEntity } from '#core/world/cell/entity'
 import { ResourcesService } from '#core/resources/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 import { now } from '#shared/time'
 
 export interface OutpostGetQueryRequest {
@@ -21,8 +21,8 @@ export interface OutpostGetQueryResponse {
   earnings_per_second: Resource
   pre_cell_earnings_per_second: Resource
   cell_resource_coefficient: Resource
-  warehouses_capacity: Resource
-  warehouse_full_in_seconds: Resource
+  warehouses_capacity: WarehouseCapacity
+  warehouse_full_in_seconds: WarehouseCapacity
 }
 
 export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, OutpostGetQueryResponse> {
@@ -61,7 +61,7 @@ export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, Outpos
       resource_stock = stock_as_of_now
     }
 
-    const warehouse_full_in_seconds: Resource = {
+    const warehouse_full_in_seconds: WarehouseCapacity = {
       plastic: ResourcesService.computeWarehouseFullInSeconds({
         space_remaining: warehouses_capacity.plastic - resource_stock.plastic,
         earnings_per_second: production.earnings_per_second.plastic

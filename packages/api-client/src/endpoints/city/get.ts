@@ -10,16 +10,19 @@ export interface CityGetDataResponse {
   name: string
   plastic: number
   mushroom: number
+  plasma: number
   maximum_building_levels: number
   building_levels_used: number
   coordinates: Coordinates
   earnings_per_second: {
     plastic: number
     mushroom: number
+    plasma: number
   }
   pre_cell_earnings_per_second: {
     plastic: number
     mushroom: number
+    plasma: number
   }
   cell_resource_coefficient: {
     plastic: number

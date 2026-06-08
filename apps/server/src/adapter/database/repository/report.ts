@@ -153,8 +153,10 @@ export class PostgresReportRepository
               was_read: row.was_read,
               plastic: row.plastic,
               mushroom: row.mushroom,
+              plasma: row.plasma,
               remaining_plastic: row.remaining_plastic,
               remaining_mushroom: row.remaining_mushroom,
+              remaining_plasma: row.remaining_plasma,
             }))
           .execute()
         report_id = with_id.id
@@ -203,8 +205,10 @@ export class PostgresReportRepository
               was_read: row.was_read,
               plastic: row.plastic,
               mushroom: row.mushroom,
+              plasma: row.plasma,
               remaining_plastic: row.remaining_plastic,
               remaining_mushroom: row.remaining_mushroom,
+              remaining_plasma: row.remaining_plasma,
             }))
           .execute()
       } else {
@@ -223,8 +227,10 @@ export class PostgresReportRepository
             was_read: row.was_read,
             plastic: row.plastic,
             mushroom: row.mushroom,
+            plasma: row.plasma,
             remaining_plastic: row.remaining_plastic,
             remaining_mushroom: row.remaining_mushroom,
+            remaining_plasma: row.remaining_plasma,
           })
           .where('id', '=', entity.id)
           .execute()
@@ -267,10 +273,12 @@ export class PostgresReportRepository
       resources: {
         plastic: row.plastic,
         mushroom: row.mushroom,
+        plasma: row.plasma,
       },
       remaining_resources: {
         plastic: row.remaining_plastic,
         mushroom: row.remaining_mushroom,
+        plasma: row.remaining_plasma,
       },
     })
   }
@@ -319,10 +327,12 @@ export class PostgresReportRepository
       resources: {
         plastic: row.plastic,
         mushroom: row.mushroom,
+        plasma: row.plasma,
       },
       remaining_resources: {
         plastic: row.remaining_plastic,
         mushroom: row.remaining_mushroom,
+        plasma: row.remaining_plasma,
       },
     })
   }
@@ -342,8 +352,10 @@ export class PostgresReportRepository
       was_read: entity.was_read,
       plastic: entity.resources.plastic,
       mushroom: entity.resources.mushroom,
+      plasma: entity.resources.plasma,
       remaining_plastic: entity.remaining_resources.plastic,
       remaining_mushroom: entity.remaining_resources.mushroom,
+      remaining_plasma: entity.remaining_resources.plasma,
     }
   }
 }

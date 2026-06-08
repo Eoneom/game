@@ -50,6 +50,7 @@ export class PostgresMovementRepository
       resources: {
         plastic: row.plastic,
         mushroom: row.mushroom,
+        plasma: row.plasma,
       },
     })
   }
@@ -67,6 +68,7 @@ export class PostgresMovementRepository
       destination_sector: entity.destination.sector,
       plastic: entity.resources.plastic,
       mushroom: entity.resources.mushroom,
+      plasma: entity.resources.plasma,
     }
   }
 }

@@ -101,5 +101,19 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
       base: 0.35,
       multiplier: 2
     }
+  },
+  [BuildingCode.CENTRAL_INDUCTOR]: {
+    plastic: {
+      base: 4000,
+      multiplier: 1.4
+    },
+    mushroom: {
+      base: 4000,
+      multiplier: 1.4
+    },
+    duration: {
+      base: 20,
+      multiplier: 1.8
+    }
   }
 }

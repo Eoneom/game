@@ -32,7 +32,8 @@ describe('citySettle', () => {
     type: CellType.FOREST,
     resource_coefficient: {
       plastic: 1,
-      mushroom: 1
+      mushroom: 1,
+      plasma: 0
     },
     solar_coefficient: 1
   }
@@ -78,7 +79,8 @@ describe('citySettle', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1
+        mushroom: 1,
+        plasma: 0
       },
       solar_coefficient: 1
     })

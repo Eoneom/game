@@ -2,6 +2,7 @@ import { City, Outpost } from '#types'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconEnergy } from '#ui/icon/energy'
+import { IconPlasma } from '#ui/icon/plasma'
 import { HeaderResourcesItem } from '#ui/header/resources/item'
 import { OutpostType } from '@eoneom/api-client'
 import React from 'react'
@@ -29,6 +30,11 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
         warehouse_full_in_seconds={city.warehouse_full_in_seconds.mushroom}
       />
       <HeaderResourcesItem
+        value={city.plasma}
+        icon={<IconPlasma />}
+        earnings_per_second={city.earnings_per_second.plasma}
+      />
+      <HeaderResourcesItem
         value={city.energy_consumption}
         icon={<IconEnergy />}
         secondary_value={city.energy}
@@ -53,6 +59,10 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
         warehouse_capacity={outpost.warehouses_capacity.mushroom}
         earnings_per_second={showEarnings ? outpost.earnings_per_second.mushroom : undefined}
         warehouse_full_in_seconds={showEarnings ? outpost.warehouse_full_in_seconds.mushroom : undefined}
+      />
+      <HeaderResourcesItem
+        value={outpost.plasma}
+        icon={<IconPlasma />}
       />
     </ul>
   }

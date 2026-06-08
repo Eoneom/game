@@ -1,6 +1,6 @@
 import { GenericQuery } from '#query/generic'
 import { AppService } from '#app/service'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 import { now } from '#shared/time'
 import { CellEntity } from '#core/world/cell/entity'
 import { CityEntity } from '#core/city/entity'
@@ -23,9 +23,9 @@ export interface CityGetQueryResponse {
   building_levels_used: number
   cell: CellEntity
   resource_stock: ResourceStockEntity
-  warehouses_capacity: Resource
-  warehouse_space_remaining: Resource
-  warehouse_full_in_seconds: Resource
+  warehouses_capacity: WarehouseCapacity
+  warehouse_space_remaining: WarehouseCapacity
+  warehouse_full_in_seconds: WarehouseCapacity
   energy: number
   pre_cell_energy: number
   neutral_photovoltaic_energy: number
@@ -96,12 +96,12 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       warehouses_capacity
     })
 
-    const warehouse_space_remaining: Resource = {
+    const warehouse_space_remaining: WarehouseCapacity = {
       plastic: Math.max(0, warehouses_capacity.plastic - stock_as_of_now.plastic),
       mushroom: Math.max(0, warehouses_capacity.mushroom - stock_as_of_now.mushroom)
     }
 
-    const warehouse_full_in_seconds: Resource = {
+    const warehouse_full_in_seconds: WarehouseCapacity = {
       plastic: ResourcesService.computeWarehouseFullInSeconds({
         space_remaining: warehouses_capacity.plastic - stock_as_of_now.plastic,
         earnings_per_second: production.earnings_per_second.plastic

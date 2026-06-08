@@ -2,22 +2,27 @@ import React from 'react'
 
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
+import { IconPlasma } from '#ui/icon/plasma'
 
 interface Props {
   plastic: number
   mushroom: number
+  plasma: number
   maxPlastic: number
   maxMushroom: number
+  maxPlasma: number
   capacity: number
   usedCapacity: number
-  onChange: (resources: { plastic: number; mushroom: number }) => void
+  onChange: (resources: { plastic: number; mushroom: number; plasma: number }) => void
 }
 
 export const MovementCreateResources: React.FC<Props> = ({
   plastic,
   mushroom,
+  plasma,
   maxPlastic,
   maxMushroom,
+  maxPlasma,
   capacity,
   usedCapacity,
   onChange,
@@ -44,6 +49,7 @@ export const MovementCreateResources: React.FC<Props> = ({
               onChange({
                 plastic: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxPlastic),
                 mushroom,
+                plasma,
               })
             }}
           />
@@ -63,6 +69,27 @@ export const MovementCreateResources: React.FC<Props> = ({
               onChange({
                 plastic,
                 mushroom: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxMushroom),
+                plasma,
+              })
+            }}
+          />
+        </li>
+        <li className="flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+            <IconPlasma /> Plasma
+          </span>
+          <input
+            type="number"
+            className="field-input field-input--number w-28"
+            min={0}
+            max={maxPlasma}
+            value={plasma}
+            onChange={event => {
+              const next = Number.parseInt(event.target.value, 10)
+              onChange({
+                plastic,
+                mushroom,
+                plasma: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxPlasma),
               })
             }}
           />

@@ -19,7 +19,7 @@ import { OutpostService } from '#core/outpost/service'
 import { OutpostError } from '#core/outpost/error'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CellEntity } from '#core/world/cell/entity'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 import { id } from '#shared/identification'
 
 export interface FinishTroopBaseMovementParams {
@@ -139,7 +139,7 @@ async function planCargoDeposit({
 }: {
   cell_id: string
   resources: Resource
-  warehouses_capacity: Resource
+  warehouses_capacity: WarehouseCapacity
 }): Promise<ResourceStockEntity> {
   const repository = Factory.getRepository()
   const stock = await repository.resource_stock.getByCellId({ cell_id })

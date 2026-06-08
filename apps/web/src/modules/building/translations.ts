@@ -42,5 +42,10 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
     name: 'Panneau solaire',
     description: 'Dans un monde où les ressources fossiles se sont épuisées, le soleil reste la source d\'énergie la plus fiable pour alimenter la colonie.',
     effect: 'Produit de l\'énergie'
+  },
+  [BuildingCode.CENTRAL_INDUCTOR]: {
+    name: 'Inducteur central',
+    description: 'Un cœur électromagnétique colossal qui force la matière à se dissocier en plasma. Instable, vorace en énergie, et trop dangereux pour être stocké dans un entrepôt ordinaire.',
+    effect: 'Consomme beaucoup d\'énergie. Produit du plasma. Stockage illimité'
   }
 }

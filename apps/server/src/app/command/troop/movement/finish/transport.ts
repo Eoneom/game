@@ -46,6 +46,7 @@ export async function finishTroopTransportMovement({
     let deposited: Resource = {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
     }
 
     const deposit_target = await resolveOwnedDepositTarget({

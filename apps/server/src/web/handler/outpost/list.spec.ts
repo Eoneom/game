@@ -34,7 +34,8 @@ const queryResult = {
     {
       cell_id: 'cell1',
       plastic: 200,
-      mushroom: 100 
+      mushroom: 100 ,
+      plasma: 0
     } 
   ],
   count_limit: 15
@@ -89,7 +90,8 @@ describe('outpostListHandler', () => {
             },
             type: 'STANDARD',
             plastic: 200,
-            mushroom: 100
+            mushroom: 100,
+            plasma: 0
           }
         ],
         count_limit: 15

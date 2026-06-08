@@ -58,10 +58,12 @@ const response_mapper = ({ report }: CommunicationGetReportQueryResponse): Commu
     resources: {
       plastic: report.resources.plastic,
       mushroom: report.resources.mushroom,
+      plasma: report.resources.plasma,
     },
     remaining_resources: {
       plastic: report.remaining_resources.plastic,
       mushroom: report.remaining_resources.mushroom,
+      plasma: report.remaining_resources.plasma,
     },
   }
 

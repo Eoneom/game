@@ -6,7 +6,7 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopService } from '#core/troop/service'
 import { CellEntity } from '#core/world/cell/entity'
 import { WorldService } from '#core/world/service'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 import { now } from '#shared/time'
 
 export async function createReturnBaseTrip({
@@ -71,7 +71,7 @@ export async function resolveOwnedDepositTarget({
 }: {
   destination_cell: CellEntity
   player_id: string
-}): Promise<{ cell_id: string; warehouses_capacity: Resource } | null> {
+}): Promise<{ cell_id: string; warehouses_capacity: WarehouseCapacity } | null> {
   const repository = Factory.getRepository()
 
   const city = destination_cell.city_id

@@ -44,7 +44,8 @@ describe('outpostGather', () => {
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1
+        mushroom: 1,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -52,6 +53,7 @@ describe('outpostGather', () => {
       cell_id,
       plastic: 100,
       mushroom: 200,
+      plasma: 0,
       last_plastic_gather: 0,
       last_mushroom_gather: 0
     })
@@ -72,11 +74,13 @@ describe('outpostGather', () => {
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit: mockEmit } as any)
     vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
       plastic: 100,
-      mushroom: 100
+      mushroom: 100,
+      plasma: 0
     })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 2000,
-      mushroom: 1500
+      mushroom: 1500,
+      plasma: 0
     })
   })
 
@@ -123,17 +127,20 @@ describe('outpostGather', () => {
 
     vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
       plastic: plastic_earnings,
-      mushroom: mushroom_earnings
+      mushroom: mushroom_earnings,
+      plasma: 0
     })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 2000,
-      mushroom: 1500
+      mushroom: 1500,
+      plasma: 0
     })
 
     const seeded = testResourceStock({
       cell_id,
       plastic: 100,
       mushroom: 200,
+      plasma: 0,
       last_plastic_gather: gather_at_time - time_elapsed * 1000,
       last_mushroom_gather: gather_at_time - time_elapsed * 1000
     })
@@ -156,17 +163,20 @@ describe('outpostGather', () => {
 
     vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
       plastic: 100,
-      mushroom: 100
+      mushroom: 100,
+      plasma: 0
     })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 250,
-      mushroom: 300
+      mushroom: 300,
+      plasma: 0
     })
 
     const seeded = testResourceStock({
       cell_id,
       plastic: 200,
       mushroom: 250,
+      plasma: 0,
       last_plastic_gather: gather_at_time - 2 * 1000,
       last_mushroom_gather: gather_at_time - 2 * 1000
     })
@@ -192,6 +202,7 @@ describe('outpostGather', () => {
       cell_id,
       plastic: 100,
       mushroom: 200,
+      plasma: 0,
       last_plastic_gather: gather_at_time - time_elapsed * 1000,
       last_mushroom_gather: gather_at_time - time_elapsed * 1000
     })
@@ -217,6 +228,7 @@ describe('outpostGather', () => {
       cell_id,
       plastic: 100,
       mushroom: 200,
+      plasma: 0,
       last_plastic_gather: gather_at_time + 10 * 1000,
       last_mushroom_gather: gather_at_time + 10 * 1000
     })

@@ -37,6 +37,7 @@ describe('cityGather', () => {
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: 0,
       last_mushroom_gather: 0
     })
@@ -57,11 +58,13 @@ describe('cityGather', () => {
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit: mockEmit } as any)
     vi.spyOn(AppService, 'getCityEarningsBySecond').mockResolvedValue({
       plastic: 100,
-      mushroom: 100
+      mushroom: 100,
+      plasma: 0
     })
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 30000,
-      mushroom: 30000
+      mushroom: 30000,
+      plasma: 0
     })
   })
 
@@ -88,6 +91,7 @@ describe('cityGather', () => {
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at_time + 10 * 1000,
       last_mushroom_gather: gather_at_time + 10 * 1000
     })
@@ -112,17 +116,20 @@ describe('cityGather', () => {
 
     vi.spyOn(AppService, 'getCityEarningsBySecond').mockResolvedValue({
       plastic: plastic_earnings,
-      mushroom: mushroom_earnings
+      mushroom: mushroom_earnings,
+      plasma: 0
     })
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: plastic_warehouse_capacity,
-      mushroom: mushroom_warehouse_capacity
+      mushroom: mushroom_warehouse_capacity,
+      plasma: 0
     })
 
     const seeded = testResourceStock({
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at_time - time_elapsed * 1000,
       last_mushroom_gather: gather_at_time - time_elapsed * 1000
     })
@@ -148,13 +155,15 @@ describe('cityGather', () => {
 
     vi.spyOn(AppService, 'getCityEarningsBySecond').mockResolvedValue({
       plastic: plastic_earnings,
-      mushroom: mushroom_earnings
+      mushroom: mushroom_earnings,
+      plasma: 0
     })
 
     const seeded = testResourceStock({
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at_time - time_elapsed * 1000,
       last_mushroom_gather: gather_at_time - time_elapsed * 1000
     })
@@ -180,6 +189,7 @@ describe('cityGather', () => {
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at_time - time_elapsed * 1000,
       last_mushroom_gather: gather_at_time - time_elapsed * 1000
     })
@@ -205,6 +215,7 @@ describe('cityGather', () => {
       cell_id: city_cell.id,
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at_time + 10 * 1000,
       last_mushroom_gather: gather_at_time + 10 * 1000
     })

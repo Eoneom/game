@@ -3,13 +3,15 @@ import {
   STARTING_PLASTIC
 } from '#core/city/constant'
 import { CityError } from '#core/city/error'
-import { Resource } from '#shared/resource'
+import { Resource, WarehouseCapacity } from '#shared/resource'
 
 export type ResourceStockState = {
   plastic: number
   mushroom: number
+  plasma: number
   last_plastic_gather: number
   last_mushroom_gather: number
+  last_plasma_gather: number
 }
 
 export class ResourcesService {
@@ -40,8 +42,10 @@ export class ResourcesService {
         max: STARTING_MUSHROOM,
         random 
       }),
+      plasma: 0,
       last_plastic_gather: gather_at,
-      last_mushroom_gather: gather_at
+      last_mushroom_gather: gather_at,
+      last_plasma_gather: gather_at
     }
   }
 
@@ -51,8 +55,10 @@ export class ResourcesService {
     return {
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
+      plasma: 0,
       last_plastic_gather: gather_at,
-      last_mushroom_gather: gather_at
+      last_mushroom_gather: gather_at,
+      last_plasma_gather: gather_at
     }
   }
 
@@ -62,8 +68,10 @@ export class ResourcesService {
     return {
       plastic: 0,
       mushroom: 0,
+      plasma: 0,
       last_plastic_gather: gather_at,
-      last_mushroom_gather: gather_at
+      last_mushroom_gather: gather_at,
+      last_plasma_gather: gather_at
     }
   }
 
@@ -76,7 +84,7 @@ export class ResourcesService {
     state: ResourceStockState
     gather_at_time: number
     earnings_per_second: Resource
-    warehouses_capacity: Resource
+    warehouses_capacity: WarehouseCapacity
   }): {
     next: ResourceStockState
     updated: boolean
@@ -91,7 +99,12 @@ export class ResourcesService {
       last_gather_time: state.last_mushroom_gather,
       gather_at_time
     })
-    const updated = Boolean(plastic_earnings) || Boolean(mushroom_earnings)
+    const plasma_earnings = ResourcesService.getEarnings({
+      earnings_per_second: earnings_per_second.plasma,
+      last_gather_time: state.last_plasma_gather,
+      gather_at_time
+    })
+    const updated = Boolean(plastic_earnings) || Boolean(mushroom_earnings) || Boolean(plasma_earnings)
     let next = state
 
     if (plastic_earnings) {
@@ -120,6 +133,14 @@ export class ResourcesService {
       }
     }
 
+    if (plasma_earnings) {
+      next = {
+        ...next,
+        last_plasma_gather: gather_at_time,
+        plasma: next.plasma + plasma_earnings
+      }
+    }
+
     return {
       next,
       updated 
@@ -133,13 +154,18 @@ export class ResourcesService {
     state: ResourceStockState
     resource: Resource
   }): ResourceStockState {
-    if (state.plastic < resource.plastic || state.mushroom < resource.mushroom) {
+    if (
+      state.plastic < resource.plastic ||
+      state.mushroom < resource.mushroom ||
+      state.plasma < resource.plasma
+    ) {
       throw new Error(CityError.NOT_ENOUGH_RESOURCES)
     }
     return {
       ...state,
       plastic: state.plastic - resource.plastic,
-      mushroom: state.mushroom - resource.mushroom
+      mushroom: state.mushroom - resource.mushroom,
+      plasma: state.plasma - resource.plasma
     }
   }
 
@@ -153,7 +179,8 @@ export class ResourcesService {
     return {
       ...state,
       plastic: state.plastic + resource.plastic,
-      mushroom: state.mushroom + resource.mushroom
+      mushroom: state.mushroom + resource.mushroom,
+      plasma: state.plasma + resource.plasma
     }
   }
 
@@ -164,7 +191,7 @@ export class ResourcesService {
   }: {
     state: ResourceStockState
     resource: Resource
-    warehouses_capacity: Resource
+    warehouses_capacity: WarehouseCapacity
   }): {
     next: ResourceStockState
     deposited: Resource
@@ -178,20 +205,24 @@ export class ResourcesService {
       resource.mushroom,
       Math.max(0, warehouses_capacity.mushroom - state.mushroom)
     )
+    const plasma_deposited = resource.plasma
 
     return {
       next: {
         ...state,
         plastic: state.plastic + plastic_deposited,
-        mushroom: state.mushroom + mushroom_deposited
+        mushroom: state.mushroom + mushroom_deposited,
+        plasma: state.plasma + plasma_deposited
       },
       deposited: {
         plastic: plastic_deposited,
-        mushroom: mushroom_deposited
+        mushroom: mushroom_deposited,
+        plasma: plasma_deposited
       },
       remaining: {
         plastic: resource.plastic - plastic_deposited,
-        mushroom: resource.mushroom - mushroom_deposited
+        mushroom: resource.mushroom - mushroom_deposited,
+        plasma: 0
       }
     }
   }

@@ -32,7 +32,8 @@ describe('TroopMovementEstimateQuery', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1
+        mushroom: 1,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -42,7 +43,8 @@ describe('TroopMovementEstimateQuery', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1
+        mushroom: 1,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -131,7 +133,8 @@ describe('TroopMovementEstimateQuery', () => {
       player_id,
       resources: {
         plastic: 0,
-        mushroom: 0
+        mushroom: 0,
+        plasma: 0
       },
     })
 
@@ -149,7 +152,8 @@ describe('TroopMovementEstimateQuery', () => {
       player_id,
       resources: {
         plastic: 100,
-        mushroom: 0
+        mushroom: 0,
+        plasma: 0
       },
     })
 
@@ -162,12 +166,14 @@ describe('TroopMovementEstimateQuery', () => {
       cell_id: destination_cell_id,
       warehouses_capacity: {
         plastic: 1000,
-        mushroom: 1000
+        mushroom: 1000,
+        plasma: 0
       },
     })
     vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
       plastic: 400,
       mushroom: 200,
+      plasma: 0,
     } as never)
 
     const result = await new TroopMovementEstimateQuery().run({
@@ -177,7 +183,8 @@ describe('TroopMovementEstimateQuery', () => {
       player_id,
       resources: {
         plastic: 100,
-        mushroom: 50
+        mushroom: 50,
+        plasma: 0
       },
     })
 
@@ -190,12 +197,14 @@ describe('TroopMovementEstimateQuery', () => {
       cell_id: destination_cell_id,
       warehouses_capacity: {
         plastic: 1000,
-        mushroom: 1000
+        mushroom: 1000,
+        plasma: 0
       },
     })
     vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
       plastic: 950,
       mushroom: 0,
+      plasma: 0,
     } as never)
 
     const result = await new TroopMovementEstimateQuery().run({
@@ -205,7 +214,8 @@ describe('TroopMovementEstimateQuery', () => {
       player_id,
       resources: {
         plastic: 100,
-        mushroom: 0
+        mushroom: 0,
+        plasma: 0
       },
     })
 

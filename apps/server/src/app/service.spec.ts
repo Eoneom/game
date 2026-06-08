@@ -43,7 +43,8 @@ describe('AppService', () => {
     }
     const resource_coefficient = {
       plastic: 0.85,
-      mushroom: 1.1
+      mushroom: 1.1,
+      plasma: 0
     }
     const city_cell = CellEntity.create({
       id: id(),
@@ -203,7 +204,8 @@ describe('AppService', () => {
     }
     const resource_coefficient = {
       plastic: 0.85,
-      mushroom: 1.1
+      mushroom: 1.1,
+      plasma: 0
     }
     const cell = CellEntity.create({
       id: cell_id,
@@ -303,11 +305,13 @@ describe('AppService', () => {
       const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id })
       expect(breakdown.earnings_per_second).toEqual({
         plastic: 0,
-        mushroom: 0 
+        mushroom: 0 ,
+        plasma: 0
       })
       expect(breakdown.pre_cell_earnings_per_second).toEqual({
         plastic: 0,
-        mushroom: 0 
+        mushroom: 0 ,
+        plasma: 0
       })
       expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
     })
@@ -325,7 +329,8 @@ describe('AppService', () => {
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1 
+        mushroom: 1 ,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -559,7 +564,8 @@ describe('AppService', () => {
       type: CellType.RUINS,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 0.5 
+        mushroom: 0.5 ,
+        plasma: 0
       },
       solar_coefficient: 1
     }).assign({ city_id: id() })
@@ -569,7 +575,8 @@ describe('AppService', () => {
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
-        mushroom: 1 
+        mushroom: 1 ,
+        plasma: 0
       },
       solar_coefficient: 1
     })
@@ -627,7 +634,8 @@ describe('AppService', () => {
         type: CellType.LAKE,
         resource_coefficient: {
           plastic: 1,
-          mushroom: 1 
+          mushroom: 1 ,
+          plasma: 0
         },
         solar_coefficient: 1
       })))

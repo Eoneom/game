@@ -27,7 +27,7 @@ export interface CreateTroopMovementResult {
   deleted_outpost_id?: string
 }
 
-const EMPTY_RESOURCES: Resource = { plastic: 0, mushroom: 0 }
+const EMPTY_RESOURCES: Resource = { plastic: 0, mushroom: 0, plasma: 0 }
 
 export async function createTroopMovement({
   player_id,

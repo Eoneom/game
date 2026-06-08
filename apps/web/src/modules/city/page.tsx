@@ -4,10 +4,12 @@ import classNames from 'classnames'
 import {
   formatCoordinates,
   transformDecimals,
+  transformHourlyEarnings,
 } from '#helpers/transform'
 import { useGetCity } from '#city/hooks'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
+import { IconPlasma } from '#ui/icon/plasma'
 import { ProductionTerrainReadout } from '#ui/production-terrain-readout'
 import { EnergyReadout } from '#ui/energy-readout'
 
@@ -83,6 +85,12 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
               </span>
               <span className="font-mono text-amber">{transformDecimals(city.mushroom)}</span>
             </li>
+            <li className="flex justify-between gap-2">
+              <span className="flex items-center gap-1 text-amber-dim">
+                <IconPlasma /> Plasma
+              </span>
+              <span className="font-mono text-amber">{transformDecimals(city.plasma)}</span>
+            </li>
           </ul>
 
           <div className="space-y-2 border-t border-rust/50 pt-3">
@@ -140,6 +148,14 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
             base={city.pre_cell_earnings_per_second}
             terrain={city.cell_resource_coefficient}
           />
+          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-sm">
+            <span className="flex items-center gap-1 text-amber-dim">
+              <IconPlasma /> Plasma
+            </span>
+            <span className="font-mono text-amber">
+              {transformHourlyEarnings(city.earnings_per_second.plasma)}
+            </span>
+          </p>
           <div className="border-t border-rust/50 pt-3">
             <EnergyReadout
               consumption={city.energy_consumption}

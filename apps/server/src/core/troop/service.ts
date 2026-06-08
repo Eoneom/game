@@ -194,7 +194,7 @@ export class TroopService {
     destination,
     player_id,
     action,
-    resources = { plastic: 0, mushroom: 0 },
+    resources = { plastic: 0, mushroom: 0, plasma: 0 },
   }: {
     troops: TroopCount[]
     start_at: number
@@ -238,9 +238,9 @@ export class TroopService {
     resources: Resource
     move_troops: TroopCount[]
   }): void {
-    const total = resources.plastic + resources.mushroom
+    const total = resources.plastic + resources.mushroom + resources.plasma
     const has_resources = total > 0
-    const has_negative = resources.plastic < 0 || resources.mushroom < 0
+    const has_negative = resources.plastic < 0 || resources.mushroom < 0 || resources.plasma < 0
 
     if (has_negative) {
       throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)

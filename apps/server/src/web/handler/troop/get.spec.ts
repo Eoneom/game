@@ -21,7 +21,8 @@ const queryResult = {
   cost: {
     resource: {
       plastic: 50,
-      mushroom: 25
+      mushroom: 25,
+      plasma: 0
     },
     duration: 1800
   },

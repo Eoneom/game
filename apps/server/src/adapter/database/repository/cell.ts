@@ -98,7 +98,8 @@ export class PostgresCellRepository
       city_id: row.city_id ?? undefined,
       resource_coefficient: {
         plastic: row.plastic_coefficient,
-        mushroom: row.mushroom_coefficient
+        mushroom: row.mushroom_coefficient,
+        plasma: 1
       },
       solar_coefficient: row.solar_coefficient
     })
