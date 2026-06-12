@@ -9,45 +9,52 @@ import { NavLocation } from '#ui/nav/location'
 import { ActivityStrip } from '#ui/activity'
 import { FxLayer } from '#ui/fx'
 import { useAuth } from '#auth/context'
-import { useInitStoredToken } from '#auth/hooks'
+import { useClearInvalidSession, useInitStoredToken } from '#auth/hooks'
 import { useListCities } from '#city/hooks'
 
 const App: React.FC = () => {
   useInitStoredToken()
 
   const { token } = useAuth()
-  const { data: citiesData } = useListCities()
+  const { data: citiesData, error, isPending } = useListCities()
+  useClearInvalidSession(error)
+
+  let content: React.ReactNode
 
   if (!token) {
-    return <AuthLoginForm />
-  }
-
-  if (!citiesData?.cities.length) {
-    return (
+    content = <AuthLoginForm />
+  } else if (isPending || !citiesData?.cities.length) {
+    content = (
       <div className="flex min-h-screen items-center justify-center text-amber">
         Chargement du terminal…
+      </div>
+    )
+  } else {
+    content = (
+      <div className="app-shell relative flex h-full flex-col overflow-hidden animate-boot-sweep motion-reduce:animate-none">
+        <Header />
+        <ActivityStrip />
+        <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
+          <NavMenu />
+          <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden surface-inset scanlines p-3">
+            <Outlet />
+          </main>
+          <NavLocation />
+        </div>
+        <FxLayer />
       </div>
     )
   }
 
   return (
-    <div className="app-shell relative flex h-full flex-col overflow-hidden animate-boot-sweep motion-reduce:animate-none">
-      <Header />
-      <ActivityStrip />
-      <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
-        <NavMenu />
-        <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden surface-inset scanlines p-3">
-          <Outlet />
-        </main>
-        <NavLocation />
-      </div>
-      <FxLayer />
+    <>
+      {content}
       <ToastContainer
         position="bottom-right"
         autoClose={3000}
         theme="dark"
       />
-    </div>
+    </>
   )
 }
 

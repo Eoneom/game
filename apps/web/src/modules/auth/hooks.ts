@@ -98,3 +98,17 @@ export const useInitStoredToken = () => {
     wsClient.connect(token)
   }, [])
 }
+
+const AUTH_ERROR_CODES = new Set(['auth:not-found', 'token:not_found'])
+
+export const useClearInvalidSession = (error: Error | null) => {
+  const { clearToken } = useAuth()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!error || !AUTH_ERROR_CODES.has(error.message)) return
+    clearToken()
+    wsClient.disconnect()
+    queryClient.clear()
+  }, [error, clearToken, queryClient])
+}
