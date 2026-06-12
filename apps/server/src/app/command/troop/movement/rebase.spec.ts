@@ -34,15 +34,10 @@ describe('rebaseTroopMovement', () => {
       player_id,
       origin: {
         x: 1,
-        y: 2,
-        sector: 3,
-      },
+        y: 2 },
       destination: {
         x: 4,
-        y: 5,
-        sector: 6,
-      },
-    })
+        y: 5 } })
     initial_movement_troops = [
       TroopEntity.create({
         id: id(),
@@ -51,8 +46,7 @@ describe('rebaseTroopMovement', () => {
         player_id,
         cell_id: null,
         movement_id: initial_base_movement.id
-      }),
-    ]
+      }) ]
 
     movementDelete = vi.fn().mockResolvedValue(undefined)
     movementCreate = vi.fn().mockResolvedValue(undefined)
@@ -63,15 +57,12 @@ describe('rebaseTroopMovement', () => {
     repository = {
       troop: {
         listByMovement: vi.fn().mockResolvedValue(initial_movement_troops),
-        updateOne: troopUpdateOne,
-      } as unknown as Repository['troop'],
+        updateOne: troopUpdateOne } as unknown as Repository['troop'],
       movement: {
         getById: vi.fn().mockResolvedValue(initial_base_movement),
         delete: movementDelete,
-        create: movementCreate,
-      } as unknown as Repository['movement'],
-      report: { create: reportCreate } as unknown as Repository['report'],
-    }
+        create: movementCreate } as unknown as Repository['movement'],
+      report: { create: reportCreate } as unknown as Repository['report'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
@@ -84,15 +75,13 @@ describe('rebaseTroopMovement', () => {
   it('should prevent player from rebasing another player troops', async () => {
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...initial_base_movement,
-      player_id: other_player_id,
-    }))
+      player_id: other_player_id }))
 
     await assert.rejects(
       () => rebaseTroopMovement({
         player_id,
         movement_id: initial_base_movement.id,
-        arrived_at,
-      }),
+        arrived_at }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
@@ -101,8 +90,7 @@ describe('rebaseTroopMovement', () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(movementDelete.mock.calls[0][0], initial_base_movement.id)
   })
@@ -111,8 +99,7 @@ describe('rebaseTroopMovement', () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
-      arrived_at,
-    })
+      arrived_at })
 
     const movement_to_create = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(movement_to_create.origin, initial_base_movement.destination)
@@ -138,8 +125,7 @@ describe('rebaseTroopMovement', () => {
     await rebaseTroopMovement({
       player_id,
       movement_id: initial_base_movement.id,
-      arrived_at,
-    })
+      arrived_at })
 
     const report = reportCreate.mock.calls[0][0]
     assert.strictEqual(report.type, ReportType.REBASE)

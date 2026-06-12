@@ -2,11 +2,14 @@ import { GenericResponse } from '../../response'
 
 import { CellType } from '@server-core/world/value/cell-type'
 
-export interface WorldGetSectorRequest {
-  sector: number
+export interface WorldGetCellsRequest {
+  min_x: number
+  max_x: number
+  min_y: number
+  max_y: number
 }
 
-export interface WorldGetSectorDataResponse {
+export interface WorldGetCellsDataResponse {
   cells: {
     coordinates: {
       x: number
@@ -23,4 +26,4 @@ export interface WorldGetSectorDataResponse {
   }[]
 }
 
-export type WorldGetSectorResponse = GenericResponse<WorldGetSectorDataResponse>
+export type WorldGetCellsResponse = GenericResponse<WorldGetCellsDataResponse>

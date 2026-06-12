@@ -72,7 +72,6 @@ describe('citySettle', () => {
     cell = CellEntity.create({
       id: cell_id,
       coordinates: {
-        sector: 1,
         x: 2,
         y: 3
       },
@@ -95,7 +94,6 @@ describe('citySettle', () => {
         ...default_cell_params,
         id: cell_id_1,
         coordinates: {
-          sector: 1,
           x: 1,
           y: 3
         }
@@ -104,7 +102,6 @@ describe('citySettle', () => {
         ...default_cell_params,
         id: cell_id_2,
         coordinates: {
-          sector: 1,
           x: 3,
           y: 3
         }
@@ -113,7 +110,6 @@ describe('citySettle', () => {
         ...default_cell_params,
         id: cell_id_3,
         coordinates: {
-          sector: 1,
           x: 2,
           y: 2
         }
@@ -122,7 +118,6 @@ describe('citySettle', () => {
         ...default_cell_params,
         id: cell_id_4,
         coordinates: {
-          sector: 1,
           x: 2,
           y: 4
         }

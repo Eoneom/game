@@ -20,14 +20,10 @@ describe('CommunicationGetReportQuery', () => {
       player_id,
       destination: {
         x: 1,
-        y: 1,
-        sector: 1 
-      },
+        y: 1 },
       origin: {
         x: 0,
-        y: 0,
-        sector: 1 
-      },
+        y: 0 },
       troops: [],
       type: ReportType.EXPLORATION,
       recorded_at: 0,

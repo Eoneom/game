@@ -53,7 +53,6 @@ export class PostgresCellRepository
       .selectAll()
       .where('x', '=', coordinates.x)
       .where('y', '=', coordinates.y)
-      .where('sector', '=', coordinates.sector)
       .executeTakeFirst()
 
     if (!row) {
@@ -72,16 +71,25 @@ export class PostgresCellRepository
     return Boolean(row)
   }
 
-  async getSector({ sector }: { sector: number }): Promise<CellEntity[]> {
+  async getByBounds({
+    min_x,
+    max_x,
+    min_y,
+    max_y
+  }: {
+    min_x: number
+    max_x: number
+    min_y: number
+    max_y: number
+  }): Promise<CellEntity[]> {
     const rows = await this.db
       .selectFrom('cell')
       .selectAll()
-      .where('sector', '=', sector)
+      .where('x', '>=', min_x)
+      .where('x', '<=', max_x)
+      .where('y', '>=', min_y)
+      .where('y', '<=', max_y)
       .execute()
-
-    if (!rows.length) {
-      throw new Error(WorldError.SECTOR_NOT_FOUND)
-    }
 
     return rows.map(row => this.buildFromRow(row))
   }
@@ -91,8 +99,7 @@ export class PostgresCellRepository
       id: row.id,
       coordinates: {
         x: row.x,
-        y: row.y,
-        sector: row.sector
+        y: row.y
       },
       type: row.type as CellType,
       city_id: row.city_id ?? undefined,
@@ -110,7 +117,6 @@ export class PostgresCellRepository
       id: entity.id,
       x: entity.coordinates.x,
       y: entity.coordinates.y,
-      sector: entity.coordinates.sector,
       type: entity.type,
       plastic_coefficient: entity.resource_coefficient.plastic,
       mushroom_coefficient: entity.resource_coefficient.mushroom,

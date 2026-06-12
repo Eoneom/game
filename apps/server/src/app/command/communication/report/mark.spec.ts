@@ -14,14 +14,10 @@ describe('markCommunicationReport', () => {
   const other_player_id = id()
   const origin = {
     x: 1,
-    y: 2,
-    sector: 3
-  }
+    y: 2 }
   const destination = {
     x: 4,
-    y: 5,
-    sector: 6
-  }
+    y: 5 }
   const resource_coefficient = {
     plastic: 1,
     mushroom: 2,

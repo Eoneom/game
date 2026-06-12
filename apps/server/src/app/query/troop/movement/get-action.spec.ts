@@ -18,15 +18,10 @@ describe('TroopMovementGetActionQuery', () => {
       action: MovementAction.BASE,
       origin: {
         x: 0,
-        y: 0,
-        sector: 1 
-      },
+        y: 0 },
       destination: {
         x: 2,
-        y: 0,
-        sector: 1 
-      },
-    })
+        y: 0 } })
     repository = { movement: { getById: vi.fn().mockResolvedValue(movement) } as unknown as Repository['movement'] }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   })

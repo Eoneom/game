@@ -1,28 +1,33 @@
 import { useState } from 'react'
+import { Coordinates } from '@eoneom/api-client'
 
-import { Sector } from '#types'
-import { getSector } from '#map/api/sector'
+import { WorldViewport } from '#types'
+import { getCells } from '#map/api/cells'
 import { useAuth } from '#auth/context'
-
-interface FetchParams {
-  sectorId: number
-}
+import { viewportBoundsAround } from '#map/viewport'
 
 export const useWorld = () => {
-  const [sector, setSector] = useState<Sector | null>(null)
+  const [viewport, setViewport] = useState<WorldViewport | null>(null)
   const { token } = useAuth()
 
-  const fetch = async ({ sectorId }: FetchParams) => {
+  const fetch = async ({ center }: { center: Coordinates }) => {
     if (!token) return
 
-    const fetched_sector = await getSector({ token, sectorId })
-    if (!fetched_sector) return
+    const bounds = viewportBoundsAround(center)
+    const fetched = await getCells({
+      token,
+      bounds 
+    })
+    if (!fetched) return
 
-    setSector({
-      id: sectorId,
-      cells: fetched_sector.cells
+    setViewport({
+      bounds,
+      cells: fetched.cells
     })
   }
 
-  return { sector, fetch }
+  return {
+    viewport,
+    fetch 
+  }
 }

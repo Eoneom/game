@@ -20,14 +20,10 @@ describe('createTroopMovement', () => {
   const cell_id = id()
   const origin = {
     x: 1,
-    y: 2,
-    sector: 3
-  }
+    y: 2 }
   const destination = {
     x: 4,
-    y: 5,
-    sector: 6
-  }
+    y: 5 }
 
   let origin_troop: TroopEntity
   let cell: CellEntity
@@ -60,8 +56,7 @@ describe('createTroopMovement', () => {
         mushroom: 0.1,
         plasma: 0
       },
-      solar_coefficient: 1,
-    })
+      solar_coefficient: 1 })
 
     troopCreate = vi.fn().mockResolvedValue(undefined)
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
@@ -78,14 +73,11 @@ describe('createTroopMovement', () => {
         listInCell,
         create: troopCreate,
         updateOne: troopUpdateOne,
-        delete: troopDelete,
-      } as unknown as Repository['troop'],
+        delete: troopDelete } as unknown as Repository['troop'],
       outpost: {
         searchByCell,
-        delete: outpostDelete,
-      } as unknown as Repository['outpost'],
-      movement: { create: movementCreate } as unknown as Repository['movement'],
-    }
+        delete: outpostDelete } as unknown as Repository['outpost'],
+      movement: { create: movementCreate } as unknown as Repository['movement'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
@@ -102,21 +94,17 @@ describe('createTroopMovement', () => {
       origin,
       destination,
       action: MovementAction.EXPLORE,
-      move_troops,
-    })
+      move_troops })
   }
 
   it('should reject when origin does not have enough troops', async () => {
     listInCell = vi.fn().mockResolvedValue([
       TroopEntity.create({
         ...origin_troop,
-        count: 3,
-      }),
-    ])
+        count: 3 }) ])
     repository.troop = {
       ...repository.troop,
-      listInCell,
-    } as unknown as Repository['troop']
+      listInCell } as unknown as Repository['troop']
 
     await assert.rejects(
       () => callCreate([
@@ -177,13 +165,11 @@ describe('createTroopMovement', () => {
       id: outpost_id,
       player_id,
       cell_id,
-      type: OutpostType.TEMPORARY,
-    })
+      type: OutpostType.TEMPORARY })
     searchByCell = vi.fn().mockResolvedValue(temporary_outpost)
     repository.outpost = {
       searchByCell,
-      delete: outpostDelete,
-    } as unknown as Repository['outpost']
+      delete: outpostDelete } as unknown as Repository['outpost']
 
     const result = await callCreate([
       {
@@ -207,13 +193,11 @@ describe('createTroopMovement', () => {
       id: outpost_id,
       player_id,
       cell_id,
-      type: OutpostType.TEMPORARY,
-    })
+      type: OutpostType.TEMPORARY })
     searchByCell = vi.fn().mockResolvedValue(temporary_outpost)
     repository.outpost = {
       searchByCell,
-      delete: outpostDelete,
-    } as unknown as Repository['outpost']
+      delete: outpostDelete } as unknown as Repository['outpost']
 
     await callCreate([
       {
@@ -249,13 +233,11 @@ describe('createTroopMovement', () => {
       id: id(),
       player_id,
       cell_id,
-      type: OutpostType.TEMPORARY,
-    })
+      type: OutpostType.TEMPORARY })
     searchByCell = vi.fn().mockResolvedValue(temporary_outpost)
     repository.outpost = {
       searchByCell,
-      delete: outpostDelete,
-    } as unknown as Repository['outpost']
+      delete: outpostDelete } as unknown as Repository['outpost']
 
     await callCreate([
       {
@@ -274,13 +256,11 @@ describe('createTroopMovement', () => {
       id: id(),
       player_id,
       cell_id,
-      type: OutpostType.PERMANENT,
-    })
+      type: OutpostType.PERMANENT })
     searchByCell = vi.fn().mockResolvedValue(permanent_outpost)
     repository.outpost = {
       searchByCell,
-      delete: outpostDelete,
-    } as unknown as Repository['outpost']
+      delete: outpostDelete } as unknown as Repository['outpost']
 
     const result = await callCreate([
       {
@@ -310,16 +290,13 @@ describe('createTroopMovement', () => {
         plasma: 10,
         last_plastic_gather: now(),
         last_mushroom_gather: now(),
-        last_plasma_gather: now(),
-      })
+        last_plasma_gather: now() })
       stockUpdateOne = vi.fn().mockResolvedValue(undefined)
       repository = {
         ...repository,
         resource_stock: {
           getByCellId: vi.fn().mockResolvedValue(stock),
-          updateOne: stockUpdateOne,
-        },
-      } as unknown as typeof repository
+          updateOne: stockUpdateOne } } as unknown as typeof repository
       vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     })
 
@@ -340,8 +317,7 @@ describe('createTroopMovement', () => {
             plastic: 0,
             mushroom: 0,
             plasma: 0
-          },
-        }),
+          } }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_REQUIRED)
       )
     })
@@ -363,8 +339,7 @@ describe('createTroopMovement', () => {
             plastic: 201,
             mushroom: 0,
             plasma: 0
-          },
-        }),
+          } }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
     })
@@ -386,8 +361,7 @@ describe('createTroopMovement', () => {
             plastic: 0,
             mushroom: 0,
             plasma: 3
-          },
-        }),
+          } }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
     })
@@ -408,8 +382,7 @@ describe('createTroopMovement', () => {
           plastic: 0,
           mushroom: 0,
           plasma: 2
-        },
-      })
+        } })
 
       assert.strictEqual(movementCreate.mock.calls.length, 1)
       const movement = movementCreate.mock.calls[0][0]
@@ -440,8 +413,7 @@ describe('createTroopMovement', () => {
             plastic: 10,
             mushroom: 0,
             plasma: 0
-          },
-        }),
+          } }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
       )
     })
@@ -450,13 +422,11 @@ describe('createTroopMovement', () => {
       origin_troop = TroopEntity.create({
         ...origin_troop,
         code: TroopCode.LIGHT_TRANSPORTER,
-        count: 1,
-      })
+        count: 1 })
       listInCell = vi.fn().mockResolvedValue([ origin_troop ])
       repository.troop = {
         ...repository.troop,
-        listInCell,
-      } as unknown as Repository['troop']
+        listInCell } as unknown as Repository['troop']
 
       await createTroopMovement({
         player_id,
@@ -473,8 +443,7 @@ describe('createTroopMovement', () => {
           plastic: 1000,
           mushroom: 500,
           plasma: 0
-        },
-      })
+        } })
 
       assert.strictEqual(movementCreate.mock.calls.length, 1)
       const movement = movementCreate.mock.calls[0][0]
@@ -501,27 +470,22 @@ describe('createTroopMovement', () => {
         mushroom: 10,
         plasma: 0,
         last_plastic_gather: now(),
-        last_mushroom_gather: now(),
-      })
+        last_mushroom_gather: now() })
       repository = {
         ...repository,
         resource_stock: {
           getByCellId: vi.fn().mockResolvedValue(stock),
-          updateOne: stockUpdateOne,
-        },
-      } as unknown as typeof repository
+          updateOne: stockUpdateOne } } as unknown as typeof repository
       vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
 
       origin_troop = TroopEntity.create({
         ...origin_troop,
         code: TroopCode.LIGHT_TRANSPORTER,
-        count: 1,
-      })
+        count: 1 })
       listInCell = vi.fn().mockResolvedValue([ origin_troop ])
       repository.troop = {
         ...repository.troop,
-        listInCell,
-      } as unknown as Repository['troop']
+        listInCell } as unknown as Repository['troop']
 
       await assert.rejects(
         () => createTroopMovement({
@@ -539,8 +503,7 @@ describe('createTroopMovement', () => {
             plastic: 100,
             mushroom: 0,
             plasma: 0
-          },
-        }),
+          } }),
         new RegExp(CityError.NOT_ENOUGH_RESOURCES)
       )
     })

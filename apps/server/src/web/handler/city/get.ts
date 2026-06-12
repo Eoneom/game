@@ -63,8 +63,7 @@ const response_mapper = ({
   cell_solar_coefficient,
   photovoltaic_optimization_level,
   energy_consumption,
-  production_energy_ratio,
-}: CityGetQueryResponse): CityGetDataResponse => {
+  production_energy_ratio }: CityGetQueryResponse): CityGetDataResponse => {
   return {
     id: city.id,
     name: city.name,
@@ -108,8 +107,7 @@ const response_mapper = ({
     },
     coordinates: {
       x: cell.coordinates.x,
-      y: cell.coordinates.y,
-      sector: cell.coordinates.sector
+      y: cell.coordinates.y
     }
   }
 }

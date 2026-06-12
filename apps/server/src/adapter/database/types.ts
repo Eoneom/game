@@ -3,7 +3,7 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from 'kysely'
+import type { ColumnType } from "kysely";
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
@@ -37,7 +37,6 @@ export interface Cell {
   id: Generated<string>;
   mushroom_coefficient: number;
   plastic_coefficient: number;
-  sector: number;
   solar_coefficient: number;
   type: string;
   x: number;
@@ -62,16 +61,14 @@ export interface ExplorationCell {
 
 export interface Movement {
   action: string;
-  destination_sector: number;
   destination_x: number;
   destination_y: number;
   id: Generated<string>;
-  mushroom: number;
-  origin_sector: number;
+  mushroom: Generated<number>;
   origin_x: number;
   origin_y: number;
-  plastic: number;
-  plasma: number;
+  plasma: Generated<number>;
+  plastic: Generated<number>;
   player_id: string;
 }
 
@@ -88,21 +85,19 @@ export interface Player {
 }
 
 export interface Report {
-  destination_sector: number;
   destination_x: number;
   destination_y: number;
   id: Generated<string>;
   mushroom: Generated<number>;
-  origin_sector: number;
   origin_x: number;
   origin_y: number;
-  plastic: Generated<number>;
   plasma: Generated<number>;
+  plastic: Generated<number>;
   player_id: string;
   recorded_at: Timestamp;
   remaining_mushroom: Generated<number>;
-  remaining_plastic: Generated<number>;
   remaining_plasma: Generated<number>;
+  remaining_plastic: Generated<number>;
   type: string;
   was_read: Generated<boolean>;
 }
@@ -118,11 +113,11 @@ export interface ResourceStock {
   cell_id: string;
   id: Generated<string>;
   last_mushroom_gather: Timestamp;
+  last_plasma_gather: Generated<Timestamp>;
   last_plastic_gather: Timestamp;
-  last_plasma_gather: Timestamp;
   mushroom: number;
+  plasma: Generated<number>;
   plastic: number;
-  plasma: number;
 }
 
 export interface Technology {

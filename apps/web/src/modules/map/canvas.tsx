@@ -1,17 +1,18 @@
 import { MapCells } from '#map/cells'
-import { gridDimensionFromSector, mapViewScaleAndPosition } from '#map/geometry'
+import { mapViewScaleAndPosition } from '#map/geometry'
 import { MapLegendOverlay } from '#map/legend-overlay'
 import { MapMarkers } from '#map/markers'
-import { Sector } from '#types'
+import { WorldViewport } from '#types'
+import { Coordinates } from '@eoneom/api-client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Group, Layer, Stage } from 'react-konva'
 
 export interface MapCanvasProps {
-  sector: Sector
+  viewport: WorldViewport
   onCellClicked: (params: { x: number; y: number }) => void
   selectedCoordinates?: { x: number; y: number } | null
-  cityMarker?: { sector: number; x: number; y: number } | null
-  outpostMarker?: { sector: number; x: number; y: number } | null
+  cityMarker?: Coordinates | null
+  outpostMarker?: Coordinates | null
 }
 
 type HoverTooltip = {
@@ -22,7 +23,7 @@ type HoverTooltip = {
 }
 
 export const MapCanvas: React.FC<MapCanvasProps> = ({
-  sector,
+  viewport,
   onCellClicked,
   selectedCoordinates,
   cityMarker,
@@ -30,14 +31,19 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 }) => {
   const wrapRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ width: 800, height: 450 })
+  const [size, setSize] = useState({
+    width: 800,
+    height: 450 
+  })
   const [hoverTooltip, setHoverTooltip] = useState<HoverTooltip | null>(null)
 
-  const gridDim = useMemo(() => gridDimensionFromSector(sector), [sector])
-
   const { scale, position } = useMemo(
-    () => mapViewScaleAndPosition(size.width, size.height, gridDim),
-    [gridDim, size.height, size.width],
+    () => mapViewScaleAndPosition(size.width, size.height, viewport.bounds),
+    [
+      size.height,
+      size.width,
+      viewport.bounds
+    ],
   )
 
   useEffect(() => {
@@ -54,7 +60,10 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
       const { width, height } = entry.contentRect
       const nextW = Math.max(0, Math.floor(width))
       const nextH = Math.max(0, Math.floor(height))
-      setSize(s => (s.width === nextW && s.height === nextH ? s : { width: nextW, height: nextH }))
+      setSize(s => (s.width === nextW && s.height === nextH ? s : {
+        width: nextW,
+        height: nextH 
+      }))
     })
 
     ro.observe(el)
@@ -80,19 +89,25 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const hoverForCells =
     hoverTooltip == null
       ? null
-      : { cx: hoverTooltip.cx, cy: hoverTooltip.cy }
+      : {
+        cx: hoverTooltip.cx,
+        cy: hoverTooltip.cy 
+      }
 
   return (
     <div className="map-root">
       <div className="map-toolbar">
-        <h2>Secteur {sector.id}</h2>
+        <h2>Carte</h2>
         <p className="map-hint">Cliquez une case pour les détails.</p>
       </div>
       <div className="map-stage-wrap" ref={wrapRef}>
         {hoverTooltip && (
           <div
             className="map-cell-tooltip"
-            style={{ left: hoverTooltip.px, top: hoverTooltip.py }}
+            style={{
+              left: hoverTooltip.px,
+              top: hoverTooltip.py 
+            }}
           >
             ({hoverTooltip.cx}, {hoverTooltip.cy})
           </div>
@@ -111,16 +126,14 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 scaleY={scale}
               >
                 <MapCells
-                  sector={sector}
-                  gridDim={gridDim}
+                  viewport={viewport}
                   hoverTooltip={hoverForCells}
                   selectedCoordinates={selectedCoordinates}
                   onCellClicked={onCellClicked}
                   onHoverCell={updateHoverTooltip}
                 />
                 <MapMarkers
-                  sectorId={sector.id}
-                  gridDim={gridDim}
+                  bounds={viewport.bounds}
                   cityMarker={cityMarker}
                   outpostMarker={outpostMarker}
                 />

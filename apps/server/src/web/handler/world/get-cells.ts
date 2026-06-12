@@ -2,25 +2,36 @@ import {
   NextFunction, Request, Response
 } from 'express'
 import {
-  WorldGetSectorDataResponse,
-  WorldGetSectorRequest,
-  WorldGetSectorResponse
-} from '@eoneom/api-client/src/endpoints/world/get-sector'
+  WorldGetCellsDataResponse,
+  WorldGetCellsResponse
+} from '@eoneom/api-client/src/endpoints/world/get-cells'
 import {
-  WorldGetSectorQuery, WorldGetSectorQueryResponse
-} from '#query/world/get-sector'
+  WorldGetCellsQuery, WorldGetCellsQueryResponse
+} from '#query/world/get-cells'
 import { getPlayerIdFromContext } from '#web/helpers'
 
-export const worldGetSectorHandler = async (
-  req: Request<WorldGetSectorRequest>,
-  res: Response<WorldGetSectorResponse>,
+const parseBound = (value: unknown): number | null => {
+  if (typeof value !== 'string' && typeof value !== 'number') {
+    return null
+  }
+  const parsed = Number.parseInt(`${value}`, 10)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+export const worldGetCellsHandler = async (
+  req: Request,
+  res: Response<WorldGetCellsResponse>,
   next: NextFunction
 ) => {
-  const sector = req.params.sector
-  if (!sector) {
+  const min_x = parseBound(req.query.min_x)
+  const max_x = parseBound(req.query.max_x)
+  const min_y = parseBound(req.query.min_y)
+  const max_y = parseBound(req.query.max_y)
+
+  if (min_x === null || max_x === null || min_y === null || max_y === null) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'sector:not-found'
+      error_code: 'world:invalid-bounds'
     })
   }
 
@@ -29,9 +40,12 @@ export const worldGetSectorHandler = async (
     const {
       cells,
       explored_cell_ids
-    } = await new WorldGetSectorQuery().run({
+    } = await new WorldGetCellsQuery().run({
       player_id,
-      sector: Number.parseInt(`${sector}`)
+      min_x,
+      max_x,
+      min_y,
+      max_y
     })
 
     const response = response_mapper({
@@ -51,8 +65,7 @@ export const worldGetSectorHandler = async (
 const response_mapper = ({
   cells,
   explored_cell_ids
-}: WorldGetSectorQueryResponse): WorldGetSectorDataResponse => {
-
+}: WorldGetCellsQueryResponse): WorldGetCellsDataResponse => {
   return {
     cells: cells.map(cell => cell_mapper({
       cell,
@@ -65,11 +78,11 @@ const cell_mapper = ({
   cell,
   explored_cell_ids
 }: {
-  cell: WorldGetSectorQueryResponse['cells'][number],
+  cell: WorldGetCellsQueryResponse['cells'][number],
   explored_cell_ids: string[]
-}): WorldGetSectorDataResponse['cells'][number] => {
+}): WorldGetCellsDataResponse['cells'][number] => {
   const is_explored = explored_cell_ids.some((explored_cell_id) => explored_cell_id === cell.id)
-  const characteristic: WorldGetSectorDataResponse['cells'][number]['characteristic'] = is_explored ? {
+  const characteristic: WorldGetCellsDataResponse['cells'][number]['characteristic'] = is_explored ? {
     type: cell.type,
     resource_coefficient: {
       plastic: cell.resource_coefficient.plastic,

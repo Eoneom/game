@@ -32,8 +32,7 @@ vi.mock('@tanstack/react-router', () => ({
     >
       {children}
     </a>
-  ),
-}))
+  ) }))
 
 const minimalCity = (overrides: Partial<City> = {}): City => ({
   id: 'city-1',
@@ -43,7 +42,7 @@ const minimalCity = (overrides: Partial<City> = {}): City => ({
   plasma: 0,
   maximum_building_levels: 5,
   building_levels_used: 1,
-  coordinates: { sector: 1, x: 2, y: 3 },
+  coordinates: { x: 2, y: 3 },
   earnings_per_second: { plastic: 0.1, mushroom: 0.2 , plasma: 0},
   pre_cell_earnings_per_second: { plastic: 0.1, mushroom: 0.2 , plasma: 0},
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
@@ -57,12 +56,11 @@ const minimalCity = (overrides: Partial<City> = {}): City => ({
   photovoltaic_optimization_level: 0,
   energy_consumption: 0,
   production_energy_ratio: 1,
-  ...overrides,
-})
+  ...overrides })
 
 const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   id: 'out-1',
-  coordinates: { sector: 5, x: 6, y: 7 },
+  coordinates: { x: 6, y: 7 },
   type: OutpostType.TEMPORARY,
   plastic: 0,
   mushroom: 0,
@@ -72,8 +70,7 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
   warehouses_capacity: { plastic: 2000, mushroom: 1500 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
-  ...overrides,
-})
+  ...overrides })
 
 interface Props {
   cityId?: string
@@ -98,8 +95,7 @@ interface RenderOptions {
 
 function renderHeader({ city, outpost, cityId, outpostId }: RenderOptions = {}) {
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
+    defaultOptions: { queries: { retry: false } } })
 
   if (city && cityId) {
     queryClient.setQueryData(cityKeys.detail(cityId), city)
@@ -124,7 +120,7 @@ function renderHeader({ city, outpost, cityId, outpostId }: RenderOptions = {}) 
 describe('Header', () => {
   it('renders brand heading', () => {
     renderHeader()
-    expect(screen.getByRole('heading', { level: 3, name: 'Eoneom' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'EONEOM' })).toBeInTheDocument()
   })
 
   it('shows city name and city link when city is set', async () => {
@@ -132,14 +128,14 @@ describe('Header', () => {
     renderHeader({ city, cityId: 'c-99' })
     await act(async () => {})
     const link = screen.getByRole('link', { name: 'Metro' })
-    expect(link).toHaveAttribute('href', '/city/c-99')
+    expect(link).toHaveAttribute('href', '/city/c-99/base/')
   })
 
   it('shows formatted coordinates and outpost link when only outpost is set', async () => {
-    const outpost = minimalOutpost({ id: 'o-42', coordinates: { sector: 3, x: 1, y: 9 } })
+    const outpost = minimalOutpost({ id: 'o-42', coordinates: { x: 1, y: 9 } })
     renderHeader({ outpost, outpostId: 'o-42' })
     await act(async () => {})
-    const link = screen.getByRole('link', { name: '3.1.9' })
+    const link = screen.getByRole('link', { name: '1.9' })
     expect(link).toHaveAttribute('href', '/outpost/o-42')
   })
 
@@ -147,7 +143,7 @@ describe('Header', () => {
     const city = minimalCity({ id: 'c-1', name: 'OnlyCity' })
     renderHeader({ city, cityId: 'c-1' })
     await act(async () => {})
-    expect(screen.getByRole('link', { name: 'OnlyCity' })).toHaveAttribute('href', '/city/c-1')
+    expect(screen.getByRole('link', { name: 'OnlyCity' })).toHaveAttribute('href', '/city/c-1/base/')
   })
 
   it('when neither city nor outpost, no title link is rendered', async () => {
@@ -160,14 +156,14 @@ describe('Header', () => {
     const city = minimalCity()
     renderHeader({ city, cityId: city.id })
     await act(async () => {})
-    expect(screen.getAllByRole('progressbar')).toHaveLength(2)
+    expect(screen.getAllByRole('progressbar')).toHaveLength(3)
   })
 
-  it('with outpost, shows two resource items with progress bars', async () => {
+  it('with outpost, shows resource items with progress bars', async () => {
     const outpost = minimalOutpost({ plastic: 100, mushroom: 200 })
     renderHeader({ outpost, outpostId: outpost.id })
     await act(async () => {})
-    expect(screen.getAllByRole('listitem')).toHaveLength(2)
+    expect(screen.getAllByRole('listitem')).toHaveLength(3)
     expect(screen.getAllByRole('progressbar')).toHaveLength(2)
   })
 })

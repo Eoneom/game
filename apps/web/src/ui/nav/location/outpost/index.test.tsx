@@ -26,25 +26,21 @@ vi.mock('@tanstack/react-router', () => ({
       {children}
     </a>
   ),
-  useLocation: () => ({ pathname: '/' }),
-}))
+  useLocation: () => ({ pathname: '/' }) }))
 
 const outposts = [
   {
     id: 'o1',
-    coordinates: { x: 1, y: 2, sector: 0 },
+    coordinates: { x: 1, y: 2 },
     type: OutpostType.PERMANENT,
     plastic: 0,
-    mushroom: 0,
-  },
+    mushroom: 0 },
   {
     id: 'o2',
-    coordinates: { x: 3, y: 4, sector: 0 },
+    coordinates: { x: 3, y: 4 },
     type: OutpostType.TEMPORARY,
     plastic: 0,
-    mushroom: 0,
-  },
-]
+    mushroom: 0 } ]
 
 describe('NavLocationOutposts', () => {
   it('renders Avant-postes heading with current count and limit', () => {

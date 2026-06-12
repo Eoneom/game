@@ -1,5 +1,5 @@
 import { Fetcher } from '../../fetcher'
-import { WorldGetSectorResponse } from './get-sector'
+import { WorldGetCellsRequest, WorldGetCellsResponse } from './get-cells'
 
 export class WorldEndpoint {
   private fetcher: Fetcher
@@ -8,7 +8,13 @@ export class WorldEndpoint {
     this.fetcher = fetcher
   }
 
-  public async getSector(token: string, body: { sector: number}): Promise<WorldGetSectorResponse> {
-    return this.fetcher.get(`/sector/${body.sector}`, { token })
+  public async getCells(token: string, bounds: WorldGetCellsRequest): Promise<WorldGetCellsResponse> {
+    const params = new URLSearchParams({
+      min_x: String(bounds.min_x),
+      max_x: String(bounds.max_x),
+      min_y: String(bounds.min_y),
+      max_y: String(bounds.max_y)
+    })
+    return this.fetcher.get(`/world/cells?${params.toString()}`, { token })
   }
 }

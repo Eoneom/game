@@ -1,9 +1,9 @@
 import type { MockInstance } from 'vitest'
 import {
-  Request, Response, NextFunction 
+  Request, Response, NextFunction
 } from 'express'
-import { worldGetSectorHandler } from './get-sector'
-import { WorldGetSectorQuery } from '#query/world/get-sector'
+import { worldGetCellsHandler } from './get-cells'
+import { WorldGetCellsQuery } from '#query/world/get-cells'
 
 type MockRes = {
   status: MockInstance
@@ -18,12 +18,12 @@ const queryResult = {
       id: 'cell1',
       coordinates: {
         x: 2,
-        y: 3 
+        y: 3
       },
       type: 'PLAIN',
       resource_coefficient: {
         plastic: 1.2,
-        mushroom: 0.8 ,
+        mushroom: 0.8,
         plasma: 0
       },
       solar_coefficient: 1.4
@@ -32,12 +32,12 @@ const queryResult = {
       id: 'cell2',
       coordinates: {
         x: 2,
-        y: 4 
+        y: 4
       },
       type: 'FOREST',
       resource_coefficient: {
         plastic: 0.5,
-        mushroom: 1.5 ,
+        mushroom: 1.5,
         plasma: 0
       },
       solar_coefficient: 1.1
@@ -46,13 +46,20 @@ const queryResult = {
   explored_cell_ids: [ 'cell1' ]
 }
 
-describe('worldGetSectorHandler', () => {
+describe('worldGetCellsHandler', () => {
   let req: Partial<Request>
   let res: MockRes
   let next: MockInstance
 
   beforeEach(() => {
-    req = { params: { sector: '1' } }
+    req = {
+      query: {
+        min_x: '1',
+        max_x: '5',
+        min_y: '1',
+        max_y: '5'
+      }
+    }
     res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
@@ -60,32 +67,36 @@ describe('worldGetSectorHandler', () => {
       locals: { player_id: 'p1' }
     }
     next = vi.fn()
-    vi.spyOn(WorldGetSectorQuery.prototype, 'run').mockResolvedValue(queryResult as any)
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue(queryResult as any)
   })
 
   afterEach(() => {
     vi.restoreAllMocks()
   })
 
-  it('returns 400 when sector is missing', async () => {
-    req.params = {}
-    await worldGetSectorHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+  it('returns 400 when a bound is missing', async () => {
+    req.query = {
+      min_x: '1',
+      max_x: '5',
+      min_y: '1'
+    }
+    await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'sector:not-found' 
+      error_code: 'world:invalid-bounds'
     })
   })
 
   it('calls next with error when query throws', async () => {
     const error = new Error('query error')
-    vi.spyOn(WorldGetSectorQuery.prototype, 'run').mockRejectedValue(error)
-    await worldGetSectorHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockRejectedValue(error)
+    await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(next).toHaveBeenCalledWith(error)
   })
 
-  it('returns mapped sector cells on success', async () => {
-    await worldGetSectorHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+  it('returns mapped cells on success', async () => {
+    await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
       data: {
@@ -93,7 +104,7 @@ describe('worldGetSectorHandler', () => {
           {
             coordinates: {
               x: 2,
-              y: 3 
+              y: 3
             },
             characteristic: {
               type: 'PLAIN',
@@ -107,7 +118,7 @@ describe('worldGetSectorHandler', () => {
           {
             coordinates: {
               x: 2,
-              y: 4 
+              y: 4
             },
             characteristic: undefined
           }

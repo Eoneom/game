@@ -12,14 +12,10 @@ import { id } from '#shared/identification'
 describe('TroopMovementEstimateQuery', () => {
   const origin = {
     x: 0,
-    y: 0,
-    sector: 1
-  }
+    y: 0 }
   const destination = {
     x: 1,
-    y: 0,
-    sector: 1
-  }
+    y: 0 }
   const player_id = 'player-1'
   const destination_cell_id = id()
   let repository: Pick<Repository, 'cell' | 'resource_stock'>
@@ -51,7 +47,7 @@ describe('TroopMovementEstimateQuery', () => {
     repository = {
       cell: {
         getCell: vi.fn().mockImplementation(async ({ coordinates }) => {
-          if (coordinates.x === destination.x && coordinates.y === destination.y && coordinates.sector === destination.sector) {
+          if (coordinates.x === destination.x && coordinates.y === destination.y) {
             return destination_cell
           }
           return origin_cell
@@ -59,8 +55,7 @@ describe('TroopMovementEstimateQuery', () => {
       } as unknown as Repository['cell'],
       resource_stock: {
         getByCellId: vi.fn()
-      } as unknown as Repository['resource_stock'],
-    }
+      } as unknown as Repository['resource_stock'] }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   })
 
@@ -84,8 +79,7 @@ describe('TroopMovementEstimateQuery', () => {
       origin,
       destination,
       troop_codes,
-      player_id,
-    })
+      player_id })
 
     expect(result.distance).toBe(distance)
     expect(result.speed).toBe(speed)
@@ -107,8 +101,7 @@ describe('TroopMovementEstimateQuery', () => {
           count: 2
         }
       ],
-      player_id,
-    })
+      player_id })
 
     expect(result.transport_capacity).toBe(
       TroopService.getTotalTransportCapacity({
@@ -135,8 +128,7 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 0,
         mushroom: 0,
         plasma: 0
-      },
-    })
+      } })
 
     expect(result.destination_capacity_exceeded).toBe(false)
     expect(resolve).not.toHaveBeenCalled()
@@ -154,8 +146,7 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 100,
         mushroom: 0,
         plasma: 0
-      },
-    })
+      } })
 
     expect(result.destination_capacity_exceeded).toBe(false)
     expect(repository.resource_stock.getByCellId).not.toHaveBeenCalled()
@@ -168,13 +159,11 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 1000,
         mushroom: 1000,
         plasma: 0
-      },
-    })
+      } })
     vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
       plastic: 400,
       mushroom: 200,
-      plasma: 0,
-    } as never)
+      plasma: 0 } as never)
 
     const result = await new TroopMovementEstimateQuery().run({
       origin,
@@ -185,8 +174,7 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 100,
         mushroom: 50,
         plasma: 0
-      },
-    })
+      } })
 
     expect(result.destination_capacity_exceeded).toBe(false)
     expect(repository.resource_stock.getByCellId).toHaveBeenCalledWith({ cell_id: destination_cell_id })
@@ -199,13 +187,11 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 1000,
         mushroom: 1000,
         plasma: 0
-      },
-    })
+      } })
     vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
       plastic: 950,
       mushroom: 0,
-      plasma: 0,
-    } as never)
+      plasma: 0 } as never)
 
     const result = await new TroopMovementEstimateQuery().run({
       origin,
@@ -216,8 +202,7 @@ describe('TroopMovementEstimateQuery', () => {
         plastic: 100,
         mushroom: 0,
         plasma: 0
-      },
-    })
+      } })
 
     expect(result.destination_capacity_exceeded).toBe(true)
   })

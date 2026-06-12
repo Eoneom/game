@@ -35,18 +35,15 @@ vi.mock('@tanstack/react-router', () => ({
     >
       {children}
     </a>
-  ),
-}))
+  ) }))
 
 vi.mock('#outpost/hooks', async () => ({
   ...(await vi.importActual<typeof import('#outpost/hooks')>('#outpost/hooks')),
-  useSetOutpostPermanent: () => ({ mutate: mockSetPermanent }),
-}))
+  useSetOutpostPermanent: () => ({ mutate: mockSetPermanent }) }))
 
 vi.mock('#city/hooks', async () => ({
   ...(await vi.importActual<typeof import('#city/hooks')>('#city/hooks')),
-  useSettleCity: () => ({ mutate: mockSettleCity }),
-}))
+  useSettleCity: () => ({ mutate: mockSettleCity }) }))
 
 vi.mock('#outpost/settle', () => ({
   OutpostSettle: ({ onSettle }: { onSettle: (name: string) => void }) => (
@@ -58,7 +55,7 @@ let queryClient: QueryClient
 
 const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   id: 'o1',
-  coordinates: { sector: 1, x: 1, y: 1 },
+  coordinates: { x: 1, y: 1 },
   type: OutpostType.TEMPORARY,
   plastic: 10,
   mushroom: 20,
@@ -68,13 +65,11 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
   warehouses_capacity: { plastic: 2000, mushroom: 1500 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
-  ...overrides,
-})
+  ...overrides })
 
 function renderWithOutpost(outpost: Outpost | null) {
   queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
+    defaultOptions: { queries: { retry: false } } })
 
   if (outpost) {
     queryClient.setQueryData(outpostKeys.detail(outpost.id), outpost)
@@ -109,8 +104,7 @@ describe('OutpostPage', () => {
         ...outpost,
         type: OutpostType.PERMANENT,
         earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
-        pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
-      })
+        pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0} })
     })
 
     await waitFor(() => {
@@ -124,8 +118,7 @@ describe('OutpostPage', () => {
       type: OutpostType.PERMANENT,
       earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
       pre_cell_earnings_per_second: { plastic: 0.12, mushroom: 0.1 , plasma: 0},
-      cell_resource_coefficient: { plastic: 1.2, mushroom: 0.8 },
-    }))
+      cell_resource_coefficient: { plastic: 1.2, mushroom: 0.8 } }))
 
     expect(screen.getByRole('heading', { name: 'Production et terrain' })).toBeInTheDocument()
     expect(screen.getByText('Actuelle')).toBeInTheDocument()

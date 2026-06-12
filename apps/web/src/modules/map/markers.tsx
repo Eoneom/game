@@ -1,36 +1,42 @@
 import { CELL_WORLD_SIZE } from '#map/helper'
 import { cellCenter } from '#map/geometry'
+import { ViewportBounds } from '#map/viewport'
+import { Coordinates } from '@eoneom/api-client'
 import React, { useMemo } from 'react'
 import { Circle, Group, Text } from 'react-konva'
 
 interface Props {
-  sectorId: number
-  gridDim: number
-  cityMarker?: { sector: number; x: number; y: number } | null
-  outpostMarker?: { sector: number; x: number; y: number } | null
+  bounds: ViewportBounds
+  cityMarker?: Coordinates | null
+  outpostMarker?: Coordinates | null
 }
 
+const isInBounds = (marker: Coordinates, bounds: ViewportBounds): boolean =>
+  marker.x >= bounds.min_x
+  && marker.x <= bounds.max_x
+  && marker.y >= bounds.min_y
+  && marker.y <= bounds.max_y
+
 export const MapMarkers: React.FC<Props> = ({
-  sectorId,
-  gridDim,
+  bounds,
   cityMarker,
   outpostMarker,
 }) => {
   const sameCityOutpostCell =
     cityMarker &&
     outpostMarker &&
-    cityMarker.sector === sectorId &&
-    outpostMarker.sector === sectorId &&
+    isInBounds(cityMarker, bounds) &&
+    isInBounds(outpostMarker, bounds) &&
     cityMarker.x === outpostMarker.x &&
     cityMarker.y === outpostMarker.y
 
   const content = useMemo(() => {
     const list: React.ReactNode[] = []
     const addCity = (ox: number, oy: number) => {
-      if (!cityMarker || cityMarker.sector !== sectorId) {
+      if (!cityMarker || !isInBounds(cityMarker, bounds)) {
         return
       }
-      const c = cellCenter(cityMarker.x, cityMarker.y, gridDim, CELL_WORLD_SIZE)
+      const c = cellCenter(cityMarker.x, cityMarker.y, bounds, CELL_WORLD_SIZE)
       list.push(
         <Circle
           key="city"
@@ -57,13 +63,13 @@ export const MapMarkers: React.FC<Props> = ({
       )
     }
     const addOutpost = (ox: number, oy: number) => {
-      if (!outpostMarker || outpostMarker.sector !== sectorId) {
+      if (!outpostMarker || !isInBounds(outpostMarker, bounds)) {
         return
       }
       const c = cellCenter(
         outpostMarker.x,
         outpostMarker.y,
-        gridDim,
+        bounds,
         CELL_WORLD_SIZE,
       )
       list.push(
@@ -102,11 +108,10 @@ export const MapMarkers: React.FC<Props> = ({
 
     return list
   }, [
+    bounds,
     cityMarker,
-    gridDim,
     outpostMarker,
     sameCityOutpostCell,
-    sectorId,
   ])
 
   return <Group listening={false}>{content}</Group>

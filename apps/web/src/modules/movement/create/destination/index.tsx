@@ -33,21 +33,16 @@ export const MovementCreateDestination: React.FC<Props> = ({
         onSelectedKeyChange={setSelectedKey}
         onChange={onChange}
       />
-      <div id="coordinates" className="grid grid-cols-3 gap-2">
-        <label className="flex flex-col gap-1">
-          <span className="field-label">Secteur</span>
-          <MovementCreateDestinationCoordinate
-            value={destination.sector}
-            placeholder="Secteur"
-            onChange={sector => handleManualChange({ ...destination, sector })}
-          />
-        </label>
+      <div id="coordinates" className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-1">
           <span className="field-label">X</span>
           <MovementCreateDestinationCoordinate
             value={destination.x}
             placeholder="X"
-            onChange={x => handleManualChange({ ...destination, x })}
+            onChange={x => handleManualChange({
+              ...destination,
+              x 
+            })}
           />
         </label>
         <label className="flex flex-col gap-1">
@@ -55,7 +50,10 @@ export const MovementCreateDestination: React.FC<Props> = ({
           <MovementCreateDestinationCoordinate
             value={destination.y}
             placeholder="Y"
-            onChange={y => handleManualChange({ ...destination, y })}
+            onChange={y => handleManualChange({
+              ...destination,
+              y 
+            })}
           />
         </label>
       </div>

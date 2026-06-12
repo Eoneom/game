@@ -18,6 +18,7 @@ import { TroopCode } from '#core/troop/constant/code'
 import { TroopService } from '#core/troop/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CellEntity } from '#core/world/cell/entity'
+import { WORLD_SIZE } from '#core/world/constant/size'
 import { WorldError } from '#core/world/error'
 import { WorldService } from '#core/world/service'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -461,28 +462,30 @@ export class AppService {
 
   static async getCellsAround({ coordinates }: { coordinates: Coordinates }): Promise<CellEntity[]> {
     const repository = Factory.getRepository()
-    const all_coordinates: Coordinates[] = [
+    const candidates: Coordinates[] = [
       {
         x: coordinates.x - 1,
-        y: coordinates.y,
-        sector: coordinates.sector
+        y: coordinates.y
       },
       {
         x: coordinates.x,
-        y: coordinates.y - 1,
-        sector: coordinates.sector
+        y: coordinates.y - 1
       },
       {
         x: coordinates.x + 1,
-        y: coordinates.y,
-        sector: coordinates.sector
+        y: coordinates.y
       },
       {
         x: coordinates.x,
-        y: coordinates.y + 1,
-        sector: coordinates.sector
+        y: coordinates.y + 1
       }
     ]
+    const all_coordinates = candidates.filter(cell_coordinates =>
+      cell_coordinates.x >= 1
+      && cell_coordinates.x <= WORLD_SIZE
+      && cell_coordinates.y >= 1
+      && cell_coordinates.y <= WORLD_SIZE
+    )
 
     return Promise.all(all_coordinates.map(cell_coordinates => repository.cell.getCell({ coordinates: cell_coordinates })))
   }

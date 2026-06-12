@@ -18,14 +18,10 @@ type MockRes = {
 
 const origin = {
   x: 0,
-  y: 0,
-  sector: 0 
-}
+  y: 0 }
 const destination = {
   x: 1,
-  y: 1,
-  sector: 0 
-}
+  y: 1 }
 const troops = { WARRIOR: 5 }
 
 describe('troopCreateMovementHandler', () => {

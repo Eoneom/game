@@ -26,15 +26,10 @@ describe('TroopMovementGetQuery', () => {
       action: MovementAction.EXPLORE,
       origin: {
         x: 0,
-        y: 0,
-        sector: 1
-      },
+        y: 0 },
       destination: {
         x: 1,
-        y: 0,
-        sector: 1
-      },
-    })
+        y: 0 } })
     troops = [
       TroopEntity.create({
         id: id(),
@@ -53,8 +48,7 @@ describe('TroopMovementGetQuery', () => {
       player_id,
       movement_id,
       execute_at: 99_999,
-      job_id: 'job-1',
-    })
+      job_id: 'job-1' })
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingTroopMovementFinish } as unknown as JobQueue)
   })

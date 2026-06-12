@@ -44,17 +44,14 @@ export const troopGetMovementHandler = async (
 const response_mapper = ({
   movement,
   troops,
-  arrive_at,
-}: TroopMovementGetQueryResponse): TroopGetMovementDataResponse => {
+  arrive_at }: TroopMovementGetQueryResponse): TroopGetMovementDataResponse => {
   const response_movements: TroopGetMovementDataResponse = {
     action: movement.action,
     origin: {
-      sector: movement.origin.sector,
       x: movement.origin.x,
       y: movement.origin.y
     },
     destination: {
-      sector: movement.destination.sector,
       x: movement.destination.x,
       y: movement.destination.y
     },
@@ -62,8 +59,7 @@ const response_mapper = ({
     resources: {
       plastic: movement.resources.plastic,
       mushroom: movement.resources.mushroom,
-      plasma: movement.resources.plasma,
-    },
+      plasma: movement.resources.plasma },
     troops: troops.map((troop) => ({
       code: troop.code,
       count: troop.count

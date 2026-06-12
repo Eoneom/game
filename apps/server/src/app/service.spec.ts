@@ -38,9 +38,7 @@ describe('AppService', () => {
     const city_id = id()
     const coordinates: Coordinates = {
       x: 1,
-      y: 2,
-      sector: 3
-    }
+      y: 2 }
     const resource_coefficient = {
       plastic: 0.85,
       mushroom: 1.1,
@@ -199,9 +197,7 @@ describe('AppService', () => {
     const cell_id = id()
     const coordinates: Coordinates = {
       x: 1,
-      y: 2,
-      sector: 3
-    }
+      y: 2 }
     const resource_coefficient = {
       plastic: 0.85,
       mushroom: 1.1,
@@ -235,8 +231,7 @@ describe('AppService', () => {
             {
               code: TroopCode.RECYCLER,
               count: 5 
-            },
-          ])
+            } ])
         }
       } as unknown as Repository
 
@@ -296,8 +291,7 @@ describe('AppService', () => {
             {
               code: TroopCode.FARMER,
               count: 10 
-            },
-          ])
+            } ])
         }
       } as unknown as Repository
       setRepositoryMock(repository)
@@ -320,9 +314,7 @@ describe('AppService', () => {
   describe('getExploredCellIds', () => {
     const coordinates: Coordinates = {
       x: 4,
-      y: 5,
-      sector: 1 
-    }
+      y: 5 }
     const cell = CellEntity.create({
       id: id(),
       coordinates,
@@ -550,14 +542,10 @@ describe('AppService', () => {
   describe('selectCityFirstCell', () => {
     const coords_taken: Coordinates = {
       x: 10,
-      y: 20,
-      sector: 1 
-    }
+      y: 20 }
     const coords_free: Coordinates = {
       x: 11,
-      y: 20,
-      sector: 1 
-    }
+      y: 20 }
     const assigned_cell = CellEntity.create({
       id: id(),
       coordinates: coords_taken,
@@ -601,30 +589,20 @@ describe('AppService', () => {
   describe('getCellsAround', () => {
     const center: Coordinates = {
       x: 5,
-      y: 7,
-      sector: 2 
-    }
+      y: 7 }
     const expected_neighbors: Coordinates[] = [
       {
         x: 4,
-        y: 7,
-        sector: 2 
-      },
+        y: 7 },
       {
         x: 5,
-        y: 6,
-        sector: 2 
-      },
+        y: 6 },
       {
         x: 6,
-        y: 7,
-        sector: 2 
-      },
+        y: 7 },
       {
         x: 5,
-        y: 8,
-        sector: 2 
-      }
+        y: 8 }
     ]
   
     beforeEach(() => {

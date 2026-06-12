@@ -18,7 +18,7 @@ import { troopListCityHandler } from '#web/handler/troop/list/city'
 import { troopListOutpostHandler } from '#web/handler/troop/list/outpost'
 import { troopListMovementHandler } from '#web/handler/troop/movement/list'
 import { troopRecruitHandler } from '#web/handler/troop/recruit'
-import { worldGetSectorHandler } from '#web/handler/world/get-sector'
+import { worldGetCellsHandler } from '#web/handler/world/get-cells'
 import { technologyGetHandler } from '#web/handler/technology/get'
 import { outpostListHandler } from '#web/handler/outpost/list'
 import { outpostGetHandler } from '#web/handler/outpost/get'
@@ -80,7 +80,7 @@ export const router = (): Router => {
   r.get('/outpost/:outpost_id/activity', authMiddleware, outpostActivityHandler)
   r.put('/outpost/permanent', authMiddleware, outpostSetPermanentHandler)
 
-  r.get('/sector/:sector', authMiddleware, worldGetSectorHandler)
+  r.get('/world/cells', authMiddleware, worldGetCellsHandler)
 
   r.get('/communication/report', authMiddleware, communicationListReportHandler)
   r.put('/communication/report/mark', authMiddleware, communicationMarkReportHandler)

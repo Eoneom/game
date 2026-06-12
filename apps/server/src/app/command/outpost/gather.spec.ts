@@ -38,9 +38,7 @@ describe('outpostGather', () => {
       id: cell_id,
       coordinates: {
         x: 1,
-        y: 1,
-        sector: 1
-      },
+        y: 1 },
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,

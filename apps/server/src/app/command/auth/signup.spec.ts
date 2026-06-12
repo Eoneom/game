@@ -39,9 +39,7 @@ describe('signupAuth', () => {
     id: id(),
     coordinates: {
       x: 1,
-      y: 1,
-      sector: 1
-    }
+      y: 1 }
   })
 
   const cells_around_city = [
@@ -49,7 +47,6 @@ describe('signupAuth', () => {
       ...default_cell_params,
       id: cell_id_1,
       coordinates: {
-        sector: 1,
         x: 0,
         y: 1
       }
@@ -58,7 +55,6 @@ describe('signupAuth', () => {
       ...default_cell_params,
       id: cell_id_2,
       coordinates: {
-        sector: 1,
         x: 1,
         y: 0
       }
@@ -67,7 +63,6 @@ describe('signupAuth', () => {
       ...default_cell_params,
       id: cell_id_3,
       coordinates: {
-        sector: 1,
         x: 2,
         y: 1
       }
@@ -76,7 +71,6 @@ describe('signupAuth', () => {
       ...default_cell_params,
       id: cell_id_4,
       coordinates: {
-        sector: 1,
         x: 1,
         y: 2
       }

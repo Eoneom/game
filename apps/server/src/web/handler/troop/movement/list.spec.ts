@@ -19,23 +19,19 @@ const movement = MovementEntity.create({
   player_id: 'p1',
   action: MovementAction.EXPLORE,
   origin: {
-    sector: 0,
     x: 0,
     y: 0
   },
   destination: {
-    sector: 0,
     x: 3,
     y: 4
-  },
-})
+  } })
 
 const queryResult = {
   movements: [
     {
       movement,
-      arrive_at: 1_744_000_000_000,
-    }
+      arrive_at: 1_744_000_000_000 }
   ]
 }
 
@@ -83,12 +79,10 @@ describe('troopListMovementHandler', () => {
             id: 'm1',
             action: MovementAction.EXPLORE,
             origin: {
-              sector: 0,
               x: 0,
               y: 0
             },
             destination: {
-              sector: 0,
               x: 3,
               y: 4
             },
@@ -96,9 +90,7 @@ describe('troopListMovementHandler', () => {
             resources: {
               plastic: 0,
               mushroom: 0,
-              plasma: 0,
-            },
-          }
+              plasma: 0 } }
         ]
       }
     })

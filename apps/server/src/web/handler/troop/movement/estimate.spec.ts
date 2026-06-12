@@ -15,14 +15,10 @@ type MockRes = {
 
 const origin = {
   x: 0,
-  y: 0,
-  sector: 0
-}
+  y: 0 }
 const destination = {
   x: 3,
-  y: 4,
-  sector: 0
-}
+  y: 4 }
 const troop_codes = [ 'WARRIOR' ]
 
 describe('troopEstimateMovementHandler', () => {
@@ -51,8 +47,7 @@ describe('troopEstimateMovementHandler', () => {
       speed: 2,
       duration: 150,
       transport_capacity: 200,
-      destination_capacity_exceeded: false,
-    } as any)
+      destination_capacity_exceeded: false } as any)
   })
 
   afterEach(() => {
@@ -120,8 +115,7 @@ describe('troopEstimateMovementHandler', () => {
           code: 'WARRIOR',
           count: 1
         }
-      ],
-    }
+      ] }
     await troopEstimateMovementHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(helpers.getPlayerIdFromContext).toHaveBeenCalledWith(res)
     expect(TroopMovementEstimateQuery.prototype.run).toHaveBeenCalledWith({
@@ -139,8 +133,7 @@ describe('troopEstimateMovementHandler', () => {
         plastic: 10,
         mushroom: 5,
         plasma: 0
-      },
-    })
+      } })
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
@@ -149,8 +142,7 @@ describe('troopEstimateMovementHandler', () => {
         speed: 2,
         duration: 150,
         transport_capacity: 200,
-        destination_capacity_exceeded: false,
-      }
+        destination_capacity_exceeded: false }
     })
   })
 })

@@ -4,7 +4,7 @@ import {
   getCellStrokeStyle,
 } from '#map/helper'
 import { cellTopLeft } from '#map/geometry'
-import { Sector } from '#types'
+import { WorldViewport } from '#types'
 import React from 'react'
 import { Rect } from 'react-konva'
 
@@ -14,31 +14,29 @@ export type MapHoverTip = {
 }
 
 interface Props {
-  sector: Sector
-  gridDim: number
+  viewport: WorldViewport
   hoverTooltip: MapHoverTip | null
   selectedCoordinates?: { x: number; y: number } | null
   onCellClicked: (params: { x: number; y: number }) => void
   onHoverCell: (
     evt: { clientX: number; clientY: number },
-    cell: Sector['cells'][number],
+    cell: WorldViewport['cells'][number],
   ) => void
 }
 
 export const MapCells: React.FC<Props> = ({
-  sector,
-  gridDim,
+  viewport,
   hoverTooltip,
   selectedCoordinates,
   onCellClicked,
   onHoverCell,
 }) => (
   <>
-    {sector.cells.map(cell => {
+    {viewport.cells.map(cell => {
       const { x: rx, y: ry } = cellTopLeft(
         cell.coordinates.x,
         cell.coordinates.y,
-        gridDim,
+        viewport.bounds,
         CELL_WORLD_SIZE,
       )
       const fill = getCellFillStyle({

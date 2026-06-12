@@ -5,7 +5,7 @@ import { MovementAction, TroopCode } from '@eoneom/api-client'
 import { Button } from '#ui/button'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
 import { MapDetailsActionBase } from '#map/details/action/base'
-import { Sector } from '#types'
+import { WorldViewport } from '#types'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
 import { useCreateMovement } from '#troop/hooks'
@@ -18,32 +18,43 @@ interface DetailsInput {
     x: number
     y: number
   }
-  sector: Sector
+  viewport: WorldViewport
 }
 
-export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, sector }) => {
+export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, viewport }) => {
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
   const createMovement = useCreateMovement()
 
   const selectedCell = useMemo(() => {
     if (!coordinates) return null
-    return sector.cells.find(cell =>
+    return viewport.cells.find(cell =>
       cell.coordinates.x === coordinates.x &&
       cell.coordinates.y === coordinates.y
     )
-  }, [sector, coordinates])
+  }, [
+    viewport,
+    coordinates
+  ])
 
   const handleExplore = () => {
-    if (!sector || !coordinates) return
+    if (!viewport || !coordinates) return
     const origin = city ? city.coordinates : outpost?.coordinates
     if (!origin) return
 
     createMovement.mutate({
       action: MovementAction.EXPLORE,
       origin,
-      destination: { sector: sector.id, x: coordinates.x, y: coordinates.y },
-      troops: [{ code: TroopCode.EXPLORER, count: 1 }]
+      destination: {
+        x: coordinates.x,
+        y: coordinates.y 
+      },
+      troops: [
+        {
+          code: TroopCode.EXPLORER,
+          count: 1 
+        }
+      ]
     })
   }
 
@@ -68,16 +79,22 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
           <Button onClick={handleExplore}>Explorer</Button>
         </div>
       )}
-      {selectedCell && selectedCell.characteristic && sector && (
+      {selectedCell && selectedCell.characteristic && viewport && (
         cityId
           ? <MapDetailsActionBase
             cityId={cityId}
-            coordinates={{ sector: sector.id, x: coordinates.x, y: coordinates.y }}
+            coordinates={{
+              x: coordinates.x,
+              y: coordinates.y 
+            }}
           />
           : outpostId
             ? <MapDetailsActionBase
               outpostId={outpostId}
-              coordinates={{ sector: sector.id, x: coordinates.x, y: coordinates.y }}
+              coordinates={{
+                x: coordinates.x,
+                y: coordinates.y 
+              }}
             />
             : null
       )}

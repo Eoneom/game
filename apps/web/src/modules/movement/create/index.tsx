@@ -28,7 +28,10 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   const createMovement = useCreateMovement()
 
   const [ selectedTroops, setSelectedTroops ] = useState<Partial<Record<TroopCode, number>>>({})
-  const [ destination, setDestination ] = useState<Coordinates>({ x: 1, y: 1, sector: 1 })
+  const [ destination, setDestination ] = useState<Coordinates>({
+    x: 1,
+    y: 1 
+  })
   const [ estimation, setEstimation ] = useState<MovementEstimation>({
     speed: 0,
     duration: 0,

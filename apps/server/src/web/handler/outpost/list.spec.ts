@@ -25,9 +25,7 @@ const queryResult = {
       id: 'cell1',
       coordinates: {
         x: 2,
-        y: 4,
-        sector: 0 
-      } 
+        y: 4 } 
     } 
   ],
   resource_stocks: [
@@ -85,9 +83,7 @@ describe('outpostListHandler', () => {
             id: 'o1',
             coordinates: {
               x: 2,
-              y: 4,
-              sector: 0 
-            },
+              y: 4 },
             type: 'STANDARD',
             plastic: 200,
             mushroom: 100,

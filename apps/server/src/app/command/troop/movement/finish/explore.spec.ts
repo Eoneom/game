@@ -41,16 +41,11 @@ describe('finishTroopExploreMovement', () => {
       player_id,
       action: MovementAction.EXPLORE,
       origin: {
-        sector: 1,
         x: 2,
-        y: 3,
-      },
+        y: 3 },
       destination: {
-        sector: 4,
         x: 5,
-        y: 6,
-      },
-    })
+        y: 6 } })
 
     troop = TroopEntity.create({
       id: troop_id,
@@ -58,14 +53,12 @@ describe('finishTroopExploreMovement', () => {
       player_id,
       cell_id: city_cell_id,
       count: 1,
-      movement_id: null,
-    })
+      movement_id: null })
 
     exploration = ExplorationEntity.create({
       id: exploration_id,
       player_id,
-      cell_ids: [ already_explored_cell_id ],
-    })
+      cell_ids: [ already_explored_cell_id ] })
 
     movementDelete = vi.fn().mockResolvedValue(undefined)
     movementCreate = vi.fn().mockResolvedValue(undefined)
@@ -77,19 +70,15 @@ describe('finishTroopExploreMovement', () => {
     repository = {
       troop: {
         listByMovement: vi.fn().mockResolvedValue([ troop ]),
-        updateOne: troopUpdateOne,
-      } as unknown as Repository['troop'],
+        updateOne: troopUpdateOne } as unknown as Repository['troop'],
       movement: {
         getById: vi.fn().mockResolvedValue(movement),
         delete: movementDelete,
-        create: movementCreate,
-      } as unknown as Repository['movement'],
+        create: movementCreate } as unknown as Repository['movement'],
       exploration: {
         get: vi.fn().mockResolvedValue(exploration),
-        updateOne: explorationUpdateOne,
-      } as unknown as Repository['exploration'],
-      report: { create: reportCreate } as unknown as Repository['report'],
-    }
+        updateOne: explorationUpdateOne } as unknown as Repository['exploration'],
+      report: { create: reportCreate } as unknown as Repository['report'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
@@ -103,15 +92,13 @@ describe('finishTroopExploreMovement', () => {
   it('should prevent a player for finishing a movement of another player', async () => {
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...movement,
-      player_id: other_player_id,
-    }))
+      player_id: other_player_id }))
 
     await assert.rejects(
       () => finishTroopExploreMovement({
         player_id,
         movement_id,
-        arrived_at,
-      }),
+        arrived_at }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
@@ -120,8 +107,7 @@ describe('finishTroopExploreMovement', () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const updated_exploration = explorationUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated_exploration.cell_ids.length, 2)
@@ -132,8 +118,7 @@ describe('finishTroopExploreMovement', () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const movement_to_create = movementCreate.mock.calls[0][0]
     assert.strictEqual(movementDelete.mock.calls[0][0], movement.id)
@@ -152,8 +137,7 @@ describe('finishTroopExploreMovement', () => {
     await finishTroopExploreMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const report = reportCreate.mock.calls[0][0]
     assert.strictEqual(report.troops.length, 1)

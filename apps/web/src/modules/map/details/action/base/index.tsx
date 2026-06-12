@@ -16,7 +16,6 @@ interface CoordinatesInput {
   coordinates: {
     x: number
     y: number
-    sector: number
   }
 }
 

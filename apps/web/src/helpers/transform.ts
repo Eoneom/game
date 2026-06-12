@@ -33,7 +33,7 @@ export const transformApproximateTimeUntilSeconds = (seconds: number): string =>
 }
 
 export const formatCoordinates = (coordinates: Coordinates): string => {
-  return `${coordinates.sector}.${coordinates.x}.${coordinates.y}`
+  return `${coordinates.x}.${coordinates.y}`
 }
 
 export const formatDate = (timestamp: number): string => {

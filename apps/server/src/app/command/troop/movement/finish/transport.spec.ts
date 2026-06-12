@@ -44,21 +44,15 @@ describe('finishTroopTransportMovement', () => {
       player_id,
       action: MovementAction.TRANSPORT,
       origin: {
-        sector: 1,
         x: 2,
-        y: 3,
-      },
+        y: 3 },
       destination: {
-        sector: 4,
         x: 5,
-        y: 6,
-      },
+        y: 6 },
       resources: {
         plastic: 1000,
         mushroom: 500,
-        plasma: 0,
-      },
-    })
+        plasma: 0 } })
 
     troop = TroopEntity.create({
       id: troop_id,
@@ -66,8 +60,7 @@ describe('finishTroopTransportMovement', () => {
       player_id,
       cell_id: null,
       count: 1,
-      movement_id,
-    })
+      movement_id })
 
     destination_stock = ResourceStockEntity.create({
       id: id(),
@@ -76,8 +69,7 @@ describe('finishTroopTransportMovement', () => {
       mushroom: 0,
       plasma: 0,
       last_plastic_gather: now(),
-      last_mushroom_gather: now(),
-    })
+      last_mushroom_gather: now() })
 
     movementDelete = vi.fn().mockResolvedValue(undefined)
     movementCreate = vi.fn().mockResolvedValue(undefined)
@@ -89,48 +81,37 @@ describe('finishTroopTransportMovement', () => {
     repository = {
       troop: {
         listByMovement: vi.fn().mockResolvedValue([ troop ]),
-        updateOne: troopUpdateOne,
-      } as unknown as Repository['troop'],
+        updateOne: troopUpdateOne } as unknown as Repository['troop'],
       movement: {
         getById: vi.fn().mockResolvedValue(movement),
         delete: movementDelete,
-        create: movementCreate,
-      } as unknown as Repository['movement'],
+        create: movementCreate } as unknown as Repository['movement'],
       cell: {
         getCell: vi.fn().mockResolvedValue({
           id: destination_cell_id,
-          city_id,
-        }),
-      } as unknown as Repository['cell'],
+          city_id }) } as unknown as Repository['cell'],
       city: {
         get: vi.fn().mockResolvedValue(CityEntity.create({
           id: city_id,
           player_id,
-          name: 'Home',
-        })),
-      } as unknown as Repository['city'],
+          name: 'Home' })) } as unknown as Repository['city'],
       outpost: {
-        searchByCell: vi.fn().mockResolvedValue(null),
-      } as unknown as Repository['outpost'],
+        searchByCell: vi.fn().mockResolvedValue(null) } as unknown as Repository['outpost'],
       report: { create: reportCreate } as unknown as Repository['report'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(destination_stock),
-        updateOne: stockUpdateOne,
-      } as unknown as Repository['resource_stock'],
-    }
+        updateOne: stockUpdateOne } as unknown as Repository['resource_stock'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 3000,
       mushroom: 4000,
-      plasma: 0,
-    })
+      plasma: 0 })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 10000,
       mushroom: 10000,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 
   afterEach(() => {
@@ -140,15 +121,13 @@ describe('finishTroopTransportMovement', () => {
   it('should prevent finishing another player transport', async () => {
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...movement,
-      player_id: other_player_id,
-    }))
+      player_id: other_player_id }))
 
     await assert.rejects(
       () => finishTroopTransportMovement({
         player_id,
         movement_id,
-        arrived_at,
-      }),
+        arrived_at }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
@@ -157,8 +136,7 @@ describe('finishTroopTransportMovement', () => {
     const result = await finishTroopTransportMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
     const updated_stock = stockUpdateOne.mock.calls[0][0]
@@ -171,40 +149,34 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 900,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.strictEqual(result.base_movement.id, base_movement.id)
     assert.strictEqual(reportCreate.mock.calls[0][0].type, ReportType.TRANSPORT)
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 100,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 900,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 
   it('should deposit full cargo into owned outpost', async () => {
     repository.cell.getCell = vi.fn().mockResolvedValue({
       id: destination_cell_id,
-      city_id: undefined,
-    })
+      city_id: undefined })
     repository.city.get = vi.fn()
     repository.outpost.searchByCell = vi.fn().mockResolvedValue(OutpostEntity.create({
       id: id(),
       player_id,
       cell_id: destination_cell_id,
-      type: OutpostType.PERMANENT,
-    }))
+      type: OutpostType.PERMANENT }))
 
     await finishTroopTransportMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const updated_stock = stockUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated_stock.plastic, 3900)
@@ -214,82 +186,69 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 
   it('should bounce full cargo when destination is empty', async () => {
     repository.cell.getCell = vi.fn().mockResolvedValue({
       id: destination_cell_id,
-      city_id: undefined,
-    })
+      city_id: undefined })
     repository.city.get = vi.fn()
     repository.outpost.searchByCell = vi.fn().mockResolvedValue(null)
 
     await finishTroopTransportMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
     const base_movement = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 
   it('should bounce full cargo when destination is not owned', async () => {
     repository.city.get = vi.fn().mockResolvedValue(CityEntity.create({
       id: city_id,
       player_id: other_player_id,
-      name: 'Enemy',
-    }))
+      name: 'Enemy' }))
 
     await finishTroopTransportMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
     const base_movement = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 })

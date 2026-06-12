@@ -20,31 +20,36 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
   const cityCoordinates = city?.coordinates ?? null
   const outpostCoordinates = outpost?.coordinates ?? null
 
-  const { fetch, sector } = useWorld()
+  const { fetch, viewport } = useWorld()
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(null)
 
   React.useEffect(() => {
-    const sectorId = cityCoordinates ? cityCoordinates.sector : outpostCoordinates?.sector
-    if (!sectorId) return
-    fetch({ sectorId })
+    const center = cityCoordinates ?? outpostCoordinates
+    if (!center) return
+    fetch({ center })
   }, [cityCoordinates, outpostCoordinates])
 
   const details = useMemo(() => {
-    if (!selectedCoordinates || !sector) return null
+    if (!selectedCoordinates || !viewport) return null
     if (cityId) {
-      return <MapDetails cityId={cityId} coordinates={selectedCoordinates} sector={sector} />
+      return <MapDetails cityId={cityId} coordinates={selectedCoordinates} viewport={viewport} />
     }
     if (!outpostId) {
       return null
     }
-    return <MapDetails outpostId={outpostId} coordinates={selectedCoordinates} sector={sector} />
-  }, [cityId, outpostId, selectedCoordinates, sector])
+    return <MapDetails outpostId={outpostId} coordinates={selectedCoordinates} viewport={viewport} />
+  }, [
+    cityId,
+    outpostId,
+    selectedCoordinates,
+    viewport
+  ])
 
   return <LayoutPage details={details}>
-    {sector && (
+    {viewport && (
       <div className="map-page">
         <MapCanvas
-          sector={sector}
+          viewport={viewport}
           onCellClicked={setSelectedCoordinates}
           selectedCoordinates={selectedCoordinates}
           cityMarker={city?.coordinates ?? null}

@@ -20,9 +20,7 @@ const queryResult = {
   cell: {
     coordinates: {
       x: 3,
-      y: 5,
-      sector: 1
-    }
+      y: 5 }
   },
   resource_stock: {
     plastic: 150,
@@ -100,9 +98,7 @@ describe('outpostGetHandler', () => {
         id: 'o1',
         coordinates: {
           x: 3,
-          y: 5,
-          sector: 1
-        },
+          y: 5 },
         type: 'permanent',
         plastic: 150,
         mushroom: 75,

@@ -56,9 +56,7 @@ describe('OutpostGetQuery', () => {
       id: cell_id,
       coordinates: {
         x: 0,
-        y: 0,
-        sector: 1
-      },
+        y: 0 },
       type: CellType.FOREST,
       resource_coefficient: {
         plastic: 0.85,

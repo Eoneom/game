@@ -145,10 +145,8 @@ export class PostgresReportRepository
               player_id: row.player_id,
               origin_x: row.origin_x,
               origin_y: row.origin_y,
-              origin_sector: row.origin_sector,
               destination_x: row.destination_x,
               destination_y: row.destination_y,
-              destination_sector: row.destination_sector,
               recorded_at: row.recorded_at,
               was_read: row.was_read,
               plastic: row.plastic,
@@ -197,10 +195,8 @@ export class PostgresReportRepository
               player_id: row.player_id,
               origin_x: row.origin_x,
               origin_y: row.origin_y,
-              origin_sector: row.origin_sector,
               destination_x: row.destination_x,
               destination_y: row.destination_y,
-              destination_sector: row.destination_sector,
               recorded_at: row.recorded_at,
               was_read: row.was_read,
               plastic: row.plastic,
@@ -219,10 +215,8 @@ export class PostgresReportRepository
             player_id: row.player_id,
             origin_x: row.origin_x,
             origin_y: row.origin_y,
-            origin_sector: row.origin_sector,
             destination_x: row.destination_x,
             destination_y: row.destination_y,
-            destination_sector: row.destination_sector,
             recorded_at: row.recorded_at,
             was_read: row.was_read,
             plastic: row.plastic,
@@ -260,13 +254,11 @@ export class PostgresReportRepository
       })),
       origin: {
         x: row.origin_x,
-        y: row.origin_y,
-        sector: row.origin_sector
+        y: row.origin_y
       },
       destination: {
         x: row.destination_x,
-        y: row.destination_y,
-        sector: row.destination_sector
+        y: row.destination_y
       },
       recorded_at: fromTimestampRequired(row.recorded_at),
       was_read: row.was_read,
@@ -314,13 +306,11 @@ export class PostgresReportRepository
       troops: [],
       origin: {
         x: row.origin_x,
-        y: row.origin_y,
-        sector: row.origin_sector
+        y: row.origin_y
       },
       destination: {
         x: row.destination_x,
-        y: row.destination_y,
-        sector: row.destination_sector
+        y: row.destination_y
       },
       recorded_at: fromTimestampRequired(row.recorded_at),
       was_read: row.was_read,
@@ -344,10 +334,8 @@ export class PostgresReportRepository
       player_id: entity.player_id,
       origin_x: entity.origin.x,
       origin_y: entity.origin.y,
-      origin_sector: entity.origin.sector,
       destination_x: entity.destination.x,
       destination_y: entity.destination.y,
-      destination_sector: entity.destination.sector,
       recorded_at: toTimestampRequired(entity.recorded_at),
       was_read: entity.was_read,
       plastic: entity.resources.plastic,

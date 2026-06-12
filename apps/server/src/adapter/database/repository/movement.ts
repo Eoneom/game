@@ -39,13 +39,11 @@ export class PostgresMovementRepository
       action: row.action as MovementAction,
       origin: {
         x: row.origin_x,
-        y: row.origin_y,
-        sector: row.origin_sector
+        y: row.origin_y
       },
       destination: {
         x: row.destination_x,
-        y: row.destination_y,
-        sector: row.destination_sector
+        y: row.destination_y
       },
       resources: {
         plastic: row.plastic,
@@ -62,10 +60,8 @@ export class PostgresMovementRepository
       action: entity.action,
       origin_x: entity.origin.x,
       origin_y: entity.origin.y,
-      origin_sector: entity.origin.sector,
       destination_x: entity.destination.x,
       destination_y: entity.destination.y,
-      destination_sector: entity.destination.sector,
       plastic: entity.resources.plastic,
       mushroom: entity.resources.mushroom,
       plasma: entity.resources.plasma,

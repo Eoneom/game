@@ -37,9 +37,7 @@ const queryResult = {
   cell: {
     coordinates: {
       x: 1,
-      y: 2,
-      sector: 0 
-    } 
+      y: 2 } 
   },
   resource_stock: {
     plastic: 500,
@@ -152,9 +150,7 @@ describe('cityGetHandler', () => {
         production_energy_ratio: 1,
         coordinates: {
           x: 1,
-          y: 2,
-          sector: 0 
-        }
+          y: 2 }
       }
     })
   })

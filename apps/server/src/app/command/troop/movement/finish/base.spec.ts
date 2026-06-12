@@ -23,16 +23,12 @@ describe('finishTroopBaseMovement', () => {
   const city_id = id()
   const arrived_at = now() - 5000
   const origin: Coordinates = {
-    sector: 1,
     x: 2,
-    y: 3,
-  }
+    y: 3 }
   const destination_cell_id = id()
   const destination: Coordinates = {
-    sector: 4,
     x: 5,
-    y: 6,
-  }
+    y: 6 }
   let movement: MovementEntity
   let movement_troop_explorer: TroopEntity
   let movement_troop_settler: TroopEntity
@@ -52,8 +48,7 @@ describe('finishTroopBaseMovement', () => {
   function mountRepository({
     city_exists,
     outpost_exists,
-    existing_outposts_count,
-  }: {
+    existing_outposts_count }: {
     city_exists: boolean
     outpost_exists: boolean
     existing_outposts_count: number
@@ -69,32 +64,25 @@ describe('finishTroopBaseMovement', () => {
       troop: {
         listByMovement: vi.fn().mockResolvedValue([
           movement_troop_explorer,
-          movement_troop_settler,
-        ]),
+          movement_troop_settler ]),
         listInCell: vi.fn().mockResolvedValue([ destination_troop_explorer ]),
         updateOne: troopUpdateOne,
-        delete: troopDelete,
-      } as unknown as Repository['troop'],
+        delete: troopDelete } as unknown as Repository['troop'],
       movement: {
         getById: vi.fn().mockResolvedValue(movement),
-        delete: movementDelete,
-      } as unknown as Repository['movement'],
+        delete: movementDelete } as unknown as Repository['movement'],
       cell: {
         getCell: vi.fn().mockResolvedValue({
           id: destination_cell_id,
           coordinates: destination,
-          city_id: city_exists ? city_id : undefined,
-        }),
-      } as unknown as Repository['cell'],
+          city_id: city_exists ? city_id : undefined }) } as unknown as Repository['cell'],
       outpost: {
         existsOnCell: vi.fn().mockResolvedValue(outpost_exists),
         countForPlayer: vi.fn().mockResolvedValue(existing_outposts_count),
         searchByCell: vi.fn().mockResolvedValue(null),
-        create: outpostCreate,
-      } as unknown as Repository['outpost'],
+        create: outpostCreate } as unknown as Repository['outpost'],
       report: { create: reportCreate } as unknown as Repository['report'],
-      resource_stock: { ensureWorldStockForCell } as unknown as Repository['resource_stock'],
-    }
+      resource_stock: { ensureWorldStockForCell } as unknown as Repository['resource_stock'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   }
@@ -105,8 +93,7 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       action: MovementAction.BASE,
       origin,
-      destination,
-    })
+      destination })
 
     movement_troop_settler = TroopEntity.create({
       id: movement_troop_id,
@@ -114,8 +101,7 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: null,
       count: 1,
-      movement_id: movement.id,
-    })
+      movement_id: movement.id })
 
     movement_troop_explorer = TroopEntity.create({
       id: movement_troop_id,
@@ -123,8 +109,7 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: null,
       count: 2,
-      movement_id: movement.id,
-    })
+      movement_id: movement.id })
 
     destination_troop_explorer = TroopEntity.create({
       id: city_troop_id,
@@ -132,8 +117,7 @@ describe('finishTroopBaseMovement', () => {
       player_id,
       cell_id: destination_cell_id,
       count: 1,
-      movement_id: null,
-    })
+      movement_id: null })
   })
 
   afterEach(() => {
@@ -144,19 +128,16 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
     repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
       ...movement,
-      player_id: other_player_id,
-    }))
+      player_id: other_player_id }))
 
     await assert.rejects(
       () => finishTroopBaseMovement({
         player_id,
         movement_id,
-        arrived_at,
-      }),
+        arrived_at }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
   })
@@ -165,14 +146,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: true,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 0)
   })
@@ -181,14 +160,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: true,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 0)
   })
@@ -197,15 +174,13 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 1000,
-    })
+      existing_outposts_count: 1000 })
 
     await assert.rejects(
       () => finishTroopBaseMovement({
         player_id,
         movement_id,
-        arrived_at,
-      }),
+        arrived_at }),
       new RegExp(OutpostError.LIMIT_REACHED)
     )
   })
@@ -214,14 +189,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(outpostCreate.mock.calls.length, 1)
     const outpost = outpostCreate.mock.calls[0][0]
@@ -234,14 +207,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
     assert.strictEqual(delete_ids.length, 2)
@@ -268,14 +239,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: true,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
     assert.strictEqual(delete_ids.length, 2)
@@ -305,14 +274,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: true,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const delete_ids = troopDelete.mock.calls.map(([ idArg ]) => idArg)
     assert.strictEqual(delete_ids.length, 2)
@@ -341,14 +308,12 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     const report = reportCreate.mock.calls[0][0]
     assert.strictEqual(report.troops.length, 2)
@@ -374,15 +339,12 @@ describe('finishTroopBaseMovement', () => {
       resources: {
         plastic: 400,
         mushroom: 100,
-        plasma: 0,
-      },
-    })
+        plasma: 0 } })
 
     mountRepository({
       city_exists: true,
       outpost_exists: false,
-      existing_outposts_count: 0,
-    })
+      existing_outposts_count: 0 })
 
     const stock = ResourceStockEntity.create({
       id: id(),
@@ -391,34 +353,28 @@ describe('finishTroopBaseMovement', () => {
       mushroom: 50,
       plasma: 0,
       last_plastic_gather: now(),
-      last_mushroom_gather: now(),
-    })
+      last_mushroom_gather: now() })
     const stockUpdateOne = vi.fn().mockResolvedValue(undefined)
 
     repository.city = {
       get: vi.fn().mockResolvedValue(CityEntity.create({
         id: city_id,
         player_id,
-        name: 'Home',
-      })),
-    } as unknown as Repository['city']
+        name: 'Home' })) } as unknown as Repository['city']
     repository.resource_stock = {
       ensureWorldStockForCell,
       getByCellId: vi.fn().mockResolvedValue(stock),
-      updateOne: stockUpdateOne,
-    } as unknown as Repository['resource_stock']
+      updateOne: stockUpdateOne } as unknown as Repository['resource_stock']
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 3000,
       mushroom: 4000,
-      plasma: 0,
-    })
+      plasma: 0 })
 
     await finishTroopBaseMovement({
       player_id,
       movement_id,
-      arrived_at,
-    })
+      arrived_at })
 
     assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
     const updated = stockUpdateOne.mock.calls[0][0]
@@ -429,12 +385,10 @@ describe('finishTroopBaseMovement', () => {
     assert.deepStrictEqual(report.resources, {
       plastic: 400,
       mushroom: 100,
-      plasma: 0,
-    })
+      plasma: 0 })
     assert.deepStrictEqual(report.remaining_resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0,
-    })
+      plasma: 0 })
   })
 })

@@ -65,9 +65,7 @@ describe('BuildingGetQuery', () => {
           id: id(),
           coordinates: {
             x: 1,
-            y: 1,
-            sector: 1
-          },
+            y: 1 },
           type: CellType.FOREST,
           resource_coefficient: {
             plastic: 1,
