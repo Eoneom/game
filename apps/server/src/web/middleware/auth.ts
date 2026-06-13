@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import { authorizeAuth } from '#app/command/auth/authorize'
 import { now } from '#shared/time'
 import {
@@ -9,7 +10,7 @@ export const authMiddleware = async (req: Request<unknown>, res: Response<unknow
   if (!token) {
     return res.status(401).json({
       status: 'nok',
-      error_code: 'token:not_found'
+      error_code: RequestError.TOKEN_NOT_FOUND
     })
   }
   try {

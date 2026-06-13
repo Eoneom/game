@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction, Request, Response
 } from 'express'
@@ -18,14 +19,14 @@ export const buildingCancelQueuedHandler = async (
   if (!city_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'city_id:not-found'
+      error_code: RequestError.CITY_ID_NOT_FOUND
     })
   }
 
   if (!queue_item_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'queue_item_id:not-found'
+      error_code: RequestError.QUEUE_ITEM_ID_NOT_FOUND
     })
   }
 

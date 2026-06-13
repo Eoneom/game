@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction, Request, Response
 } from 'express'
@@ -15,7 +16,7 @@ export const signupHandler = async (
   if (!player_name) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'player_name:not-found'
+      error_code: RequestError.PLAYER_NAME_NOT_FOUND
     })
   }
 
@@ -23,7 +24,7 @@ export const signupHandler = async (
   if (!city_name) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'city_name:not-found'
+      error_code: RequestError.CITY_NAME_NOT_FOUND
     })
   }
 

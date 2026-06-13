@@ -1,3 +1,4 @@
+import { WorldError } from '#core/world/error'
 import {
   NextFunction, Request, Response
 } from 'express'
@@ -31,7 +32,7 @@ export const worldGetCellsHandler = async (
   if (min_x === null || max_x === null || min_y === null || max_y === null) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'world:invalid-bounds'
+      error_code: WorldError.INVALID_BOUNDS
     })
   }
 

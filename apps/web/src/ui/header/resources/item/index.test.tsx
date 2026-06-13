@@ -40,7 +40,7 @@ describe('HeaderResourcesItem', () => {
     expect(progress).toHaveAttribute('value', '50')
   })
 
-  it('does not add warn class on progress when value is below 70% of capacity', () => {
+  it('does not add danger fill on progress when value is below 70% of capacity', () => {
     render(
       <ul>
         <HeaderResourcesItem
@@ -51,10 +51,10 @@ describe('HeaderResourcesItem', () => {
       </ul>,
     )
     const progress = screen.getByRole('progressbar')
-    expect(progress.className).not.toContain('warn')
+    expect(progress.className).not.toContain('[&::-webkit-progress-value]:bg-danger')
   })
 
-  it('adds warn class on progress when value is at or above 70% of capacity', () => {
+  it('adds danger fill on progress when value is at or above 70% of capacity', () => {
     render(
       <ul>
         <HeaderResourcesItem
@@ -64,7 +64,7 @@ describe('HeaderResourcesItem', () => {
         />
       </ul>,
     )
-    expect(screen.getByRole('progressbar').className).toContain('warn')
+    expect(screen.getByRole('progressbar').className).toContain('[&::-webkit-progress-value]:bg-danger')
   })
 
   it('adds danger class on resource item when value is at or above capacity', () => {
@@ -77,8 +77,9 @@ describe('HeaderResourcesItem', () => {
         />
       </ul>,
     )
-    const item = container.querySelector('.resource-item.danger')
+    const item = container.querySelector('.resource-item')
     expect(item).toBeInTheDocument()
+    expect(item?.className).toContain('text-danger')
   })
 
   it('does not add danger class when below capacity', () => {
@@ -91,7 +92,8 @@ describe('HeaderResourcesItem', () => {
         />
       </ul>,
     )
-    expect(container.querySelector('.resource-item.danger')).not.toBeInTheDocument()
+    const item = container.querySelector('.resource-item')
+    expect(item?.className).not.toContain('text-danger')
   })
 
   it('displays transformDecimals output for non-zero value', () => {

@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   vi, type MockInstance 
 } from 'vitest'
@@ -48,7 +49,7 @@ describe('communicationMarkReportHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'report_id:not-found' 
+      error_code: RequestError.REPORT_ID_NOT_FOUND 
     })
   })
 
@@ -61,7 +62,7 @@ describe('communicationMarkReportHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'was_read:not-found' 
+      error_code: RequestError.WAS_READ_NOT_FOUND 
     })
   })
 
@@ -74,7 +75,7 @@ describe('communicationMarkReportHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'was_read:not-found' 
+      error_code: RequestError.WAS_READ_NOT_FOUND 
     })
   })
 

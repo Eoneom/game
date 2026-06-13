@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -19,7 +20,7 @@ export const troopEstimateMovementHandler = async (
   if (!origin) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'origin:not-found'
+      error_code: RequestError.ORIGIN_NOT_FOUND
     })
   }
 
@@ -27,7 +28,7 @@ export const troopEstimateMovementHandler = async (
   if (!destination) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'destination:not-found'
+      error_code: RequestError.DESTINATION_NOT_FOUND
     })
   }
 
@@ -35,7 +36,7 @@ export const troopEstimateMovementHandler = async (
   if (!troop_codes) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'troop_codes:not-found'
+      error_code: RequestError.TROOP_CODES_NOT_FOUND
     })
   }
 

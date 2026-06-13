@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -19,7 +20,7 @@ export const troopCreateMovementHandler = async (
   if (!origin) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'origin:not-found'
+      error_code: RequestError.ORIGIN_NOT_FOUND
     })
   }
 
@@ -27,7 +28,7 @@ export const troopCreateMovementHandler = async (
   if (!destination) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'destination:not-found'
+      error_code: RequestError.DESTINATION_NOT_FOUND
     })
   }
 
@@ -35,7 +36,7 @@ export const troopCreateMovementHandler = async (
   if (!troops) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'troops:not-found'
+      error_code: RequestError.TROOPS_NOT_FOUND
     })
   }
 
@@ -43,7 +44,7 @@ export const troopCreateMovementHandler = async (
   if (!action) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'action:not-found'
+      error_code: RequestError.ACTION_NOT_FOUND
     })
   }
 

@@ -3,6 +3,7 @@ import { WorldGetCellsDataResponse, WorldGetCellsRequest } from '@eoneom/api-cli
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 
 export const getCells = async ({
   token,
@@ -13,7 +14,7 @@ export const getCells = async ({
 }): Promise<WorldGetCellsDataResponse | null> => {
   const res = await client.world.getCells(token, bounds)
   if (isError(res)) {
-    toast.error(res.error_code)
+    toast.error(translateError(res.error_code))
     return null
   }
 

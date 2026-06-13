@@ -4,6 +4,7 @@ import { Coordinates, MovementAction, TroopCode } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
 import { outpostKeys } from '#outpost/hooks'
@@ -92,7 +93,7 @@ export const useRecruitTroop = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: activityKeys.all })
       triggerFxBurst()
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -110,7 +111,7 @@ export const useCancelTroop = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: troopKeys.cityList(cityId ?? '') })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId ?? '') })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -173,6 +174,6 @@ export const useCreateMovement = () => {
       queryClient.invalidateQueries({ queryKey: activityKeys.all })
       triggerFxBurst()
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }

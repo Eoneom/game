@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -23,7 +24,7 @@ export const outpostGetHandler = async (
   if (!outpost_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'outpost_id:not-found'
+      error_code: RequestError.OUTPOST_ID_NOT_FOUND
     })
   }
 

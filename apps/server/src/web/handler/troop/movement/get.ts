@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction, Request, Response
 } from 'express'
@@ -20,7 +21,7 @@ export const troopGetMovementHandler = async (
   if (!movement_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'movement_id:not-found'
+      error_code: RequestError.MOVEMENT_ID_NOT_FOUND
     })
   }
 

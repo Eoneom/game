@@ -32,7 +32,7 @@ describe('HeaderTitle', () => {
   it('renders city link with text and href from props', () => {
     render(<HeaderTitle cityId='abc' text='My City' />)
     const link = screen.getByRole('link', { name: 'My City' })
-    expect(link).toHaveAttribute('href', '/city/abc')
+    expect(link).toHaveAttribute('href', '/city/abc/base/')
   })
 
   it('renders outpost link when city is not set', () => {

@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   vi, type MockInstance 
 } from 'vitest'
@@ -62,7 +63,7 @@ describe('troopCreateMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'origin:not-found' 
+      error_code: RequestError.ORIGIN_NOT_FOUND 
     })
   })
 
@@ -76,7 +77,7 @@ describe('troopCreateMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'destination:not-found' 
+      error_code: RequestError.DESTINATION_NOT_FOUND 
     })
   })
 
@@ -90,7 +91,7 @@ describe('troopCreateMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'troops:not-found' 
+      error_code: RequestError.TROOPS_NOT_FOUND 
     })
   })
 
@@ -104,7 +105,7 @@ describe('troopCreateMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'action:not-found' 
+      error_code: RequestError.ACTION_NOT_FOUND 
     })
   })
 

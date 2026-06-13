@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -19,7 +20,7 @@ export const troopGetHandler = async (
   if (!troop_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'troop_id:not-found'
+      error_code: RequestError.TROOP_ID_NOT_FOUND
     })
   }
 

@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import type { MockInstance } from 'vitest'
 import {
   Request, Response, NextFunction 
@@ -49,7 +50,7 @@ describe('buildingListHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'city_id:not-found' 
+      error_code: RequestError.CITY_ID_NOT_FOUND 
     })
   })
 

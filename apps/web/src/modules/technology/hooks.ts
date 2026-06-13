@@ -4,6 +4,7 @@ import { TechnologyCode } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
 import { activityKeys } from '#location/activity-hooks'
@@ -66,7 +67,7 @@ export const useResearchTechnology = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: activityKeys.all })
       triggerFxBurst()
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -83,6 +84,6 @@ export const useCancelTechnology = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: technologyKeys.all })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }

@@ -4,6 +4,7 @@ import { BuildingCode } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
 import { activityKeys } from '#location/activity-hooks'
@@ -72,7 +73,7 @@ export const useUpgradeBuilding = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: activityKeys.all })
       triggerFxBurst()
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -90,7 +91,7 @@ export const useCancelBuildingUpgrade = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: buildingKeys.list(cityId) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -110,6 +111,6 @@ export const useCancelQueuedBuildingUpgrade = (cityId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: buildingKeys.list(cityId) })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }

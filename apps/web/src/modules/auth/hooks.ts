@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { wsClient } from '#helpers/websocket'
 import { useAuth } from '#auth/context'
 import { registerCityWsListeners } from '#city/ws-listener'
@@ -57,7 +58,7 @@ export const useLogin = () => {
       wsClient.connect(token)
     },
     onError: (err: Error) => {
-      toast.error(err.message)
+      toast.error(translateError(err.message))
     },
   })
 }
@@ -80,7 +81,7 @@ export const useLogout = () => {
       queryClient.clear()
     },
     onError: (err: Error) => {
-      toast.error(err.message)
+      toast.error(translateError(err.message))
     },
   })
 }

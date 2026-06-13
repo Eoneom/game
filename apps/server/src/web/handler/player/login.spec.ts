@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   vi, type MockInstance 
 } from 'vitest'
@@ -43,7 +44,7 @@ describe('loginHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'player_name:not-found' 
+      error_code: RequestError.PLAYER_NAME_NOT_FOUND 
     })
   })
 

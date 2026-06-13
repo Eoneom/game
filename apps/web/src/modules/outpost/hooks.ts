@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 
 export const outpostKeys = {
@@ -56,6 +57,6 @@ export const useSetOutpostPermanent = (outpostId: string) => {
       queryClient.invalidateQueries({ queryKey: outpostKeys.detail(outpostId) })
       queryClient.invalidateQueries({ queryKey: outpostKeys.all })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }

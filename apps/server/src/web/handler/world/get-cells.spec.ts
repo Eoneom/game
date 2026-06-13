@@ -1,3 +1,4 @@
+import { WorldError } from '#core/world/error'
 import type { MockInstance } from 'vitest'
 import {
   Request, Response, NextFunction
@@ -84,7 +85,7 @@ describe('worldGetCellsHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'world:invalid-bounds'
+      error_code: WorldError.INVALID_BOUNDS
     })
   })
 

@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction, Request, Response
 } from 'express'
@@ -16,7 +17,7 @@ export const troopRecruitHandler = async (
   if (!city_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'city_id:not-found'
+      error_code: RequestError.CITY_ID_NOT_FOUND
     })
   }
 
@@ -24,7 +25,7 @@ export const troopRecruitHandler = async (
   if (!count) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'count:not-found'
+      error_code: RequestError.COUNT_NOT_FOUND
     })
   }
 
@@ -32,7 +33,7 @@ export const troopRecruitHandler = async (
   if (!troop_code) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'troop_code:not-found'
+      error_code: RequestError.TROOP_CODE_NOT_FOUND
     })
   }
 

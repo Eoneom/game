@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 import { useLocation } from '#location/context'
 
@@ -63,6 +64,6 @@ export const useSettleCity = () => {
       queryClient.invalidateQueries({ queryKey: ['outposts'] })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(newCityId) })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }

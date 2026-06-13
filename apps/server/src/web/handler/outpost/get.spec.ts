@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import type { MockInstance } from 'vitest'
 import {
   Request, Response, NextFunction
@@ -79,7 +80,7 @@ describe('outpostGetHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'outpost_id:not-found'
+      error_code: RequestError.OUTPOST_ID_NOT_FOUND
     })
   })
 

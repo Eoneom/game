@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   WebSocketServer, WebSocket
 } from 'ws'
@@ -27,7 +28,7 @@ export function setupWebSocketServer(
     const token = url.searchParams.get('token')
 
     if (!token) {
-      ws.close(4001, 'token:not_found')
+      ws.close(4001, RequestError.TOKEN_NOT_FOUND)
       return
     }
 

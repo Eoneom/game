@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   vi, type MockInstance 
 } from 'vitest'
@@ -82,7 +83,7 @@ describe('setupWebSocketServer', () => {
 
     await connectionHandler(mockWs, makeReq('/'))
 
-    expect(mockWs.close).toHaveBeenCalledWith(4001, 'token:not_found')
+    expect(mockWs.close).toHaveBeenCalledWith(4001, RequestError.TOKEN_NOT_FOUND)
   })
 
   it('closes the connection when authorization fails', async () => {

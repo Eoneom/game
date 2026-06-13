@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
+import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 
 export const reportKeys = {
@@ -73,7 +74,7 @@ export const useMarkReportAsRead = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 
@@ -90,7 +91,7 @@ export const useMarkAllReportsAsRead = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] })
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(translateError(err.message)),
   })
 }
 

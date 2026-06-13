@@ -1,0 +1,43 @@
+---
+description: Keep API error codes typed and translated to French when adding or changing errors
+globs: apps/server/src/core/**/error.ts,packages/api-client/src/error/**/*.ts,packages/api-client/src/index.ts,apps/web/src/helpers/error-translations.ts,apps/server/src/web/**/*.ts,apps/web/src/modules/**/hooks.ts
+alwaysApply: false
+---
+
+# API error codes and French translations
+
+When adding or changing an API `error_code`, complete **all** of these steps in the same change.
+
+## Checklist
+
+1. **Typed code** — never invent a string literal for `error_code` / `throw new Error(...)` / `ws.close(...)`.
+   - Domain: add to the matching enum in `apps/server/src/core/<context>/error.ts` (`kebab-case` values, e.g. `city:not-enough-resources`).
+   - Request validation / auth: add to `RequestError` in `packages/api-client/src/error/request.ts` (`field:not-found` style with hyphens, never `not_found`).
+2. **Export** — domain enums must be re-exported from `packages/api-client/src/index.ts` (same pattern as existing `*Error` exports). `RequestError` is already exported from there.
+3. **French copy** — add an entry in `apps/web/src/helpers/error-translations.ts` keyed by the enum member. Short player-facing French; validation codes may share « Paramètre manquant » / « Authentification requise ».
+4. **UI** — surface errors with `toast.error(translateError(...))`, never the raw code.
+5. **Rebuild** — run `yarn client:build` if api-client exports changed so web/server pick up types.
+
+## Examples
+
+```typescript
+// ❌ BAD — ad-hoc string
+return res.status(400).json({ status: 'nok', error_code: 'city_id:not-found' })
+throw new Error('city:not-enough-resources')
+
+// ✅ GOOD
+return res.status(400).json({ status: 'nok', error_code: RequestError.CITY_ID_NOT_FOUND })
+throw new Error(CityError.NOT_ENOUGH_RESOURCES)
+```
+
+```typescript
+// ❌ BAD — new enum value without translation (falls back to « Une erreur est survenue »)
+export enum CityError {
+  NEW_CODE = 'city:new-code',
+}
+
+// ✅ GOOD — also add in error-translations.ts
+[CityError.NEW_CODE]: 'Message clair en français',
+```
+
+Do not put French strings in the API response; codes stay on the wire, translation stays on the web.

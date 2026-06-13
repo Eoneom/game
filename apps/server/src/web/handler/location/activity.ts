@@ -3,7 +3,7 @@ import {
   Request,
   Response
 } from 'express'
-import { LocationActivityResponse } from '@eoneom/api-client'
+import { LocationActivityResponse, RequestError} from '@eoneom/api-client'
 import { getPlayerIdFromContext } from '#web/helpers'
 import { LocationActivityQuery } from '#query/location/activity'
 import { locationActivityResponseMapper } from '#web/handler/location/activity.mapper'
@@ -17,7 +17,7 @@ export const cityActivityHandler = async (
   if (!city_id || Array.isArray(city_id)) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'city_id:not-found'
+      error_code: RequestError.CITY_ID_NOT_FOUND
     })
   }
 
@@ -45,7 +45,7 @@ export const outpostActivityHandler = async (
   if (!outpost_id || Array.isArray(outpost_id)) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'outpost_id:not-found'
+      error_code: RequestError.OUTPOST_ID_NOT_FOUND
     })
   }
 

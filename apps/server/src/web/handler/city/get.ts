@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -23,7 +24,7 @@ export const cityGetHandler = async (
   if (!city_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'city_id:not-found'
+      error_code: RequestError.CITY_ID_NOT_FOUND
     })
   }
 

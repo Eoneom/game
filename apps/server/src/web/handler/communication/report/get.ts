@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
   Request,
@@ -22,7 +23,7 @@ export const communicationGetReportHandler = async (
   if (!report_id) {
     return res.status(400).json({
       status: 'nok',
-      error_code: 'report_id:not-found'
+      error_code: RequestError.REPORT_ID_NOT_FOUND
     })
   }
 

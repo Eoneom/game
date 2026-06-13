@@ -1,3 +1,4 @@
+import { RequestError } from '@eoneom/api-client'
 import {
   vi, type MockInstance 
 } from 'vitest'
@@ -48,7 +49,7 @@ describe('technologyResearchHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'city_id:not-found' 
+      error_code: RequestError.CITY_ID_NOT_FOUND 
     })
   })
 
@@ -58,7 +59,7 @@ describe('technologyResearchHandler', () => {
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
-      error_code: 'technology_code:not-found' 
+      error_code: RequestError.TECHNOLOGY_CODE_NOT_FOUND 
     })
   })
 
