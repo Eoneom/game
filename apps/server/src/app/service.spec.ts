@@ -7,6 +7,7 @@ import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingService } from '#core/building/service'
+import { CityEntity } from '#core/city/entity'
 import { CityService } from '#core/city/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -51,6 +52,12 @@ describe('AppService', () => {
       resource_coefficient,
       solar_coefficient: 1
     })
+    const city = CityEntity.create({
+      id: city_id,
+      name: 'c',
+      player_id: id(),
+      cell_id: city_cell.id
+    })
   
     beforeEach(() => {
       const repository = {
@@ -74,7 +81,8 @@ describe('AppService', () => {
             return Promise.resolve(0)
           })
         },
-        cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) },
+        city: { get: vi.fn().mockResolvedValue(city) },
+        cell: { getById: vi.fn().mockResolvedValue(city_cell) },
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -157,7 +165,8 @@ describe('AppService', () => {
             return Promise.resolve(0)
           })
         },
-        cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) },
+        city: { get: vi.fn().mockResolvedValue(city) },
+        cell: { getById: vi.fn().mockResolvedValue(city_cell) },
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -340,15 +349,21 @@ describe('AppService', () => {
   
   describe('getCityMaximumBuildingLevels', () => {
     const city_id = id()
+    const city = CityEntity.create({
+      id: city_id,
+      name: 'c',
+      player_id: id(),
+      cell_id: id()
+    })
   
     beforeEach(() => {
-      const repository = { cell: { getCityCellsCount: vi.fn().mockResolvedValue(7) } } as unknown as Repository
+      const repository = { city: { get: vi.fn().mockResolvedValue(city) } } as unknown as Repository
       setRepositoryMock(repository)
     })
   
-    it('delegates to CityService using city cell count from repository', async () => {
+    it('delegates to CityService maximum building levels', async () => {
       const result = await AppService.getCityMaximumBuildingLevels({ city_id })
-      expect(result).toBe(CityService.getMaximumBuildingLevels({ city_cells_count: 7 }))
+      expect(result).toBe(CityService.getMaximumBuildingLevels())
     })
   })
   
@@ -546,7 +561,7 @@ describe('AppService', () => {
     const coords_free: Coordinates = {
       x: 11,
       y: 20 }
-    const assigned_cell = CellEntity.create({
+    const occupied_cell = CellEntity.create({
       id: id(),
       coordinates: coords_taken,
       type: CellType.RUINS,
@@ -556,7 +571,7 @@ describe('AppService', () => {
         plasma: 0
       },
       solar_coefficient: 1
-    }).assign({ city_id: id() })
+    })
     const free_cell = CellEntity.create({
       id: id(),
       coordinates: coords_free,
@@ -574,9 +589,20 @@ describe('AppService', () => {
         .mockReturnValueOnce(coords_taken)
         .mockReturnValueOnce(coords_free)
       const getCell = vi.fn()
-        .mockResolvedValueOnce(assigned_cell)
+        .mockResolvedValueOnce(occupied_cell)
         .mockResolvedValueOnce(free_cell)
-      const repository = { cell: { getCell } } as unknown as Repository
+      const searchByCell = vi.fn()
+        .mockResolvedValueOnce(CityEntity.create({
+          id: id(),
+          name: 'existing',
+          player_id: id(),
+          cell_id: occupied_cell.id
+        }))
+        .mockResolvedValueOnce(null)
+      const repository = {
+        cell: { getCell },
+        city: { searchByCell }
+      } as unknown as Repository
       setRepositoryMock(repository)
     })
   

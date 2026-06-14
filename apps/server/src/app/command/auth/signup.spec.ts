@@ -83,12 +83,11 @@ describe('signupAuth', () => {
   let cityCreate: MockInstance
   let buildingCreate: MockInstance
   let technologyCreate: MockInstance
-  let cellUpdateOne: MockInstance
   let resourceStockGetByCellId: MockInstance
   let resourceStockUpdateOne: MockInstance
   let troopCreate: MockInstance
   let explorationCreate: MockInstance
-  let repository: Pick<Repository, 'player' | 'city' | 'building' | 'technology' | 'cell' | 'resource_stock' | 'troop' | 'exploration'>
+  let repository: Pick<Repository, 'player' | 'city' | 'building' | 'technology' | 'resource_stock' | 'troop' | 'exploration'>
 
   beforeEach(() => {
     playerExist = vi.fn().mockResolvedValue(false)
@@ -97,7 +96,6 @@ describe('signupAuth', () => {
     cityCreate = vi.fn().mockResolvedValue(undefined)
     buildingCreate = vi.fn().mockResolvedValue(undefined)
     technologyCreate = vi.fn().mockResolvedValue(undefined)
-    cellUpdateOne = vi.fn().mockResolvedValue(undefined)
     troopCreate = vi.fn().mockResolvedValue(undefined)
     explorationCreate = vi.fn().mockResolvedValue(undefined)
     resourceStockGetByCellId = vi.fn().mockImplementation(({ cell_id }: { cell_id: string }) => Promise.resolve(testResourceStock({
@@ -119,7 +117,6 @@ describe('signupAuth', () => {
       } as unknown as Repository['city'],
       building: { create: buildingCreate } as unknown as Repository['building'],
       technology: { create: technologyCreate } as unknown as Repository['technology'],
-      cell: { updateOne: cellUpdateOne } as unknown as Repository['cell'],
       resource_stock: {
         getByCellId: resourceStockGetByCellId,
         updateOne: resourceStockUpdateOne
@@ -207,6 +204,7 @@ describe('signupAuth', () => {
     assert.strictEqual(created_player.name, player_name)
     assert.strictEqual(created_city.name, city_name)
     assert.strictEqual(created_city.player_id, created_player.id)
+    assert.strictEqual(created_city.cell_id, city_first_cell.id)
   })
 
   it('should init all city buildings', async () => {
@@ -257,10 +255,8 @@ describe('signupAuth', () => {
       city_name 
     })
 
-    assert.strictEqual(cellUpdateOne.mock.calls.length, 1)
-    const updated_cell = cellUpdateOne.mock.calls[0][0]
     const created_city = cityCreate.mock.calls[0][0]
-    assert.strictEqual(updated_cell.city_id, created_city.id)
+    assert.strictEqual(created_city.cell_id, city_first_cell.id)
 
     assert.strictEqual(resourceStockUpdateOne.mock.calls.length, 1)
     const saved_stock = resourceStockUpdateOne.mock.calls[0][0]
@@ -277,10 +273,9 @@ describe('signupAuth', () => {
     assert.strictEqual(explorationCreate.mock.calls.length, 1)
     const exploration = explorationCreate.mock.calls[0][0]
     const created_player = playerCreate.mock.calls[0][0]
-    const created_city = cityCreate.mock.calls[0][0]
     const expected_cell_ids = [
       ...cells_around_city.map(cell => cell.id),
-      city_first_cell.assign({ city_id: created_city.id }).id
+      city_first_cell.id
     ]
     assert.deepStrictEqual(exploration.cell_ids, expected_cell_ids)
     assert.strictEqual(exploration.player_id, created_player.id)

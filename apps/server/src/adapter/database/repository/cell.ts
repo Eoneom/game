@@ -23,30 +23,6 @@ export class PostgresCellRepository
     return this.findByIdOrThrow(id)
   }
 
-  async getCityCellsCount({ city_id }: { city_id: string }): Promise<number> {
-    const result = await this.db
-      .selectFrom('cell')
-      .select(({ fn }) => fn.countAll<number>().as('count'))
-      .where('city_id', '=', city_id)
-      .executeTakeFirstOrThrow()
-
-    return Number(result.count)
-  }
-
-  async getCityCell({ city_id }: { city_id: string }): Promise<CellEntity> {
-    const row = await this.db
-      .selectFrom('cell')
-      .selectAll()
-      .where('city_id', '=', city_id)
-      .executeTakeFirst()
-
-    if (!row) {
-      throw new Error(WorldError.CELL_NOT_FOUND)
-    }
-
-    return this.buildFromRow(row)
-  }
-
   async getCell({ coordinates }: { coordinates: Coordinates }): Promise<CellEntity> {
     const row = await this.db
       .selectFrom('cell')
@@ -102,7 +78,6 @@ export class PostgresCellRepository
         y: row.y
       },
       type: row.type as CellType,
-      city_id: row.city_id ?? undefined,
       resource_coefficient: {
         plastic: row.plastic_coefficient,
         mushroom: row.mushroom_coefficient,
@@ -120,8 +95,7 @@ export class PostgresCellRepository
       type: entity.type,
       plastic_coefficient: entity.resource_coefficient.plastic,
       mushroom_coefficient: entity.resource_coefficient.mushroom,
-      solar_coefficient: entity.solar_coefficient,
-      city_id: entity.city_id ?? null
+      solar_coefficient: entity.solar_coefficient
     }
   }
 }

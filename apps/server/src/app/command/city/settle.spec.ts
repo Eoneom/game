@@ -48,7 +48,6 @@ describe('citySettle', () => {
   let cityCreate: MockInstance
   let buildingCreate: MockInstance
   let troopUpdateOne: MockInstance
-  let cellUpdateOne: MockInstance
   let explorationUpdateOne: MockInstance
   let repository: Pick<Repository, 'outpost' | 'city' | 'exploration' | 'cell' | 'troop' | 'building'>
 
@@ -128,7 +127,6 @@ describe('citySettle', () => {
     cityCreate = vi.fn().mockResolvedValue(undefined)
     buildingCreate = vi.fn().mockResolvedValue(undefined)
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
-    cellUpdateOne = vi.fn().mockResolvedValue(undefined)
     explorationUpdateOne = vi.fn().mockResolvedValue(undefined)
 
     repository = {
@@ -146,8 +144,7 @@ describe('citySettle', () => {
         updateOne: explorationUpdateOne
       } as unknown as Repository['exploration'],
       cell: {
-        getById: vi.fn().mockResolvedValue(cell),
-        updateOne: cellUpdateOne
+        getById: vi.fn().mockResolvedValue(cell)
       } as unknown as Repository['cell'],
       troop: {
         getInCell: vi.fn().mockResolvedValue(settler_troop),
@@ -248,6 +245,7 @@ describe('citySettle', () => {
     assert.strictEqual(cityCreate.mock.calls.length, 1)
     const created_city = cityCreate.mock.calls[0][0]
     assert.strictEqual(created_city.name, city_name)
+    assert.strictEqual(created_city.cell_id, cell.id)
     assert.strictEqual(city_id, created_city.id)
   })
 
@@ -258,10 +256,8 @@ describe('citySettle', () => {
       city_name
     })
 
-    assert.strictEqual(cellUpdateOne.mock.calls.length, 1)
-    const updated_cell = cellUpdateOne.mock.calls[0][0]
     const created_city = cityCreate.mock.calls[0][0]
-    assert.strictEqual(updated_cell.city_id, created_city.id)
+    assert.strictEqual(created_city.cell_id, cell.id)
   })
 
   it('should create buildings for this city', async () => {

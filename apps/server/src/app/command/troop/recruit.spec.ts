@@ -34,13 +34,11 @@ describe('recruitTroop', () => {
   let repository: Pick<Repository, 'cell' | 'city' | 'building' | 'technology' | 'troop' | 'resource_stock'>
 
   beforeEach(() => {
+    city_cell = testCityCell({ cell_id })
     city = CityEntity.initCity({
       name: 'dummy',
       player_id,
-    })
-    city_cell = testCityCell({
-      city_id: city.id,
-      cell_id
+      cell_id: city_cell.id
     })
     stock = testResourceStock({
       cell_id,
@@ -59,7 +57,7 @@ describe('recruitTroop', () => {
     getPendingTroopRecruitProgress = vi.fn().mockResolvedValue(null)
 
     repository = {
-      cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
+      cell: { getById: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       building: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['building'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],

@@ -33,7 +33,6 @@ export interface BuildingUpgradeQueue {
 }
 
 export interface Cell {
-  city_id: string | null;
   id: Generated<string>;
   mushroom_coefficient: number;
   plastic_coefficient: number;
@@ -44,6 +43,7 @@ export interface Cell {
 }
 
 export interface City {
+  cell_id: string;
   id: Generated<string>;
   name: string;
   player_id: string;

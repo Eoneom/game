@@ -2,14 +2,13 @@ import { CityEntity } from '#core/city/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CellType } from '#core/world/value/cell-type'
+import { id } from '#shared/identification'
 
 export function testCityCell({
-  city_id,
   cell_id = 'test-cell-id'
 }: {
-  city_id: string
   cell_id?: string
-}): CellEntity {
+} = {}): CellEntity {
   return CellEntity.create({
     id: cell_id,
     coordinates: {
@@ -21,8 +20,7 @@ export function testCityCell({
       mushroom: 1,
       plasma: 1
     },
-    solar_coefficient: 1,
-    city_id
+    solar_coefficient: 1
   })
 }
 
@@ -72,11 +70,12 @@ export function testCityWithStock({
   city_cell: CellEntity
   stock: ResourceStockEntity
 } {
+  const city_cell = testCityCell({ cell_id: id() })
   const city = CityEntity.initCity({
     name: 'c',
-    player_id
+    player_id,
+    cell_id: city_cell.id
   })
-  const city_cell = testCityCell({ city_id: city.id })
   const stock = testResourceStock({
     cell_id: city_cell.id,
     plastic,

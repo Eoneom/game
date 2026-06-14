@@ -23,11 +23,13 @@ describe('cancelQueuedBuildingUpgrade', () => {
   beforeEach(() => {
     city = CityEntity.initCity({
       name: 'dummy',
-      player_id
+      player_id,
+      cell_id: id()
     })
     other_city = CityEntity.initCity({
       name: 'other',
-      player_id: other_player_id
+      player_id: other_player_id,
+      cell_id: id()
     })
     item = BuildingUpgradeQueueEntity.create({
       id: id(),

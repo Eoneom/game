@@ -3,6 +3,7 @@ import assert from 'assert'
 import { finishTroopBaseMovement } from '#app/command/troop/movement/finish/base'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
+import { CityEntity } from '#core/city/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
@@ -42,7 +43,7 @@ describe('finishTroopBaseMovement', () => {
   let ensureWorldStockForCell: MockInstance
   let repository: Pick<
     Repository,
-    'troop' | 'movement' | 'cell' | 'outpost' | 'report' | 'resource_stock'
+    'troop' | 'movement' | 'cell' | 'city' | 'outpost' | 'report' | 'resource_stock'
   >
 
   function mountRepository({
@@ -74,8 +75,16 @@ describe('finishTroopBaseMovement', () => {
       cell: {
         getCell: vi.fn().mockResolvedValue({
           id: destination_cell_id,
-          coordinates: destination,
-          city_id: city_exists ? city_id : undefined }) } as unknown as Repository['cell'],
+          coordinates: destination }) } as unknown as Repository['cell'],
+      city: {
+        searchByCell: vi.fn().mockResolvedValue(city_exists
+          ? CityEntity.create({
+            id: city_id,
+            player_id,
+            name: 'Home',
+            cell_id: destination_cell_id
+          })
+          : null) } as unknown as Repository['city'],
       outpost: {
         existsOnCell: vi.fn().mockResolvedValue(outpost_exists),
         countForPlayer: vi.fn().mockResolvedValue(existing_outposts_count),
@@ -330,7 +339,6 @@ describe('finishTroopBaseMovement', () => {
   })
 
   it('should unload remaining cargo into owned city stock', async () => {
-    const { CityEntity } = await import('#core/city/entity')
     const { ResourceStockEntity } = await import('#core/resources/resource-stock/entity')
     const { AppService } = await import('#app/service')
 
@@ -356,11 +364,6 @@ describe('finishTroopBaseMovement', () => {
       last_mushroom_gather: now() })
     const stockUpdateOne = vi.fn().mockResolvedValue(undefined)
 
-    repository.city = {
-      get: vi.fn().mockResolvedValue(CityEntity.create({
-        id: city_id,
-        player_id,
-        name: 'Home' })) } as unknown as Repository['city']
     repository.resource_stock = {
       ensureWorldStockForCell,
       getByCellId: vi.fn().mockResolvedValue(stock),

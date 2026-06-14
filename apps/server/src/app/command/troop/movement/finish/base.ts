@@ -162,7 +162,8 @@ async function buildSettlePlan({
   arrived_at: number
 }): Promise<FinishBaseSave> {
   const repository = Factory.getRepository()
-  const city_exists = Boolean(destination_cell.city_id)
+  const city = await repository.city.searchByCell({ cell_id: destination_cell.id })
+  const city_exists = Boolean(city)
   const outpost_exists = await repository.outpost.existsOnCell({ cell_id: destination_cell.id })
   const should_build_temporary_outpost = OutpostService.shouldBuildTemporaryOutpost({
     city_exists,

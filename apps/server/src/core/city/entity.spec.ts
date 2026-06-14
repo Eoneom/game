@@ -9,7 +9,8 @@ describe('CityEntity', () => {
   beforeEach(() => {
     city = CityEntity.initCity({
       name,
-      player_id
+      player_id,
+      cell_id: 'fake-cell-id'
     })
   })
 

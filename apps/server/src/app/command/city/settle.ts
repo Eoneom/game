@@ -88,13 +88,13 @@ export async function citySettle({
 
     const city = CityEntity.initCity({
       player_id,
-      name: city_name
+      name: city_name,
+      cell_id: cell.id
     })
 
     const buildings = BuildingService.init({ city_id: city.id })
 
     const settler_troop_to_update = settler_troop.removeCount(1)
-    const cell_to_update = cell.assign({ city_id: city.id })
     const exploration_to_update = exploration.exploreCells([
       ...cells_around_city.map(c => c.id),
       cell.id
@@ -105,7 +105,6 @@ export async function citySettle({
       repository.outpost.delete(outpost.id),
       ...buildings.map(building => repository.building.create(building)),
       repository.troop.updateOne(settler_troop_to_update),
-      repository.cell.updateOne(cell_to_update),
       repository.exploration.updateOne(exploration_to_update)
     ])
 

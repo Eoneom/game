@@ -14,7 +14,8 @@ describe('CityListQuery', () => {
     cities = [
       CityEntity.initCity({
         name: 'a',
-        player_id
+        player_id,
+        cell_id: id()
       })
     ]
     repository = { city: { list: vi.fn().mockResolvedValue(cities) } as unknown as Repository['city'] }

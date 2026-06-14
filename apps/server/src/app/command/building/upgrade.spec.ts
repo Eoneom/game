@@ -39,11 +39,12 @@ describe('upgradeBuilding', () => {
   >
 
   beforeEach(() => {
+    city_cell = testCityCell({ cell_id: id() })
     city = CityEntity.initCity({
       name: 'dummy',
-      player_id
+      player_id,
+      cell_id: city_cell.id
     })
-    city_cell = testCityCell({ city_id: city.id })
     stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: 30000,
@@ -88,8 +89,7 @@ describe('upgradeBuilding', () => {
         ])
       } as unknown as Repository['technology'],
       cell: {
-        getCityCellsCount: vi.fn().mockResolvedValue(10),
-        getCityCell: vi.fn().mockResolvedValue(city_cell)
+        getById: vi.fn().mockResolvedValue(city_cell)
       } as unknown as Repository['cell'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),

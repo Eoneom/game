@@ -11,8 +11,6 @@ export type CellRepository = GenericRepository<CellEntity> & {
     min_y: number
     max_y: number
   }): Promise<CellEntity[]>
-  getCityCell(query: { city_id: string }): Promise<CellEntity>
-  getCityCellsCount(query: { city_id: string }): Promise<number>
   getById(id: string): Promise<CellEntity>
   getCell(query: { coordinates: Coordinates }): Promise<CellEntity>
 }

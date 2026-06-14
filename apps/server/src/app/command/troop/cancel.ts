@@ -28,13 +28,12 @@ export async function cancelTroop({
 
     const [
       city,
-      city_cell,
       troop
     ] = await Promise.all([
       repository.city.get(city_id),
-      repository.cell.getCityCell({ city_id }),
       repository.troop.getById(pending.troop_id)
     ])
+    const city_cell = await repository.cell.getById(city.cell_id)
 
     const progressed = TroopService.progressRecruitment({
       count: troop.count,

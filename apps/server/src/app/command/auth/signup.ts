@@ -46,23 +46,23 @@ export async function signupAuth({
     const city = CityService.settle({
       name: city_name,
       player_id: player.id,
+      cell_id: city_first_cell.id,
       does_city_exist
     })
     const buildings = BuildingService.init({ city_id: city.id })
     const technologies = TechnologyService.init({ player_id: player.id })
     const gather_at = now()
-    const cell = city_first_cell.assign({ city_id: city.id })
-    const initial_stock = await repository.resource_stock.getByCellId({ cell_id: cell.id })
+    const initial_stock = await repository.resource_stock.getByCellId({ cell_id: city_first_cell.id })
     const stock_for_first_city = initial_stock.withState(ResourcesService.firstCityCanonicalResourceStockState({ gather_at }))
     const troops = TroopService.init({
       player_id: player.id,
-      cell_id: cell.id
+      cell_id: city_first_cell.id
     })
     const exploration = ExplorationEntity.init({
       player_id: player.id,
       cell_ids: [
         ...cells_around_city.map(c => c.id),
-        cell.id
+        city_first_cell.id
       ]
     })
 
@@ -71,7 +71,6 @@ export async function signupAuth({
     await Promise.all([
       ...buildings.map(building => repository.building.create(building)),
       ...technologies.map(technology => repository.technology.create(technology)),
-      repository.cell.updateOne(cell),
       repository.resource_stock.updateOne(stock_for_first_city),
       ...troops.map(troop => repository.troop.create(troop)),
       repository.exploration.create(exploration)

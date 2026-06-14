@@ -46,13 +46,11 @@ export async function startBuildingUpgrade({
 
   const [
     city,
-    city_cell,
     building,
     levels,
     pending_upgrade
   ] = await Promise.all([
     repository.city.get(city_id),
-    repository.cell.getCityCell({ city_id }),
     repository.building.get({
       city_id,
       code: building_code
@@ -66,6 +64,8 @@ export async function startBuildingUpgrade({
       ? Promise.resolve(null)
       : job_queue.getPendingBuildingUpgrade({ city_id })
   ])
+
+  const city_cell = await repository.cell.getById(city.cell_id)
 
   building.assertCanUpgrade({ is_building_in_progress: pending_upgrade !== null })
 

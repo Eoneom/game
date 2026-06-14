@@ -9,7 +9,6 @@ type CellEntityProps = BaseEntity & {
   type: CellType
   resource_coefficient: Resource
   solar_coefficient: number
-  city_id?: string
 }
 
 export class CellEntity extends BaseEntity {
@@ -17,7 +16,6 @@ export class CellEntity extends BaseEntity {
   readonly type: CellType
   readonly resource_coefficient: Resource
   readonly solar_coefficient: number
-  readonly city_id?: string
 
   private constructor({
     id,
@@ -25,7 +23,6 @@ export class CellEntity extends BaseEntity {
     type,
     resource_coefficient,
     solar_coefficient,
-    city_id,
   }: CellEntityProps) {
     super({ id })
 
@@ -33,7 +30,6 @@ export class CellEntity extends BaseEntity {
     this.type = type
     this.resource_coefficient = resource_coefficient
     this.solar_coefficient = solar_coefficient
-    this.city_id = city_id
   }
 
   static create(props: CellEntityProps): CellEntity {
@@ -57,17 +53,6 @@ export class CellEntity extends BaseEntity {
       resource_coefficient: coefficient,
       solar_coefficient,
     })
-  }
-
-  assign({ city_id }: {city_id: string }): CellEntity {
-    return CellEntity.create({
-      ...this,
-      city_id
-    })
-  }
-
-  isAssigned(): boolean {
-    return Boolean(this.city_id)
   }
 
   private static getType({ coefficient }: { coefficient: Resource }): CellType {

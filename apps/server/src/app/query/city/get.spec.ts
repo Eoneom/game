@@ -22,10 +22,6 @@ describe('CityGetQuery', () => {
 
   beforeEach(() => {
     nowSpy = vi.spyOn(time, 'now').mockReturnValue(0)
-    city = CityEntity.initCity({
-      name: 'dummy',
-      player_id
-    })
     cell = CellEntity.create({
       id: cell_id,
       coordinates: {
@@ -37,8 +33,12 @@ describe('CityGetQuery', () => {
         mushroom: 1,
         plasma: 1
       },
-      solar_coefficient: 1,
-      city_id: city.id
+      solar_coefficient: 1
+    })
+    city = CityEntity.initCity({
+      name: 'dummy',
+      player_id,
+      cell_id: cell.id
     })
 
     repository = {
@@ -46,7 +46,7 @@ describe('CityGetQuery', () => {
         getTotalLevels: vi.fn().mockResolvedValue(7),
         getLevel: vi.fn().mockResolvedValue(2) } as unknown as Repository['building'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
-      cell: { getCityCell: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
+      cell: { getById: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(testResourceStock({
           cell_id: cell.id,

@@ -60,11 +60,26 @@ export class PostgresCityRepository
     return Boolean(row)
   }
 
+  async searchByCell({ cell_id }: { cell_id: string }): Promise<CityEntity | null> {
+    const row = await this.db
+      .selectFrom('city')
+      .selectAll()
+      .where('cell_id', '=', cell_id)
+      .executeTakeFirst()
+
+    if (!row) {
+      return null
+    }
+
+    return this.buildFromRow(row)
+  }
+
   protected buildFromRow(row: Selectable<DB['city']>): CityEntity {
     return CityEntity.create({
       id: row.id,
       player_id: row.player_id,
-      name: row.name
+      name: row.name,
+      cell_id: row.cell_id
     })
   }
 
@@ -72,7 +87,8 @@ export class PostgresCityRepository
     return {
       id: entity.id,
       player_id: entity.player_id,
-      name: entity.name
+      name: entity.name,
+      cell_id: entity.cell_id
     }
   }
 }

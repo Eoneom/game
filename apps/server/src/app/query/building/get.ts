@@ -113,7 +113,8 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     if (isProductionBuildingCode(building.code)) {
-      const city_cell = await this.repository.cell.getCityCell({ city_id: building.city_id })
+      const city = await this.repository.city.get(building.city_id)
+      const city_cell = await this.repository.cell.getById(city.cell_id)
       const coefficients = city_cell.resource_coefficient
       const { production_energy_ratio } = await AppService.getCityEnergyConsumptionBreakdown({
         city_id: building.city_id,
@@ -173,11 +174,12 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     }
 
     if (isEnergyBuildingCode(building.code)) {
+      const city = await this.repository.city.get(building.city_id)
       const [
         city_cell,
         photovoltaic_optimization
       ] = await Promise.all([
-        this.repository.cell.getCityCell({ city_id: building.city_id }),
+        this.repository.cell.getById(city.cell_id),
         this.repository.technology.get({
           player_id,
           code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION

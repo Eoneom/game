@@ -41,8 +41,8 @@ export class AppService {
 
   static async getCityMaximumBuildingLevels({ city_id }: { city_id: string }): Promise<number> {
     const repository = Factory.getRepository()
-    const city_cells_count = await repository.cell.getCityCellsCount({ city_id })
-    return CityService.getMaximumBuildingLevels({ city_cells_count })
+    await repository.city.get(city_id)
+    return CityService.getMaximumBuildingLevels()
   }
 
   static async getCityEarningsBySecond({
@@ -222,11 +222,12 @@ export class AppService {
     photovoltaic_optimization_level: number
   }> {
     const repository = Factory.getRepository()
+    const city = await repository.city.get(city_id)
     const [
       city_cell,
       photovoltaic_optimization
     ] = await Promise.all([
-      repository.cell.getCityCell({ city_id }),
+      repository.cell.getById(city.cell_id),
       repository.technology.get({
         player_id,
         code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION
@@ -454,7 +455,8 @@ export class AppService {
     for (;;) {
       const random_coordinates = WorldService.getRandomCoordinates()
       const cell = await repository.cell.getCell({ coordinates: random_coordinates })
-      if (!cell.isAssigned()) {
+      const city_on_cell = await repository.city.searchByCell({ cell_id: cell.id })
+      if (!city_on_cell) {
         return cell
       }
     }
@@ -499,7 +501,7 @@ export class AppService {
     city_cell: CellEntity
     stock: ResourceStockEntity
   }): void {
-    if (city_cell.city_id !== city.id || stock.cell_id !== city_cell.id) {
+    if (city.cell_id !== city_cell.id || stock.cell_id !== city_cell.id) {
       throw new Error(WorldError.CELL_CITY_MISMATCH)
     }
   }
@@ -613,6 +615,7 @@ export class AppService {
     city_cell: CellEntity
   }> {
     const repository = Factory.getRepository()
+    const city = await repository.city.get(city_id)
     const [
       mushroom_farm_level,
       recycling_plant_level,
@@ -646,7 +649,7 @@ export class AppService {
         city_id,
         code: BuildingCode.SOLAR_PANEL
       }),
-      repository.cell.getCityCell({ city_id })
+      repository.cell.getById(city.cell_id)
     ])
 
     return {

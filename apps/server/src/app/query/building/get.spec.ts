@@ -23,9 +23,23 @@ describe('BuildingGetQuery', () => {
   let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'cell'>
 
   beforeEach(() => {
+    const city_cell = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: 1,
+        y: 1 },
+      type: CellType.FOREST,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 0
+      },
+      solar_coefficient: 1
+    })
     city = CityEntity.initCity({
       name: 'c',
-      player_id
+      player_id,
+      cell_id: city_cell.id
     })
     building = BuildingEntity.create({
       id: id(),
@@ -61,19 +75,7 @@ describe('BuildingGetQuery', () => {
         })
       } as unknown as Repository['technology'],
       cell: {
-        getCityCell: vi.fn().mockResolvedValue(CellEntity.create({
-          id: id(),
-          coordinates: {
-            x: 1,
-            y: 1 },
-          type: CellType.FOREST,
-          resource_coefficient: {
-            plastic: 1,
-            mushroom: 1,
-            plasma: 0
-          },
-          solar_coefficient: 1
-        }))
+        getById: vi.fn().mockResolvedValue(city_cell)
       } as unknown as Repository['cell']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -94,7 +96,8 @@ describe('BuildingGetQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other = CityEntity.initCity({
       name: 'x',
-      player_id: other_player_id
+      player_id: other_player_id,
+      cell_id: id()
     })
     ;(repository.city.get as MockInstance).mockResolvedValue(other)
 

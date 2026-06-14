@@ -27,7 +27,8 @@ export async function recruitTroop({
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
-    const city_cell = await repository.cell.getCityCell({ city_id })
+    const city = await repository.city.get(city_id)
+    const city_cell = await repository.cell.getById(city.cell_id)
 
     const pending_recruit = await job_queue.getPendingTroopRecruitProgress({ city_id })
     if (pending_recruit) {
@@ -35,13 +36,11 @@ export async function recruitTroop({
     }
 
     const [
-      city,
       cloning_factory_level,
       replication_catalyst_level,
       levels,
       troop,
     ] = await Promise.all([
-      repository.city.get(city_id),
       repository.building.getLevel({
         city_id,
         code: BuildingCode.CLONING_FACTORY,

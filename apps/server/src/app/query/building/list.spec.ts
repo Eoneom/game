@@ -28,7 +28,8 @@ describe('BuildingListQuery', () => {
   beforeEach(() => {
     city = CityEntity.initCity({
       name: 'c',
-      player_id
+      player_id,
+      cell_id: id()
     })
     architecture = TechnologyEntity.create({
       id: technology_id,
@@ -82,7 +83,8 @@ describe('BuildingListQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other = CityEntity.initCity({
       name: 'x',
-      player_id: other_player_id
+      player_id: other_player_id,
+      cell_id: id()
     })
     ;(repository.city.get as unknown as MockInstance).mockResolvedValue(other)
 

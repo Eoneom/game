@@ -24,7 +24,7 @@ export async function cityGather({
       earnings_per_second,
       warehouses_capacity
     ] = await Promise.all([
-      repository.cell.getCityCell({ city_id }),
+      repository.cell.getById(city.cell_id),
       AppService.getCityEarningsBySecond({
         city_id,
         player_id

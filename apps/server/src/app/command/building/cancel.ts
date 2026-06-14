@@ -26,13 +26,8 @@ export async function cancelBuilding({
 
     const building = await repository.building.getById(pending.building_id)
 
-    const [
-      city,
-      city_cell
-    ] = await Promise.all([
-      repository.city.get(city_id),
-      repository.cell.getCityCell({ city_id })
-    ])
+    const city = await repository.city.get(city_id)
+    const city_cell = await repository.cell.getById(city.cell_id)
 
     const resource_refund = PricingService.getBuildingUpgradeRefund({
       code: building.code,

@@ -80,13 +80,13 @@ export class TroopGetQuery extends GenericQuery<TroopGetQueryRequest, TroopGetQu
       return 0
     }
 
-    const cell = await this.repository.cell.getById(cell_id)
-    if (!cell.city_id) {
+    const city = await this.repository.city.searchByCell({ cell_id })
+    if (!city) {
       return 0
     }
 
     return this.repository.building.getLevel({
-      city_id: cell.city_id,
+      city_id: city.id,
       code: BuildingCode.CLONING_FACTORY
     })
   }
@@ -96,11 +96,11 @@ export class TroopGetQuery extends GenericQuery<TroopGetQueryRequest, TroopGetQu
       return null
     }
 
-    const cell = await this.repository.cell.getById(cell_id)
-    if (!cell.city_id) {
+    const city = await this.repository.city.searchByCell({ cell_id })
+    if (!city) {
       return null
     }
 
-    return Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id: cell.city_id })
+    return Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id: city.id })
   }
 }

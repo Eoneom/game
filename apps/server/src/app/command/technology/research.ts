@@ -27,16 +27,15 @@ export async function researchTechnology({
 
     const [
       city,
-      city_cell,
       technology,
     ] = await Promise.all([
       repository.city.get(city_id),
-      repository.cell.getCityCell({ city_id }),
       repository.technology.get({
         player_id,
         code: technology_code
       }),
     ])
+    const city_cell = await repository.cell.getById(city.cell_id)
 
     technology.assertCanResearch({ is_technology_in_progress })
 

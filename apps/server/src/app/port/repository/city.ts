@@ -7,4 +7,5 @@ export type CityRepository = GenericRepository<CityEntity> & {
   list (query: { player_id: string }): Promise<CityEntity[]>
   listAll(): Promise<CityEntity[]>
   exist (name: string): Promise<boolean>
+  searchByCell(query: { cell_id: string }): Promise<CityEntity | null>
 }

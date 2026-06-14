@@ -3,6 +3,7 @@ import { TroopGetQuery } from '#app/query/troop/get'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
+import { CityEntity } from '#core/city/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
@@ -18,7 +19,7 @@ describe('TroopGetQuery', () => {
   const cell_id = id()
   const city_id = id()
   let troop_no_cell: TroopEntity
-  let repository: Pick<Repository, 'troop' | 'technology' | 'cell' | 'building'>
+  let repository: Pick<Repository, 'troop' | 'technology' | 'cell' | 'building' | 'city'>
 
   beforeEach(() => {
     troop_no_cell = TroopEntity.create({
@@ -33,7 +34,8 @@ describe('TroopGetQuery', () => {
       troop: { getById: vi.fn().mockResolvedValue(troop_no_cell) } as unknown as Repository['troop'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
       cell: { getById: vi.fn() } as unknown as Repository['cell'],
-      building: { getLevel: vi.fn() } as unknown as Repository['building']
+      building: { getLevel: vi.fn() } as unknown as Repository['building'],
+      city: { searchByCell: vi.fn().mockResolvedValue(null) } as unknown as Repository['city']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
@@ -82,8 +84,13 @@ describe('TroopGetQuery', () => {
         mushroom: 1 ,
         plasma: 0
       },
-      solar_coefficient: 1,
-      city_id
+      solar_coefficient: 1
+    })
+    const city = CityEntity.create({
+      id: city_id,
+      name: 'c',
+      player_id,
+      cell_id: cell.id
     })
     const troop_in_city = TroopEntity.create({
       id: troop_id,
@@ -95,6 +102,7 @@ describe('TroopGetQuery', () => {
     })
     ;(repository.troop.getById as MockInstance).mockResolvedValue(troop_in_city)
     repository.cell = { getById: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell']
+    repository.city = { searchByCell: vi.fn().mockResolvedValue(city) } as unknown as Repository['city']
     repository.building = { getLevel: vi.fn().mockResolvedValue(3) } as unknown as Repository['building']
 
     await new TroopGetQuery().run({

@@ -74,9 +74,7 @@ export async function resolveOwnedDepositTarget({
 }): Promise<{ cell_id: string; warehouses_capacity: WarehouseCapacity } | null> {
   const repository = Factory.getRepository()
 
-  const city = destination_cell.city_id
-    ? await repository.city.get(destination_cell.city_id)
-    : null
+  const city = await repository.city.searchByCell({ cell_id: destination_cell.id })
   const outpost = await repository.outpost.searchByCell({ cell_id: destination_cell.id })
 
   const owned_city = city?.isOwnedBy(player_id) ? city : null

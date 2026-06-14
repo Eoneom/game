@@ -88,13 +88,13 @@ describe('finishTroopTransportMovement', () => {
         create: movementCreate } as unknown as Repository['movement'],
       cell: {
         getCell: vi.fn().mockResolvedValue({
-          id: destination_cell_id,
-          city_id }) } as unknown as Repository['cell'],
+          id: destination_cell_id }) } as unknown as Repository['cell'],
       city: {
-        get: vi.fn().mockResolvedValue(CityEntity.create({
+        searchByCell: vi.fn().mockResolvedValue(CityEntity.create({
           id: city_id,
           player_id,
-          name: 'Home' })) } as unknown as Repository['city'],
+          name: 'Home',
+          cell_id: destination_cell_id })) } as unknown as Repository['city'],
       outpost: {
         searchByCell: vi.fn().mockResolvedValue(null) } as unknown as Repository['outpost'],
       report: { create: reportCreate } as unknown as Repository['report'],
@@ -163,10 +163,7 @@ describe('finishTroopTransportMovement', () => {
   })
 
   it('should deposit full cargo into owned outpost', async () => {
-    repository.cell.getCell = vi.fn().mockResolvedValue({
-      id: destination_cell_id,
-      city_id: undefined })
-    repository.city.get = vi.fn()
+    repository.city.searchByCell = vi.fn().mockResolvedValue(null)
     repository.outpost.searchByCell = vi.fn().mockResolvedValue(OutpostEntity.create({
       id: id(),
       player_id,
@@ -198,10 +195,7 @@ describe('finishTroopTransportMovement', () => {
   })
 
   it('should bounce full cargo when destination is empty', async () => {
-    repository.cell.getCell = vi.fn().mockResolvedValue({
-      id: destination_cell_id,
-      city_id: undefined })
-    repository.city.get = vi.fn()
+    repository.city.searchByCell = vi.fn().mockResolvedValue(null)
     repository.outpost.searchByCell = vi.fn().mockResolvedValue(null)
 
     await finishTroopTransportMovement({
@@ -226,10 +220,11 @@ describe('finishTroopTransportMovement', () => {
   })
 
   it('should bounce full cargo when destination is not owned', async () => {
-    repository.city.get = vi.fn().mockResolvedValue(CityEntity.create({
+    repository.city.searchByCell = vi.fn().mockResolvedValue(CityEntity.create({
       id: city_id,
       player_id: other_player_id,
-      name: 'Enemy' }))
+      name: 'Enemy',
+      cell_id: destination_cell_id }))
 
     await finishTroopTransportMovement({
       player_id,

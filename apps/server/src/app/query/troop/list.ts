@@ -108,7 +108,7 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
         throw new Error(CityError.NOT_OWNER)
       }
 
-      return this.repository.cell.getCityCell({ city_id: city.id })
+      return this.repository.cell.getById(city.cell_id)
     }
 
     const outpost = await this.repository.outpost.getById(location.outpost_id)

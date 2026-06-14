@@ -32,11 +32,12 @@ describe('researchTechnology', () => {
   let repository: Pick<Repository, 'city' | 'technology' | 'building' | 'cell' | 'resource_stock'>
 
   beforeEach(() => {
+    city_cell = testCityCell({ cell_id: id() })
     city = CityEntity.initCity({
       name: 'dummy',
-      player_id
+      player_id,
+      cell_id: city_cell.id
     })
-    city_cell = testCityCell({ city_id: city.id })
     stock = testResourceStock({
       cell_id: city_cell.id,
       plastic: 100000,
@@ -64,7 +65,7 @@ describe('researchTechnology', () => {
         get: vi.fn().mockResolvedValue(technology),
       } as unknown as Repository['technology'],
       building: { get: vi.fn().mockResolvedValue(research_lab) } as unknown as Repository['building'],
-      cell: { getCityCell: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
+      cell: { getById: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
         updateOne: stockUpdateOne

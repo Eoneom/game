@@ -62,7 +62,7 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
         city_id: city.id,
         player_id
       }),
-      this.repository.cell.getCityCell({ city_id: city.id }),
+      this.repository.cell.getById(city.cell_id),
       AppService.getCityMaximumBuildingLevels({ city_id: city.id }),
       AppService.getCityWarehousesCapacity({ city_id: city.id }),
       this.repository.building.getTotalLevels({ city_id: city.id }),

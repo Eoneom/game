@@ -23,10 +23,6 @@ describe('TroopListQuery', () => {
   let repository: Pick<Repository, 'city' | 'cell' | 'troop' | 'building' | 'technology' | 'outpost'>
 
   beforeEach(() => {
-    city = CityEntity.initCity({
-      name: 'c',
-      player_id
-    })
     cell = CellEntity.create({
       id: id(),
       coordinates: {
@@ -38,8 +34,12 @@ describe('TroopListQuery', () => {
         mushroom: 1 ,
         plasma: 0
       },
-      solar_coefficient: 1,
-      city_id: city.id
+      solar_coefficient: 1
+    })
+    city = CityEntity.initCity({
+      name: 'c',
+      player_id,
+      cell_id: cell.id
     })
     troop = TroopEntity.create({
       id: id(),
@@ -53,8 +53,7 @@ describe('TroopListQuery', () => {
     repository = {
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
       cell: {
-        getCityCell: vi.fn().mockResolvedValue(cell),
-        getById: vi.fn()
+        getById: vi.fn().mockResolvedValue(cell)
       } as unknown as Repository['cell'],
       troop: { listInCell: vi.fn().mockResolvedValue([ troop ]) } as unknown as Repository['troop'],
       building: { getLevel: vi.fn().mockResolvedValue(1) } as unknown as Repository['building'],
@@ -74,7 +73,8 @@ describe('TroopListQuery', () => {
   it('throws when city is not owned by player', async () => {
     const other_city = CityEntity.initCity({
       name: 'x',
-      player_id: other_player_id
+      player_id: other_player_id,
+      cell_id: id()
     })
     ;(repository.city.get as MockInstance).mockResolvedValue(other_city)
 
