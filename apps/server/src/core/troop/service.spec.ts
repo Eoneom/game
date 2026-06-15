@@ -1,5 +1,6 @@
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { TroopRole } from '#core/troop/constant/role'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { TroopService } from '#core/troop/service'
@@ -252,6 +253,68 @@ describe('TroopService', () => {
         count: 10,
         coefficients: { plastic: 1.5, mushroom: 2 , plasma: 0}
       }), 1.8)
+    })
+
+    it('scales harvester earnings like farmer', () => {
+      assert.strictEqual(
+        TroopService.getEarningsBySecond({
+          code: TroopCode.HARVESTER,
+          count: 10,
+          coefficients: { plastic: 2, mushroom: 1.5, plasma: 0 }
+        }),
+        TroopService.getEarningsBySecond({
+          code: TroopCode.FARMER,
+          count: 10,
+          coefficients: { plastic: 2, mushroom: 1.5, plasma: 0 }
+        })
+      )
+    })
+
+    it('scales reclaimer earnings like recycler', () => {
+      assert.strictEqual(
+        TroopService.getEarningsBySecond({
+          code: TroopCode.RECLAIMER,
+          count: 10,
+          coefficients: { plastic: 1.5, mushroom: 2, plasma: 0 }
+        }),
+        TroopService.getEarningsBySecond({
+          code: TroopCode.RECYCLER,
+          count: 10,
+          coefficients: { plastic: 1.5, mushroom: 2, plasma: 0 }
+        })
+      )
+    })
+  })
+
+  describe('roleFor', () => {
+    it('maps faction unit types onto shared roles', () => {
+      assert.strictEqual(TroopService.roleFor(TroopCode.EXPLORER), TroopRole.SCOUT)
+      assert.strictEqual(TroopService.roleFor(TroopCode.SEEKER), TroopRole.SCOUT)
+      assert.strictEqual(TroopService.roleFor(TroopCode.SETTLER), TroopRole.FOUNDER)
+      assert.strictEqual(TroopService.roleFor(TroopCode.ASSEMBLER), TroopRole.FOUNDER)
+    })
+  })
+
+  describe('findByRole', () => {
+    it('returns the stack whose unit type has the given role', () => {
+      const troops = [
+        {
+          code: TroopCode.SEEKER,
+          count: 2
+        },
+        {
+          code: TroopCode.ASSEMBLER,
+          count: 1
+        }
+      ]
+      const founder = TroopService.findByRole({
+        troops,
+        role: TroopRole.FOUNDER
+      })
+      assert.deepStrictEqual(founder, {
+        code: TroopCode.ASSEMBLER,
+        count: 1
+      })
     })
   })
 

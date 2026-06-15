@@ -15,6 +15,7 @@ import {
 import { RequirementValue } from '#core/requirement/value/requirement'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
+import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CellEntity } from '#core/world/cell/entity'
@@ -314,8 +315,8 @@ export class AppService {
     const {
       outpost,
       cell,
-      farmer_count,
-      recycler_count
+      cultivator,
+      salvager
     } = await this.loadOutpostProductionInputs(outpost_id)
 
     if (outpost.type !== OutpostType.PERMANENT) {
@@ -336,29 +337,37 @@ export class AppService {
 
     const cell_resource_coefficient = cell.resource_coefficient
 
-    const plastic = TroopService.getEarningsBySecond({
-      code: TroopCode.RECYCLER,
-      count: recycler_count,
-      coefficients: cell_resource_coefficient,
-    })
+    const plastic = salvager
+      ? TroopService.getEarningsBySecond({
+        code: salvager.code,
+        count: salvager.count,
+        coefficients: cell_resource_coefficient,
+      })
+      : 0
 
-    const mushroom = TroopService.getEarningsBySecond({
-      code: TroopCode.FARMER,
-      count: farmer_count,
-      coefficients: cell_resource_coefficient,
-    })
+    const mushroom = cultivator
+      ? TroopService.getEarningsBySecond({
+        code: cultivator.code,
+        count: cultivator.count,
+        coefficients: cell_resource_coefficient,
+      })
+      : 0
 
-    const pre_cell_plastic = TroopService.getEarningsBySecond({
-      code: TroopCode.RECYCLER,
-      count: recycler_count,
-      coefficients: NEUTRAL_CELL_COEFFICIENTS,
-    })
+    const pre_cell_plastic = salvager
+      ? TroopService.getEarningsBySecond({
+        code: salvager.code,
+        count: salvager.count,
+        coefficients: NEUTRAL_CELL_COEFFICIENTS,
+      })
+      : 0
 
-    const pre_cell_mushroom = TroopService.getEarningsBySecond({
-      code: TroopCode.FARMER,
-      count: farmer_count,
-      coefficients: NEUTRAL_CELL_COEFFICIENTS,
-    })
+    const pre_cell_mushroom = cultivator
+      ? TroopService.getEarningsBySecond({
+        code: cultivator.code,
+        count: cultivator.count,
+        coefficients: NEUTRAL_CELL_COEFFICIENTS,
+      })
+      : 0
 
     return {
       earnings_per_second: {
@@ -530,8 +539,8 @@ export class AppService {
   private static async loadOutpostProductionInputs(outpost_id: string): Promise<{
     outpost: OutpostEntity
     cell: CellEntity
-    farmer_count: number
-    recycler_count: number
+    cultivator: { code: TroopCode; count: number } | undefined
+    salvager: { code: TroopCode; count: number } | undefined
   }> {
     const repository = Factory.getRepository()
     const outpost = await repository.outpost.getById(outpost_id)
@@ -546,14 +555,17 @@ export class AppService {
       })
     ])
 
-    const farmer_count = troops.find(troop => troop.code === TroopCode.FARMER)?.count ?? 0
-    const recycler_count = troops.find(troop => troop.code === TroopCode.RECYCLER)?.count ?? 0
-
     return {
       outpost,
       cell,
-      farmer_count,
-      recycler_count
+      cultivator: TroopService.findByRole({
+        troops,
+        role: TroopRole.CULTIVATOR
+      }),
+      salvager: TroopService.findByRole({
+        troops,
+        role: TroopRole.SALVAGER
+      })
     }
   }
 

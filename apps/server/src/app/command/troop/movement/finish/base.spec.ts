@@ -7,6 +7,7 @@ import { CityEntity } from '#core/city/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
+import { TroopService } from '#core/troop/service'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { now } from '#shared/time'
 import { TroopEntity } from '#core/troop/entity'
@@ -236,7 +237,10 @@ describe('finishTroopBaseMovement', () => {
     assert.strictEqual(delete_ids.length, 2)
     assert.strictEqual(delete_ids[0], movement_troop_id)
 
-    assert.strictEqual(troopUpdateOne.mock.calls.length, Object.values(TroopCode).length)
+    assert.strictEqual(
+      troopUpdateOne.mock.calls.length,
+      TroopService.codesForFaction(FactionCode.THE_CONFEDERATION).length
+    )
 
     const updated_troops = troopUpdateOne.mock.calls.map(([ t ]) => t)
     const updated_explorer = updated_troops.find(t => t.code === TroopCode.EXPLORER)

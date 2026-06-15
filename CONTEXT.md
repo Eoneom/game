@@ -19,3 +19,7 @@ _Avoid_: user, account, character
 **Troop**:
 A stack of a single unit type owned by a Player, stationed on a cell or a movement. Each unit type belongs to exactly one Faction.
 _Avoid_: army
+
+**Role**:
+A job a unit type performs. Several unit types, each belonging to one Faction, can share a Role.
+_Avoid_: class, archetype, template, kind, job

@@ -4,7 +4,14 @@ import { troop_faction } from '#core/troop/constant/faction'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
-import { troop_earnings } from '#core/troop/constant/earnings'
+import {
+  EarningTroopCode,
+  troop_earnings
+} from '#core/troop/constant/earnings'
+import {
+  TroopRole,
+  troop_role
+} from '#core/troop/constant/role'
 import { resource_transport_weight } from '#core/troop/constant/transport-weight'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
@@ -73,6 +80,20 @@ export class TroopService {
 
   static codesForFaction(faction_code: FactionCode): TroopCode[] {
     return Object.values(TroopCode).filter(code => troop_faction[code] === faction_code)
+  }
+
+  static roleFor(code: TroopCode): TroopRole {
+    return troop_role[code]
+  }
+
+  static findByRole<T extends { code: TroopCode }>({
+    troops,
+    role
+  }: {
+    troops: T[]
+    role: TroopRole
+  }): T | undefined {
+    return troops.find(troop => this.roleFor(troop.code) === role)
   }
 
   static assertInRoster({
@@ -359,7 +380,7 @@ export class TroopService {
     count,
     coefficients,
   }: {
-    code: TroopCode.FARMER | TroopCode.RECYCLER
+    code: TroopCode
     count: number
     coefficients: Resource
   }): number {
@@ -367,8 +388,13 @@ export class TroopService {
       return 0
     }
 
-    const base = troop_earnings[code]
-    const coefficient = code === TroopCode.FARMER
+    const role = this.roleFor(code)
+    if (role !== TroopRole.CULTIVATOR && role !== TroopRole.SALVAGER) {
+      return 0
+    }
+
+    const base = troop_earnings[code as EarningTroopCode]
+    const coefficient = role === TroopRole.CULTIVATOR
       ? coefficients.mushroom
       : coefficients.plastic
     const per_game_second = Math.round(base * count * coefficient * 100) / 100

@@ -3,5 +3,10 @@ export enum TroopCode {
   SETTLER = 'settler',
   LIGHT_TRANSPORTER = 'light_transporter',
   FARMER = 'farmer',
-  RECYCLER = 'recycler'
+  RECYCLER = 'recycler',
+  SEEKER = 'seeker',
+  ASSEMBLER = 'assembler',
+  HAULER = 'hauler',
+  HARVESTER = 'harvester',
+  RECLAIMER = 'reclaimer'
 }

@@ -1,4 +1,4 @@
-import { TroopCode } from '@eoneom/api-client'
+import { TroopRole, troop_role } from '@eoneom/api-client'
 import React, { useMemo, useState } from 'react'
 
 import { useListOutpostTroops } from '#troop/hooks'
@@ -12,13 +12,13 @@ export const OutpostSettle: React.FC<Props> = ({ outpostId, onSettle }) => {
   const [cityName, setCityName] = useState('')
   const { data: troops = [] } = useListOutpostTroops(outpostId)
 
-  const settler = useMemo(() => {
-    return troops.find(troop => troop.code === TroopCode.SETTLER)
+  const founder = useMemo(() => {
+    return troops.find(troop => troop_role[troop.code] === TroopRole.FOUNDER)
   }, [troops])
 
   const disabled = useMemo(() => {
-    return (settler?.count ?? 0) === 0
-  }, [settler])
+    return (founder?.count ?? 0) === 0
+  }, [founder])
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()

@@ -147,7 +147,7 @@ describe('citySettle', () => {
         getById: vi.fn().mockResolvedValue(cell)
       } as unknown as Repository['cell'],
       troop: {
-        getInCell: vi.fn().mockResolvedValue(settler_troop),
+        listInCell: vi.fn().mockResolvedValue([ settler_troop ]),
         updateOne: troopUpdateOne
       } as unknown as Repository['troop'],
       building: { create: buildingCreate } as unknown as Repository['building']
@@ -207,10 +207,12 @@ describe('citySettle', () => {
   })
 
   it('should prevent player from settling a city when there is no settler available', async () => {
-    repository.troop.getInCell = vi.fn().mockResolvedValue(TroopEntity.create({
-      ...settler_troop,
-      count: 0
-    }))
+    repository.troop.listInCell = vi.fn().mockResolvedValue([
+      TroopEntity.create({
+        ...settler_troop,
+        count: 0
+      })
+    ])
 
     await assert.rejects(
       () => citySettle({
@@ -307,6 +309,37 @@ describe('citySettle', () => {
     assert.strictEqual(troopUpdateOne.mock.calls.length, 1)
     const updated_troop = troopUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated_troop.id, settler_troop.id)
+    assert.strictEqual(updated_troop.count, 0)
+  })
+
+  it('should prevent settling when no founder troop is on the cell', async () => {
+    repository.troop.listInCell = vi.fn().mockResolvedValue([])
+
+    await assert.rejects(
+      () => citySettle({
+        outpost_id,
+        player_id,
+        city_name
+      }),
+      new RegExp(CityError.NO_SETTLER_AVAILABLE)
+    )
+  })
+
+  it('should consume an assembler as the founder troop', async () => {
+    const assembler_troop = TroopEntity.create({
+      ...settler_troop,
+      code: TroopCode.ASSEMBLER
+    })
+    repository.troop.listInCell = vi.fn().mockResolvedValue([ assembler_troop ])
+
+    await citySettle({
+      outpost_id,
+      player_id,
+      city_name
+    })
+
+    const updated_troop = troopUpdateOne.mock.calls[0][0]
+    assert.strictEqual(updated_troop.code, TroopCode.ASSEMBLER)
     assert.strictEqual(updated_troop.count, 0)
   })
 })

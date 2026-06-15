@@ -91,7 +91,23 @@ describe('TroopService recruitment', () => {
         cell_id: 'c',
         faction_code: FactionCode.THE_CONFEDERATION
       })
-      assert.strictEqual(troops.length, Object.values(TroopCode).length)
+      assert.strictEqual(
+        troops.length,
+        TroopService.codesForFaction(FactionCode.THE_CONFEDERATION).length
+      )
+    })
+
+    it('creates the singularity roster', () => {
+      const troops = TroopService.init({
+        player_id: 'p',
+        cell_id: 'c',
+        faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY
+      })
+      const codes = troops.map(troop => troop.code).sort()
+      assert.deepStrictEqual(
+        codes,
+        TroopService.codesForFaction(FactionCode.THE_TECHNOLOGICAL_SINGULARITY).slice().sort()
+      )
     })
   })
 

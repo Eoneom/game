@@ -7,7 +7,7 @@ import { CityError } from '#core/city/error'
 import { CityService } from '#core/city/service'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostError } from '#core/outpost/error'
-import { TroopCode } from '#core/troop/constant/code'
+import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
 
 export interface CitySettleParams {
@@ -56,25 +56,33 @@ export async function citySettle({
 
     const [
       cell,
-      settler_troop
+      troops
     ] = await Promise.all([
       repository.cell.getById(outpost.cell_id),
-      repository.troop.getInCell({
+      repository.troop.listInCell({
         cell_id: outpost.cell_id,
-        code: TroopCode.SETTLER
+        player_id
       }),
     ])
 
-    const have_enough_settler = TroopService.haveEnoughTroops({
-      origin_troops: [ settler_troop ],
+    const founder_troop = TroopService.findByRole({
+      troops,
+      role: TroopRole.FOUNDER
+    })
+    if (!founder_troop) {
+      throw new Error(CityError.NO_SETTLER_AVAILABLE)
+    }
+
+    const have_enough_founder = TroopService.haveEnoughTroops({
+      origin_troops: [ founder_troop ],
       move_troops: [
         {
-          code: TroopCode.SETTLER,
+          code: founder_troop.code,
           count: 1
         }
       ]
     })
-    if (!have_enough_settler) {
+    if (!have_enough_founder) {
       throw new Error(CityError.NO_SETTLER_AVAILABLE)
     }
 
@@ -94,7 +102,7 @@ export async function citySettle({
 
     const buildings = BuildingService.init({ city_id: city.id })
 
-    const settler_troop_to_update = settler_troop.removeCount(1)
+    const settler_troop_to_update = founder_troop.removeCount(1)
     const exploration_to_update = exploration.exploreCells([
       ...cells_around_city.map(c => c.id),
       cell.id

@@ -31,7 +31,7 @@ const ErrorTranslations: Record<string, string> = {
   [CityError.NOT_ENOUGH_SPACE]: 'Pas assez d\'espace',
   [CityError.NOT_OWNER]: 'Vous n\'êtes pas propriétaire de cette ville',
   [CityError.LIMIT_REACHED]: 'Limite de villes atteinte',
-  [CityError.NO_SETTLER_AVAILABLE]: 'Aucun colon disponible',
+  [CityError.NO_SETTLER_AVAILABLE]: 'Aucune unité de colonisation disponible',
   [CityError.CANNOT_SETTLE_ON_PERMANENT_OUTPOST]: 'Impossible de s\'installer sur un avant-poste permanent',
 
   [CommunicationError.REPORT_NOT_FOUND]: 'Rapport introuvable',

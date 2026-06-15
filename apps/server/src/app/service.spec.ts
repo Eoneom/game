@@ -318,6 +318,39 @@ describe('AppService', () => {
       })
       expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
     })
+
+    it('resolves cultivator and salvager earnings for singularity troops', async () => {
+      const repository = {
+        outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
+        cell: { getById: vi.fn().mockResolvedValue(cell) },
+        troop: {
+          listInCell: vi.fn().mockResolvedValue([
+            {
+              code: TroopCode.HARVESTER,
+              count: 10
+            },
+            {
+              code: TroopCode.RECLAIMER,
+              count: 5
+            }
+          ])
+        }
+      } as unknown as Repository
+      setRepositoryMock(repository)
+
+      const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id })
+
+      expect(breakdown.earnings_per_second.mushroom).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.HARVESTER,
+        count: 10,
+        coefficients: resource_coefficient
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.RECLAIMER,
+        count: 5,
+        coefficients: resource_coefficient
+      }))
+    })
   })
   
   describe('getExploredCellIds', () => {

@@ -31,5 +31,30 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     name: 'Recycleur',
     description: 'Unité dédiée à la récupération et à la valorisation du plastique sur les avant postes.',
     effect: 'Récolte du plastique.'
+  },
+  [TroopCode.SEEKER]: {
+    name: 'Traqueur',
+    description: 'Conçu pour se déplacer rapidement, ce drone se camoufle et s\'infiltre partout.',
+    effect: 'Récupère des informations sur le monde concernant les ressources à récupérer'
+  },
+  [TroopCode.ASSEMBLER]: {
+    name: 'Assembleur',
+    description: 'L\'assembleur emporte le matériel nécessaire à l\'édification d\'une ville-machine.',
+    effect: 'Permet de coloniser un emplacement du monde en créant une nouvelle ville'
+  },
+  [TroopCode.HAULER]: {
+    name: 'Convoyeur',
+    description: '',
+    effect: ''
+  },
+  [TroopCode.HARVESTER]: {
+    name: 'Moissonneur',
+    description: 'Unité spécialisée dans l\'extraction de champignons sur les avant-postes.',
+    effect: 'Récolte des champignons.'
+  },
+  [TroopCode.RECLAIMER]: {
+    name: 'Récupérateur',
+    description: 'Unité dédiée à l\'extraction et à la valorisation du plastique sur les avant-postes.',
+    effect: 'Récolte du plastique.'
   }
 }

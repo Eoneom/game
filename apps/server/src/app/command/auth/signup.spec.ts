@@ -9,7 +9,7 @@ import { FactionCode } from '#core/faction/constant/code'
 import { FactionError } from '#core/faction/error'
 import { PlayerError } from '#core/player/error'
 import { TechnologyCode } from '#core/technology/constant/code'
-import { TroopCode } from '#core/troop/constant/code'
+import { TroopService } from '#core/troop/service'
 import {
   STARTING_MUSHROOM,
   STARTING_PLASTIC
@@ -277,7 +277,7 @@ describe('signupAuth', () => {
       faction_code
     })
 
-    assert.strictEqual(troopCreate.mock.calls.length, Object.keys(TroopCode).length)
+    assert.strictEqual(troopCreate.mock.calls.length, TroopService.codesForFaction(faction_code).length)
     const created_player = playerCreate.mock.calls[0][0]
     troopCreate.mock.calls.forEach(([ troop ]) => {
       assert.strictEqual(troop.count, 0)

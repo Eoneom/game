@@ -47,5 +47,50 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       }
     ],
     technologies: []
+  },
+  [TroopCode.SEEKER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.ASSEMBLER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 9
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.HAULER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.HARVESTER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.RECLAIMER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
   }
 }

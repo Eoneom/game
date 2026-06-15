@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 
-import { MovementAction, TroopCode } from '@eoneom/api-client'
+import { MovementAction, TroopRole, troop_role } from '@eoneom/api-client'
 
 import { Button } from '#ui/button'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
@@ -8,7 +8,7 @@ import { MapDetailsActionBase } from '#map/details/action/base'
 import { WorldViewport } from '#types'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
-import { useCreateMovement } from '#troop/hooks'
+import { useCreateMovement, useListTroops } from '#troop/hooks'
 
 type Props =
   | { cityId: string; outpostId?: never }
@@ -24,7 +24,14 @@ interface DetailsInput {
 export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, viewport }) => {
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
+  const { data: troops = [] } = useListTroops(
+    cityId ? { cityId } : { outpostId: outpostId as string }
+  )
   const createMovement = useCreateMovement()
+
+  const scout = useMemo(() => {
+    return troops.find(troop => troop_role[troop.code] === TroopRole.SCOUT)
+  }, [troops])
 
   const selectedCell = useMemo(() => {
     if (!coordinates) return null
@@ -42,6 +49,8 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
     const origin = city ? city.coordinates : outpost?.coordinates
     if (!origin) return
 
+    if (!scout || scout.count < 1) return
+
     createMovement.mutate({
       action: MovementAction.EXPLORE,
       origin,
@@ -51,7 +60,7 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
       },
       troops: [
         {
-          code: TroopCode.EXPLORER,
+          code: scout.code,
           count: 1 
         }
       ]
