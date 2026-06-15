@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react'
 import { toast } from 'react-toastify'
-import { FactionCode } from '@eoneom/api-client'
+import { FactionCode, playableFactionCodes } from '@eoneom/api-client'
 
 import { useSignup } from '#auth/hooks'
 import { FactionTranslations } from '#faction/translations'
@@ -75,7 +75,7 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
       </label>
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
         <legend className="px-0 text-xs uppercase tracking-wider text-label">Faction</legend>
-        {Object.values(FactionCode).map(code => (
+        {playableFactionCodes().map(code => (
           <label
             key={code}
             className="flex cursor-pointer items-center gap-2 text-sm normal-case tracking-normal text-amber"

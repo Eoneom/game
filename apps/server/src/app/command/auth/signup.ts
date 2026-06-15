@@ -3,6 +3,7 @@ import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { BuildingService } from '#core/building/service'
 import { CityService } from '#core/city/service'
+import { FactionService } from '#core/faction/service'
 import { PlayerService } from '#core/player/service'
 import { TechnologyService } from '#core/technology/service'
 import { TroopService } from '#core/troop/service'
@@ -27,6 +28,8 @@ export async function signupAuth({
   faction_code,
 }: SignupAuthParams): Promise<SignupAuthResult> {
   return runCommand('auth:signup', async () => {
+    FactionService.assertPlayable(faction_code)
+
     const repository = Factory.getRepository()
 
     const [

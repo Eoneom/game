@@ -165,6 +165,19 @@ describe('signupAuth', () => {
     assert.strictEqual(playerCreate.mock.calls.length, 0)
   })
 
+  it('should prevent user from signup with a non-playable faction', async () => {
+    await assert.rejects(
+      () => signupAuth({
+        player_name,
+        city_name,
+        faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY
+      }),
+      new RegExp(FactionError.NOT_PLAYABLE)
+    )
+
+    assert.strictEqual(playerCreate.mock.calls.length, 0)
+  })
+
   it('should prevent user from settling a city with an existing name', async () => {
     cityExist.mockResolvedValue(true)
 

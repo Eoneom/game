@@ -23,6 +23,7 @@ describe('AuthSignupForm', () => {
     expect(screen.getByPlaceholderText('Nom')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Ville')).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: 'La confédération' })).toBeChecked()
+    expect(screen.queryByRole('radio', { name: 'Singularité technologique' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'S\'inscrire' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Déjà un commandant ? Se connecter' })).toBeInTheDocument()
   })

@@ -42,6 +42,7 @@ const ErrorTranslations: Record<string, string> = {
   [OutpostError.LIMIT_REACHED]: 'Limite d\'avant-postes atteinte',
 
   [FactionError.NOT_FOUND]: 'Faction introuvable',
+  [FactionError.NOT_PLAYABLE]: 'Cette faction n\'est pas jouable',
 
   [PlayerError.NOT_FOUND]: 'Joueur introuvable',
   [PlayerError.ALREADY_EXISTS]: 'Ce joueur existe déjà',
