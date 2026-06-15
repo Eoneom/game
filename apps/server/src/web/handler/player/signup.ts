@@ -28,13 +28,22 @@ export const signupHandler = async (
     })
   }
 
+  const faction_code = req.body.faction_code
+  if (!faction_code) {
+    return res.status(400).json({
+      status: 'nok',
+      error_code: RequestError.FACTION_CODE_NOT_FOUND
+    })
+  }
+
   try {
     const {
       player_id,
       city_id
     } = await signupAuth({
       player_name,
-      city_name
+      city_name,
+      faction_code
     })
     return res.status(200).send({
       status: 'ok',

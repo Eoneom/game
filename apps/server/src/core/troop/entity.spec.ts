@@ -1,5 +1,7 @@
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopService } from '#core/troop/service'
+import { FactionCode } from '#core/faction/constant/code'
+import { TroopError } from '#core/troop/error'
 import assert from 'assert'
 
 describe('TroopService recruitment', () => {
@@ -83,12 +85,25 @@ describe('TroopService recruitment', () => {
   })
 
   describe('init', () => {
-    it('creates one troop per code', () => {
+    it('creates one troop per roster code', () => {
       const troops = TroopService.init({
         player_id: 'p',
-        cell_id: 'c'
+        cell_id: 'c',
+        faction_code: FactionCode.THE_CONFEDERATION
       })
       assert.strictEqual(troops.length, Object.values(TroopCode).length)
+    })
+  })
+
+  describe('assertInRoster', () => {
+    it('rejects a troop code that is not in the faction roster', () => {
+      assert.throws(
+        () => TroopService.assertInRoster({
+          faction_code: FactionCode.THE_CONFEDERATION,
+          troop_code: 'not_a_unit' as TroopCode
+        }),
+        new RegExp(TroopError.NOT_IN_FACTION_ROSTER)
+      )
     })
   })
 })

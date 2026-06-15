@@ -9,6 +9,20 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+export type Json = JsonValue;
+
+export type JsonArray = JsonValue[];
+
+export type JsonObject = {
+  [x: string]: JsonValue | undefined;
+};
+
+export type JsonPrimitive = boolean | number | string | null;
+
+export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+
+export type PgbossJobState = "active" | "cancelled" | "completed" | "created" | "failed" | "retry";
+
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Auth {
@@ -79,7 +93,140 @@ export interface Outpost {
   type: string;
 }
 
+export interface PgbossBam {
+  command: string;
+  completed_on: Timestamp | null;
+  created_on: Generated<Timestamp>;
+  error: string | null;
+  id: Generated<string>;
+  name: string;
+  queue: string | null;
+  started_on: Timestamp | null;
+  status: Generated<string>;
+  table_name: string;
+  version: number;
+}
+
+export interface PgbossJob {
+  blocked: Generated<boolean>;
+  blocking: Generated<boolean>;
+  completed_on: Timestamp | null;
+  created_on: Generated<Timestamp>;
+  data: Json | null;
+  dead_letter: string | null;
+  deletion_seconds: Generated<number>;
+  expire_seconds: Generated<number>;
+  group_id: string | null;
+  group_tier: string | null;
+  heartbeat_on: Timestamp | null;
+  heartbeat_seconds: number | null;
+  id: Generated<string>;
+  keep_until: Generated<Timestamp>;
+  name: string;
+  output: Json | null;
+  pending_dependencies: Generated<number>;
+  policy: string | null;
+  priority: Generated<number>;
+  retry_backoff: Generated<boolean>;
+  retry_count: Generated<number>;
+  retry_delay: Generated<number>;
+  retry_delay_max: number | null;
+  retry_limit: Generated<number>;
+  singleton_key: string | null;
+  singleton_on: Timestamp | null;
+  source_created_on: Timestamp | null;
+  source_id: string | null;
+  source_name: string | null;
+  source_retry_count: number | null;
+  start_after: Generated<Timestamp>;
+  started_on: Timestamp | null;
+  state: Generated<PgbossJobState>;
+}
+
+export interface PgbossJobDependency {
+  child_id: string;
+  child_name: string;
+  parent_id: string;
+  parent_name: string;
+}
+
+export interface PgbossQueue {
+  active_count: Generated<number>;
+  created_on: Generated<Timestamp>;
+  dead_letter: string | null;
+  deferred_count: Generated<number>;
+  deletion_seconds: number;
+  expire_seconds: number;
+  failed_count: Generated<number>;
+  heartbeat_seconds: number | null;
+  maintain_on: Timestamp | null;
+  monitor_on: Timestamp | null;
+  name: string;
+  notify: Generated<boolean>;
+  partition: boolean;
+  policy: string;
+  queued_count: Generated<number>;
+  ready_count: Generated<number>;
+  ready_history: Generated<number[]>;
+  retention_seconds: number;
+  retry_backoff: boolean;
+  retry_delay: number;
+  retry_delay_max: number | null;
+  retry_limit: number;
+  singletons_active: string[] | null;
+  table_name: string;
+  total_count: Generated<number>;
+  updated_on: Generated<Timestamp>;
+  warning_queued: Generated<number>;
+}
+
+export interface PgbossQueueStats {
+  active_count: Generated<number>;
+  captured_on: Generated<Timestamp>;
+  deferred_count: Generated<number>;
+  failed_count: Generated<number>;
+  id: Generated<string>;
+  name: string;
+  queued_count: Generated<number>;
+  ready_count: Generated<number>;
+  total_count: Generated<number>;
+}
+
+export interface PgbossSchedule {
+  created_on: Generated<Timestamp>;
+  cron: string;
+  data: Json | null;
+  key: Generated<string>;
+  name: string;
+  options: Json | null;
+  timezone: string | null;
+  updated_on: Generated<Timestamp>;
+}
+
+export interface PgbossSubscription {
+  created_on: Generated<Timestamp>;
+  event: string;
+  name: string;
+  updated_on: Generated<Timestamp>;
+}
+
+export interface PgbossVersion {
+  bam_on: Timestamp | null;
+  cron_on: Timestamp | null;
+  flow_on: Timestamp | null;
+  version: number;
+}
+
+export interface PgbossWarning {
+  created_on: Generated<Timestamp>;
+  data: Json | null;
+  id: Generated<string>;
+  message: string;
+  type: string;
+}
+
 export interface Player {
+  faction_code: string;
   id: Generated<string>;
   name: string;
 }
@@ -146,6 +293,15 @@ export interface DB {
   exploration_cell: ExplorationCell;
   movement: Movement;
   outpost: Outpost;
+  "pgboss.bam": PgbossBam;
+  "pgboss.job": PgbossJob;
+  "pgboss.job_dependency": PgbossJobDependency;
+  "pgboss.queue": PgbossQueue;
+  "pgboss.queue_stats": PgbossQueueStats;
+  "pgboss.schedule": PgbossSchedule;
+  "pgboss.subscription": PgbossSubscription;
+  "pgboss.version": PgbossVersion;
+  "pgboss.warning": PgbossWarning;
   player: Player;
   report: Report;
   report_troop: ReportTroop;

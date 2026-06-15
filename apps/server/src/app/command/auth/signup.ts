@@ -13,6 +13,7 @@ import { now } from '#shared/time'
 export interface SignupAuthParams {
   city_name: string
   player_name: string
+  faction_code: string
 }
 
 export interface SignupAuthResult {
@@ -23,6 +24,7 @@ export interface SignupAuthResult {
 export async function signupAuth({
   player_name,
   city_name,
+  faction_code,
 }: SignupAuthParams): Promise<SignupAuthResult> {
   return runCommand('auth:signup', async () => {
     const repository = Factory.getRepository()
@@ -41,6 +43,7 @@ export async function signupAuth({
 
     const player = PlayerService.init({
       name: player_name,
+      faction_code,
       does_player_exist
     })
     const city = CityService.settle({
@@ -56,7 +59,8 @@ export async function signupAuth({
     const stock_for_first_city = initial_stock.withState(ResourcesService.firstCityCanonicalResourceStockState({ gather_at }))
     const troops = TroopService.init({
       player_id: player.id,
-      cell_id: city_first_cell.id
+      cell_id: city_first_cell.id,
+      faction_code: player.faction_code
     })
     const exploration = ExplorationEntity.init({
       player_id: player.id,

@@ -4,6 +4,7 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { PlayerEntity } from '#core/player/entity'
 import { PlayerError } from '#core/player/error'
+import { FactionCode } from '#core/faction/constant/code'
 import assert from 'assert'
 import { id } from '#shared/identification'
 
@@ -12,7 +13,8 @@ describe('loginAuth', () => {
   const player_id = id()
   const player = PlayerEntity.create({
     id: player_id,
-    name: player_name 
+    name: player_name,
+    faction_code: FactionCode.THE_CONFEDERATION
   })
 
   let getByName: MockInstance

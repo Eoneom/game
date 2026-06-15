@@ -1,6 +1,7 @@
 import { PlayerEntity } from '#core/player/entity'
 import { PlayerRepository } from '#app/port/repository/player'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
+import { FactionCode } from '#core/faction/constant/code'
 import { PlayerError } from '#core/player/error'
 import type { DB } from '#adapter/database/types'
 import {
@@ -48,14 +49,16 @@ export class PostgresPlayerRepository
   protected buildFromRow(row: Selectable<DB['player']>): PlayerEntity {
     return PlayerEntity.create({
       id: row.id,
-      name: row.name
+      name: row.name,
+      faction_code: row.faction_code as FactionCode
     })
   }
 
   protected toRow(entity: PlayerEntity): Insertable<DB['player']> {
     return {
       id: entity.id,
-      name: entity.name
+      name: entity.name,
+      faction_code: entity.faction_code
     }
   }
 }

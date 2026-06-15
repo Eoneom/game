@@ -17,10 +17,11 @@ const renderLoginForm = (ui: React.ReactElement) => {
 }
 
 describe('AuthLoginForm', () => {
-  it('renders name field and submit', () => {
-    renderLoginForm(<AuthLoginForm />)
+  it('renders name field, submit, and signup link', () => {
+    renderLoginForm(<AuthLoginForm onGoToSignup={() => undefined} />)
 
     expect(screen.getByPlaceholderText('Nom')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Se connecter' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Créer un compte' })).toBeInTheDocument()
   })
 })

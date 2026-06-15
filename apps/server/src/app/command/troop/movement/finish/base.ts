@@ -9,6 +9,7 @@ import { ReportEntity } from '#core/communication/report/entity'
 import { ReportFactory } from '#core/communication/report/factory'
 import { ReportType } from '#core/communication/value/report-type'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { FactionCode } from '#core/faction/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -82,6 +83,7 @@ function finishBaseMovementInTemporaryOutpost({
   movement,
   existing_outposts_count,
   player_id,
+  faction_code,
   movement_troops,
   arrived_at,
 }: {
@@ -89,6 +91,7 @@ function finishBaseMovementInTemporaryOutpost({
   movement: MovementEntity
   existing_outposts_count: number
   player_id: string
+  faction_code: FactionCode
   movement_troops: TroopEntity[]
   arrived_at: number
 }): FinishBaseSave {
@@ -100,6 +103,7 @@ function finishBaseMovementInTemporaryOutpost({
   const destination_troops = TroopService.init({
     player_id,
     cell_id: destination_cell_id,
+    faction_code,
   })
 
   const updated_troops = TroopService.mergeTroopsInCell({
@@ -192,10 +196,12 @@ async function buildSettlePlan({
 
   const [
     movement_troops,
-    existing_outposts_count
+    existing_outposts_count,
+    player
   ] = await Promise.all([
     repository.troop.listByMovement({ movement_id: movement.id }),
     repository.outpost.countForPlayer({ player_id }),
+    repository.player.get(player_id),
   ])
   return finishBaseMovementInTemporaryOutpost({
     destination_cell_id: destination_cell.id,
@@ -203,6 +209,7 @@ async function buildSettlePlan({
     existing_outposts_count,
     movement_troops,
     player_id,
+    faction_code: player.faction_code,
     arrived_at,
   })
 }

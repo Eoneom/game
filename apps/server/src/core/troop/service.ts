@@ -1,4 +1,6 @@
+import { FactionCode } from '#core/faction/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
+import { troop_faction } from '#core/troop/constant/faction'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
@@ -69,20 +71,36 @@ export class TroopService {
     }
   }
 
+  static codesForFaction(faction_code: FactionCode): TroopCode[] {
+    return Object.values(TroopCode).filter(code => troop_faction[code] === faction_code)
+  }
+
+  static assertInRoster({
+    faction_code,
+    troop_code
+  }: {
+    faction_code: FactionCode
+    troop_code: TroopCode
+  }): void {
+    if (troop_faction[troop_code] !== faction_code) {
+      throw new Error(TroopError.NOT_IN_FACTION_ROSTER)
+    }
+  }
+
   static init({
     player_id,
-    cell_id
+    cell_id,
+    faction_code
   }: {
     player_id: string
     cell_id: string
+    faction_code: FactionCode
   }): TroopEntity[] {
-    const troops = Object.values(TroopCode).map(code => TroopEntity.init({
+    return this.codesForFaction(faction_code).map(code => TroopEntity.init({
       cell_id,
       player_id,
       code
     }))
-
-    return troops
   }
 
   static haveEnoughTroops({

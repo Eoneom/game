@@ -8,6 +8,7 @@ import { RequirementService } from '#core/requirement/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopError } from '#core/troop/error'
+import { TroopService } from '#core/troop/service'
 import { now } from '#shared/time'
 
 export interface RecruitTroopParams {
@@ -27,7 +28,17 @@ export async function recruitTroop({
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
-    const city = await repository.city.get(city_id)
+    const [
+      city,
+      player
+    ] = await Promise.all([
+      repository.city.get(city_id),
+      repository.player.get(player_id),
+    ])
+    TroopService.assertInRoster({
+      faction_code: player.faction_code,
+      troop_code,
+    })
     const city_cell = await repository.cell.getById(city.cell_id)
 
     const pending_recruit = await job_queue.getPendingTroopRecruitProgress({ city_id })

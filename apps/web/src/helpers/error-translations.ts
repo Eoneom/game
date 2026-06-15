@@ -3,6 +3,7 @@ import {
   BuildingError,
   CityError,
   CommunicationError,
+  FactionError,
   OutpostError,
   PlayerError,
   RequestError,
@@ -40,6 +41,8 @@ const ErrorTranslations: Record<string, string> = {
   [OutpostError.NOT_OWNER]: 'Vous n\'êtes pas propriétaire de cet avant-poste',
   [OutpostError.LIMIT_REACHED]: 'Limite d\'avant-postes atteinte',
 
+  [FactionError.NOT_FOUND]: 'Faction introuvable',
+
   [PlayerError.NOT_FOUND]: 'Joueur introuvable',
   [PlayerError.ALREADY_EXISTS]: 'Ce joueur existe déjà',
 
@@ -63,6 +66,7 @@ const ErrorTranslations: Record<string, string> = {
   [TroopError.TRANSPORT_CAPACITY_EXCEEDED]: 'Capacité de transport dépassée',
   [TroopError.TRANSPORT_RESOURCES_REQUIRED]: 'Des ressources sont requises pour ce transport',
   [TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED]: 'Les ressources ne sont pas autorisées pour cette action',
+  [TroopError.NOT_IN_FACTION_ROSTER]: 'Cette unité n\'appartient pas à votre faction',
 
   [WorldError.ALREADY_EXISTS]: 'Ce monde existe déjà',
   [WorldError.CELL_NOT_FOUND]: 'Case introuvable',
@@ -82,6 +86,7 @@ const ErrorTranslations: Record<string, string> = {
   [RequestError.REPORT_ID_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.PLAYER_NAME_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.CITY_NAME_NOT_FOUND]: 'Paramètre manquant',
+  [RequestError.FACTION_CODE_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.COUNT_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.ORIGIN_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.DESTINATION_NOT_FOUND]: 'Paramètre manquant',

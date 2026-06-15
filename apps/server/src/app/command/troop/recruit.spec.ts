@@ -8,6 +8,8 @@ import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
+import { FactionCode } from '#core/faction/constant/code'
+import { PlayerEntity } from '#core/player/entity'
 import { RequirementError } from '#core/requirement/error'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
@@ -31,7 +33,7 @@ describe('recruitTroop', () => {
   let stockUpdateOne: MockInstance
   let scheduleTroopRecruitProgress: MockInstance
   let getPendingTroopRecruitProgress: MockInstance
-  let repository: Pick<Repository, 'cell' | 'city' | 'building' | 'technology' | 'troop' | 'resource_stock'>
+  let repository: Pick<Repository, 'cell' | 'city' | 'building' | 'technology' | 'troop' | 'resource_stock' | 'player'>
 
   beforeEach(() => {
     city_cell = testCityCell({ cell_id })
@@ -59,6 +61,13 @@ describe('recruitTroop', () => {
     repository = {
       cell: { getById: vi.fn().mockResolvedValue(city_cell) } as unknown as Repository['cell'],
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
+      player: {
+        get: vi.fn().mockResolvedValue(PlayerEntity.create({
+          id: player_id,
+          name: 'dummy',
+          faction_code: FactionCode.THE_CONFEDERATION
+        }))
+      } as unknown as Repository['player'],
       building: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['building'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
       troop: {

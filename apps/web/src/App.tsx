@@ -2,7 +2,7 @@ import React from 'react'
 import { Outlet } from '@tanstack/react-router'
 import { ToastContainer } from 'react-toastify'
 
-import { AuthLoginForm } from '#auth/login-form'
+import { AuthUnauthenticated } from '#auth/unauthenticated'
 import { Header } from '#ui/header'
 import { NavMenu } from '#ui/nav/menu'
 import { NavLocation } from '#ui/nav/location'
@@ -22,7 +22,7 @@ const App: React.FC = () => {
   let content: React.ReactNode
 
   if (!token) {
-    content = <AuthLoginForm />
+    content = <AuthUnauthenticated />
   } else if (isPending || !citiesData?.cities.length) {
     content = (
       <div className="flex min-h-screen items-center justify-center text-amber">

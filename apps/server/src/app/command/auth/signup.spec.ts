@@ -5,6 +5,8 @@ import { AppService } from '#app/service'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
+import { FactionCode } from '#core/faction/constant/code'
+import { FactionError } from '#core/faction/error'
 import { PlayerError } from '#core/player/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
@@ -21,6 +23,7 @@ import { testResourceStock } from '../../test-support/resource-stock'
 describe('signupAuth', () => {
   const player_name = 'player_name'
   const city_name = 'city_name'
+  const faction_code = FactionCode.THE_CONFEDERATION
   const cell_id_1 = id()
   const cell_id_2 = id()
   const cell_id_3 = id()
@@ -140,9 +143,23 @@ describe('signupAuth', () => {
     await assert.rejects(
       () => signupAuth({
         player_name,
-        city_name 
+        city_name,
+        faction_code
       }),
       new RegExp(PlayerError.ALREADY_EXISTS)
+    )
+
+    assert.strictEqual(playerCreate.mock.calls.length, 0)
+  })
+
+  it('should prevent user from signup with an unknown faction', async () => {
+    await assert.rejects(
+      () => signupAuth({
+        player_name,
+        city_name,
+        faction_code: 'unknown_faction'
+      }),
+      new RegExp(FactionError.NOT_FOUND)
     )
 
     assert.strictEqual(playerCreate.mock.calls.length, 0)
@@ -154,7 +171,8 @@ describe('signupAuth', () => {
     await assert.rejects(
       () => signupAuth({
         player_name,
-        city_name 
+        city_name,
+        faction_code
       }),
       new RegExp(CityError.ALREADY_EXISTS)
     )
@@ -165,7 +183,8 @@ describe('signupAuth', () => {
   it('should pass names to exist checks and load surrounding cells from the first city cell', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     assert.strictEqual(playerExist.mock.calls.length, 1)
@@ -184,7 +203,8 @@ describe('signupAuth', () => {
   it('should return player_id and city_id of the created entities', async () => {
     const result = await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     const created_player = playerCreate.mock.calls[0][0]
@@ -196,12 +216,14 @@ describe('signupAuth', () => {
   it('should create player and city with the given names and link the city to the player', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     const created_player = playerCreate.mock.calls[0][0]
     const created_city = cityCreate.mock.calls[0][0]
     assert.strictEqual(created_player.name, player_name)
+    assert.strictEqual(created_player.faction_code, faction_code)
     assert.strictEqual(created_city.name, city_name)
     assert.strictEqual(created_city.player_id, created_player.id)
     assert.strictEqual(created_city.cell_id, city_first_cell.id)
@@ -210,7 +232,8 @@ describe('signupAuth', () => {
   it('should init all city buildings', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     assert.strictEqual(buildingCreate.mock.calls.length, Object.keys(BuildingCode).length)
@@ -223,7 +246,8 @@ describe('signupAuth', () => {
   it('should init all technologies', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     assert.strictEqual(technologyCreate.mock.calls.length, Object.keys(TechnologyCode).length)
@@ -236,7 +260,8 @@ describe('signupAuth', () => {
   it('should init all city troops', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     assert.strictEqual(troopCreate.mock.calls.length, Object.keys(TroopCode).length)
@@ -252,7 +277,8 @@ describe('signupAuth', () => {
   it('should place the city in the world and apply first-city canonical stock', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     const created_city = cityCreate.mock.calls[0][0]
@@ -267,7 +293,8 @@ describe('signupAuth', () => {
   it('should init the exploration cells in the world next to the initial city', async () => {
     await signupAuth({
       player_name,
-      city_name 
+      city_name,
+      faction_code
     })
 
     assert.strictEqual(explorationCreate.mock.calls.length, 1)

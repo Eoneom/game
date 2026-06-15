@@ -25,6 +25,9 @@
       "#auth/*": [
         "./src/modules/auth/*"
       ],
+      "#faction/*": [
+        "./src/modules/faction/*"
+      ],
       "#building/*": [
         "./src/modules/building/*"
       ],

@@ -9,5 +9,6 @@ export enum TroopError {
   MOVEMENT_ACTION_NOT_IMPLEMENTED = 'troop:movement:action-not-implemented',
   TRANSPORT_CAPACITY_EXCEEDED = 'troop:movement:transport-capacity-exceeded',
   TRANSPORT_RESOURCES_REQUIRED = 'troop:movement:transport-resources-required',
-  TRANSPORT_RESOURCES_NOT_ALLOWED = 'troop:movement:transport-resources-not-allowed'
+  TRANSPORT_RESOURCES_NOT_ALLOWED = 'troop:movement:transport-resources-not-allowed',
+  NOT_IN_FACTION_ROSTER = 'troop:not-in-faction-roster'
 }

@@ -13,6 +13,8 @@ import { TroopEntity } from '#core/troop/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostError } from '#core/outpost/error'
+import { FactionCode } from '#core/faction/constant/code'
+import { PlayerEntity } from '#core/player/entity'
 import { id } from '#shared/identification'
 
 describe('finishTroopBaseMovement', () => {
@@ -43,7 +45,7 @@ describe('finishTroopBaseMovement', () => {
   let ensureWorldStockForCell: MockInstance
   let repository: Pick<
     Repository,
-    'troop' | 'movement' | 'cell' | 'city' | 'outpost' | 'report' | 'resource_stock'
+    'troop' | 'movement' | 'cell' | 'city' | 'outpost' | 'report' | 'resource_stock' | 'player'
   >
 
   function mountRepository({
@@ -91,7 +93,14 @@ describe('finishTroopBaseMovement', () => {
         searchByCell: vi.fn().mockResolvedValue(null),
         create: outpostCreate } as unknown as Repository['outpost'],
       report: { create: reportCreate } as unknown as Repository['report'],
-      resource_stock: { ensureWorldStockForCell } as unknown as Repository['resource_stock'] }
+      resource_stock: { ensureWorldStockForCell } as unknown as Repository['resource_stock'],
+      player: {
+        get: vi.fn().mockResolvedValue(PlayerEntity.create({
+          id: player_id,
+          name: 'dummy',
+          faction_code: FactionCode.THE_CONFEDERATION
+        }))
+      } as unknown as Repository['player'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   }

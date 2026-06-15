@@ -26,7 +26,8 @@ describe('signupHandler', () => {
     req = {
       body: {
         player_name: 'alice',
-        city_name: 'Aliceton' 
+        city_name: 'Aliceton',
+        faction_code: 'the_confederation'
       } 
     }
     res = {
@@ -47,7 +48,10 @@ describe('signupHandler', () => {
   })
 
   it('returns 400 when player_name is missing', async () => {
-    req.body = { city_name: 'Aliceton' }
+    req.body = {
+      city_name: 'Aliceton',
+      faction_code: 'the_confederation'
+    }
     await signupHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
@@ -57,12 +61,28 @@ describe('signupHandler', () => {
   })
 
   it('returns 400 when city_name is missing', async () => {
-    req.body = { player_name: 'alice' }
+    req.body = {
+      player_name: 'alice',
+      faction_code: 'the_confederation'
+    }
     await signupHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(res.status).toHaveBeenCalledWith(400)
     expect(res.json).toHaveBeenCalledWith({
       status: 'nok',
       error_code: RequestError.CITY_NAME_NOT_FOUND 
+    })
+  })
+
+  it('returns 400 when faction_code is missing', async () => {
+    req.body = {
+      player_name: 'alice',
+      city_name: 'Aliceton'
+    }
+    await signupHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+    expect(res.status).toHaveBeenCalledWith(400)
+    expect(res.json).toHaveBeenCalledWith({
+      status: 'nok',
+      error_code: RequestError.FACTION_CODE_NOT_FOUND
     })
   })
 
@@ -75,6 +95,11 @@ describe('signupHandler', () => {
 
   it('returns player_id and city_id on success', async () => {
     await signupHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+    expect(signupAuth).toHaveBeenCalledWith({
+      player_name: 'alice',
+      city_name: 'Aliceton',
+      faction_code: 'the_confederation'
+    })
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.send).toHaveBeenCalledWith({
       status: 'ok',

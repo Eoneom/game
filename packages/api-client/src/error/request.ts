@@ -10,6 +10,7 @@ export enum RequestError {
   REPORT_ID_NOT_FOUND = 'report_id:not-found',
   PLAYER_NAME_NOT_FOUND = 'player_name:not-found',
   CITY_NAME_NOT_FOUND = 'city_name:not-found',
+  FACTION_CODE_NOT_FOUND = 'faction_code:not-found',
   COUNT_NOT_FOUND = 'count:not-found',
   ORIGIN_NOT_FOUND = 'origin:not-found',
   DESTINATION_NOT_FOUND = 'destination:not-found',

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
+import { FactionCode } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -24,14 +25,39 @@ const doLogin = async (playerName: string): Promise<string> => {
   return res.data.token
 }
 
-const doSignup = async (playerName: string): Promise<void> => {
+const doSignup = async ({
+  playerName,
+  cityName,
+  factionCode,
+}: {
+  playerName: string
+  cityName: string
+  factionCode: FactionCode
+}): Promise<void> => {
   const res = await client.player.signup({
     player_name: playerName,
-    city_name: `${playerName}City`,
+    city_name: cityName,
+    faction_code: factionCode,
   })
   if (isError(res)) {
     throw new Error(res.error_code)
   }
+}
+
+const startSession = ({
+  token,
+  setToken,
+}: {
+  token: string
+  setToken: (token: string) => void
+}): void => {
+  setToken(token)
+  registerCityWsListeners()
+  registerBuildingWsListeners()
+  registerTechnologyWsListeners()
+  registerTroopWsListeners()
+  registerOutpostWsListeners()
+  wsClient.connect(token)
 }
 
 export const useLogin = () => {
@@ -39,23 +65,45 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: async (playerName: string) => {
-      let token: string
-      try {
-        token = await doLogin(playerName)
-      } catch {
-        await doSignup(playerName)
-        token = await doLogin(playerName)
-      }
-      return token
+      return doLogin(playerName)
     },
     onSuccess: (token) => {
-      setToken(token)
-      registerCityWsListeners()
-      registerBuildingWsListeners()
-      registerTechnologyWsListeners()
-      registerTroopWsListeners()
-      registerOutpostWsListeners()
-      wsClient.connect(token)
+      startSession({
+        token,
+        setToken 
+      })
+    },
+    onError: (err: Error) => {
+      toast.error(translateError(err.message))
+    },
+  })
+}
+
+export const useSignup = () => {
+  const { setToken } = useAuth()
+
+  return useMutation({
+    mutationFn: async ({
+      playerName,
+      cityName,
+      factionCode,
+    }: {
+      playerName: string
+      cityName: string
+      factionCode: FactionCode
+    }) => {
+      await doSignup({
+        playerName,
+        cityName,
+        factionCode 
+      })
+      return doLogin(playerName)
+    },
+    onSuccess: (token) => {
+      startSession({
+        token,
+        setToken 
+      })
     },
     onError: (err: Error) => {
       toast.error(translateError(err.message))
