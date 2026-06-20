@@ -21,3 +21,4 @@ containers/postgres-data
 
 .env
 coverage
+logs/

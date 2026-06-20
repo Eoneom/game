@@ -1,4 +1,5 @@
 import type { JobQueueContext } from '#adapter/job-queue/context'
+import { createTickLogger } from '#adapter/logger'
 import type {
   PendingSystemPlayerTick, SystemPlayerTickJobData 
 } from '#app/port/job-queue'
@@ -21,7 +22,7 @@ export const scheduleSystemPlayerTick = async (
 ): Promise<string | null> => {
   const data: SystemPlayerTickJobData = { tick_index }
 
-  ctx.logger.info('schedule system player tick', {
+  createTickLogger('job-queue').info('schedule system player tick', {
     execute_at,
     tick_index
   })
@@ -64,7 +65,7 @@ export const ensureSystemPlayerTickScheduled = async (
 ): Promise<string | null> => {
   const pending = await getPendingSystemPlayerTick(ctx)
   if (pending) {
-    ctx.logger.info('system player tick already scheduled', {
+    createTickLogger('job-queue').info('system player tick already scheduled', {
       job_id: pending.job_id,
       execute_at: pending.execute_at,
       tick_index: pending.tick_index

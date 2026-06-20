@@ -7,7 +7,7 @@ import { now } from '#shared/time'
 export async function tickSystemPlayers({ tick_index }: { tick_index: number }): Promise<void> {
   const repository = Factory.getRepository()
   const job_queue = Factory.getJobQueue()
-  const logger = Factory.getLogger('app:command:player:system:tick')
+  const logger = Factory.getTickLogger('app:command:player:system:tick')
   const tick_at = now()
 
   const players = await repository.player.listSystemControlled()

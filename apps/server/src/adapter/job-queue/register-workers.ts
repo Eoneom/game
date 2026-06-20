@@ -183,13 +183,15 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
     }
   )
 
+  const tick_logger = Factory.getTickLogger('adapter:job-queue:register-workers')
+
   await queue.work<SystemPlayerTickJobData, void, { includeMetadata: true }>(
     SYSTEM_PLAYER_TICK_QUEUE,
     { includeMetadata: true },
     async (jobs) => {
       for (const job of jobs) {
         const tick_index = job.data?.tick_index ?? 0
-        logger.info('processing system player tick', {
+        tick_logger.info('processing system player tick', {
           job_id: job.id,
           tick_index
         })

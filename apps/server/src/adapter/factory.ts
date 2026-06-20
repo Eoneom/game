@@ -1,7 +1,10 @@
 import { PostgresRepository } from '#adapter/database/repository'
 import { Repository } from '#app/port/repository/generic'
 import { AppLogger } from '#app/port/logger'
-import { loggerAdapter } from '#adapter/logger'
+import {
+  createStdoutLogger,
+  createTickLogger
+} from '#adapter/logger'
 import { Lock } from '#app/port/lock'
 import { LockInMemory } from '#adapter/lock'
 import { AppEventBus } from '#app/event-bus'
@@ -24,7 +27,11 @@ export class Factory {
   }
 
   static getLogger(component: string): AppLogger {
-    return loggerAdapter().child({ component })
+    return createStdoutLogger(component)
+  }
+
+  static getTickLogger(component: string): AppLogger {
+    return createTickLogger(component)
   }
 
   static getLock(): Lock {

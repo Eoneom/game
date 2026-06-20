@@ -38,7 +38,7 @@ describe('tickSystemPlayers', () => {
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({ player: { listSystemControlled } } as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleSystemPlayerTick } as unknown as JobQueue)
-    vi.spyOn(Factory, 'getLogger').mockReturnValue({
+    vi.spyOn(Factory, 'getTickLogger').mockReturnValue({
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),
