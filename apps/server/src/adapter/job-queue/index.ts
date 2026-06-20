@@ -37,6 +37,12 @@ export {
 } from '#adapter/job-queue/communication/cleanup-old-read-reports'
 
 export {
+  SYSTEM_PLAYER_TICK_QUEUE,
+  SYSTEM_PLAYER_TICK_SINGLETON_KEY,
+  type SystemPlayerTickJobData
+} from '#adapter/job-queue/player/system-tick'
+
+export {
   JobQueue,
   createJobQueue
 } from '#adapter/job-queue/job-queue'
@@ -48,5 +54,6 @@ export type {
   PendingTroopMovementFinish,
   PendingCityResourcesGather,
   PendingOutpostResourcesGather,
-  PendingReportCleanup
+  PendingReportCleanup,
+  PendingSystemPlayerTick
 } from '#app/port/job-queue'

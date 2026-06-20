@@ -42,7 +42,8 @@ describe('signupAuth', () => {
     id: id(),
     coordinates: {
       x: 1,
-      y: 1 }
+      y: 1 
+    }
   })
 
   const cells_around_city = [
@@ -237,6 +238,7 @@ describe('signupAuth', () => {
     const created_city = cityCreate.mock.calls[0][0]
     assert.strictEqual(created_player.name, player_name)
     assert.strictEqual(created_player.faction_code, faction_code)
+    assert.strictEqual(created_player.system_controlled, false)
     assert.strictEqual(created_city.name, city_name)
     assert.strictEqual(created_city.player_id, created_player.id)
     assert.strictEqual(created_city.cell_id, city_first_cell.id)

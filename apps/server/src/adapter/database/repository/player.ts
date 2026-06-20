@@ -46,11 +46,22 @@ export class PostgresPlayerRepository
     return this.buildFromRow(row)
   }
 
+  async listSystemControlled(): Promise<PlayerEntity[]> {
+    const rows = await this.db
+      .selectFrom('player')
+      .selectAll()
+      .where('system_controlled', '=', true)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   protected buildFromRow(row: Selectable<DB['player']>): PlayerEntity {
     return PlayerEntity.create({
       id: row.id,
       name: row.name,
-      faction_code: row.faction_code as FactionCode
+      faction_code: row.faction_code as FactionCode,
+      system_controlled: row.system_controlled
     })
   }
 
@@ -58,7 +69,8 @@ export class PostgresPlayerRepository
     return {
       id: entity.id,
       name: entity.name,
-      faction_code: entity.faction_code
+      faction_code: entity.faction_code,
+      system_controlled: entity.system_controlled
     }
   }
 }

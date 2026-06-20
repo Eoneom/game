@@ -5,4 +5,5 @@ export type PlayerRepository = GenericRepository<PlayerEntity> & {
   exist(name: string): Promise<boolean>
   get(id: string): Promise<PlayerEntity>
   getByName(name: string): Promise<PlayerEntity>
+  listSystemControlled(): Promise<PlayerEntity[]>
 }

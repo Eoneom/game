@@ -65,14 +65,13 @@ describe('recruitTroop', () => {
         get: vi.fn().mockResolvedValue(PlayerEntity.create({
           id: player_id,
           name: 'dummy',
-          faction_code: FactionCode.THE_CONFEDERATION
+          faction_code: FactionCode.THE_CONFEDERATION,
+          system_controlled: false
         }))
       } as unknown as Repository['player'],
       building: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['building'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
-      troop: {
-        getInCell: vi.fn().mockResolvedValue(troop),
-      } as unknown as Repository['troop'],
+      troop: { getInCell: vi.fn().mockResolvedValue(troop) } as unknown as Repository['troop'],
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
         updateOne: stockUpdateOne,

@@ -46,6 +46,7 @@ const ErrorTranslations: Record<string, string> = {
 
   [PlayerError.NOT_FOUND]: 'Joueur introuvable',
   [PlayerError.ALREADY_EXISTS]: 'Ce joueur existe déjà',
+  [PlayerError.SYSTEM_CONTROLLED]: 'Ce commandant ne peut pas se connecter',
 
   [RequirementError.BUILDING_NOT_FULFILLED]: 'Prérequis de bâtiment non remplis',
   [RequirementError.TECHNOLOGY_NOT_FULFILLED]: 'Prérequis de technologie non remplis',

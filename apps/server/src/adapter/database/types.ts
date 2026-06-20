@@ -229,6 +229,7 @@ export interface Player {
   faction_code: string;
   id: Generated<string>;
   name: string;
+  system_controlled: boolean;
 }
 
 export interface Report {

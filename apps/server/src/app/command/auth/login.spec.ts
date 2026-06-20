@@ -14,7 +14,8 @@ describe('loginAuth', () => {
   const player = PlayerEntity.create({
     id: player_id,
     name: player_name,
-    faction_code: FactionCode.THE_CONFEDERATION
+    faction_code: FactionCode.THE_CONFEDERATION,
+    system_controlled: false
   })
 
   let getByName: MockInstance
@@ -58,5 +59,21 @@ describe('loginAuth', () => {
     const created_auth = authCreate.mock.calls[0][0]
     assert.strictEqual(created_auth.player_id, player.id)
     assert.strictEqual(result.token, created_auth.token)
+  })
+
+  it('should reject login for a system-controlled player', async () => {
+    getByName.mockResolvedValue(PlayerEntity.create({
+      id: player_id,
+      name: player_name,
+      faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+      system_controlled: true
+    }))
+
+    await assert.rejects(
+      () => loginAuth({ player_name }),
+      new RegExp(PlayerError.SYSTEM_CONTROLLED)
+    )
+
+    assert.strictEqual(authCreate.mock.calls.length, 0)
   })
 })

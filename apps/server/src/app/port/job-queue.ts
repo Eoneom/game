@@ -53,6 +53,15 @@ export type PendingReportCleanup = {
   job_id: string
 }
 
+export type SystemPlayerTickJobData = {
+  tick_index: number
+}
+
+export type PendingSystemPlayerTick = SystemPlayerTickJobData & {
+  execute_at: number
+  job_id: string
+}
+
 export interface JobQueue {
   start(): Promise<void>
   stop(): Promise<void>
@@ -127,5 +136,17 @@ export interface JobQueue {
 
   ensureReportCleanupScheduled(args: {
     execute_at: number
+  }): Promise<string | null>
+
+  scheduleSystemPlayerTick(args: {
+    execute_at: number
+    tick_index: number
+  }): Promise<string | null>
+
+  getPendingSystemPlayerTick(): Promise<PendingSystemPlayerTick | null>
+
+  ensureSystemPlayerTickScheduled(args: {
+    execute_at: number
+    tick_index: number
   }): Promise<string | null>
 }

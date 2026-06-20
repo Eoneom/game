@@ -1,6 +1,7 @@
 import './load-env'
 
 import { generateWorld } from '#app/command/world/generate'
+import { ensureSystemPlayer } from '#app/command/player/ensure-system'
 import { Factory } from '#adapter/factory'
 import { migrateToLatest } from '#adapter/database/migrate'
 import { WorldError } from '#core/world/error'
@@ -32,6 +33,18 @@ import { now } from '#shared/time'
       logger.error(err.message)
     }
   }
+
+  try {
+    await ensureSystemPlayer()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    logger.error(err.message)
+  }
+
+  await jobQueue.ensureSystemPlayerTickScheduled({
+    execute_at: now(),
+    tick_index: 0
+  })
 
   launchServer({
     logger: Factory.getLogger('web:http'),

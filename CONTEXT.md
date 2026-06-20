@@ -16,6 +16,10 @@ _Avoid_: selectable, choosable
 A named commander who belongs to exactly one Faction.
 _Avoid_: user, account, character
 
+**System-controlled**:
+A Player that cannot log in and is driven by the server controller. Assigned at creation and never changed.
+_Avoid_: bot, NPC, AI, treating it as a separate type from Player
+
 **Troop**:
 A stack of a single unit type owned by a Player, stationed on a cell or a movement. Each unit type belongs to exactly one Faction.
 _Avoid_: army

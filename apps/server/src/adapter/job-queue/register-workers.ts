@@ -8,6 +8,8 @@ import {
   type OutpostResourcesGatherJobData,
   REPORT_CLEANUP_QUEUE,
   type ReportCleanupJobData,
+  SYSTEM_PLAYER_TICK_QUEUE,
+  type SystemPlayerTickJobData,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
   type TechnologyResearchFinishJobData,
   TROOP_MOVEMENT_FINISH_QUEUE,
@@ -23,6 +25,7 @@ import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
 import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progress-gather-all'
 import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
+import { tickSystemPlayers } from '#app/command/player/system/tick'
 import { Factory } from '#adapter/factory'
 
 const asPgBossJobQueue = (queue: JobQueue): PgBossJobQueue => {
@@ -176,6 +179,21 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
       for (const job of jobs) {
         logger.info('processing report cleanup', { job_id: job.id })
         await cleanupOldReadReports()
+      }
+    }
+  )
+
+  await queue.work<SystemPlayerTickJobData, void, { includeMetadata: true }>(
+    SYSTEM_PLAYER_TICK_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        const tick_index = job.data?.tick_index ?? 0
+        logger.info('processing system player tick', {
+          job_id: job.id,
+          tick_index
+        })
+        await tickSystemPlayers({ tick_index })
       }
     }
   )
