@@ -66,11 +66,13 @@ Root `package.json` exposes convenience scripts that delegate to the `@eoneom/se
    yarn server:build
    ```
 
-2. Start (runs compiled output with pretty logs):
+2. Start (runs compiled output; pretty logs when stdout is a TTY, e.g. a dedicated terminal):
 
    ```bash
    yarn server:start
    ```
+
+   `yarn dev` and other piped or multiplexed setups get raw JSON logs and do not require a TTY.
 
 The API listens on **port 3000**. Endpoints are wired in `apps/server/src/web/router.ts`.
 

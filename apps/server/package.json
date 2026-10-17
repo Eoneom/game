@@ -7,7 +7,8 @@
   "scripts": {
     "build": "vite build",
     "build:watch": "vite build --watch",
-    "start": "node --enable-source-maps dist/index.js | pino-pretty-min",
+    "start": "node scripts/start.mjs",
+    "start:pretty": "node scripts/start.mjs --pretty",
     "db:migrate": "tsx src/adapter/database/migrate-cli.ts",
     "db:migrate:down": "tsx src/adapter/database/migrate-cli.ts down",
     "db:codegen": "kysely-codegen --dialect postgres --env-file .env --out-file ./src/adapter/database/types.ts --exclude-pattern \"kysely_*|pgboss.*\"",
