@@ -54,7 +54,7 @@ System tick actions use `CityGetQuery` warehouse fields (`warehouses_capacity`, 
 
 When not pressured, building iteration order is unchanged (repository list order).
 
-**Transport** (`tryTransport`): cargo sent to the first city is capped per resource to `min(origin stock, destination warehouse_space_remaining)`, matching `depositUpToCapacity` on arrival. Plasma is not warehouse-capped. If capped cargo is empty, the outpost is skipped.
+**Transport** (`tryTransport`, helpers in `system/transport.ts`): only **permanent** outposts whose plastic or mushroom stock is at **warehouse pressure** (`stock >= capacity × 0.7`, same ratio as city upgrades) or that hold **any plasma** are candidates; outposts are tried **highest total stock first** (cell resource score tie-break). **Destination city** is the one that can accept the most deliverable cargo (`min(origin, destination warehouse_space_remaining)` per resource; plasma uncapped at destination). Requires at least one **carrier** troop (`TroopRole.CARRIER`, e.g. Hauler) on the outpost; sends the **minimum** hauler count needed for the load (up to garrison). Cargo is capped to destination warehouse space, then **clamped to transporter capacity** (partial loads allowed, same as human transport UI). One transport movement per successful tick; no batching across outposts.
 
 **Research** (`tryResearch`): technologies are ordered by `sortTechnologiesForSystemResearch` (`system/technologies.ts`) — highest priority first: `architecture`, `photovoltaic_optimization`, `replication_catalyst`, `outpost_logistics`; tiebreaker lower `level` first. Skips codes with in-flight research (`research_at` on list entries or pending job via `hasPendingTechnologyResearchByCode`). If any technology is already researching, the action returns idle (unchanged).
 
@@ -107,8 +107,8 @@ Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-
 
 | Area | Paths |
 | --- | --- |
-| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,requirements}.ts` |
+| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,requirements,transport,troops,technologies,production}.ts` |
 | Jobs | `apps/server/src/adapter/job-queue/player/system-tick.ts` |
 | Core | `apps/server/src/core/player/constant/system.ts`, `core/player/system/expansion-cell.ts` |
 
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/transport.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.

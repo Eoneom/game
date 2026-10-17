@@ -62,15 +62,20 @@ import {
   meetsTechnologyResearchRequirement,
   meetsTroopRecruitRequirement,
 } from '#command/player/system/requirements'
+import { AppService } from '#app/service'
+import {
+  carrierTroopsForTransportLoad,
+  clampResourcesToTransportCapacity,
+  hasTransportableStock,
+  isPermanentOutpostStockWorthTransport,
+  pickCityForSystemTransport,
+  sortOutpostsForSystemTransport,
+} from '#command/player/system/transport'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
     && stock.mushroom >= cost.mushroom
     && stock.plasma >= cost.plasma
-}
-
-function hasStock(stock: Resource): boolean {
-  return stock.plastic + stock.mushroom + stock.plasma > 0
 }
 
 function viewportAround(coordinates: Coordinates): {
@@ -673,30 +678,57 @@ async function tryMakePermanent(player_id: string): Promise<Record<string, unkno
 
 async function tryTransport(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
-  const city = cities[0]
-  if (!city) {
+  if (cities.length === 0) {
     return null
   }
 
-  const city_details = await new CityGetQuery().run({
+  const city_details_list = await Promise.all(cities.map(city => new CityGetQuery().run({
     city_id: city.id,
-    player_id
-  })
-  const {
-    outposts, cells, resource_stocks 
-  } = await new OutpostListQuery().run({ player_id })
+    player_id,
+  })))
+  const city_candidates = city_details_list.map(details => ({
+    city_id: details.city.id,
+    city_name: details.city.name,
+    coordinates: details.cell.coordinates,
+    warehouse_space_remaining: details.warehouse_space_remaining,
+  }))
 
-  for (const [
-    index,
-    outpost 
-  ] of outposts.entries()) {
-    if (outpost.type !== OutpostType.PERMANENT) {
-      continue
-    }
+  const [
+    {
+      outposts, cells, resource_stocks 
+    },
+    outpost_warehouses_capacity,
+  ] = await Promise.all([
+    new OutpostListQuery().run({ player_id }),
+    AppService.getOutpostWarehousesCapacity({ player_id }),
+  ])
 
-    const cell = cells[index]
-    const stock = resource_stocks[index]
-    if (!cell || !stock || !hasStock(stock)) {
+  const outpost_candidates = sortOutpostsForSystemTransport(
+    outposts
+      .map((outpost, index) => ({
+        outpost,
+        cell: cells[index],
+        stock: resource_stocks[index],
+      }))
+      .filter(({ outpost, cell, stock }) => {
+        if (outpost.type !== OutpostType.PERMANENT || !cell || !stock) {
+          return false
+        }
+        return isPermanentOutpostStockWorthTransport({
+          stock,
+          warehouses_capacity: outpost_warehouses_capacity,
+        })
+      }),
+  )
+
+  for (const {
+    outpost, cell, stock 
+  } of outpost_candidates) {
+    const destination = pickCityForSystemTransport({
+      origin_stock: stock,
+      cities: city_candidates,
+    })
+    if (!destination) {
       continue
     }
 
@@ -715,22 +747,28 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
       continue
     }
 
-    const resources = resourcesForTransportToDestination({
+    const destination_capped = resourcesForTransportToDestination({
       origin_stock: stock,
-      destination_space_remaining: city_details.warehouse_space_remaining,
+      destination_space_remaining: destination.warehouse_space_remaining,
     })
-    if (!hasStock(resources)) {
+    if (!hasTransportableStock(destination_capped)) {
       continue
     }
-    const move_troops = [
-      {
-        code: hauler.code,
-        count: hauler.count
-      }
-    ]
-    const load = TroopService.getTransportLoad({ resources })
+
+    const move_troops = carrierTroopsForTransportLoad({
+      hauler,
+      load: TroopService.getTransportLoad({ resources: destination_capped }),
+    })
+    if (move_troops.length === 0) {
+      continue
+    }
+
     const capacity = TroopService.getTotalTransportCapacity({ troops: move_troops })
-    if (load > capacity) {
+    const resources = clampResourcesToTransportCapacity({
+      resources: destination_capped,
+      capacity,
+    })
+    if (!hasTransportableStock(resources)) {
       continue
     }
 
@@ -738,18 +776,18 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
       player_id,
       action: MovementAction.TRANSPORT,
       origin: cell.coordinates,
-      destination: city_details.cell.coordinates,
+      destination: destination.coordinates,
       move_troops,
       resources
     })
     return {
       action: MovementAction.TRANSPORT,
       origin: cell.coordinates,
-      destination: city_details.cell.coordinates,
+      destination: destination.coordinates,
       move_troops,
       resources,
-      city_id: city.id,
-      city_name: city.name,
+      city_id: destination.city_id,
+      city_name: destination.city_name,
       outpost_id: outpost.id,
     }
   }

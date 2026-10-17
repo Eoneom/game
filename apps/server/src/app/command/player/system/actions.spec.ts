@@ -3,6 +3,7 @@ import { upgradeBuilding } from '#app/command/building/upgrade'
 import { researchTechnology } from '#app/command/technology/research'
 import { citySettle } from '#app/command/city/settle'
 import { createTroopMovement } from '#app/command/troop/movement/create'
+import { AppService } from '#app/service'
 import { recruitTroop } from '#app/command/troop/recruit'
 import { BuildingListQuery } from '#query/building/list'
 import { BuildingGetQuery } from '#query/building/get'
@@ -464,8 +465,12 @@ describe('systemTickActions', () => {
     assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.RECYCLING_PLANT)
   })
 
-  it('skips transport when the permanent outpost has no stock', async () => {
+  it('skips transport when the permanent outpost stock is below warehouse pressure', async () => {
     const outpost_cell = testCityCell({ cell_id: id() })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
       count_limit: 5
@@ -496,7 +501,7 @@ describe('systemTickActions', () => {
       resource_stocks: [
         testResourceStock({
           cell_id: outpost_cell.id,
-          plastic: 0,
+          plastic: 100,
           mushroom: 0,
           plasma: 0
         })
@@ -809,6 +814,10 @@ describe('systemTickActions', () => {
   it('limits transport cargo to destination warehouse free space', async () => {
     const outpost_cell = testCityCell({ cell_id: id() })
     const outpost_id = id()
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
       count_limit: 5
@@ -839,7 +848,7 @@ describe('systemTickActions', () => {
       resource_stocks: [
         testResourceStock({
           cell_id: outpost_cell.id,
-          plastic: 500,
+          plastic: 800,
           mushroom: 200,
           plasma: 0
         })
@@ -869,5 +878,11 @@ describe('systemTickActions', () => {
       mushroom: 200,
       plasma: 0
     })
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].move_troops, [
+      {
+        code: TroopCode.HAULER,
+        count: 1,
+      },
+    ])
   })
 })
