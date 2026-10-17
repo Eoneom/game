@@ -138,34 +138,38 @@ No per-player recruit cap beyond existing city recruitment concurrency ([`009`](
 
 ### Recruitment (requirements + pricing)
 
-Combat troops are **not** recruitable at game start. Gates live in `TroopRequirement` (`apps/server/src/core/requirement/constant/troop.ts`) and are enforced by `RequirementService.checkTroopRequirement` on `PUT /troop/recruit` ([`014`](../014-requirements-pricing/spec.md), [`009`](../009-troops-stationary/spec.md)). Costs live in `troop_costs` (`apps/server/src/core/pricing/constant/troop.ts`).
+Combat troops are **not** recruitable at game start. Each combat `TroopCode` has its **own** `TroopRequirement` row (no shared anchor/striker pairs across codes or factions). Gates live in `TroopRequirement` (`apps/server/src/core/requirement/constant/troop.ts`) and are enforced by `RequirementService.checkTroopRequirement` on `PUT /troop/recruit` ([`009`](../009-troops-stationary/spec.md), [`014`](../014-requirements-pricing/spec.md)). Costs live in `troop_costs` (`apps/server/src/core/pricing/constant/troop.ts`) with the same per-code granularity; duration reductions still follow [`014`](../014-requirements-pricing/spec.md) (`cloning_factory` + `replication_catalyst` levels on the recruiting city).
 
-**Building + technology requirements** (per `TroopCode`; wire codes from [`007`](../007-buildings-upgrade-queue/spec.md) / [`008`](../008-technology-research/spec.md)):
+**Building + technology requirements** (one unique row per `TroopCode`; wire codes from [`007`](../007-buildings-upgrade-queue/spec.md) / [`008`](../008-technology-research/spec.md); **no** `outpost_logistics` gate):
 
-| `TroopCode` | Faction | `cloning_factory` level | `replication_catalyst` level |
-| --- | --- | ---: | ---: |
-| `legionnaire` | `the_confederation` | 4 | 1 |
-| `interceptor` | `the_confederation` | 6 | 3 |
-| `war_machine` | `the_technological_singularity` | 4 | 1 |
-| `disruptor` | `the_technological_singularity` | 6 | 3 |
+| `TroopCode` | Faction | `cloning_factory` | `architecture` | `replication_catalyst` | `photovoltaic_optimization` |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `legionnaire` | `the_confederation` | 4 | 2 | 1 | — |
+| `interceptor` | `the_confederation` | 6 | — | 3 | — |
+| `war_machine` | `the_technological_singularity` | 5 | 4 | 2 | — |
+| `disruptor` | `the_technological_singularity` | 7 | — | 1 | 2 |
 
-- **Anchor** (`legionnaire`, `war_machine`): mid-game military cloning after the factory is upgraded past light haulers (`light_transporter` / `hauler` require `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)) and **`replication_catalyst` 1** is researched (military-grade replication — same tech family that shortens recruit duration today).
-- **Striker** (`interceptor`, `disruptor`): late-mid assault troops need a higher factory tier plus **`replication_catalyst` 3** (advanced replication tier — troop-linked tech only; **no** `outpost_logistics` gate).
-- **Singularity parity**: Alpha cities use the **same requirement rows** for `war_machine` / `disruptor` as confederation uses for `legionnaire` / `interceptor` (faction differs; gates do not).
-- **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the rows above are met.
+- **`legionnaire`**: first confederation line troops after hauler-tier cloning (`light_transporter` / `hauler` need `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)); **`architecture` 2** (chassis templates from the same tech tree that unlocks the cloning factory) plus baseline military **`replication_catalyst` 1**.
+- **`interceptor`**: elite fast-hull replication at **`cloning_factory` 6** and **`replication_catalyst` 3** only — no extra building beyond the factory tier.
+- **`war_machine`**: singularity assault platforms gate on **`architecture` 4** (autonomous fortress blueprints) and **`replication_catalyst` 2** at **`cloning_factory` 5** — **not** the same building/tech mix as `legionnaire` (different factory tier and architecture depth).
+- **`disruptor`**: harassment units need peak factory output (**`cloning_factory` 7**), **`photovoltaic_optimization` 2** (energy-dense drives), and **`replication_catalyst` 1** — a distinct singularity progression path from `war_machine`.
+- **Faction differentiation**: confederation and singularity combat codes differ in **both** [stats](#roster-names-faction-stats) and **requirement rows**; implementers must not mirror confederation gates onto singularity codes.
+- **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the row for that code is met.
 
-**Recruitment cost** (paired by role slot; combat stats are **not** paired across factions):
+**Recruitment cost** (per `TroopCode`; independent of requirement shape):
 
-| Role slot | Codes | plastic | mushroom | duration (s) |
-| --- | --- | ---: | ---: | ---: |
-| Anchor | `legionnaire`, `war_machine` | 2_500 | 2_500 | 200 |
-| Striker | `interceptor`, `disruptor` | 3_500 | 2_000 | 280 |
+| `TroopCode` | plastic | mushroom | duration (s) |
+| --- | ---: | ---: | ---: |
+| `legionnaire` | 2_500 | 2_500 | 200 |
+| `interceptor` | 3_500 | 2_000 | 280 |
+| `war_machine` | 2_700 | 2_300 | 210 |
+| `disruptor` | 3_300 | 1_750 | 270 |
 
-Implementation maps each row to `RequirementValue` `{ buildings: [{ code, level }], technologies: [{ code, level }] }` with `BuildingCode.CLONING_FACTORY` and `TechnologyCode.REPLICATION_CATALYST` as applicable.
+Implementation maps each requirement row to `RequirementValue` `{ buildings: [{ code, level }], technologies: [{ code, level }] }` using `BuildingCode` / `TechnologyCode` members from [`007`](../007-buildings-upgrade-queue/spec.md) and [`008`](../008-technology-research/spec.md).
 
 ### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
 
-- **Recruitment gates + costs**: Alpha uses **`war_machine`** / **`disruptor`** with the same **`TroopRequirement`** and **`troop_costs`** rows as confederation **`legionnaire`** / **`interceptor`** (see [Recruitment (requirements + pricing)](#recruitment-requirements--pricing)); combat stats differ per [Roster](#roster-names-faction-stats).
+- **Recruitment gates + costs**: Alpha recruits **`war_machine`** / **`disruptor`** only through [`009`](../009-troops-stationary/spec.md) with [`RequirementService.checkTroopRequirement`](../014-requirements-pricing/spec.md) (`TroopRequirement` per code) using the **singularity-specific** rows and **per-code** `troop_costs` in [Recruitment (requirements + pricing)](#recruitment-requirements--pricing) (not confederation `legionnaire` / `interceptor` gates). Combat stats differ per [Roster](#roster-names-faction-stats).
 - **Policy (v1)**: below garrison threshold, prefer **`war_machine`** until ~20 count, then up to ~30% **`disruptor`** before `attack` tick actions.
 - **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
 - **Strategy (v1)**: Alpha picks `opening_strike` when attacker advantage ≥ 1.2 projected pools, else `balanced` (see [Combat strategies](#combat-strategies)).
