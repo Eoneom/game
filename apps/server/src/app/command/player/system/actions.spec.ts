@@ -75,6 +75,14 @@ describe('systemTickActions', () => {
         plastic: 10000,
         mushroom: 10000
       }),
+      warehouses_capacity: {
+        plastic: 50000,
+        mushroom: 50000
+      },
+      warehouse_space_remaining: {
+        plastic: 40000,
+        mushroom: 40000
+      },
       maximum_building_levels: 100,
       building_levels_used: 1
     } as never)
@@ -123,6 +131,79 @@ describe('systemTickActions', () => {
     })
   })
 
+  it('prefers a plastic warehouse upgrade when city plastic storage is pressured', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 3500,
+        mushroom: 100
+      }),
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+      warehouse_space_remaining: {
+        plastic: 500,
+        mushroom: 2900
+      },
+      maximum_building_levels: 100,
+      building_levels_used: 1
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 0
+        },
+        {
+          id: id(),
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        }
+      ],
+      upgrade_queue: []
+    })
+    const building_cost = {
+      resource: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0
+      },
+      duration: 1
+    }
+    vi.spyOn(BuildingGetQuery.prototype, 'run').mockImplementation(async ({ building_code }) => ({
+      building: BuildingEntity.create({
+        id: id(),
+        city_id,
+        code: building_code,
+        level: 0
+      }),
+      cost: {
+        code: building_code,
+        level: 1,
+        ...building_cost,
+      },
+      requirement: {
+        buildings: [],
+        technologies: []
+      },
+      metadata: {}
+    }))
+
+    const acted = await systemTickActions.upgrade(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.PLASTIC_WAREHOUSE)
+  })
+
   it('skips transport when the permanent outpost has no stock', async () => {
     const outpost_cell = testCityCell({ cell_id: id() })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
@@ -136,7 +217,11 @@ describe('systemTickActions', () => {
         cell_id: city_cell.id,
         plastic: 0,
         mushroom: 0
-      })
+      }),
+      warehouse_space_remaining: {
+        plastic: 0,
+        mushroom: 0
+      }
     } as never)
     vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
       outposts: [
@@ -251,5 +336,70 @@ describe('systemTickActions', () => {
     assert.strictEqual(acted, null)
     const transport_calls = vi.mocked(createTroopMovement).mock.calls.filter(call => call[0].action === MovementAction.TRANSPORT)
     assert.strictEqual(transport_calls.length, 0)
+  })
+
+  it('limits transport cargo to destination warehouse free space', async () => {
+    const outpost_cell = testCityCell({ cell_id: id() })
+    const outpost_id = id()
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 3900,
+        mushroom: 0
+      }),
+      warehouse_space_remaining: {
+        plastic: 100,
+        mushroom: 3000
+      }
+    } as never)
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT
+        })
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 500,
+          mushroom: 200,
+          plasma: 0
+        })
+      ],
+      count_limit: 10
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: outpost_cell.id,
+          code: TroopCode.HAULER,
+          count: 5,
+          movement_id: null
+        })
+      ],
+      costs: {} as never,
+      pending_recruitment: null
+    })
+
+    const acted = await systemTickActions.transport(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
+      plastic: 100,
+      mushroom: 200,
+      plasma: 0
+    })
   })
 })

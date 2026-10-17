@@ -33,6 +33,10 @@ import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { Resource } from '#shared/resource'
 import type { SystemTickAction } from '#command/player/system/policy'
+import {
+  resourcesForTransportToDestination,
+  sortBuildingsForSystemUpgrade
+} from '#command/player/system/storage'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
@@ -134,7 +138,13 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       technologies
     })
 
-    for (const building of building_list.buildings) {
+    const buildings_to_try = sortBuildingsForSystemUpgrade({
+      buildings: building_list.buildings,
+      resource_stock: city_details.resource_stock,
+      warehouses_capacity: city_details.warehouses_capacity,
+    })
+
+    for (const building of buildings_to_try) {
       if ('upgrade_at' in building) {
         continue
       }
@@ -577,10 +587,12 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
       continue
     }
 
-    const resources: Resource = {
-      plastic: stock.plastic,
-      mushroom: stock.mushroom,
-      plasma: stock.plasma
+    const resources = resourcesForTransportToDestination({
+      origin_stock: stock,
+      destination_space_remaining: city_details.warehouse_space_remaining,
+    })
+    if (!hasStock(resources)) {
+      continue
     }
     const move_troops = [
       {

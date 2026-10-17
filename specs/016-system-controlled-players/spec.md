@@ -32,8 +32,26 @@ Constants (`core/player/constant/system.ts`):
 | `categoriesForTick` | Rotates action order by `tick_index` |
 | `systemTickActions` | Per-category handlers in `app/command/player/system/actions.ts` |
 | `actForSystemPlayer` | First action returning `true` wins the tick |
+| `storage.ts` | Warehouse pressure threshold and upgrade / transport helpers |
 
 Interval: `SYSTEM_PLAYER_TICK_INTERVAL_MS` (`app/scheduling/intervals`).
+
+## Warehouse storage awareness
+
+System tick actions use `CityGetQuery` warehouse fields (`warehouses_capacity`, `resource_stock`, `warehouse_space_remaining`) — same capacity math as human city reads; no duplicate domain logic.
+
+**Pressure threshold**: a plastic or mushroom stock counts as pressured when `stock >= capacity × 0.7`. This matches the web header warehouse progress warn level (`HeaderResourcesItem` `warnCapacity`).
+
+**Upgrade** (`tryUpgrade`): when the city is under warehouse pressure, eligible buildings are sorted before the first affordable upgrade is chosen:
+
+1. Warehouse for each pressured resource (`plastic_warehouse` / `mushroom_warehouse`).
+2. Other warehouses.
+3. Non-production buildings (labs, solar, etc.).
+4. Production buildings (`recycling_plant`, `mushroom_farm`, `central_inductor`).
+
+When not pressured, building iteration order is unchanged (repository list order).
+
+**Transport** (`tryTransport`): cargo sent to the first city is capped per resource to `min(origin stock, destination warehouse_space_remaining)`, matching `depositUpToCapacity` on arrival. Plasma is not warehouse-capped. If capped cargo is empty, the outpost is skipped.
 
 Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
 
