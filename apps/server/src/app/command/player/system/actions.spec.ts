@@ -161,7 +161,12 @@ describe('systemTickActions', () => {
         {
           id: id(),
           code: BuildingCode.MUSHROOM_FARM,
-          level: 0
+          level: 1
+        },
+        {
+          id: id(),
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1
         },
         {
           id: id(),

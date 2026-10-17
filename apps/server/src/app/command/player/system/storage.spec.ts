@@ -48,12 +48,17 @@ describe('system player storage policy', () => {
     }), false)
   })
 
-  it('prefers the pressured warehouse over production when sorting upgrades', () => {
+  it('bootstraps core production before a pressured warehouse when levels are still 0', () => {
     const sorted = sortBuildingsForSystemUpgrade({
       buildings: [
         {
           id: 'farm',
           code: BuildingCode.MUSHROOM_FARM,
+          level: 0
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
           level: 0
         },
         {
@@ -64,6 +69,72 @@ describe('system player storage policy', () => {
       ],
       resource_stock: {
         plastic: 3500,
+        mushroom: 0,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      }
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.MUSHROOM_FARM)
+  })
+
+  it('prefers the pressured warehouse over production once core production exists', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1
+        },
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 3500,
+        mushroom: 0,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      }
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.PLASTIC_WAREHOUSE)
+  })
+
+  it('prefers a full warehouse even while bootstrapping production', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 0
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 0
+        },
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 4000,
         mushroom: 0,
         plasma: 0
       },
@@ -135,13 +206,51 @@ describe('system player storage policy', () => {
     assert.strictEqual(sorted[1].code, BuildingCode.RECYCLING_PLANT)
   })
 
-  it('still prefers warehouses over production when storage is not pressured', () => {
+  it('bootstraps production before warehouses when storage is not pressured', () => {
     const sorted = sortBuildingsForSystemUpgrade({
       buildings: [
         {
           id: 'farm',
           code: BuildingCode.MUSHROOM_FARM,
           level: 0
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 0
+        },
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 50,
+        mushroom: 10,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.MUSHROOM_FARM)
+  })
+
+  it('still prefers warehouses over production when storage is not pressured and core production exists', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 2
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 2
         },
         {
           id: 'plastic',
