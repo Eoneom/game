@@ -1,10 +1,10 @@
 # Slice 020 — System Player observability (admin live feed)
 
-**Status**: Implementing on `main`.
+**Status**: As implemented on `main`.
 
 ## Summary
 
-Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open an **in-game** screen (nav link when admin) that streams **every** system-controlled Player tick over **WebSocket** — not only successful commits — and shows a **read-only stats panel** (cities, outposts, building levels per city, technology levels per player). Each tick event shows outcome (`success` | `idle` | `error`), an ordered **attempts** trace, a concise French **summary**, and **expandable JSON**. Combined god-view stream with optional **filter by system Player name** (applies to feed and stats). Stats: HTTP snapshot on load/refresh; live patches via WebSocket after each **successful** tick action only. No DB persistence for feed or stats. v1 does not change tick policy, replay/export, or alerts. Existing `logs/system-tick.log` remains.
+Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open a **dedicated admin console** (not the in-game workspace shell) at `/admin`. The nav link « Observabilité IA » (visible only when `is_admin`) points to that console. The console streams **every** system-controlled Player tick over a **narrow admin WebSocket** — not the game event socket — and shows a **read-only stats panel** (cities, outposts, building levels per city, technology levels per player). Each tick event shows outcome (`success` | `idle` | `error`), an ordered **attempts** trace, a concise French **summary**, and **expandable JSON**. Combined god-view stream with optional **filter by system Player name** (applies to feed and stats). Stats: HTTP snapshot on load/refresh; live patches via admin WebSocket after each **successful** tick action only. No DB persistence for feed or stats. v1 does not change tick policy, replay/export, or alerts. Existing `logs/system-tick.log` remains.
 
 **Depends on**: [`016`](../016-system-controlled-players/spec.md), [`017`](../017-realtime-websocket/spec.md), session auth ([`002`](../002-player-session-auth/spec.md)).
 
@@ -16,7 +16,8 @@ Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open an **in-game** 
 | Check | Server compares logged-in `PlayerEntity.name` to allowlist (not client-only) |
 | HTTP | `GET /admin/system-player-observability` — `{ is_admin, system_players? }` |
 | HTTP | `GET /admin/system-player-stats` — `{ players: [...] }` (admin middleware; `admin:forbidden` otherwise) |
-| WS | On connect, admin sockets registered; `system-player:action-committed` and `system-player:stats-updated` fan-out to admins only |
+| Game WS | Default upgrade path (`/?token=`): **game** `AppEvent` fan-out only; observability events **not** sent here |
+| Admin WS | Path `/admin/observability/ws?token=` — allowlisted admins only (`4003` + `forbidden` otherwise); fan-out **only** `system-player:action-committed` and `system-player:stats-updated` |
 
 ## Event emission
 
@@ -68,7 +69,14 @@ After each successful system tick action, server emits `system-player:stats-upda
 
 ## Web UI
 
-Route `/admin/system-players`: stats panel (« État des joueurs système ») with manual refresh; live tick list (newest first); shared name filter; outcome badge; inline attempt chain; `<details>` for JSON. Nav link « Observabilité IA » when `is_admin`. Copy in French covers succès, inactif, and erreur.
+| Route | Behavior |
+| --- | --- |
+| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; attempt chain; JSON details |
+| `/admin/system-players` | Redirect to `/admin` (legacy URL) |
+
+Nav: « Observabilité IA » when `is_admin` → `/admin`. Non-admins: link hidden; direct `/admin` navigates away (e.g. to inbox). Admin observability WebSocket connects **only** while the admin console route is mounted (not on game login).
+
+Copy in French covers succès, inactif, and erreur — not only successful actions.
 
 ## Out of scope
 
@@ -80,5 +88,5 @@ AI tick policy changes, replay/export, alerts.
 | --- | --- |
 | Spec | `specs/020-system-player-observability/` |
 | Server | `core/admin/`, `app/query/admin/`, `web/handler/admin/`, `web/ws.ts`, `system/tick.ts`, `system/policy.ts` |
-| Web | `apps/web/src/modules/admin/`, `routes/admin/` |
+| Web | `apps/web/src/modules/admin/`, `routes/admin/`, `helpers/admin-observability-websocket.ts` |
 | Client | `packages/api-client/src/endpoints/admin/` |

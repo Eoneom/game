@@ -6,6 +6,7 @@ import { FactionCode } from '@eoneom/api-client'
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
 import { translateError } from '#helpers/error-translations'
+import { adminObservabilityWsClient } from '#helpers/admin-observability-websocket'
 import { wsClient } from '#helpers/websocket'
 import { useAuth } from '#auth/context'
 import { registerCityWsListeners } from '#city/ws-listener'
@@ -13,7 +14,6 @@ import { registerBuildingWsListeners } from '#building/ws-listener'
 import { registerTechnologyWsListeners } from '#technology/ws-listener'
 import { registerTroopWsListeners } from '#troop/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
-import { registerSystemPlayerObservabilityWsListener } from '#admin/system-player-observability/ws-listener'
 import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
 import { clearSystemPlayerStatsSnapshots } from '#admin/system-player-observability/stats-store'
 
@@ -63,11 +63,6 @@ const startSession = async ({
   registerTroopWsListeners()
   registerOutpostWsListeners()
   wsClient.connect(token)
-
-  const session = await client.admin.getSystemPlayerObservability(token)
-  if (!isError(session) && session.data?.is_admin) {
-    registerSystemPlayerObservabilityWsListener()
-  }
 }
 
 export const useLogin = () => {
@@ -137,6 +132,7 @@ export const useLogout = () => {
       clearToken()
       clearSystemPlayerObservabilityEvents()
       clearSystemPlayerStatsSnapshots()
+      adminObservabilityWsClient.disconnect()
       wsClient.disconnect()
       queryClient.clear()
     },
@@ -158,10 +154,6 @@ export const useInitStoredToken = () => {
       registerTroopWsListeners()
       registerOutpostWsListeners()
       wsClient.connect(token)
-      const session = await client.admin.getSystemPlayerObservability(token)
-      if (!isError(session) && session.data?.is_admin) {
-        registerSystemPlayerObservabilityWsListener()
-      }
     })()
   }, [])
 }

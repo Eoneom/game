@@ -10,8 +10,21 @@ import { AppLogger } from '#app/port/logger'
 import { AppEvent } from '#core/events'
 import { now } from '#shared/time'
 
-const connections = new Map<string, WebSocket>()
-const admin_connections = new Set<string>()
+const ADMIN_OBSERVABILITY_WS_PATH = '/admin/observability/ws'
+
+const game_connections = new Map<string, WebSocket>()
+const admin_observability_connections = new Map<string, WebSocket>()
+
+async function authorizeWsPlayerId(token: string | null): Promise<string | null> {
+  if (!token) {
+    return null
+  }
+  const { player_id } = await authorizeAuth({
+    token,
+    action_at: now()
+  })
+  return player_id
+}
 
 export function setupWebSocketServer(
   server: Server,
@@ -23,9 +36,13 @@ export function setupWebSocketServer(
     logger: AppLogger
   }
 ): void {
-  const wss = new WebSocketServer({ server })
+  const game_wss = new WebSocketServer({ server })
+  const admin_observability_wss = new WebSocketServer({
+    server,
+    path: ADMIN_OBSERVABILITY_WS_PATH,
+  })
 
-  wss.on('connection', async (ws, req) => {
+  game_wss.on('connection', async (ws, req) => {
     const url = new URL(req.url ?? '', 'http://localhost')
     const token = url.searchParams.get('token')
 
@@ -35,25 +52,50 @@ export function setupWebSocketServer(
     }
 
     try {
-      const { player_id } = await authorizeAuth({
-        token,
-        action_at: now()
-      })
-
-      connections.set(player_id, ws)
-      const is_admin = await isObservabilityAdmin({ player_id })
-      if (is_admin) {
-        admin_connections.add(player_id)
+      const player_id = await authorizeWsPlayerId(token)
+      if (!player_id) {
+        ws.close(4001, RequestError.TOKEN_NOT_FOUND)
+        return
       }
-      logger.info('player connected', {
-        player_id,
-        is_admin,
-      })
+      game_connections.set(player_id, ws)
+      logger.info('game player connected', { player_id })
 
       ws.on('close', () => {
-        connections.delete(player_id)
-        admin_connections.delete(player_id)
-        logger.info('player disconnected', { player_id })
+        game_connections.delete(player_id)
+        logger.info('game player disconnected', { player_id })
+      })
+    } catch {
+      ws.close(4001, 'unauthorized')
+    }
+  })
+
+  admin_observability_wss.on('connection', async (ws, req) => {
+    const url = new URL(req.url ?? '', 'http://localhost')
+    const token = url.searchParams.get('token')
+
+    if (!token) {
+      ws.close(4001, RequestError.TOKEN_NOT_FOUND)
+      return
+    }
+
+    try {
+      const player_id = await authorizeWsPlayerId(token)
+      if (!player_id) {
+        ws.close(4001, RequestError.TOKEN_NOT_FOUND)
+        return
+      }
+      const is_admin = await isObservabilityAdmin({ player_id })
+      if (!is_admin) {
+        ws.close(4003, 'forbidden')
+        return
+      }
+
+      admin_observability_connections.set(player_id, ws)
+      logger.info('admin observability connected', { player_id })
+
+      ws.on('close', () => {
+        admin_observability_connections.delete(player_id)
+        logger.info('admin observability disconnected', { player_id })
       })
     } catch {
       ws.close(4001, 'unauthorized')
@@ -63,7 +105,7 @@ export function setupWebSocketServer(
   eventBus.on(AppEvent.CityResourcesGathered, ({
     city_id, player_id
   }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: AppEvent.CityResourcesGathered,
@@ -75,7 +117,7 @@ export function setupWebSocketServer(
   eventBus.on(AppEvent.BuildingUpgradeFinished, ({
     city_id, player_id
   }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: AppEvent.BuildingUpgradeFinished,
@@ -85,14 +127,14 @@ export function setupWebSocketServer(
   })
 
   eventBus.on(AppEvent.TechnologyResearchFinished, ({ player_id }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: AppEvent.TechnologyResearchFinished }))
     }
   })
 
   eventBus.on(AppEvent.TroopMovementFinished, ({ player_id }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: AppEvent.TroopMovementFinished }))
     }
@@ -101,7 +143,7 @@ export function setupWebSocketServer(
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({
     city_id, player_id
   }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: AppEvent.TroopRecruitmentUpdated,
@@ -111,7 +153,7 @@ export function setupWebSocketServer(
   })
 
   eventBus.on(AppEvent.OutpostCreated, ({ player_id }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: AppEvent.OutpostCreated }))
     }
@@ -120,7 +162,7 @@ export function setupWebSocketServer(
   eventBus.on(AppEvent.OutpostDeleted, ({
     player_id, outpost_id
   }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: AppEvent.OutpostDeleted,
@@ -132,7 +174,7 @@ export function setupWebSocketServer(
   eventBus.on(AppEvent.OutpostResourcesGathered, ({
     outpost_id, player_id
   }) => {
-    const ws = connections.get(player_id)
+    const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({
         type: AppEvent.OutpostResourcesGathered,
@@ -142,9 +184,8 @@ export function setupWebSocketServer(
   })
 
   eventBus.on(AppEvent.SystemPlayerActionCommitted, (payload) => {
-    for (const admin_player_id of admin_connections) {
-      const ws = connections.get(admin_player_id)
-      if (ws?.readyState === WebSocket.OPEN) {
+    for (const [ admin_player_id, ws ] of admin_observability_connections) {
+      if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: AppEvent.SystemPlayerActionCommitted,
           committed_at: payload.committed_at,
@@ -157,18 +198,21 @@ export function setupWebSocketServer(
           summary: payload.summary,
           payload: payload.payload,
         }))
+      } else {
+        admin_observability_connections.delete(admin_player_id)
       }
     }
   })
 
   eventBus.on(AppEvent.SystemPlayerStatsUpdated, (snapshot) => {
-    for (const admin_player_id of admin_connections) {
-      const ws = connections.get(admin_player_id)
-      if (ws?.readyState === WebSocket.OPEN) {
+    for (const [ admin_player_id, ws ] of admin_observability_connections) {
+      if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({
           type: AppEvent.SystemPlayerStatsUpdated,
           ...snapshot,
         }))
+      } else {
+        admin_observability_connections.delete(admin_player_id)
       }
     }
   })

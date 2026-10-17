@@ -8,6 +8,7 @@ import {
   getSystemPlayerObservabilityEvents,
   subscribeSystemPlayerObservabilityEvents,
 } from './event-store'
+import { adminObservabilityWsClient } from '#helpers/admin-observability-websocket'
 import {
   getSystemPlayerStatsSnapshots,
   replaceSystemPlayerStatsSnapshots,
@@ -52,12 +53,18 @@ export const useSystemPlayerNameFilter = () => {
 }
 
 export const useRegisterObservabilityWsWhenAdmin = (is_admin: boolean | undefined) => {
+  const { token } = useAuth()
+
   useEffect(() => {
-    if (!is_admin) {
+    if (!is_admin || !token) {
       return
     }
     registerSystemPlayerObservabilityWsListener()
-  }, [ is_admin ])
+    adminObservabilityWsClient.connect(token)
+    return () => {
+      adminObservabilityWsClient.disconnect()
+    }
+  }, [ is_admin, token ])
 }
 
 export const useSystemPlayerStats = (is_admin: boolean | undefined) => {

@@ -1,6 +1,6 @@
 import { AppEvent } from '@eoneom/api-client'
 
-import { wsClient } from '#helpers/websocket'
+import { adminObservabilityWsClient } from '#helpers/admin-observability-websocket'
 import { pushSystemPlayerObservabilityEvent } from './event-store'
 import { patchSystemPlayerStatsSnapshot } from './stats-store'
 import type { SystemPlayerObservabilityEvent } from './types'
@@ -14,7 +14,7 @@ export function registerSystemPlayerObservabilityWsListener(): void {
   }
   registered = true
 
-  wsClient.on(AppEvent.SystemPlayerActionCommitted, (raw) => {
+  adminObservabilityWsClient.on(AppEvent.SystemPlayerActionCommitted, (raw) => {
     const message = raw as SystemPlayerObservabilityEvent & { type: string }
     pushSystemPlayerObservabilityEvent({
       committed_at: message.committed_at,
@@ -29,7 +29,7 @@ export function registerSystemPlayerObservabilityWsListener(): void {
     })
   })
 
-  wsClient.on(AppEvent.SystemPlayerStatsUpdated, (raw) => {
+  adminObservabilityWsClient.on(AppEvent.SystemPlayerStatsUpdated, (raw) => {
     const message = raw as AdminSystemPlayerStatsSnapshot & { type: string }
     patchSystemPlayerStatsSnapshot({
       player_id: message.player_id,

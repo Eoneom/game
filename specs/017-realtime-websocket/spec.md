@@ -4,19 +4,25 @@
 
 ## Summary
 
-The HTTP server hosts a **WebSocket** server on the same port. Connections authenticate with the session token query param (`?token=`). The in-process `AppEventBus` bridges domain events to per-player WS messages. The web client registers module listeners on login/signup and invalidates React Query caches on events.
+The HTTP server hosts **game** WebSocket upgrades on the default path and a separate **admin observability** path on the same port (see [`020`](../020-system-player-observability/spec.md)). Connections authenticate with the session token query param (`?token=`). The in-process `AppEventBus` bridges domain events to per-player game WS messages. The web client registers game module listeners on login/signup and invalidates React Query caches on events.
 
 **Depends on**: session auth ([`002`](../002-player-session-auth/spec.md)).
 
 ## Connection gate (`apps/server/src/web/ws.ts`)
 
+### Game socket (default upgrade path)
+
 | Condition | Close code | Reason |
 | --- | --- | --- |
 | Missing `token` | `4001` | `token:not-found` (`RequestError.TOKEN_NOT_FOUND`) |
 | `authorizeAuth` failure | `4001` | `unauthorized` (literal string) |
-| Success | — | One socket per `player_id` in memory map |
+| Success | — | One game socket per `player_id` in memory map |
 
-Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts`.
+### Admin observability socket (`/admin/observability/ws`)
+
+Same token gates as game; additionally requires observability allowlist (`4003` + `forbidden` when not admin). Carries only `system-player:action-committed` and `system-player:stats-updated` (slice 020).
+
+Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts`, `apps/web/src/helpers/admin-observability-websocket.test.ts`.
 
 ## Events (`core/events.ts` → bus → WS payload)
 

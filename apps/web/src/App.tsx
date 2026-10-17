@@ -1,5 +1,5 @@
 import React from 'react'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useRouterState } from '@tanstack/react-router'
 import { ToastContainer } from 'react-toastify'
 
 import { AuthUnauthenticated } from '#auth/unauthenticated'
@@ -15,6 +15,9 @@ import { useListCities } from '#city/hooks'
 const App: React.FC = () => {
   useInitStoredToken()
 
+  const is_admin_route = useRouterState({
+    select: state => state.location.pathname.startsWith('/admin'),
+  })
   const { token } = useAuth()
   const { data: citiesData, error, isPending } = useListCities()
   useClearInvalidSession(error)
@@ -23,6 +26,8 @@ const App: React.FC = () => {
 
   if (!token) {
     content = <AuthUnauthenticated />
+  } else if (is_admin_route) {
+    content = <Outlet />
   } else if (isPending || !citiesData?.cities.length) {
     content = (
       <div className="flex min-h-screen items-center justify-center text-amber">

@@ -81,8 +81,8 @@ export const NavMenu: React.FC = () => {
         {observabilitySession?.is_admin ? (
           <li>
             <RouterLink
-              to="/admin/system-players"
-              className={linkClass('/admin/system-players')}
+              to="/admin"
+              className={linkClass('/admin')}
             >
               Observabilité IA
             </RouterLink>

@@ -41,8 +41,8 @@ function makeReq(url: string) {
 describe('setupWebSocketServer', () => {
   let mockLogger: { info: MockInstance; error: MockInstance; warn: MockInstance; debug: MockInstance; child: MockInstance }
   let capturedEventListeners: Map<string, (payload: unknown) => void>
-  let connectionHandler: (ws: ReturnType<typeof makeMockWs>, req: ReturnType<typeof makeReq>) => Promise<void>
-  let wssInstance: { on: MockInstance }
+  let gameConnectionHandler: (ws: ReturnType<typeof makeMockWs>, req: ReturnType<typeof makeReq>) => Promise<void>
+  let adminObservabilityConnectionHandler: (ws: ReturnType<typeof makeMockWs>, req: ReturnType<typeof makeReq>) => Promise<void>
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -68,12 +68,14 @@ describe('setupWebSocketServer', () => {
       logger: mockLogger as any
     })
 
-    wssInstance = (WebSocketServer as unknown as MockInstance).mock.results[
-      (WebSocketServer as unknown as MockInstance).mock.results.length - 1
-    ].value
+    const wss_instances = (WebSocketServer as unknown as MockInstance).mock.results.map(
+      result => result.value
+    )
+    const game_wss = wss_instances[wss_instances.length - 2]
+    const admin_wss = wss_instances[wss_instances.length - 1]
 
-    const connectionCall = (wssInstance.on as MockInstance).mock.calls.find(([ event ]) => event === 'connection')
-    connectionHandler = connectionCall[1]
+    gameConnectionHandler = (game_wss.on as MockInstance).mock.calls.find(([ event ]) => event === 'connection')[1]
+    adminObservabilityConnectionHandler = (admin_wss.on as MockInstance).mock.calls.find(([ event ]) => event === 'connection')[1]
   })
 
   afterEach(() => {
@@ -83,7 +85,7 @@ describe('setupWebSocketServer', () => {
   it('closes the connection when token is missing from the URL', async () => {
     const mockWs = makeMockWs()
 
-    await connectionHandler(mockWs, makeReq('/'))
+    await gameConnectionHandler(mockWs, makeReq('/'))
 
     expect(mockWs.close).toHaveBeenCalledWith(4001, RequestError.TOKEN_NOT_FOUND)
   })
@@ -92,7 +94,7 @@ describe('setupWebSocketServer', () => {
     (authorizeAuth as MockInstance).mockRejectedValue(new Error('invalid token'))
     const mockWs = makeMockWs()
 
-    await connectionHandler(mockWs, makeReq('/?token=bad-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=bad-token'))
 
     expect(mockWs.close).toHaveBeenCalledWith(4001, 'unauthorized')
   })
@@ -103,7 +105,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.CityResourcesGathered)
     eventHandler?.({
@@ -122,7 +124,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(0)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.CityResourcesGathered)
     eventHandler?.({
@@ -138,7 +140,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     mockWs._handlers.get('close')?.()
 
@@ -157,7 +159,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.BuildingUpgradeFinished)
     eventHandler?.({
@@ -176,7 +178,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.TechnologyResearchFinished)
     eventHandler?.({ player_id })
@@ -189,7 +191,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.TroopMovementFinished)
     eventHandler?.({ player_id })
@@ -203,7 +205,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.TroopRecruitmentUpdated)
     eventHandler?.({
@@ -222,7 +224,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.OutpostCreated)
     eventHandler?.({ player_id })
@@ -236,7 +238,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.OutpostDeleted)
     eventHandler?.({
@@ -256,7 +258,7 @@ describe('setupWebSocketServer', () => {
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.OutpostResourcesGathered)
     eventHandler?.({
@@ -270,13 +272,16 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
-  it('forwards SystemPlayerActionCommitted to connected admin WebSockets only', async () => {
+  it('forwards SystemPlayerActionCommitted to admin observability WebSockets only', async () => {
     const admin_player_id = 'admin-1'
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: admin_player_id })
     ;(isObservabilityAdmin as MockInstance).mockResolvedValue(true)
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await adminObservabilityConnectionHandler(
+      mockWs,
+      makeReq('/admin/observability/ws?token=valid-token')
+    )
 
     const eventHandler = capturedEventListeners.get(AppEvent.SystemPlayerActionCommitted)
     eventHandler?.({
@@ -315,13 +320,39 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
-  it('forwards SystemPlayerStatsUpdated to connected admin WebSockets only', async () => {
+  it('does not forward SystemPlayerActionCommitted on the game WebSocket', async () => {
+    const admin_player_id = 'admin-2'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: admin_player_id })
+    ;(isObservabilityAdmin as MockInstance).mockResolvedValue(true)
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    const eventHandler = capturedEventListeners.get(AppEvent.SystemPlayerActionCommitted)
+    eventHandler?.({
+      committed_at: 1,
+      player_id: 'system-1',
+      player_name: 'Alpha',
+      tick_index: 1,
+      outcome: 'idle',
+      attempts: [],
+      summary: 'idle',
+      payload: {},
+    })
+
+    expect(mockWs.send).not.toHaveBeenCalled()
+  })
+
+  it('forwards SystemPlayerStatsUpdated to admin observability WebSockets only', async () => {
     const admin_player_id = 'admin-1'
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: admin_player_id })
     ;(isObservabilityAdmin as MockInstance).mockResolvedValue(true)
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await adminObservabilityConnectionHandler(
+      mockWs,
+      makeReq('/admin/observability/ws?token=valid-token')
+    )
 
     const eventHandler = capturedEventListeners.get(AppEvent.SystemPlayerStatsUpdated)
     const snapshot = {
@@ -341,13 +372,26 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
+  it('closes admin observability WebSocket when player is not allowlisted', async () => {
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: 'player-x' })
+    ;(isObservabilityAdmin as MockInstance).mockResolvedValue(false)
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await adminObservabilityConnectionHandler(
+      mockWs,
+      makeReq('/admin/observability/ws?token=valid-token')
+    )
+
+    expect(mockWs.close).toHaveBeenCalledWith(4003, 'forbidden')
+  })
+
   it('does not forward an event to a different player WebSocket', async () => {
     const player_id = 'player-9'
     const other_player_id = 'player-10'
     ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
     const mockWs = makeMockWs(WebSocket.OPEN)
 
-    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
 
     const eventHandler = capturedEventListeners.get(AppEvent.CityResourcesGathered)
     eventHandler?.({

@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as SharedRouteRouteImport } from './routes/_shared/route'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SharedIndexRouteImport } from './routes/_shared/index'
 import { Route as InboxReportRouteImport } from './routes/inbox/report'
 import { Route as AdminSystemPlayersRouteImport } from './routes/admin/system-players'
@@ -39,9 +41,19 @@ import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/
 import { Route as OutpostOutpostIdWorldMovementMovementIdRouteImport } from './routes/outpost/$outpostId/world/movement/$movementId'
 import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/city/$cityId/world/movement/$movementId'
 
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SharedRouteRoute = SharedRouteRouteImport.update({
   id: '/_shared',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const SharedIndexRoute = SharedIndexRouteImport.update({
   id: '/',
@@ -54,9 +66,9 @@ const InboxReportRoute = InboxReportRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSystemPlayersRoute = AdminSystemPlayersRouteImport.update({
-  id: '/admin/system-players',
-  path: '/admin/system-players',
-  getParentRoute: () => rootRouteImport,
+  id: '/system-players',
+  path: '/system-players',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 const SharedReportRoute = SharedReportRouteImport.update({
   id: '/report',
@@ -195,11 +207,13 @@ const CityCityIdWorldMovementMovementIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof SharedIndexRoute
+  '/admin': typeof AdminRouteRouteWithChildren
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/report': typeof SharedReportRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
+  '/admin/': typeof AdminIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -228,6 +242,7 @@ export interface FileRoutesByTo {
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
   '/': typeof SharedIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -254,12 +269,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shared': typeof SharedRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/_shared/report': typeof SharedReportRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
   '/_shared/': typeof SharedIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -287,11 +304,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/report'
     | '/admin/system-players'
     | '/inbox/report'
+    | '/admin/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -320,6 +339,7 @@ export interface FileRouteTypes {
     | '/admin/system-players'
     | '/inbox/report'
     | '/'
+    | '/admin'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -345,12 +365,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_shared'
+    | '/admin'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/_shared/report'
     | '/admin/system-players'
     | '/inbox/report'
     | '/_shared/'
+    | '/admin/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -377,20 +399,34 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   SharedRouteRoute: typeof SharedRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
-  AdminSystemPlayersRoute: typeof AdminSystemPlayersRoute
   InboxReportRoute: typeof InboxReportRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_shared': {
       id: '/_shared'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof SharedRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_shared/': {
       id: '/_shared/'
@@ -408,10 +444,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/system-players': {
       id: '/admin/system-players'
-      path: '/admin/system-players'
+      path: '/system-players'
       fullPath: '/admin/system-players'
       preLoaderRoute: typeof AdminSystemPlayersRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/_shared/report': {
       id: '/_shared/report'
@@ -605,6 +641,20 @@ const SharedRouteRouteWithChildren = SharedRouteRoute._addFileChildren(
   SharedRouteRouteChildren,
 )
 
+interface AdminRouteRouteChildren {
+  AdminSystemPlayersRoute: typeof AdminSystemPlayersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminSystemPlayersRoute: AdminSystemPlayersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
 interface CityCityIdMovementRouteRouteChildren {
   CityCityIdMovementMovementIdRoute: typeof CityCityIdMovementMovementIdRoute
 }
@@ -726,9 +776,9 @@ const OutpostOutpostIdRouteRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   SharedRouteRoute: SharedRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,
-  AdminSystemPlayersRoute: AdminSystemPlayersRoute,
   InboxReportRoute: InboxReportRoute,
 }
 export const routeTree = rootRouteImport
