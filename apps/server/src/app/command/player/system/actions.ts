@@ -34,6 +34,13 @@ import { Coordinates } from '#core/world/value/coordinates'
 import { Resource } from '#shared/resource'
 import type { SystemTickAction } from '#command/player/system/policy'
 import {
+  hasPendingBuildingUpgrade,
+  hasPendingTechnologyResearch,
+  projectBuildingLevelsForPolicy,
+  projectTechnologyLevelsForPolicy,
+  projectWarehousesCapacity,
+} from '#command/player/system/pending-upgrades'
+import {
   resourcesForTransportToDestination,
   sortBuildingsForSystemUpgrade
 } from '#command/player/system/storage'
@@ -133,20 +140,37 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       continue
     }
 
-    const levels = levelsFrom({
+    const projected_buildings = projectBuildingLevelsForPolicy({
       buildings: building_list.buildings,
-      technologies
+      upgrade_queue: building_list.upgrade_queue,
+    })
+    const projected_warehouses_capacity = projectWarehousesCapacity({
+      buildings: building_list.buildings,
+      upgrade_queue: building_list.upgrade_queue,
+    })
+
+    const levels = levelsFrom({
+      buildings: projected_buildings,
+      technologies: projectTechnologyLevelsForPolicy(technologies),
     })
 
     const buildings_to_try = sortBuildingsForSystemUpgrade({
-      buildings: building_list.buildings,
+      buildings: projected_buildings,
       resource_stock: city_details.resource_stock,
-      warehouses_capacity: city_details.warehouses_capacity,
+      warehouses_capacity: projected_warehouses_capacity,
       production_energy_ratio: city_details.production_energy_ratio,
     })
 
-    for (const building of buildings_to_try) {
-      if ('upgrade_at' in building) {
+    for (const projected_building of buildings_to_try) {
+      const building = building_list.buildings.find(
+        candidate => candidate.code === projected_building.code
+      ) ?? projected_building
+
+      if (hasPendingBuildingUpgrade({
+        building_code: building.code,
+        buildings: building_list.buildings,
+        upgrade_queue: building_list.upgrade_queue,
+      })) {
         continue
       }
 
@@ -194,7 +218,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
 async function tryResearch(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies } = await new TechnologyListQuery().run({ player_id })
-  if (technologies.some(technology => 'research_at' in technology)) {
+  if (hasPendingTechnologyResearch(technologies)) {
     return null
   }
 
@@ -207,12 +231,22 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
       city_id: city.id,
       player_id
     })
-    const levels = levelsFrom({
+    const projected_buildings = projectBuildingLevelsForPolicy({
       buildings: building_list.buildings,
-      technologies
+      upgrade_queue: building_list.upgrade_queue,
+    })
+    const projected_technologies = projectTechnologyLevelsForPolicy(technologies)
+
+    const levels = levelsFrom({
+      buildings: projected_buildings,
+      technologies: projected_technologies,
     })
 
-    for (const technology of technologies) {
+    for (const technology of projected_technologies) {
+      if ('research_at' in technology) {
+        continue
+      }
+
       const details = await new TechnologyGetQuery().run({
         city_id: city.id,
         player_id,
@@ -281,8 +315,11 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     }
 
     const levels = levelsFrom({
-      buildings: building_list.buildings,
-      technologies
+      buildings: projectBuildingLevelsForPolicy({
+        buildings: building_list.buildings,
+        upgrade_queue: building_list.upgrade_queue,
+      }),
+      technologies: projectTechnologyLevelsForPolicy(technologies),
     })
 
     for (const troop of troop_list.troops) {

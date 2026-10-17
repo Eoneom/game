@@ -209,6 +209,93 @@ describe('systemTickActions', () => {
     assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.PLASTIC_WAREHOUSE)
   })
 
+  it('does not queue a building upgrade already in progress or queued', async () => {
+    const farm_id = id()
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 3500,
+        mushroom: 100
+      }),
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+      warehouse_space_remaining: {
+        plastic: 500,
+        mushroom: 2900
+      },
+      maximum_building_levels: 100,
+      building_levels_used: 5,
+      production_energy_ratio: 1,
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: farm_id,
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+          upgrade_at: 99_000,
+          upgrade_started_at: 98_000,
+        },
+        {
+          id: id(),
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1
+        },
+        {
+          id: id(),
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      upgrade_queue: [
+        {
+          id: id(),
+          building_code: BuildingCode.PLASTIC_WAREHOUSE,
+        },
+      ],
+    })
+    const building_cost = {
+      resource: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0
+      },
+      duration: 1
+    }
+    vi.spyOn(BuildingGetQuery.prototype, 'run').mockImplementation(async ({ building_code }) => ({
+      building: BuildingEntity.create({
+        id: id(),
+        city_id,
+        code: building_code,
+        level: building_code === BuildingCode.MUSHROOM_FARM ? 1 : 0
+      }),
+      cost: {
+        code: building_code,
+        level: 1,
+        ...building_cost,
+      },
+      requirement: {
+        buildings: [],
+        technologies: []
+      },
+      metadata: {}
+    }))
+
+    const acted = await systemTickActions.upgrade(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.RECYCLING_PLANT)
+  })
+
   it('skips transport when the permanent outpost has no stock', async () => {
     const outpost_cell = testCityCell({ cell_id: id() })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
