@@ -140,19 +140,19 @@ No per-player recruit cap beyond existing city recruitment concurrency ([`009`](
 
 Combat troops are **not** recruitable at game start. Each combat `TroopCode` has its **own** `TroopRequirement` row (no shared anchor/striker pairs across codes or factions). Gates live in `TroopRequirement` (`apps/server/src/core/requirement/constant/troop.ts`) and are enforced by `RequirementService.checkTroopRequirement` on `PUT /troop/recruit` ([`009`](../009-troops-stationary/spec.md), [`014`](../014-requirements-pricing/spec.md)). Costs live in `troop_costs` (`apps/server/src/core/pricing/constant/troop.ts`) with the same per-code granularity; duration reductions still follow [`014`](../014-requirements-pricing/spec.md) (`cloning_factory` + `replication_catalyst` levels on the recruiting city).
 
-**Building + technology requirements** (one unique row per `TroopCode`; wire codes from [`007`](../007-buildings-upgrade-queue/spec.md) / [`008`](../008-technology-research/spec.md); **no** `outpost_logistics` gate):
+**Recruit requirements (v1)** — one unique row per `TroopCode`; gates use **only** `cloning_factory` ([`007`](../007-buildings-upgrade-queue/spec.md)) and `replication_catalyst` ([`008`](../008-technology-research/spec.md)). **No** `architecture`, **no** `photovoltaic_optimization`, **no** `outpost_logistics`, and **no** other building/technology codes for combat recruits in this slice.
 
-| `TroopCode` | Faction | `cloning_factory` | `architecture` | `replication_catalyst` | `photovoltaic_optimization` |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `legionnaire` | `the_confederation` | 4 | 2 | 1 | — |
-| `interceptor` | `the_confederation` | 6 | — | 3 | — |
-| `war_machine` | `the_technological_singularity` | 5 | 4 | 2 | — |
-| `disruptor` | `the_technological_singularity` | 7 | — | 1 | 2 |
+| `TroopCode` | Faction | `cloning_factory` | `replication_catalyst` |
+| --- | --- | ---: | ---: |
+| `legionnaire` | `the_confederation` | 4 | 1 |
+| `interceptor` | `the_confederation` | 6 | 3 |
+| `war_machine` | `the_technological_singularity` | 5 | 2 |
+| `disruptor` | `the_technological_singularity` | 7 | 4 |
 
-- **`legionnaire`**: first confederation line troops after hauler-tier cloning (`light_transporter` / `hauler` need `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)); **`architecture` 2** (chassis templates from the same tech tree that unlocks the cloning factory) plus baseline military **`replication_catalyst` 1**.
-- **`interceptor`**: elite fast-hull replication at **`cloning_factory` 6** and **`replication_catalyst` 3** only — no extra building beyond the factory tier.
-- **`war_machine`**: singularity assault platforms gate on **`architecture` 4** (autonomous fortress blueprints) and **`replication_catalyst` 2** at **`cloning_factory` 5** — **not** the same building/tech mix as `legionnaire` (different factory tier and architecture depth).
-- **`disruptor`**: harassment units need peak factory output (**`cloning_factory` 7**), **`photovoltaic_optimization` 2** (energy-dense drives), and **`replication_catalyst` 1** — a distinct singularity progression path from `war_machine`.
+- **`legionnaire`**: first confederation line troops after hauler-tier cloning (`light_transporter` / `hauler` need `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)); baseline military replication at **`replication_catalyst` 1** with **`cloning_factory` 4** (below hauler tier so line infantry unlocks on a distinct factory step).
+- **`interceptor`**: elite fast-hull replication at **`cloning_factory` 6** and **`replication_catalyst` 3** — highest catalyst demand among confederation combat codes.
+- **`war_machine`**: singularity assault platforms at **`cloning_factory` 5** and **`replication_catalyst` 2** — **not** the same factory/catalyst pair as `legionnaire` or `interceptor`.
+- **`disruptor`**: harassment units need peak factory output (**`cloning_factory` 7**) and advanced replication (**`replication_catalyst` 4**) — a distinct singularity progression path from `war_machine`.
 - **Faction differentiation**: confederation and singularity combat codes differ in **both** [stats](#roster-names-faction-stats) and **requirement rows**; implementers must not mirror confederation gates onto singularity codes.
 - **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the row for that code is met.
 

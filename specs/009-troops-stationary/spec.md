@@ -41,7 +41,7 @@ Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, 
 
 - `TroopService.init` / `codesForFaction` at player bootstrap.
 - Costs: `PricingService.getTroopCost` (cloning factory + replication catalyst reduce duration).
-- Requirements: `RequirementService.checkTroopRequirement`.
+- Requirements: `RequirementService.checkTroopRequirement`. **Combat** codes ([`024`](../024-player-combat-pvp/spec.md)): **`cloning_factory`** + **`replication_catalyst`** only (no `architecture` / `photovoltaic_optimization` gates).
 
 ## Web UI
 
