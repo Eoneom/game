@@ -42,12 +42,13 @@ System tick actions use `CityGetQuery` warehouse fields (`warehouses_capacity`, 
 
 **Pressure threshold**: a plastic or mushroom stock counts as pressured when `stock >= capacity × 0.7`. This matches the web header warehouse progress warn level (`HeaderResourcesItem` `warnCapacity`).
 
-**Upgrade** (`tryUpgrade`): when the city is under warehouse pressure, eligible buildings are sorted before the first affordable upgrade is chosen:
+**Upgrade** (`tryUpgrade`): when the city is under warehouse pressure **or** `production_energy_ratio < 1`, eligible buildings are sorted before the first affordable upgrade is chosen:
 
-1. Warehouse for each pressured resource (`plastic_warehouse` / `mushroom_warehouse`).
-2. Other warehouses.
-3. Non-production buildings (labs, solar, etc.).
-4. Production buildings (`recycling_plant`, `mushroom_farm`, `central_inductor`).
+1. **Energy** (`solar_panel`) when energy-starved (`production_energy_ratio < 1`).
+2. Warehouse for each pressured resource (`plastic_warehouse` / `mushroom_warehouse`).
+3. Other warehouses.
+4. Non-production buildings (labs, etc.).
+5. Production buildings (`recycling_plant`, `mushroom_farm`, `central_inductor`) — deprioritized while energy-starved.
 
 When not pressured, building iteration order is unchanged (repository list order).
 

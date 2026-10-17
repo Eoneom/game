@@ -76,6 +76,35 @@ describe('system player storage policy', () => {
     assert.strictEqual(sorted[0].code, BuildingCode.PLASTIC_WAREHOUSE)
   })
 
+  it('prefers solar panel over production when production energy ratio is below 1', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 0
+        },
+        {
+          id: 'solar',
+          code: BuildingCode.SOLAR_PANEL,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+      production_energy_ratio: 0,
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.SOLAR_PANEL)
+  })
+
   it('leaves building order unchanged when storage is not pressured', () => {
     const buildings = [
       {

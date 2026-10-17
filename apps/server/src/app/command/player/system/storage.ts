@@ -1,6 +1,7 @@
 import { building_order } from '#core/building/constant/order'
 import { BuildingCode } from '#core/building/constant/code'
 import {
+  isEnergyBuildingCode,
   isProductionBuildingCode,
   isWarehouseBuildingCode
 } from '#core/building/helper'
@@ -71,34 +72,64 @@ function warehouseUpgradeRank({
   return 2
 }
 
+function systemUpgradeRank({
+  building_code,
+  resource_stock,
+  warehouses_capacity,
+  production_energy_ratio,
+}: {
+  building_code: BuildingCode
+  resource_stock: Resource
+  warehouses_capacity: WarehouseCapacity
+  production_energy_ratio: number
+}): number {
+  const energy_starved = production_energy_ratio < 1
+  if (energy_starved && isEnergyBuildingCode(building_code)) {
+    return -1
+  }
+  if (energy_starved && isProductionBuildingCode(building_code)) {
+    return 4
+  }
+  return warehouseUpgradeRank({
+    building_code,
+    resource_stock,
+    warehouses_capacity,
+  })
+}
+
 export function sortBuildingsForSystemUpgrade<
   T extends { code: BuildingCode }
 >({
   buildings,
   resource_stock,
   warehouses_capacity,
+  production_energy_ratio = 1,
 }: {
   buildings: T[]
   resource_stock: Resource
   warehouses_capacity: WarehouseCapacity
+  production_energy_ratio?: number
 }): T[] {
   const under_pressure = isCityWarehouseUnderPressure({
     resource_stock,
     warehouses_capacity,
   })
-  if (!under_pressure) {
+  const energy_starved = production_energy_ratio < 1
+  if (!under_pressure && !energy_starved) {
     return buildings
   }
 
   return [ ...buildings ].sort((left, right) => {
-    const rank_difference = warehouseUpgradeRank({
+    const rank_difference = systemUpgradeRank({
       building_code: left.code,
       resource_stock,
       warehouses_capacity,
-    }) - warehouseUpgradeRank({
+      production_energy_ratio,
+    }) - systemUpgradeRank({
       building_code: right.code,
       resource_stock,
       warehouses_capacity,
+      production_energy_ratio,
     })
     if (rank_difference !== 0) {
       return rank_difference

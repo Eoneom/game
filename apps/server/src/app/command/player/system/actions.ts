@@ -142,6 +142,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       buildings: building_list.buildings,
       resource_stock: city_details.resource_stock,
       warehouses_capacity: city_details.warehouses_capacity,
+      production_energy_ratio: city_details.production_energy_ratio,
     })
 
     for (const building of buildings_to_try) {

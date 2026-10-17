@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import classNames from 'classnames'
 
 import {
   formatCoordinates,
@@ -42,17 +43,70 @@ function formatProductionLine(earnings_per_second: Resource): string {
   ].join(' · ')
 }
 
-function formatWarehouseLine({
+const warehouseFillPercent = (capacity: number, space_remaining: number): number => {
+  if (capacity <= 0) {
+    return 0
+  }
+  const used = capacity - space_remaining
+  return Math.min(100, Math.max(0, (used / capacity) * 100))
+}
+
+function WarehouseStockBars({
+  resources,
   warehouses_capacity,
   warehouse_space_remaining,
 }: {
+  resources: Resource
   warehouses_capacity: WarehouseCapacity
   warehouse_space_remaining: WarehouseCapacity
-}): string {
-  return [
-    `${RESOURCE_LABEL.plastic} ${transformDecimals(warehouse_space_remaining.plastic)} / ${transformDecimals(warehouses_capacity.plastic)}`,
-    `${RESOURCE_LABEL.mushroom} ${transformDecimals(warehouse_space_remaining.mushroom)} / ${transformDecimals(warehouses_capacity.mushroom)}`,
-  ].join(' · ')
+}): React.ReactElement {
+  const plastic_fill = warehouseFillPercent(
+    warehouses_capacity.plastic,
+    warehouse_space_remaining.plastic
+  )
+  const mushroom_fill = warehouseFillPercent(
+    warehouses_capacity.mushroom,
+    warehouse_space_remaining.mushroom
+  )
+
+  return (
+    <div className="mt-1 space-y-1.5">
+      <div>
+        <div className="mb-0.5 flex justify-between text-[11px] text-amber-dim">
+          <span>{RESOURCE_LABEL.plastic}</span>
+          <span>
+            {transformDecimals(resources.plastic)} / {transformDecimals(warehouses_capacity.plastic)}
+          </span>
+        </div>
+        <progress
+          value={plastic_fill}
+          max={100}
+          className={classNames(
+            'h-1.5 w-full rounded-sm border border-rust/40 bg-chrome [&::-webkit-progress-value]:bg-amber [&::-moz-progress-bar]:bg-amber',
+            plastic_fill >= 90 &&
+              '[&::-webkit-progress-value]:bg-danger [&::-moz-progress-bar]:bg-danger'
+          )}
+        />
+      </div>
+      <div>
+        <div className="mb-0.5 flex justify-between text-[11px] text-amber-dim">
+          <span>{RESOURCE_LABEL.mushroom}</span>
+          <span>
+            {transformDecimals(resources.mushroom)} / {transformDecimals(warehouses_capacity.mushroom)}
+          </span>
+        </div>
+        <progress
+          value={mushroom_fill}
+          max={100}
+          className={classNames(
+            'h-1.5 w-full rounded-sm border border-rust/40 bg-chrome [&::-webkit-progress-value]:bg-terminal [&::-moz-progress-bar]:bg-terminal',
+            mushroom_fill >= 90 &&
+              '[&::-webkit-progress-value]:bg-danger [&::-moz-progress-bar]:bg-danger'
+          )}
+        />
+      </div>
+    </div>
+  )
 }
 
 function formatEnergyLine({
@@ -128,9 +182,11 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     <span className="block text-xs text-amber-dim">
                       {formatEnergyLine(city)}
                     </span>
-                    <span className="block text-xs text-amber-dim">
-                      Entrepôts (libre / cap.) : {formatWarehouseLine(city)}
-                    </span>
+                    <WarehouseStockBars
+                      resources={city.resources}
+                      warehouses_capacity={city.warehouses_capacity}
+                      warehouse_space_remaining={city.warehouse_space_remaining}
+                    />
                   </li>
                 ))}
               </ul>
@@ -162,9 +218,11 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                         </span>
                       )}
                       {outpost.warehouses_capacity.plastic > 0 && (
-                        <span className="block text-xs text-amber-dim">
-                          Entrepôts (libre / cap.) : {formatWarehouseLine(outpost)}
-                        </span>
+                        <WarehouseStockBars
+                          resources={outpost.resources}
+                          warehouses_capacity={outpost.warehouses_capacity}
+                          warehouse_space_remaining={outpost.warehouse_space_remaining}
+                        />
                       )}
                     </li>
                   ))}
