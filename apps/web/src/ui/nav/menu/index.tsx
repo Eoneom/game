@@ -5,12 +5,14 @@ import classNames from 'classnames'
 import { useLocation } from '#location/context'
 import { useLogout } from '#auth/hooks'
 import { useCountUnreadReports } from '#communication/report/hooks'
+import { useObservabilitySession } from '#admin/system-player-observability/hooks'
 
 export const NavMenu: React.FC = () => {
   const { mutate: logout } = useLogout()
   const { cityId, outpostId } = useLocation()
   const { pathname } = useRouterLocation()
   const { data: unreadCount } = useCountUnreadReports()
+  const { data: observabilitySession } = useObservabilitySession()
 
   const RouterLink = Link as React.ComponentType<{
     to: string
@@ -76,6 +78,16 @@ export const NavMenu: React.FC = () => {
             Rapport ({unreadCount ?? 0})
           </RouterLink>
         </li>
+        {observabilitySession?.is_admin ? (
+          <li>
+            <RouterLink
+              to="/admin/system-players"
+              className={linkClass('/admin/system-players')}
+            >
+              Observabilité IA
+            </RouterLink>
+          </li>
+        ) : null}
       </ul>
 
       <button

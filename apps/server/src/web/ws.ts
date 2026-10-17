@@ -4,12 +4,14 @@ import {
 } from 'ws'
 import { Server } from 'http'
 import { authorizeAuth } from '#app/command/auth/authorize'
+import { isObservabilityAdmin } from '#app/query/admin/observability-access'
 import { AppEventBus } from '#app/event-bus'
 import { AppLogger } from '#app/port/logger'
 import { AppEvent } from '#core/events'
 import { now } from '#shared/time'
 
 const connections = new Map<string, WebSocket>()
+const admin_connections = new Set<string>()
 
 export function setupWebSocketServer(
   server: Server,
@@ -39,10 +41,18 @@ export function setupWebSocketServer(
       })
 
       connections.set(player_id, ws)
-      logger.info('player connected', { player_id })
+      const is_admin = await isObservabilityAdmin({ player_id })
+      if (is_admin) {
+        admin_connections.add(player_id)
+      }
+      logger.info('player connected', {
+        player_id,
+        is_admin,
+      })
 
       ws.on('close', () => {
         connections.delete(player_id)
+        admin_connections.delete(player_id)
         logger.info('player disconnected', { player_id })
       })
     } catch {
@@ -128,6 +138,24 @@ export function setupWebSocketServer(
         type: AppEvent.OutpostResourcesGathered,
         outpost_id
       }))
+    }
+  })
+
+  eventBus.on(AppEvent.SystemPlayerActionCommitted, (payload) => {
+    for (const admin_player_id of admin_connections) {
+      const ws = connections.get(admin_player_id)
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: AppEvent.SystemPlayerActionCommitted,
+          committed_at: payload.committed_at,
+          player_id: payload.player_id,
+          player_name: payload.player_name,
+          tick_index: payload.tick_index,
+          category: payload.category,
+          summary: payload.summary,
+          payload: payload.payload,
+        }))
+      }
     }
   })
 }

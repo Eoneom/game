@@ -1,4 +1,5 @@
 import {
+  AdminError,
   AuthError,
   BuildingError,
   CityError,
@@ -17,6 +18,8 @@ import {
 const FALLBACK_MESSAGE = 'Une erreur est survenue'
 
 const ErrorTranslations: Record<string, string> = {
+  [AdminError.FORBIDDEN]: 'Accès réservé aux opérateurs',
+
   [AuthError.NOT_FOUND]: 'Authentification introuvable',
 
   [BuildingError.NOT_FOUND]: 'Bâtiment introuvable',

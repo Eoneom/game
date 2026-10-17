@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { tickSystemPlayers } from './tick'
 import { actForSystemPlayer } from '#command/player/system/policy'
+import * as observabilityEmit from '#command/player/system/emit-observability'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
@@ -32,9 +33,13 @@ describe('tickSystemPlayers', () => {
   let scheduleSystemPlayerTick: MockInstance
 
   beforeEach(() => {
+    vi.clearAllMocks()
     listSystemControlled = vi.fn().mockResolvedValue([ player ])
     scheduleSystemPlayerTick = vi.fn().mockResolvedValue('job-id')
-    vi.mocked(actForSystemPlayer).mockResolvedValue('upgrade')
+    vi.mocked(actForSystemPlayer).mockResolvedValue({
+      category: 'upgrade',
+      payload: { building_code: 'mushroom_farm' },
+    })
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({ player: { listSystemControlled } } as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleSystemPlayerTick } as unknown as JobQueue)
@@ -51,7 +56,18 @@ describe('tickSystemPlayers', () => {
     vi.restoreAllMocks()
   })
 
+  it('emits observability event after a successful action', async () => {
+    const emit = vi.spyOn(observabilityEmit, 'emitSystemPlayerActionCommitted').mockImplementation(() => {})
+
+    await tickSystemPlayers({ tick_index: 4 })
+
+    assert.strictEqual(emit.mock.calls.length, 1)
+    assert.strictEqual(emit.mock.calls[0][0].player_id, player.id)
+    assert.strictEqual(emit.mock.calls[0][0].category, 'upgrade')
+  })
+
   it('acts for each system-controlled player and reschedules the next tick', async () => {
+    vi.spyOn(observabilityEmit, 'emitSystemPlayerActionCommitted').mockImplementation(() => {})
     await tickSystemPlayers({ tick_index: 4 })
 
     assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls.length, 1)

@@ -21,7 +21,7 @@ describe('system player tick policy', () => {
       category,
       async () => {
         calls.push(category)
-        return category === 'recruit'
+        return category === 'recruit' ? { troop_code: 'scout' } : null
       },
     ])) as Record<SystemTickCategory, SystemTickAction>
 
@@ -31,7 +31,8 @@ describe('system player tick policy', () => {
       actions
     })
 
-    assert.strictEqual(acted, 'recruit')
+    assert.strictEqual(acted?.category, 'recruit')
+    assert.deepStrictEqual(acted?.payload, { troop_code: 'scout' })
     assert.deepStrictEqual(calls, [
       'research',
       'recruit' 
@@ -41,7 +42,7 @@ describe('system player tick policy', () => {
   it('returns null when no category can act', async () => {
     const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
       category,
-      async () => false,
+      async () => null,
     ])) as Record<SystemTickCategory, SystemTickAction>
 
     const acted = await actForSystemPlayer({

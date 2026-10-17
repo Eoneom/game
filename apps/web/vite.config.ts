@@ -20,6 +20,7 @@ export default defineConfig({
       '#hook': path.resolve(webSrc, 'hook'),
       '#location': path.resolve(webSrc, 'modules/location'),
       '#auth': path.resolve(webSrc, 'modules/auth'),
+      '#admin': path.resolve(webSrc, 'modules/admin'),
       '#faction': path.resolve(webSrc, 'modules/faction'),
       '#building': path.resolve(webSrc, 'modules/building'),
       '#city': path.resolve(webSrc, 'modules/city'),

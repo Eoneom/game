@@ -68,6 +68,7 @@ Copy [`apps/server/.env.example`](apps/server/.env.example) to `apps/server/.env
 | `GAME_TIME_SCALE` | Optional **speed multiplier** (`1` = default). For example `2` makes the game **twice as fast**: wait times (recruitment, building upgrades, technology research, troop movement) are shortened, and **production earnings** (`BuildingService` rates used for gathering and warehouse timers) are multiplied by the same factor. Invalid, empty, or non-positive values fall back to `1`. |
 | `DATABASE_URL` | Postgres connection string (default `postgres://eoneom:eoneom@localhost:5432/eoneom`). |
 | `HTTP_PORT` | API listen port (default `3000`). |
+| `ADMIN_PLAYER_NAMES` | Comma-separated **human** commander names allowed to open the in-game system Player observability screen and receive the live WebSocket feed (empty = feature disabled for everyone). |
 
 Example from the repository root without a `.env` file:
 

@@ -10,6 +10,7 @@ vi.mock('ws', () => ({
 }))
 
 vi.mock('#app/command/auth/authorize', () => ({ authorizeAuth: vi.fn() }))
+vi.mock('#app/query/admin/observability-access', () => ({ isObservabilityAdmin: vi.fn().mockResolvedValue(false) }))
 
 import { setupWebSocketServer } from './ws'
 import {
@@ -17,6 +18,7 @@ import {
 } from 'ws'
 import { AppEvent } from '#core/events'
 import { authorizeAuth } from '#app/command/auth/authorize'
+import { isObservabilityAdmin } from '#app/query/admin/observability-access'
 import { Server } from 'http'
 
 function makeMockWs(readyState: number = WebSocket.OPEN) {
@@ -265,6 +267,37 @@ describe('setupWebSocketServer', () => {
     expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
       type: AppEvent.OutpostResourcesGathered,
       outpost_id
+    }))
+  })
+
+  it('forwards SystemPlayerActionCommitted to connected admin WebSockets only', async () => {
+    const admin_player_id = 'admin-1'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: admin_player_id })
+    ;(isObservabilityAdmin as MockInstance).mockResolvedValue(true)
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    const eventHandler = capturedEventListeners.get(AppEvent.SystemPlayerActionCommitted)
+    eventHandler?.({
+      committed_at: 1,
+      player_id: 'system-1',
+      player_name: 'Alpha',
+      tick_index: 3,
+      category: 'upgrade',
+      summary: 'Joueur système Alpha — test',
+      payload: { building_code: 'mushroom_farm' },
+    })
+
+    expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.SystemPlayerActionCommitted,
+      committed_at: 1,
+      player_id: 'system-1',
+      player_name: 'Alpha',
+      tick_index: 3,
+      category: 'upgrade',
+      summary: 'Joueur système Alpha — test',
+      payload: { building_code: 'mushroom_farm' },
     }))
   })
 

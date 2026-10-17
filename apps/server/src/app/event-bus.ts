@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import { AppEvent } from '#core/events'
+import type { SystemTickCategory } from '#core/player/system/tick-category'
 import { AppLogger } from '#app/port/logger'
 
 export type CityResourcesGatheredPayload = {
@@ -39,6 +40,16 @@ export type OutpostResourcesGatheredPayload = {
   player_id: string
 }
 
+export type SystemPlayerActionCommittedPayload = {
+  committed_at: number
+  player_id: string
+  player_name: string
+  tick_index: number
+  category: SystemTickCategory
+  summary: string
+  payload: Record<string, unknown>
+}
+
 export type AppEventMap = {
   [AppEvent.CityResourcesGathered]: CityResourcesGatheredPayload
   [AppEvent.BuildingUpgradeFinished]: BuildingUpgradeFinishedPayload
@@ -48,6 +59,7 @@ export type AppEventMap = {
   [AppEvent.OutpostCreated]: OutpostCreatedPayload
   [AppEvent.OutpostDeleted]: OutpostDeletedPayload
   [AppEvent.OutpostResourcesGathered]: OutpostResourcesGatheredPayload
+  [AppEvent.SystemPlayerActionCommitted]: SystemPlayerActionCommittedPayload
 }
 
 export class AppEventBus extends EventEmitter {

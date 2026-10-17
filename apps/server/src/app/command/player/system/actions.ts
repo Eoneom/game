@@ -32,9 +32,7 @@ import {
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { Resource } from '#shared/resource'
-import type {
-  SystemTickAction, SystemTickCategory 
-} from '#command/player/system/policy'
+import type { SystemTickAction } from '#command/player/system/policy'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
@@ -103,7 +101,7 @@ function sortCells(cells: CellEntity[]): CellEntity[] {
   })
 }
 
-async function tryUpgrade(player_id: string): Promise<boolean> {
+async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies } = await new TechnologyListQuery().run({ player_id })
 
@@ -170,18 +168,22 @@ async function tryUpgrade(player_id: string): Promise<boolean> {
         city_id: city.id,
         building_code: building.code
       })
-      return true
+      return {
+        city_id: city.id,
+        city_name: city.name,
+        building_code: building.code,
+      }
     }
   }
 
-  return false
+  return null
 }
 
-async function tryResearch(player_id: string): Promise<boolean> {
+async function tryResearch(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies } = await new TechnologyListQuery().run({ player_id })
   if (technologies.some(technology => 'research_at' in technology)) {
-    return false
+    return null
   }
 
   for (const city of cities) {
@@ -224,14 +226,18 @@ async function tryResearch(player_id: string): Promise<boolean> {
         city_id: city.id,
         technology_code: technology.code
       })
-      return true
+      return {
+        city_id: city.id,
+        city_name: city.name,
+        technology_code: technology.code,
+      }
     }
   }
 
-  return false
+  return null
 }
 
-async function tryRecruit(player_id: string): Promise<boolean> {
+async function tryRecruit(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies } = await new TechnologyListQuery().run({ player_id })
 
@@ -292,11 +298,16 @@ async function tryRecruit(player_id: string): Promise<boolean> {
         troop_code: troop.code,
         count: 1
       })
-      return true
+      return {
+        city_id: city.id,
+        city_name: city.name,
+        troop_code: troop.code,
+        count: 1,
+      }
     }
   }
 
-  return false
+  return null
 }
 
 async function ownedLocationCells(player_id: string): Promise<{
@@ -352,7 +363,7 @@ async function ownedLocationCells(player_id: string): Promise<{
   }
 }
 
-async function tryExplore(player_id: string): Promise<boolean> {
+async function tryExplore(player_id: string): Promise<Record<string, unknown> | null> {
   const { origins } = await ownedLocationCells(player_id)
 
   for (const origin of origins) {
@@ -390,13 +401,23 @@ async function tryExplore(player_id: string): Promise<boolean> {
         }
       ]
     })
-    return true
+    return {
+      action: MovementAction.EXPLORE,
+      origin: origin.coordinates,
+      destination: destination.coordinates,
+      move_troops: [
+        {
+          code: scout.code,
+          count: 1,
+        },
+      ],
+    }
   }
 
-  return false
+  return null
 }
 
-async function tryBase(player_id: string): Promise<boolean> {
+async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
   const {
     origins, occupied_cell_ids 
   } = await ownedLocationCells(player_id)
@@ -438,18 +459,28 @@ async function tryBase(player_id: string): Promise<boolean> {
         }
       ]
     })
-    return true
+    return {
+      action: MovementAction.BASE,
+      origin: origin.coordinates,
+      destination: destination.coordinates,
+      move_troops: [
+        {
+          code: founder.code,
+          count: 1,
+        },
+      ],
+    }
   }
 
-  return false
+  return null
 }
 
-async function trySettle(player_id: string): Promise<boolean> {
+async function trySettle(player_id: string): Promise<Record<string, unknown> | null> {
   const {
     cities, count_limit 
   } = await new CityListQuery().run({ player_id })
   if (cities.length >= count_limit) {
-    return false
+    return null
   }
 
   const { outposts } = await new OutpostListQuery().run({ player_id })
@@ -473,36 +504,40 @@ async function trySettle(player_id: string): Promise<boolean> {
       continue
     }
 
+    const city_name = nextSystemCityName(cities.map(city => city.name))
     await citySettle({
       player_id,
       outpost_id: outpost.id,
-      city_name: nextSystemCityName(cities.map(city => city.name))
+      city_name,
     })
-    return true
+    return {
+      outpost_id: outpost.id,
+      city_name,
+    }
   }
 
-  return false
+  return null
 }
 
-async function tryMakePermanent(player_id: string): Promise<boolean> {
+async function tryMakePermanent(player_id: string): Promise<Record<string, unknown> | null> {
   const { outposts } = await new OutpostListQuery().run({ player_id })
   const temporary = outposts.find(outpost => outpost.type !== OutpostType.PERMANENT)
   if (!temporary) {
-    return false
+    return null
   }
 
   await outpostSetPermanent({
     player_id,
     outpost_id: temporary.id
   })
-  return true
+  return { outpost_id: temporary.id }
 }
 
-async function tryTransport(player_id: string): Promise<boolean> {
+async function tryTransport(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const city = cities[0]
   if (!city) {
-    return false
+    return null
   }
 
   const city_details = await new CityGetQuery().run({
@@ -567,10 +602,19 @@ async function tryTransport(player_id: string): Promise<boolean> {
       move_troops,
       resources
     })
-    return true
+    return {
+      action: MovementAction.TRANSPORT,
+      origin: cell.coordinates,
+      destination: city_details.cell.coordinates,
+      move_troops,
+      resources,
+      city_id: city.id,
+      city_name: city.name,
+      outpost_id: outpost.id,
+    }
   }
 
-  return false
+  return null
 }
 
 export const systemTickActions: Record<SystemTickCategory, SystemTickAction> = {

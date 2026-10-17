@@ -7,6 +7,7 @@ import { PlayerEndpoint } from './endpoints/player'
 import { TechnologyEndpoint } from './endpoints/technology'
 import { TroopEndpoint } from './endpoints/troop'
 import { WorldEndpoint } from './endpoints/world'
+import { AdminEndpoint } from './endpoints/admin'
 import { Fetcher } from './fetcher'
 export { TechnologyCode } from '@server-core/technology/constant/code'
 export { BuildingCode } from '@server-core/building/constant/code'
@@ -32,6 +33,7 @@ export { ResourceStockError } from '@server-core/resources/resource-stock/error'
 export { TechnologyError } from '@server-core/technology/error'
 export { TroopError } from '@server-core/troop/error'
 export { WorldError } from '@server-core/world/error'
+export { AdminError } from '@server-core/admin/error'
 export { RequestError } from './error/request'
 
 export * from './endpoints/shared/coordinates'
@@ -51,6 +53,7 @@ export class Client {
   public technology: TechnologyEndpoint
   public troop: TroopEndpoint
   public world: WorldEndpoint
+  public admin: AdminEndpoint
 
   constructor({ base_url }: { base_url: string }) {
     this.fetcher = new Fetcher({ base_url })
@@ -64,5 +67,6 @@ export class Client {
     this.technology = new TechnologyEndpoint({ fetcher: this.fetcher })
     this.troop = new TroopEndpoint({ fetcher: this.fetcher })
     this.world = new WorldEndpoint({ fetcher: this.fetcher })
+    this.admin = new AdminEndpoint({ fetcher: this.fetcher })
   }
 }

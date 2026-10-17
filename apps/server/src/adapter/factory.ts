@@ -11,6 +11,7 @@ import { AppEventBus } from '#app/event-bus'
 import { JobQueue } from '#app/port/job-queue'
 import { createJobQueue } from '#adapter/job-queue'
 import { withTransaction } from '#adapter/database/context'
+import { getAdminPlayerNamesFromEnv } from '#adapter/admin/player-names'
 
 export class Factory {
   private static repository: Repository
@@ -60,5 +61,9 @@ export class Factory {
 
   static runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
     return withTransaction(fn)
+  }
+
+  static getAdminPlayerNames(): string[] {
+    return getAdminPlayerNamesFromEnv()
   }
 }

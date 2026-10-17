@@ -13,6 +13,8 @@ import { registerBuildingWsListeners } from '#building/ws-listener'
 import { registerTechnologyWsListeners } from '#technology/ws-listener'
 import { registerTroopWsListeners } from '#troop/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
+import { registerSystemPlayerObservabilityWsListener } from '#admin/system-player-observability/ws-listener'
+import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
 
 const doLogin = async (playerName: string): Promise<string> => {
   const res = await client.player.login({ player_name: playerName })
@@ -44,20 +46,26 @@ const doSignup = async ({
   }
 }
 
-const startSession = ({
+const startSession = async ({
   token,
   setToken,
 }: {
   token: string
   setToken: (token: string) => void
-}): void => {
+}): Promise<void> => {
   setToken(token)
+  clearSystemPlayerObservabilityEvents()
   registerCityWsListeners()
   registerBuildingWsListeners()
   registerTechnologyWsListeners()
   registerTroopWsListeners()
   registerOutpostWsListeners()
   wsClient.connect(token)
+
+  const session = await client.admin.getSystemPlayerObservability(token)
+  if (!isError(session) && session.data?.is_admin) {
+    registerSystemPlayerObservabilityWsListener()
+  }
 }
 
 export const useLogin = () => {
@@ -67,8 +75,8 @@ export const useLogin = () => {
     mutationFn: async (playerName: string) => {
       return doLogin(playerName)
     },
-    onSuccess: (token) => {
-      startSession({
+    onSuccess: async (token) => {
+      await startSession({
         token,
         setToken 
       })
@@ -99,8 +107,8 @@ export const useSignup = () => {
       })
       return doLogin(playerName)
     },
-    onSuccess: (token) => {
-      startSession({
+    onSuccess: async (token) => {
+      await startSession({
         token,
         setToken 
       })
@@ -125,6 +133,7 @@ export const useLogout = () => {
     },
     onSuccess: () => {
       clearToken()
+      clearSystemPlayerObservabilityEvents()
       wsClient.disconnect()
       queryClient.clear()
     },
@@ -139,12 +148,18 @@ export const useInitStoredToken = () => {
 
   useEffect(() => {
     if (!token) return
-    registerCityWsListeners()
-    registerBuildingWsListeners()
-    registerTechnologyWsListeners()
-    registerTroopWsListeners()
-    registerOutpostWsListeners()
-    wsClient.connect(token)
+    void (async () => {
+      registerCityWsListeners()
+      registerBuildingWsListeners()
+      registerTechnologyWsListeners()
+      registerTroopWsListeners()
+      registerOutpostWsListeners()
+      wsClient.connect(token)
+      const session = await client.admin.getSystemPlayerObservability(token)
+      if (!isError(session) && session.data?.is_admin) {
+        registerSystemPlayerObservabilityWsListener()
+      }
+    })()
   }, [])
 }
 

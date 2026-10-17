@@ -114,7 +114,7 @@ describe('systemTickActions', () => {
 
     const acted = await systemTickActions.upgrade(player_id)
 
-    assert.strictEqual(acted, true)
+    assert.ok(acted)
     assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls.length, 1)
     assert.deepStrictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0], {
       player_id,
@@ -161,7 +161,7 @@ describe('systemTickActions', () => {
 
     const acted = await systemTickActions.transport(player_id)
 
-    assert.strictEqual(acted, false)
+    assert.strictEqual(acted, null)
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
   })
 
@@ -208,7 +208,7 @@ describe('systemTickActions', () => {
 
     const acted = await systemTickActions.settle(player_id)
 
-    assert.strictEqual(acted, true)
+    assert.ok(acted)
     assert.deepStrictEqual(vi.mocked(citySettle).mock.calls[0][0], {
       player_id,
       outpost_id,
@@ -248,7 +248,7 @@ describe('systemTickActions', () => {
 
     const acted = await systemTickActions.explore(player_id)
 
-    assert.strictEqual(acted, false)
+    assert.strictEqual(acted, null)
     const transport_calls = vi.mocked(createTroopMovement).mock.calls.filter(call => call[0].action === MovementAction.TRANSPORT)
     assert.strictEqual(transport_calls.length, 0)
   })

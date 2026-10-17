@@ -25,6 +25,9 @@
       "#auth/*": [
         "./src/modules/auth/*"
       ],
+      "#admin/*": [
+        "./src/modules/admin/*"
+      ],
       "#faction/*": [
         "./src/modules/faction/*"
       ],
