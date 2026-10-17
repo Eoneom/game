@@ -44,7 +44,7 @@ export const TroopListInProgress: React.FC<Props> = ({ cityId }) => {
           <EntityThumb
             size="md"
             src={troopImageSrc(inProgress.code)}
-            alt=""
+            alt={TroopTranslations[inProgress.code].name}
           />
           <div className="min-w-0 flex-1 space-y-2">
             <p className="m-0 text-sm text-amber">

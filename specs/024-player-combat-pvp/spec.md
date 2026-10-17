@@ -99,9 +99,9 @@ Align with existing troops (`explorer`, `seeker`, etc.):
 | **Alt text** | Troop list/detail components | Use `TroopTranslations[code].name` for `image.alt` (today `list/item` uses empty `alt` — implementation should set alt to troop name for accessibility). |
 | **API client** | `packages/api-client` | Export new enum members after server `TroopCode` extension. |
 
-**Required new assets (implementation checklist, not in repo until art lands):**
+**Combat troop artwork (present on `main`):** portrait-card PNGs (~1024²), painterly sci-fi, same layout as `explorer.png` / `seeker.png`. **Confederation** (`legionnaire`, `interceptor`): human troops, warm desert/orange tactical palette (see `explorer.png`). **Singularity** (`war_machine`, `disruptor`): robotic troops, cold gray metal and cyan optics (see `seeker.png`). Each file is a distinct asset (not a duplicate of explorer/seeker or of each other).
 
-| Wire code | PNG path | Suggested alt (FR) |
+| Wire code | PNG path | Alt (FR) |
 | --- | --- | --- |
 | `legionnaire` | `apps/web/public/troops/legionnaire.png` | Légionnaire |
 | `interceptor` | `apps/web/public/troops/interceptor.png` | Intercepteur |
@@ -491,7 +491,7 @@ See project `docs/combat-spec-interview.md` (max 5 open questions): exploration 
 | Area | Direction |
 | --- | --- |
 | Core | `core/combat/`, `troop/constant/{code,characteristic,faction}.ts`, pricing/requirement tables |
-| Web | New PNGs + `TroopTranslations`; optional `image.alt` fix |
+| Web | Combat PNGs + `TroopTranslations`; troop list/detail `image.alt` uses FR name |
 | Sagas / jobs | `sagaFinishAttack`, `combat.round.advance` |
 
 ## Evidence index (expected after implementation)

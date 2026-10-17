@@ -28,7 +28,7 @@ export const TroopListItem: React.FC<Props> = ({
     busy={busy}
     image={{
       src: troopImageSrc(troop.code),
-      alt: '',
+      alt: TroopTranslations[troop.code].name,
     }}
     onSelect={() => onSelect(troop.id)}
   />

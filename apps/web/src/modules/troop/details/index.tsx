@@ -49,7 +49,7 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
   return <>
     <LayoutDetailsContent>
       <div className="flex gap-4">
-        <EntityThumb src={troopImageSrc(troop.code)} alt="" />
+        <EntityThumb src={troopImageSrc(troop.code)} alt={name} />
         <div className="min-w-0 flex-1 space-y-2">
           <h2>{name}</h2>
           <p>{effect}</p>
