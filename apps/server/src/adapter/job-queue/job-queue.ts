@@ -106,6 +106,7 @@ export class JobQueue implements JobQueuePort {
     await this.ctx.boss.createQueue(TECHNOLOGY_RESEARCH_FINISH_QUEUE)
     await this.ctx.boss.createQueue(TROOP_RECRUIT_PROGRESS_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(TROOP_MOVEMENT_FINISH_QUEUE)
+    await this.ctx.boss.createQueue(COMBAT_ROUND_ADVANCE_QUEUE)
     await this.ctx.boss.createQueue(CITY_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(OUTPOST_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(REPORT_CLEANUP_QUEUE, { policy: 'stately' })
