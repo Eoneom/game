@@ -60,7 +60,20 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Production-ready research priority** (`tickSystemPlayers`): when `isEmpireProductionReadyForResearch(player_id)` is true for the first city — projected building levels satisfy `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure (`isCityWarehouseUnderPressure`) — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s rotated category list so research is attempted before building upgrades when research would otherwise run later on the same tick.
 
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
+## Requirement gating (upgrade, research, recruit)
+
+Before calling `upgradeBuilding`, `researchTechnology`, or `recruitTroop`, system tick actions evaluate the same domain rules as human commands via `RequirementService` (`core/requirement/`, slice [`014`](../014-requirements-pricing/spec.md)). Helpers live in `system/requirements.ts`:
+
+| Helper | Role |
+| --- | --- |
+| `levelsForSystemRequirementGate` | Builds `Levels` for checks; **current** building/technology levels when starting an action (`can_start`), **projected** levels (pending upgrades + research queue) when only enqueueing behind in-flight work (`can_enqueue`) — aligned with `startBuildingUpgrade` / `startTechnologyResearch` reading live DB state on start |
+| `meetsBuildingUpgradeRequirement` | `RequirementService.checkBuildingRequirement` |
+| `meetsTechnologyResearchRequirement` | `RequirementService.checkTechnologyRequirement` (research-lab level offset uses the technology’s current or projected level as appropriate) |
+| `meetsTroopRecruitRequirement` | `RequirementService.checkTroopRequirement` (always current levels) |
+
+Candidates that fail a check are skipped; the tick does not invoke the command (avoiding requirement errors and wasted queue slots). Sorting (`sortBuildingsForSystemUpgrade`, `sortTechnologiesForSystemResearch`) is unchanged — filtering happens immediately before enqueue/start.
+
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
 
 ## Player errors (relevant)
 
@@ -77,6 +90,6 @@ Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-
 
 | Area | Paths |
 | --- | --- |
-| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions}.ts` |
+| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,requirements}.ts` |
 | Jobs | `apps/server/src/adapter/job-queue/player/system-tick.ts` |
 | Core | `apps/server/src/core/player/constant/system.ts` |

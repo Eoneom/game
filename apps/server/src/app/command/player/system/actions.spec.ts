@@ -1,5 +1,6 @@
 import { systemTickActions } from './actions'
 import { upgradeBuilding } from '#app/command/building/upgrade'
+import { researchTechnology } from '#app/command/technology/research'
 import { citySettle } from '#app/command/city/settle'
 import { createTroopMovement } from '#app/command/troop/movement/create'
 import { recruitTroop } from '#app/command/troop/recruit'
@@ -9,10 +10,12 @@ import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TechnologyListQuery } from '#query/technology/list'
+import { TechnologyGetQuery } from '#query/technology/get'
 import { TroopListQuery } from '#query/troop/list'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
+import { TechnologyCode } from '#core/technology/constant/code'
 import { CityEntity } from '#core/city/entity'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -27,6 +30,7 @@ import {
 import assert from 'assert'
 
 vi.mock('#app/command/building/upgrade', () => ({ upgradeBuilding: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('#app/command/technology/research', () => ({ researchTechnology: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('#app/command/city/settle', () => ({ citySettle: vi.fn().mockResolvedValue({ city_id: 'new-city' }) }))
 vi.mock('#app/command/troop/movement/create', () => ({ createTroopMovement: vi.fn().mockResolvedValue({}) }))
 vi.mock('#app/command/troop/recruit', () => ({ recruitTroop: vi.fn().mockResolvedValue(undefined) }))
@@ -53,6 +57,7 @@ describe('systemTickActions', () => {
   beforeEach(() => {
     fakeLogger.child.mockReturnValue(fakeLogger)
     vi.mocked(upgradeBuilding).mockClear()
+    vi.mocked(researchTechnology).mockClear()
     vi.mocked(citySettle).mockClear()
     vi.mocked(createTroopMovement).mockClear()
     vi.mocked(recruitTroop).mockClear()
@@ -216,6 +221,154 @@ describe('systemTickActions', () => {
 
     assert.ok(acted)
     assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.PLASTIC_WAREHOUSE)
+  })
+
+  it('skips building upgrades that fail RequirementService checks', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [
+        {
+          id: id(),
+          code: TechnologyCode.ARCHITECTURE,
+          level: 0,
+        },
+      ],
+      research_queue: []
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 10000,
+        mushroom: 10000
+      }),
+      warehouses_capacity: {
+        plastic: 50000,
+        mushroom: 50000
+      },
+      warehouse_space_remaining: {
+        plastic: 40000,
+        mushroom: 40000
+      },
+      maximum_building_levels: 100,
+      building_levels_used: 5,
+      production_energy_ratio: 1,
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.CLONING_FACTORY,
+          level: 0,
+        },
+        {
+          id: id(),
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 0,
+        },
+      ],
+      upgrade_queue: []
+    })
+    vi.spyOn(BuildingGetQuery.prototype, 'run').mockImplementation(async ({ building_code }) => ({
+      building: BuildingEntity.create({
+        id: id(),
+        city_id,
+        code: building_code,
+        level: 0
+      }),
+      cost: {
+        code: building_code,
+        level: 1,
+        resource: {
+          plastic: 10,
+          mushroom: 10,
+          plasma: 0
+        },
+        duration: 1
+      },
+      requirement: {
+        buildings: [],
+        technologies: []
+      },
+      metadata: {}
+    }))
+
+    const acted = await systemTickActions.upgrade(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.MUSHROOM_FARM)
+  })
+
+  it('skips research when the research lab level is too low', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [
+        {
+          id: id(),
+          code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+          level: 0,
+        },
+        {
+          id: id(),
+          code: TechnologyCode.ARCHITECTURE,
+          level: 5,
+        },
+      ],
+      research_queue: []
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 10000,
+        mushroom: 10000
+      }),
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.RESEARCH_LAB,
+          level: 3,
+        },
+      ],
+      upgrade_queue: []
+    })
+    vi.spyOn(TechnologyGetQuery.prototype, 'run').mockImplementation(async ({ technology_code }) => ({
+      technology: {
+        id: id(),
+        code: technology_code,
+        level: 0,
+      },
+      cost: {
+        code: technology_code,
+        level: 1,
+        resource: {
+          plastic: 10,
+          mushroom: 10,
+          plasma: 0
+        },
+        duration: 1
+      },
+      requirement: {
+        buildings: [],
+        technologies: []
+      },
+      metadata: {}
+    }))
+
+    const acted = await systemTickActions.research(player_id)
+
+    assert.strictEqual(acted, null)
+    assert.strictEqual(vi.mocked(researchTechnology).mock.calls.length, 0)
   })
 
   it('does not queue a building upgrade already in progress or queued', async () => {

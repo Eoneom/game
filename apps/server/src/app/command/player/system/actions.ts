@@ -18,11 +18,6 @@ import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
-import {
-  Levels,
-  RequirementService
-} from '#core/requirement/service'
-import { TechnologyCode } from '#core/technology/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
@@ -33,7 +28,10 @@ import {
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { Resource } from '#shared/resource'
-import type { SystemTickAction } from '#command/player/system/policy'
+import type {
+  SystemTickAction,
+  SystemTickCategory,
+} from '#command/player/system/policy'
 import {
   hasPendingBuildingUpgrade,
   hasPendingTechnologyResearch,
@@ -52,6 +50,12 @@ import {
   sortTroopsForSystemRecruit,
 } from '#command/player/system/troops'
 import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
+import {
+  levelsForSystemRequirementGate,
+  meetsBuildingUpgradeRequirement,
+  meetsTechnologyResearchRequirement,
+  meetsTroopRecruitRequirement,
+} from '#command/player/system/requirements'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
@@ -61,36 +65,6 @@ function canAfford(stock: Resource, cost: Resource): boolean {
 
 function hasStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
-}
-
-function isRequirementMet({ check }: {
-  check: () => void
-}): boolean {
-  try {
-    check()
-    return true
-  } catch {
-    return false
-  }
-}
-
-function levelsFrom({
-  buildings,
-  technologies
-}: {
-  buildings: { code: BuildingCode, level: number }[]
-  technologies: { code: TechnologyCode, level: number }[]
-}): Levels {
-  return {
-    building: Object.fromEntries(buildings.map(building => [
-      building.code,
-      building.level 
-    ])),
-    technology: Object.fromEntries(technologies.map(technology => [
-      technology.code,
-      technology.level 
-    ])),
-  }
 }
 
 function viewportAround(coordinates: Coordinates): {
@@ -157,12 +131,13 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       upgrade_queue: building_list.upgrade_queue,
     })
 
-    const levels = levelsFrom({
-      buildings: projected_buildings,
-      technologies: projectTechnologyLevelsForPolicy({
-        technologies,
-        research_queue
-      }),
+    const use_projected_levels = !can_start && can_enqueue
+    const levels = levelsForSystemRequirementGate({
+      use_projected_levels,
+      buildings: building_list.buildings,
+      technologies,
+      upgrade_queue: building_list.upgrade_queue,
+      research_queue,
     })
 
     const buildings_to_try = sortBuildingsForSystemUpgrade({
@@ -191,13 +166,10 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
         building_code: building.code
       })
 
-      const requirements_met = isRequirementMet({
-        check: () => RequirementService.checkBuildingRequirement({
-          building_code: building.code,
-          levels
-        })
-      })
-      if (!requirements_met) {
+      if (!meetsBuildingUpgradeRequirement({
+        building_code: building.code,
+        levels,
+      })) {
         continue
       }
 
@@ -257,18 +229,13 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
       city_id: city.id,
       player_id
     })
-    const projected_buildings = projectBuildingLevelsForPolicy({
+    const use_projected_levels = !can_start && can_enqueue
+    const levels = levelsForSystemRequirementGate({
+      use_projected_levels,
       buildings: building_list.buildings,
-      upgrade_queue: building_list.upgrade_queue,
-    })
-    const projected_technologies = projectTechnologyLevelsForPolicy({
       technologies,
-      research_queue
-    })
-
-    const levels = levelsFrom({
-      buildings: projected_buildings,
-      technologies: projected_technologies,
+      upgrade_queue: building_list.upgrade_queue,
+      research_queue,
     })
 
     for (const technology of research_order) {
@@ -286,14 +253,15 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
         technology_code: technology.code
       })
 
-      const requirements_met = isRequirementMet({
-        check: () => RequirementService.checkTechnologyRequirement({
-          technology_code: technology.code,
-          technology_level: technology.level,
-          levels
-        })
-      })
-      if (!requirements_met) {
+      const technology_level = use_projected_levels
+        ? technology.level
+        : (technologies.find(entry => entry.code === technology.code)?.level ?? technology.level)
+
+      if (!meetsTechnologyResearchRequirement({
+        technology_code: technology.code,
+        technology_level,
+        levels,
+      })) {
         continue
       }
 
@@ -353,15 +321,12 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       continue
     }
 
-    const levels = levelsFrom({
-      buildings: projectBuildingLevelsForPolicy({
-        buildings: building_list.buildings,
-        upgrade_queue: building_list.upgrade_queue,
-      }),
-      technologies: projectTechnologyLevelsForPolicy({
-        technologies,
-        research_queue
-      }),
+    const levels = levelsForSystemRequirementGate({
+      use_projected_levels: false,
+      buildings: building_list.buildings,
+      technologies,
+      upgrade_queue: building_list.upgrade_queue,
+      research_queue,
     })
 
     const recruit_hints = recruitSortHintsForCity({
@@ -379,13 +344,10 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
         continue
       }
 
-      const requirements_met = isRequirementMet({
-        check: () => RequirementService.checkTroopRequirement({
-          troop_code: troop.code,
-          levels
-        })
-      })
-      if (!requirements_met) {
+      if (!meetsTroopRecruitRequirement({
+        troop_code: troop.code,
+        levels,
+      })) {
         continue
       }
       if (!canAfford(city_details.resource_stock, cost.resource)) {
