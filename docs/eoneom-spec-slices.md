@@ -25,7 +25,10 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 017 | [`specs/017-realtime-websocket/`](../specs/017-realtime-websocket/spec.md) | Real-time event fan-out (WebSocket) |
 | 018 | [`specs/018-app-composition-jobs/`](../specs/018-app-composition-jobs/spec.md) | Application composition and background jobs |
 | 019 | [`specs/019-web-shell-routing/`](../specs/019-web-shell-routing/spec.md) | Web application shell and routing |
-| 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — design locked, not implemented |
+| 020 | [`specs/020-system-player-observability/`](../specs/020-system-player-observability/spec.md) | System Player observability (admin live feed) |
+| 022 | [`specs/022-timing-and-resources/`](../specs/022-timing-and-resources/spec.md) | Timing and resource pacing |
+| 023 | [`specs/023-technology-research-queue/`](../specs/023-technology-research-queue/spec.md) | Technology research queue |
+| 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — design locked (`4257ad3`, `3b25dcc`), not implemented |
 
 ## Brownfield inventory (dependency order)
 

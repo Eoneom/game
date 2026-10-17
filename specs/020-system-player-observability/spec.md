@@ -74,12 +74,25 @@ After each successful system tick action, server emits `system-player:stats-upda
 
 | Route | Behavior |
 | --- | --- |
-| `/admin` | Two-column layout: **État** (stats) | **Ticks** (live feed). Per-city cards group production, energy readout (progress bar), warehouse bars, and buildings. Tick list omits **skipped** attempt categories in summaries and attempt chains (full attempts remain in JSON). Shared name filter; **« Forcer un tick IA »** / stats refresh as before |
+| `/admin` | Two-column layout: **État** (stats) | **Ticks** (live feed). Tick list omits **skipped** attempt categories in summaries and attempt chains (full attempts remain in JSON). Shared name filter; **« Forcer un tick IA »** / stats refresh as before |
 | `/admin/system-players` | Redirect to `/admin` (legacy URL) |
 
 Nav: « Observabilité IA » when `is_admin` → `/admin`. Non-admins: link hidden; direct `/admin` navigates away (e.g. to inbox). Admin observability WebSocket connects **only** while the admin console route is mounted (not on game login).
 
 Copy in French covers succès, inactif, and erreur — not only successful actions.
+
+### Admin stats panel (UI)
+
+As implemented on `main` (read-only **État** column; no new requirements beyond the snapshot fields above):
+
+| Concern | Behavior |
+| --- | --- |
+| Layered surfaces | Admin chrome uses `admin-surface-page`, `admin-surface-panel`, `admin-surface-card`, `admin-surface-nested`, `admin-surface-toolbar`, and `admin-surface-code` (`apps/web/src/index.css`; wired from `modules/admin/layout.tsx` and observability `page.tsx`). |
+| Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (outposts omitted when empty). |
+| Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** two-column grid (counts only; optional in-progress recruit with countdown). |
+| Per-outpost row | Same nested surface: coordinates, optional production, warehouse bars when capacity > 0, troops grid. |
+
+Evidence: `apps/web/src/modules/admin/system-player-observability/stats-panel.tsx`, `apps/web/src/index.css`, `apps/web/src/ui/energy-readout.tsx`.
 
 ## Out of scope
 
@@ -91,5 +104,5 @@ Automated tick interval changes, per-player-only force tick, replay/export, aler
 | --- | --- |
 | Spec | `specs/020-system-player-observability/` |
 | Server | `core/admin/`, `app/query/admin/`, `web/handler/admin/`, `web/ws.ts`, `system/tick.ts`, `system/policy.ts` |
-| Web | `apps/web/src/modules/admin/`, `routes/admin/`, `helpers/admin-observability-websocket.ts` |
+| Web | `apps/web/src/modules/admin/`, `routes/admin/`, `helpers/admin-observability-websocket.ts`, `modules/admin/system-player-observability/stats-panel.tsx`, `ui/energy-readout.tsx`, `index.css` (`admin-surface-*`) |
 | Client | `packages/api-client/src/endpoints/admin/` |
