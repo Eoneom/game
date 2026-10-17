@@ -60,9 +60,18 @@ function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
 
 function formatIdleSummary(event: SystemPlayerObservabilityEvent): string {
   const tried = event.attempts
+    .filter(attempt => attempt.result !== 'skipped')
     .map(attempt => TICK_CATEGORY_LABEL[attempt.category])
-    .join(' → ')
-  return `Joueur système ${event.player_name} — Aucune action réussie (essais : ${tried})`
+  if (tried.length === 0) {
+    return `Joueur système ${event.player_name} — Aucune action réussie`
+  }
+  return `Joueur système ${event.player_name} — Aucune action réussie (${tried.join(' → ')})`
+}
+
+export function observabilityAttemptsForDisplay(
+  event: SystemPlayerObservabilityEvent,
+): SystemPlayerObservabilityEvent['attempts'] {
+  return event.attempts.filter(attempt => attempt.result !== 'skipped')
 }
 
 function formatErrorSummary(event: SystemPlayerObservabilityEvent): string {

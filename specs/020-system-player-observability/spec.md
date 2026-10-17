@@ -74,7 +74,7 @@ After each successful system tick action, server emits `system-player:stats-upda
 
 | Route | Behavior |
 | --- | --- |
-| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; French attempt chain and summaries (codes translated client-side); JSON details; **« Forcer un tick IA »** calls `POST /admin/system-player-tick` (toast on success/error) |
+| `/admin` | Two-column layout: **État** (stats) | **Ticks** (live feed). Per-city cards group production, energy readout (progress bar), warehouse bars, and buildings. Tick list omits **skipped** attempt categories in summaries and attempt chains (full attempts remain in JSON). Shared name filter; **« Forcer un tick IA »** / stats refresh as before |
 | `/admin/system-players` | Redirect to `/admin` (legacy URL) |
 
 Nav: « Observabilité IA » when `is_admin` → `/admin`. Non-admins: link hidden; direct `/admin` navigates away (e.g. to inbox). Admin observability WebSocket connects **only** while the admin console route is mounted (not on game login).
