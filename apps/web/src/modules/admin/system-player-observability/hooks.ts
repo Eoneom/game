@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { toast } from 'react-toastify'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
