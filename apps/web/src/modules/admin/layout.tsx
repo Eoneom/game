@@ -13,8 +13,8 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
   }>
 
   return (
-    <div className="app-shell relative flex h-full min-h-screen flex-col overflow-hidden bg-void text-amber">
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-rust/70 bg-chrome px-4 py-3">
+    <div className="app-shell admin-surface-page relative flex h-full min-h-screen flex-col overflow-hidden text-amber">
+      <header className="surface-chrome z-10 flex shrink-0 items-center justify-between gap-3 border-b border-rust/70 px-4 py-3 shadow-[0_4px_14px_rgba(0,0,0,0.35)]">
         <div className="min-w-0">
           <h1 className="m-0 text-base font-normal tracking-wide text-amber">
             Console opérateur
@@ -39,7 +39,7 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
           </button>
         </nav>
       </header>
-      <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 md:p-5">
         {children}
       </main>
     </div>

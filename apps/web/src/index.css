@@ -119,6 +119,60 @@
     background-repeat: repeat;
   }
 
+  /* Operator console (/admin) — distinct elevation levels on shared chrome tokens */
+  .admin-surface-page {
+    @apply bg-chrome text-amber-dim;
+    background-image:
+      linear-gradient(180deg, rgba(32, 26, 21, 0.97), rgba(44, 36, 30, 0.99)),
+      var(--background-image-tex-rust);
+    background-size: auto, 180px;
+    background-repeat: repeat;
+  }
+
+  .admin-surface-panel {
+    @apply border border-rust/70 bg-chrome-2 text-amber-dim;
+    background-image:
+      linear-gradient(165deg, rgba(53, 44, 36, 0.9), rgba(44, 36, 30, 0.92)),
+      var(--background-image-tex-metal);
+    background-size: auto, 160px;
+    background-repeat: repeat;
+    box-shadow:
+      0 3px 12px rgba(0, 0, 0, 0.38),
+      inset 0 1px 0 rgba(232, 197, 71, 0.07);
+  }
+
+  .admin-surface-card {
+    @apply border border-rust/65 bg-chrome-3 text-amber-dim;
+    background-image:
+      linear-gradient(165deg, rgba(70, 56, 46, 0.88), rgba(53, 44, 36, 0.92)),
+      var(--background-image-tex-metal);
+    background-size: auto, 160px;
+    background-repeat: repeat;
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(232, 197, 71, 0.05);
+  }
+
+  .admin-surface-nested {
+    @apply border border-rust/55 bg-chrome text-amber-dim;
+    background-image:
+      linear-gradient(180deg, rgba(44, 36, 30, 0.9), rgba(52, 42, 34, 0.94)),
+      var(--background-image-tex-rust);
+    background-size: auto, 180px;
+    background-repeat: repeat;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.22);
+  }
+
+  .admin-surface-toolbar {
+    @apply rounded-sm border border-rust/55 bg-chrome-2/90 px-3 py-2;
+    box-shadow: inset 0 1px 0 rgba(232, 197, 71, 0.04);
+  }
+
+  .admin-surface-code {
+    @apply border border-rust/50 bg-chrome text-amber-dim;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
   .scanlines::after {
     content: '';
     @apply pointer-events-none absolute inset-0 opacity-[0.07];

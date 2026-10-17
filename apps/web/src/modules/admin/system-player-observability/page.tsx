@@ -67,20 +67,20 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden">
-      <header className="shrink-0 space-y-1 border-b border-rust/50 pb-2">
+      <header className="admin-surface-toolbar shrink-0 space-y-1">
         <h1 className="m-0 text-lg text-amber">Observabilité des joueurs système</h1>
         <p className="m-0 text-sm text-amber-dim">
           Colonnes : état des joueurs système et flux des ticks en direct.
         </p>
       </header>
 
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
-        <label className="text-xs uppercase tracking-wider text-amber-dim" htmlFor="system-player-filter">
+      <div className="admin-surface-toolbar flex shrink-0 flex-wrap items-center gap-2">
+        <label className="field-label text-label" htmlFor="system-player-filter">
           Filtrer par joueur
         </label>
         <select
           id="system-player-filter"
-          className="rounded-sm border border-rust/60 bg-chrome px-2 py-1 text-sm text-amber"
+          className="field-input max-w-xs py-1 text-sm"
           value={filter}
           onChange={e => setFilter(e.target.value)}
         >
@@ -93,14 +93,14 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
         </select>
         <button
           type="button"
-          className="rounded-sm border border-rust/60 bg-chrome px-2 py-1 text-sm text-amber hover:border-amber/50"
+          className="rounded-sm border border-rust/60 bg-chrome-3 px-2 py-1 text-sm text-amber shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:border-amber/50"
           onClick={() => refetch_stats()}
         >
           Actualiser les stats
         </button>
         <button
           type="button"
-          className="rounded-sm border border-amber/40 bg-chrome px-2 py-1 text-sm text-amber hover:border-amber/60 disabled:opacity-50"
+          className="rounded-sm border border-amber/45 bg-chrome-3 px-2 py-1 text-sm text-amber shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:border-amber/65 disabled:opacity-50"
           disabled={force_tick_pending}
           onClick={() => force_tick()}
         >
@@ -110,10 +110,10 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
 
       <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-2">
         <section
-          className="flex min-h-0 flex-col overflow-hidden rounded-sm border border-rust/40 bg-void/20"
+          className="admin-surface-panel flex min-h-0 flex-col overflow-hidden rounded-sm"
           aria-label="État des joueurs système"
         >
-          <h2 className="m-0 shrink-0 border-b border-rust/30 px-3 py-2 text-sm uppercase tracking-wider text-amber-dim">
+          <h2 className="m-0 shrink-0 border-b border-rust/45 bg-chrome-3/40 px-3 py-2 text-sm uppercase tracking-wider text-label">
             État
           </h2>
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -126,10 +126,10 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
         </section>
 
         <section
-          className="flex min-h-0 flex-col overflow-hidden rounded-sm border border-rust/40 bg-void/20"
+          className="admin-surface-panel flex min-h-0 flex-col overflow-hidden rounded-sm"
           aria-label="Flux des ticks"
         >
-          <h2 className="m-0 shrink-0 border-b border-rust/30 px-3 py-2 text-sm uppercase tracking-wider text-amber-dim">
+          <h2 className="m-0 shrink-0 border-b border-rust/45 bg-chrome-3/40 px-3 py-2 text-sm uppercase tracking-wider text-label">
             Ticks
           </h2>
           <ul className="m-0 min-h-0 flex-1 list-none space-y-2 overflow-y-auto p-2">
@@ -142,7 +142,7 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                 return (
                   <li
                     key={`${event.committed_at}-${event.player_id}-${event.tick_index}-${index}`}
-                    className="rounded-sm border border-rust/40 bg-chrome/40 p-2"
+                    className="admin-surface-card rounded-sm p-2.5"
                   >
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
@@ -175,7 +175,7 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                     )}
                     <details className="mt-2 text-xs text-amber-dim">
                       <summary className="cursor-pointer text-amber">Détails JSON</summary>
-                      <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded-sm border border-rust/30 bg-void/40 p-2 text-[11px] text-amber-dim">
+                      <pre className="admin-surface-code mt-2 overflow-x-auto whitespace-pre-wrap break-all rounded-sm p-2 text-[11px]">
                         {JSON.stringify({
                           outcome: event.outcome,
                           attempts: event.attempts,

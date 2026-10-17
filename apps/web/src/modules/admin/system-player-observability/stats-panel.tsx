@@ -151,7 +151,7 @@ function CityStatsSection({
   const troops_line = formatTroopsLine(city.troops)
 
   return (
-    <section className="rounded-sm border border-rust/35 bg-chrome/20 p-2.5">
+    <section className="admin-surface-nested rounded-sm p-2.5">
       <header className="mb-2 border-b border-rust/25 pb-2">
         <h4 className="m-0 text-sm font-medium text-amber">
           {city.name}
@@ -181,7 +181,7 @@ function CityStatsSection({
           <CityPendingRecruitment pending={city.pending_recruitment} />
         )}
         <div>
-          <h5 className="m-0 mb-1 text-[10px] uppercase tracking-wider text-amber-dim">Bâtiments</h5>
+          <h5 className="field-label m-0 mb-1 text-label">Bâtiments</h5>
           <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
             {buildings.map(building => (
               <li key={`${city.id}-${building.code}`}>
@@ -230,7 +230,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
         return (
           <article
             key={snapshot.player_id}
-            className="rounded-sm border border-rust/40 bg-chrome/30 p-3"
+            className="admin-surface-card rounded-sm p-3"
           >
             <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-rust/30 pb-2">
               <h2 className="m-0 text-base text-amber">{snapshot.player_name}</h2>
@@ -241,7 +241,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
 
             <div className="space-y-3">
               <div className="space-y-2">
-                <h3 className="m-0 text-xs uppercase tracking-wider text-amber-dim">
+                <h3 className="field-label m-0 text-label">
                   Colonies ({snapshot.cities.length})
                 </h3>
                 {snapshot.cities.map(city => (
@@ -255,7 +255,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
 
               {snapshot.outposts.length > 0 && (
                 <section>
-                  <h3 className="m-0 mb-1 text-xs uppercase tracking-wider text-amber-dim">
+                  <h3 className="field-label m-0 mb-1 text-label">
                     Avant-postes ({snapshot.outposts.length})
                   </h3>
                   <ul className="m-0 list-none space-y-2 p-0">
@@ -264,7 +264,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                       return (
                         <li
                           key={outpost.id}
-                          className="rounded-sm border border-rust/25 bg-chrome/15 p-2 text-sm text-amber"
+                          className="admin-surface-nested rounded-sm p-2 text-sm text-amber"
                         >
                           {translateOutpostType(outpost.type)}
                           <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
@@ -293,7 +293,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
               )}
 
               <section>
-                <h3 className="m-0 mb-1 text-xs uppercase tracking-wider text-amber-dim">Technologies</h3>
+                <h3 className="field-label m-0 mb-1 text-label">Technologies</h3>
                 <ul className="m-0 list-none space-y-0.5 p-0 text-sm text-amber">
                   {snapshot.technologies.map(tech => (
                     <li key={tech.code}>
