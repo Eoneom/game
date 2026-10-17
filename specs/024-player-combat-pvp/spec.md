@@ -20,6 +20,7 @@ Players launch **`attack`** troop movements ([`010`](../010-troop-movement-comba
 | **Combat stats** | Each `TroopCode` has **`attack_capacity`** and **`defense_capacity`** (extend `troop_characteristics`). |
 | **Outcomes (v1)** | **Loot**, **destroy**, and **occupy** are all in scope; see [Outcomes matrix](#outcomes-matrix) and [Outcomes vs army composition](#outcomes-vs-army-composition). |
 | **Defenders** | **Auto-defend only**: all eligible defender troops on the target cell join the battle automatically; no optional decline, no manual intercept from other cells. |
+| **Attacker retreat** | On **defender win** or **draw** (when the attacker still has survivors), surviving attacker troops **return to the attack movement origin cell** — same as defeat retreat; draw does not leave attackers on the destination. |
 | **System players** | **Yes** — system-controlled players are valid attackers and defenders under the same faction and combat rules (e.g. singularity `Alpha` vs confederation humans). |
 | **Faction identity** | **No shared generic combat unit** across factions; each new combat troop is **one faction only** (`troop_faction`), with **distinct name + art** like `explorer` vs `seeker`. |
 
@@ -192,8 +193,8 @@ At battle **start**, snapshot defender cell stacks or attacker movement payload:
 | --- | --- |
 | Defender 0 `combat`, attacker ≥ 1 `combat` (any round 1–5) | **Attacker wins** |
 | Attacker 0 `combat`, defender ≥ 1 `combat` (any round 1–5) | **Defender wins** |
-| Round **5** completes and **both** sides have ≥ 1 `combat` | **Draw** (stalemate) — no winner |
-| Both sides 0 `combat` in the same round | **Draw** — no winner |
+| Round **5** completes and **both** sides have ≥ 1 `combat` | **Draw** (stalemate) — no winner; apply [Draw (stalemate) outcomes](#draw-stalemate-outcomes) (attacker survivors **retreat to origin**). |
+| Both sides 0 `combat` in the same round | **Draw** — no winner; casualties only (no retreat — no surviving attacker stacks). |
 
 There is **no** defender-wins-on-timeout, **no** maximum round count beyond the fixed five, and **no** automatic defender victory when time elapses.
 
@@ -203,13 +204,13 @@ When the result is **draw**:
 
 | Effect | Spec |
 | --- | --- |
-| **Casualties** | All losses from rounds **1–5** (or fewer if ended early on a draw) **remain applied**; surviving stacks stay on the battle cell. |
+| **Casualties** | All losses from rounds **1–5** (or fewer if ended early on a mutual-wipe draw) **remain applied**. **Defender** survivors stay on the battle cell; **attacker** survivors **leave** the destination (see **Attacker movement**). |
 | **Occupy** | **No** — city/outpost ownership unchanged; attacker does not hold the cell as occupier. |
 | **Destroy** | **No** — temp outposts, field stacks, and garrison structures are **not** destroyed solely because of a draw. |
 | **Loot** | **No** — no resource transfer. |
-| **Attacker movement** | Surviving attacker troops **remain on the destination cell** (not treated as a defeat retreat). |
+| **Attacker movement** | Surviving attacker troops **retreat to the attack movement origin cell** (same placement rule as **defender win**). Draw is **not** a defender win — only retreat + casualty rules apply (no loot / occupy / destroy). |
 
-**Attacker defeat (spec default):** on **defender win** only, survivors **return to attack movement origin cell**. Draw is not a defender win.
+**Attacker retreat (spec default):** on **defender win** or **draw** with ≥ 1 surviving attacker stack, survivors **return to attack movement origin cell**.
 
 Draw does **not** apply when one side eliminated the other’s **combat** force in round 5 (or earlier): that battle ends with a normal **attacker** or **defender** win and full [Outcomes matrix](#outcomes-matrix) applies.
 
@@ -221,10 +222,10 @@ All defender stacks on cell with `movement_id` null; no reinforcements; no build
 
 | Target | Attacker **wins** | Attacker **loses** | **Draw** (after 5 rounds or mutual wipe) |
 | --- | --- | --- | --- |
-| **Field stack** | Destroy defender troops; loot if carriers survive; occupy with survivors. | Retreat to origin. | Casualties only; stacks remain; no loot/occupy/destroy. |
-| **City** | Destroy garrison; loot warehouse; transfer **city** ownership. | City stays defender; retreat. | City stays defender; casualties only; no loot. |
-| **Outpost (temporary)** | Destroy garrison; **destroy** temp outpost; loot; hold cell. | Outpost remains; retreat. | Outpost remains; casualties only. |
-| **Outpost (permanent)** | Destroy garrison; loot; transfer **outpost** ownership. | Outpost remains; retreat. | Outpost remains; casualties only; no loot. |
+| **Field stack** | Destroy defender troops; loot if carriers survive; occupy with survivors. | Retreat to origin. | Casualties only; defender stacks remain on cell; **attacker retreat to origin**; no loot/occupy/destroy. |
+| **City** | Destroy garrison; loot warehouse; transfer **city** ownership. | City stays defender; retreat. | City stays defender; casualties only; **attacker retreat to origin**; no loot. |
+| **Outpost (temporary)** | Destroy garrison; **destroy** temp outpost; loot; hold cell. | Outpost remains; retreat. | Outpost remains; casualties only; **attacker retreat to origin**. |
+| **Outpost (permanent)** | Destroy garrison; loot; transfer **outpost** ownership. | Outpost remains; retreat. | Outpost remains; casualties only; **attacker retreat to origin**; no loot. |
 
 City buildings are **not** deleted on capture.
 
@@ -311,6 +312,7 @@ interface ReportBattleMetadata {
     occupied: boolean
     destroyed_temp_outpost: boolean
     loot_applied: boolean
+    attacker_retreated: boolean // true when surviving attacker stacks were sent to movement origin (defender win or draw stalemate)
   }
   casualties_attacker: { code: TroopCode; count: number }[] // units lost
   casualties_defender: { code: TroopCode; count: number }[]
@@ -334,7 +336,7 @@ Follow `apps/web/src/modules/communication/` patterns:
 | --- | --- |
 | `report/translations.ts` | `ReportTypeLabels[ReportType.BATTLE] = 'Bataille'` (FR, like existing labels). |
 | `report/list.tsx` | No change required; list already shows `report.type` + origin → destination. |
-| `report/details.tsx` | Branch on `type === 'battle'`: show factions, winner, rounds, outcome flags (loot / occupy / destroy), casualty tables for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
+| `report/details.tsx` | Branch on `type === 'battle'`: show factions, winner, rounds, outcome flags (loot / occupy / destroy / **attacker retreated**), casualty tables for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
 | Troop lines | Use `TroopTranslations[troop.code].name` for all codes (confederation + singularity) per [Web artwork convention](#web-translations-and-artwork-convention). |
 
 Unread badge: existing `GET /communication/report/unread/count` includes new `battle` rows.
