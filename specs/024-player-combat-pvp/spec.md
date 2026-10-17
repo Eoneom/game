@@ -232,9 +232,116 @@ Arrival is one saga trigger; rounds use [`018`](../018-app-composition-jobs/spec
 
 Same rules; Alpha uses singularity combat codes and art. Humans see **Machine de guerre** / **Perturbateur** in UI when fighting singularity stacks.
 
-## Communication reports
+## Communication reports (battle inbox)
 
-Add `ReportType.BATTLE` (`battle`) in [`012`](../012-communication-reports/spec.md): battle id, cell, target, rounds, winner, casualties, loot, occupation, movement id; include **troop codes and counts** so both factions’ named units appear in copy.
+Extend [`012`](../012-communication-reports/spec.md) with a new persisted report type when a **fight finishes** (after the last combat round and outcome application — not when the attack movement merely arrives).
+
+### Report type
+
+| Enum | Wire value | Notes |
+| --- | --- | --- |
+| `ReportType.BATTLE` | `battle` | Add to `core/communication/value/report-type.ts` and API client re-export. Prefer **`battle`** over `combat` for consistency with domain language (“battle” entity / jobs). |
+
+Existing HTTP surface unchanged: `GET /communication/report`, `GET /communication/report/:report_id`, mark read, unread count, cleanup job ([`012`](../012-communication-reports/spec.md)).
+
+### Who receives a report
+
+| Player | Receives `battle` report? |
+| --- | --- |
+| **Attacker** (`movement.player_id`) | **Yes** — always |
+| **Defender** (owner at battle start) | **Yes** — always |
+
+Two separate `ReportEntity` rows per finished battle (one per `player_id`), same logical battle, **independent** `was_read` state. No report for non-participants. If defender is a system player, Alpha gets an inbox row like humans.
+
+### Timing and command hook
+
+1. `sagaAdvanceCombatRound` / `sagaFinishBattle` applies [Outcomes matrix](#outcomes-matrix).
+2. **`createBattleReports`** (command) inserts attacker + defender reports in one transaction with battle outcomes.
+3. Emit WebSocket notification(s) (see below).
+
+### Payload (per report row)
+
+Reuse brownfield columns where possible (`ReportEntity`: `origin`, `destination`, `troops`, `resources`, `remaining_resources`, `recorded_at`, `type`, `player_id`).
+
+| Field | Attacker report | Defender report |
+| --- | --- | --- |
+| `type` | `battle` | `battle` |
+| `player_id` | Attacker id | Defender id |
+| `origin` | Attack movement **origin** coordinates | Same (shows where the assault launched) |
+| `destination` | **Battle cell** coordinates | Same |
+| `recorded_at` | Battle finish time | Same |
+| `troops` | **This player’s casualties** (lost units per `TroopCode`, `count` = losses) | Defender casualties (losses) |
+| `resources` | **Loot gained** (attacker only; zeros if no loot / defender report) | `0` (defender does not gain loot on loss; on defender win, zeros) |
+| `remaining_resources` | Unused (zeros) unless implementation stores “loot left behind” | Zeros |
+
+**Battle-specific metadata** (not expressible in today’s flat `report` table alone): add a **`report_battle`** table (or `report.metadata` JSONB migration) keyed by `report_id`, shared shape for both players:
+
+```typescript
+interface ReportBattleMetadata {
+  battle_id: string
+  movement_id: string
+  perspective: 'attacker' | 'defender'
+  attacker_player_id: string
+  defender_player_id: string
+  attacker_faction_code: FactionCode
+  defender_faction_code: FactionCode
+  target_kind: 'field' | 'city' | 'outpost'
+  target_id?: string // city_id | outpost_id when applicable
+  winner: 'attacker' | 'defender'
+  rounds_played: number
+  outcome: {
+    occupied: boolean
+    destroyed_temp_outpost: boolean
+    loot_applied: boolean
+  }
+  casualties_attacker: { code: TroopCode; count: number }[] // units lost
+  casualties_defender: { code: TroopCode; count: number }[]
+  round_summaries?: {
+    round: number
+    attacker_losses: { code: TroopCode; count: number }[]
+    defender_losses: { code: TroopCode; count: number }[]
+  }[] // optional v1: final totals only; per-round rows if UX needs replay
+}
+```
+
+- **API**: extend `CommunicationGetReportResponse` / list item DTO with optional `battle?: ReportBattleMetadata` when `type === 'battle'`.
+- **Faction display**: use `FactionCode` + [`004`](../004-faction-domain/spec.md) web translations (`apps/web/src/modules/faction/translations.ts`).
+- **Troop names**: `TroopTranslations` + faction troop art for both sides’ codes in detail view.
+
+### Web inbox UI
+
+Follow `apps/web/src/modules/communication/` patterns:
+
+| Piece | Change |
+| --- | --- |
+| `report/translations.ts` | `ReportTypeLabels[ReportType.BATTLE] = 'Bataille'` (FR, like existing labels). |
+| `report/list.tsx` | No change required; list already shows `report.type` + origin → destination. |
+| `report/details.tsx` | Branch on `type === 'battle'`: show factions, winner, rounds, outcome flags (loot / occupy / destroy), casualty tables for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
+| Troop lines | Use `TroopTranslations[troop.code].name` for all codes (confederation + singularity) per [Web artwork convention](#web-translations-and-artwork-convention). |
+
+Unread badge: existing `GET /communication/report/unread/count` includes new `battle` rows.
+
+### WebSocket / realtime ([`017`](../017-realtime-websocket/spec.md))
+
+**Brownfield:** movement finish emits `AppEvent.TroopMovementFinished` (`troop:movement-finished`); `apps/web/src/modules/troop/ws-listener.ts` invalidates `reportKeys.unreadCount` (reports created on peaceful movement finish).
+
+**PvP:** battle reports are created at **battle end**, which may be **after** movement finish. Add:
+
+| Event | Wire | Payload | When |
+| --- | --- | --- | --- |
+| `AppEvent.BattleFinished` | `battle:finished` | `{ player_id: string }` | After each participant’s `battle` report is persisted (emit **once per player** — attacker and defender). |
+
+**Web client:** register listener (e.g. `apps/web/src/modules/communication/ws-listener.ts` or extend troop listener) to on `battle:finished` for matching session:
+
+- `queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })`
+- `queryClient.invalidateQueries({ queryKey: ['reports'] })` (list pages)
+- Optional toast: “Nouveau rapport de bataille” (product copy)
+
+Do **not** rely on `troop:movement-finished` alone for defender inbox refresh or post-round battle completion.
+
+### Factory / persistence (implementation hint)
+
+Extend `ReportFactory` (or `ReportFactory.generateBattleReport`) parallel to `generateUnread` for movement reports (`apps/server/src/core/communication/report/factory.ts`). Persist via `repository.report.create` + `report_battle` insert; covered by [`012`](../012-communication-reports/spec.md) test paths.
 
 ## Brownfield inventory (as of `main`)
 
@@ -265,4 +372,4 @@ See project `docs/combat-spec-interview.md` (max 5 open questions): exploration 
 | Core | `apps/server/src/core/combat/`, `core/troop/constant/` |
 | Web art | `apps/web/public/troops/{legionnaire,interceptor,war_machine,disruptor}.png` |
 | Web UI | `apps/web/src/modules/troop/{image,translations}.ts` |
-| Reports | `core/communication/value/report-type.ts` |
+| Reports | `core/communication/value/report-type.ts`, `report_battle` metadata, `communication/ws-listener` |

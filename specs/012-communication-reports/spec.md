@@ -23,7 +23,7 @@ Players receive persisted **reports** (exploration, base, rebase, transport) gen
 | `communication:report-not-found` | Unknown report |
 | `communication:report-not-owner` | Report belongs to another player |
 
-`ReportType` values: `exploration`, `base`, `rebase`, `transport` (`core/communication/value/report-type.ts`).
+`ReportType` values: `exploration`, `base`, `rebase`, `transport` (`core/communication/value/report-type.ts`). Planned: **`battle`** for PvP fight results (dual inbox rows, metadata, `battle:finished` WS) — see [`024`](../024-player-combat-pvp/spec.md#communication-reports-battle-inbox).
 
 Tests: `apps/server/src/web/handler/communication/report/*.spec.ts`, `apps/server/src/app/query/communication/report/*.spec.ts`, `apps/server/src/app/command/communication/report/*.spec.ts`.
 
