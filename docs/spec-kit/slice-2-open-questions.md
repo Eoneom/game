@@ -1,57 +1,55 @@
-# Slice 2 — Auth / API key — open questions for product owner
+# Slice 2 — Player session authentication — resolutions
 
-**Surveyed**: `Eoneom/game` `main` @ `180d959` (2026-10-17)  
-**Partial spec**: [`specs/002-api-key-auth/spec.md`](../../specs/002-api-key-auth/spec.md)
+**Surveyed**: `Eoneom/game` `main` (2026-10-17, post–slice 1 merge)  
+**Spec**: [`specs/002-player-session-auth/spec.md`](../../specs/002-player-session-auth/spec.md)
 
-Answer these before finalizing the spec or implementing `requireApiKey`-style behavior.
+All items below are **closed** as **documented as implemented** (brownfield capture). No product change implied unless a future slice explicitly revisits behavior.
 
 ## Naming and scope
 
-| ID | Question |
-| --- | --- |
-| Q1 | Slice title references **API key** and `requireApiKey`, but `main` only implements **player session tokens** (UUID in `auth` table). Is slice 2 strictly session auth, or must we add a separate service API key layer? |
-| Q2 | Should the feature directory remain `002-api-key-auth`, or be renamed to match “player session authentication” (store inventory slice 1)? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q1 | API key vs player session? | **Session auth only** on `main`. No `requireApiKey` or service API keys. |
+| Q2 | Directory name? | Renamed to **`specs/002-player-session-auth`**. |
 
 ## HTTP contract
 
-| ID | Question |
-| --- | --- |
-| Q3 | **`Authorization` format**: Should clients send the raw token only, or `Bearer <token>`? Middleware uses the header value as the DB lookup key with no parsing. |
-| Q4 | **Invalid/missing session on REST**: Missing header returns **401** + `token:not-found`; unknown token returns **200** + `auth:not-found` via error middleware. Should both be 401? Same body shape? |
-| Q5 | **`POST /player/logout` without header**: Handler `assert(token)` throws today. Should this be 401 + `token:not-found` like `authMiddleware`? |
-| Q6 | **Route prefix**: All routes mount at `/` today. Will auth endpoints move under `/api/v1/...` with health (slice 1), and should this spec wait for that consolidation? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q3 | `Authorization` format? | **Raw token** as stored; middleware does not strip `Bearer `. |
+| Q4 | Invalid/missing session on REST? | **As implemented**: missing header → **401** + `token:not-found`; unknown token → **200** + `auth:not-found`. |
+| Q5 | Logout without header? | **As implemented**: `assert(token)` throws. |
+| Q6 | Route prefix? | Auth routes remain at **`/player/*`** root; health uses **`/api/v1/health`** (slice 001). |
 
 ## Session lifecycle
 
-| ID | Question |
-| --- | --- |
-| Q7 | **Multiple sessions**: Each login creates a new `auth` row without revoking older tokens. Is multi-device concurrent session intended? |
-| Q8 | **Expiry / idle timeout**: `last_action_at` is updated on authorize but never enforced. Should sessions expire? |
-| Q9 | **Credentials**: Login is **player name only** (no password). Is that the long-term security model for humans? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q7 | Multiple sessions? | **As implemented**: each login adds a row; concurrent tokens allowed. |
+| Q8 | Expiry / idle timeout? | **As implemented**: `last_action_at` updated only; no enforcement. |
+| Q9 | Credentials? | **As implemented**: player name only, no password. |
 
 ## WebSocket
 
-| ID | Question |
-| --- | --- |
-| Q10 | Failed WS auth closes with reason string `unauthorized` instead of typed `auth:not-found`. Should WS use the same `error_code` vocabulary as HTTP? |
-| Q11 | Should WS accept the token only via query string, or also support headers (future reverse-proxy setups)? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q10 | WS error vocabulary? | **As implemented**: close reason `unauthorized` string on failed auth (not `auth:not-found`). |
+| Q11 | Token delivery on WS? | **As implemented**: query string `?token=` only. |
 
 ## Web client
 
-| ID | Question |
-| --- | --- |
-| Q12 | `useClearInvalidSession` watches `token:not_found` (underscore) but the API exposes `token:not-found` (hyphen). Which is canonical for session invalidation? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q12 | `token:not_found` vs `token:not-found`? | **As implemented**: API uses hyphen; client also clears on `token:not_found` in `AUTH_ERROR_CODES`. |
 
-## Service API key (if Q1 = yes)
+## Service API key (deferred)
 
-| ID | Question |
-| --- | --- |
-| Q13 | Which routes require an API key vs a player session (health, admin, bots, CI)? |
-| Q14 | Header name, key rotation, and storage (env, DB, per-deploy secret)? |
-| Q15 | Failure mode: HTTP status, `error_code` values, and interaction with CORS/public health endpoints. |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q13–Q15 | API key design? | **Out of scope** — not present on `main`; specify only if/when implemented. |
 
 ## Spec Kit process
 
-| ID | Question |
-| --- | --- |
-| Q16 | No `constitution.md` or `.specify/` directory on `main`. Should bootstrap from GitHub Spec Kit land before specs are marked “final”? |
+| ID | Question | Resolution |
+| --- | --- | --- |
+| Q16 | `.specify/` bootstrap? | **Done** on `main` (merged Spec Kit PR #3). Specs 001–002 live under `specs/`. |
