@@ -150,8 +150,8 @@ describe('cancelBuilding', () => {
     })
 
     const updated_stock = stockUpdateOne.mock.calls[0][0]
-    assert.strictEqual(updated_stock.plastic, STARTING_PLASTIC + 39)
-    assert.strictEqual(updated_stock.mushroom, STARTING_MUSHROOM + 67)
+    assert.strictEqual(updated_stock.plastic, STARTING_PLASTIC + 36)
+    assert.strictEqual(updated_stock.mushroom, STARTING_MUSHROOM + 65)
   })
 
   it('should cancel the scheduled upgrade job', async () => {

@@ -1,0 +1,65 @@
+# Slice 022 — Timing and resource pacing
+
+**Status**: As implemented on `main` (brownfield).
+
+## Summary
+
+Global **timing harmonization** for cities and outposts: one ruleset per location (no empire-size multiplier). **Passive gather** stays on a fixed **5s real-time** pulse; pacing is tuned through **pricing tables** ([`014`](../014-requirements-pricing/spec.md)) and, only where unlocks fight pacing, **requirements** ([`014`](../014-requirements-pricing/spec.md)). Resource accrual and caps remain as in [`015`](../015-resources-model/spec.md). Building upgrades and queues are unchanged in shape ([`007`](../007-buildings-upgrade-queue/spec.md)); city gather jobs unchanged ([`006`](../006-city-lifecycle-gathering/spec.md)).
+
+`GAME_TIME_SCALE` still scales durations and earnings via `scaleGameDurationSeconds` and `BuildingService.getEarningsBySecond` — behavior unchanged.
+
+## Design principles
+
+| Principle | Rule |
+| --- | --- |
+| No empire multiplier | Every city/outpost uses the same gather interval and pricing; founding more cities does not slow pulses. |
+| Gather pulse fixed | `CITY_RESOURCES_GATHER_INTERVAL_MS` = **5000** (and matching outpost gather cadence). Do not rebalance by changing gather architecture or interval constants. |
+| Balance levers | `core/pricing/constant/*` (cost + duration `base` / `multiplier`), plus minimal `core/requirement/*` tweaks. |
+| Early hook | First **meaningful** building upgrade (starter city, typical first production or warehouse path) completes in **~45s real time** at `GAME_TIME_SCALE=1`, affordable from signup stock. |
+| Mid / late | Steeper **level multipliers** on duration and resource costs; no new mechanics. |
+| Earnings | Production rates stay in `core/building/constant/earnings.ts`; scaled by cell coefficients and `gameTimeScale` as today. |
+
+## Milestones (`GAME_TIME_SCALE=1`, starter city)
+
+Assumptions: coefficient **1.0** on main resources, buildings at **0** until upgraded, signup stock (`STARTING_PLASTIC` / `STARTING_MUSHROOM`), no architecture/research reductions.
+
+| Milestone | Target (real time) | How verified |
+| --- | --- | --- |
+| Gather tick | **5s** | `apps/server/src/app/scheduling/intervals.ts` |
+| First building **0→1** (production or warehouse) | **~45s** build duration | `PricingService.getBuildingLevelCost` level 1 for `RECYCLING_PLANT`, `MUSHROOM_FARM`, `SOLAR_PANEL`, `PLASTIC_WAREHOUSE`, `MUSHROOM_WAREHOUSE` → `duration` ≈ 45 |
+| Early cadence | **~1 meaningful build/minute** after hook | Level-2+ costs/durations rise via multipliers; second upgrade often **~60–95s** after the first finishes when paying from production (path-dependent) |
+| Mid / late | Slower than early | Higher levels use sharpened `multiplier` on `duration` and resources in `building_costs` (and parallel tables for tech/troops where listed below) |
+
+### Canonical first-upgrade paths
+
+| Building | Level | Plastic | Mushroom | Duration (s) |
+| --- | --- | ---: | ---: | ---: |
+| `RECYCLING_PLANT` | 1 | 200 | 100 | 45 |
+| `MUSHROOM_FARM` | 1 | 100 | 200 | 45 |
+| `PLASTIC_WAREHOUSE` | 1 | 250 | 250 | 45 |
+| `SOLAR_PANEL` | 1 | 100 | 200 | 45 |
+
+At production **level 1**, plastic earnings ≈ **1.8/s** per unit coefficient (`building_earnings` base), so each **5s** gather adds ≈ **9** plastic before warehouse cap — used to pace upgrades after the first build.
+
+### Script check
+
+`apps/server/scripts/timing-check.mts` (run with `yarn tsx scripts/timing-check.mts` from `apps/server`) prints level-1 costs/durations and a simple two-step production sequence.
+
+## Constants touched (this slice)
+
+| File | Change |
+| --- | --- |
+| `apps/server/src/core/pricing/constant/building.ts` | Early building `duration.base` → **45** for production + warehouses; sharpened level **multipliers** on resources and duration; mid/late buildings (research lab, cloning factory, central inductor) steeper curves. |
+| `apps/server/src/app/command/building/cancel.spec.ts` | Refund golden values after mushroom farm cost curve change. |
+
+Technology and troop pricing tables were reviewed; no change required for the 45s hook (first actions are building upgrades).
+
+## Evidence index
+
+| Area | Paths |
+| --- | --- |
+| Gather interval | `apps/server/src/app/scheduling/intervals.ts`, [`006`](../006-city-lifecycle-gathering/spec.md) |
+| Pricing | `apps/server/src/core/pricing/`, [`014`](../014-requirements-pricing/spec.md) |
+| Resources | [`015`](../015-resources-model/spec.md) |
+| Buildings | [`007`](../007-buildings-upgrade-queue/spec.md) |
+| Tests | `apps/server/src/core/pricing/service.spec.ts` |

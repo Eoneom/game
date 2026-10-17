@@ -8,6 +8,8 @@
 
 **Out of scope**: persisting prices (all tables live in code constants).
 
+**Pacing**: gather interval and early-game timing targets — [`022`](../022-timing-and-resources/spec.md).
+
 ## Domain — requirements (`core/requirement/`)
 
 | API | Role |
