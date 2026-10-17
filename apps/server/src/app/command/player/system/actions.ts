@@ -25,8 +25,13 @@ import {
   INITIAL_VIEWPORT_HALF_EXTENT,
   WORLD_SIZE
 } from '#core/world/constant/size'
-import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
+import {
+  sortCellsByExpansionScore,
+  systemExpansionCitySiteScore,
+  systemExpansionOutpostResourceScore,
+  systemExpansionScoutScore,
+} from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
 import type {
   SystemTickAction,
@@ -83,15 +88,6 @@ function viewportAround(coordinates: Coordinates): {
 
 function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
   return left.x === right.x && left.y === right.y
-}
-
-function sortCells(cells: CellEntity[]): CellEntity[] {
-  return [ ...cells ].sort((left, right) => {
-    if (left.coordinates.x !== right.coordinates.x) {
-      return left.coordinates.x - right.coordinates.x
-    }
-    return left.coordinates.y - right.coordinates.y
-  })
 }
 
 async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | null> {
@@ -446,7 +442,12 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
       ...viewportAround(origin.coordinates)
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const destination = sortCells(viewport.cells).find(cell => !explored.has(cell.id) && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const unexplored = viewport.cells.filter(cell => !explored.has(cell.id)
+      && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const destination = sortCellsByExpansionScore({
+      cells: unexplored,
+      score: systemExpansionScoutScore,
+    })[0]
     if (!destination) {
       continue
     }
@@ -481,6 +482,14 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
 
 async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
   const {
+    cities, count_limit 
+  } = await new CityListQuery().run({ player_id })
+  const can_found_city = cities.length < count_limit
+  const base_cell_score = can_found_city
+    ? systemExpansionCitySiteScore
+    : systemExpansionOutpostResourceScore
+
+  const {
     origins, occupied_cell_ids 
   } = await ownedLocationCells(player_id)
 
@@ -502,9 +511,13 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
       ...viewportAround(origin.coordinates)
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const destination = sortCells(viewport.cells).find(cell => explored.has(cell.id)
+    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
       && !occupied_cell_ids.has(cell.id)
       && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const destination = sortCellsByExpansionScore({
+      cells: base_candidates,
+      score: base_cell_score,
+    })[0]
     if (!destination) {
       continue
     }
@@ -545,12 +558,28 @@ async function trySettle(player_id: string): Promise<Record<string, unknown> | n
     return null
   }
 
-  const { outposts } = await new OutpostListQuery().run({ player_id })
-  for (const outpost of outposts) {
-    if (outpost.type === OutpostType.PERMANENT) {
-      continue
-    }
+  const {
+    outposts, cells 
+  } = await new OutpostListQuery().run({ player_id })
+  const settle_candidates = outposts
+    .map((outpost, index) => ({
+      outpost,
+      cell: cells[index],
+    }))
+    .filter(({ outpost }) => outpost.type !== OutpostType.PERMANENT)
+    .filter(({ cell }) => cell !== undefined)
+    .sort((left, right) => {
+      const score_delta = systemExpansionCitySiteScore(right.cell!) - systemExpansionCitySiteScore(left.cell!)
+      if (score_delta !== 0) {
+        return score_delta
+      }
+      if (left.cell!.coordinates.x !== right.cell!.coordinates.x) {
+        return left.cell!.coordinates.x - right.cell!.coordinates.x
+      }
+      return left.cell!.coordinates.y - right.cell!.coordinates.y
+    })
 
+  for (const { outpost } of settle_candidates) {
     const { troops } = await new TroopListQuery().run({
       player_id,
       location: {
@@ -582,8 +611,28 @@ async function trySettle(player_id: string): Promise<Record<string, unknown> | n
 }
 
 async function tryMakePermanent(player_id: string): Promise<Record<string, unknown> | null> {
-  const { outposts } = await new OutpostListQuery().run({ player_id })
-  const temporary = outposts.find(outpost => outpost.type !== OutpostType.PERMANENT)
+  const {
+    outposts, cells 
+  } = await new OutpostListQuery().run({ player_id })
+  const temporary_candidates = outposts
+    .map((outpost, index) => ({
+      outpost,
+      cell: cells[index],
+    }))
+    .filter(({ outpost }) => outpost.type !== OutpostType.PERMANENT)
+    .filter(({ cell }) => cell !== undefined)
+    .sort((left, right) => {
+      const score_delta = systemExpansionOutpostResourceScore(right.cell!) - systemExpansionOutpostResourceScore(left.cell!)
+      if (score_delta !== 0) {
+        return score_delta
+      }
+      if (left.cell!.coordinates.x !== right.cell!.coordinates.x) {
+        return left.cell!.coordinates.x - right.cell!.coordinates.x
+      }
+      return left.cell!.coordinates.y - right.cell!.coordinates.y
+    })
+
+  const temporary = temporary_candidates[0]?.outpost
   if (!temporary) {
     return null
   }

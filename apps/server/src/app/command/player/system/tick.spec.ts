@@ -12,6 +12,11 @@ import { PlayerEntity } from '#core/player/entity'
 import { FactionCode } from '#core/faction/constant/code'
 import { SYSTEM_PLAYER_TICK_INTERVAL_MS } from '#app/scheduling/intervals'
 import { SYSTEM_TICK_CATEGORIES } from '#core/player/system/tick-category'
+import { CityListQuery } from '#query/city/list'
+import { CityGetQuery } from '#query/city/get'
+import { BuildingListQuery } from '#query/building/list'
+import { CityEntity } from '#core/city/entity'
+import { BuildingCode } from '#core/building/constant/code'
 import { id } from '#shared/identification'
 import * as time from '#shared/time'
 import assert from 'assert'
@@ -41,6 +46,41 @@ describe('tickSystemPlayers', () => {
     vi.spyOn(productionModule, 'isEmpireProductionReadyForResearch').mockResolvedValue(false)
     listSystemControlled = vi.fn().mockResolvedValue([ player ])
     scheduleSystemPlayerTick = vi.fn().mockResolvedValue('job-id')
+    const city = CityEntity.create({
+      id: id(),
+      name: 'Core I',
+      player_id: player.id,
+      cell_id: id(),
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      production_energy_ratio: 1,
+      resource_stock: {
+        plastic: 100,
+        mushroom: 100,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1,
+        },
+        {
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+        },
+      ],
+      upgrade_queue: [],
+    } as never)
     vi.mocked(actForSystemPlayer).mockResolvedValue({
       outcome: 'success',
       category: 'upgrade',
@@ -129,13 +169,13 @@ describe('tickSystemPlayers', () => {
     assert.deepStrictEqual(
       vi.mocked(actForSystemPlayer).mock.calls[0][0].categories,
       [
-        'research',
-        'upgrade',
-        'recruit',
         'explore',
         'base',
         'settle',
         'make-permanent',
+        'research',
+        'upgrade',
+        'recruit',
         'transport',
       ],
     )

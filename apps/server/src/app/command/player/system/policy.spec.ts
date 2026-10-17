@@ -27,15 +27,21 @@ describe('system player tick policy', () => {
   })
 
   it('leaves order unchanged when research is already before upgrade', () => {
-    const categories = categoriesForTick(1)
+    const categories = categoriesForTick(1, { economy_first: true })
     assert.deepStrictEqual(prioritizeResearchBeforeUpgrade(categories), categories)
   })
 
-  it('rotates the category ring from the tick index', () => {
-    assert.strictEqual(categoriesForTick(0)[0], 'upgrade')
-    assert.strictEqual(categoriesForTick(1)[0], 'research')
-    assert.strictEqual(categoriesForTick(3)[0], 'explore')
+  it('rotates the expansion-first category ring from the tick index', () => {
+    assert.strictEqual(categoriesForTick(0)[0], 'explore')
+    assert.strictEqual(categoriesForTick(1)[0], 'base')
+    assert.strictEqual(categoriesForTick(4)[0], 'upgrade')
     assert.deepStrictEqual(categoriesForTick(8), [ ...SYSTEM_TICK_CATEGORIES ])
+  })
+
+  it('rotates economy-first when the main city needs baseline upkeep', () => {
+    assert.strictEqual(categoriesForTick(0, { economy_first: true })[0], 'upgrade')
+    assert.strictEqual(categoriesForTick(1, { economy_first: true })[0], 'research')
+    assert.strictEqual(categoriesForTick(4, { economy_first: true })[0], 'explore')
   })
 
   it('walks from the rotated start until one action succeeds', async () => {
@@ -51,7 +57,8 @@ describe('system player tick policy', () => {
     const acted = await actForSystemPlayer({
       player_id: 'player-id',
       tick_index: 1,
-      actions
+      actions,
+      categories: categoriesForTick(1, { economy_first: true }),
     })
 
     assert.strictEqual(acted.outcome, 'success')
@@ -69,10 +76,7 @@ describe('system player tick policy', () => {
         result: 'success',
       },
     ])
-    assert.deepStrictEqual(calls, [
-      'research',
-      'recruit' 
-    ])
+    assert.deepStrictEqual(calls, [ 'research', 'recruit' ])
   })
 
   it('returns idle with skipped attempts when no category can act', async () => {

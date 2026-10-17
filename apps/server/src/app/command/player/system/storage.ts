@@ -381,3 +381,29 @@ export function resourcesForTransportToDestination({
     plasma: origin_stock.plasma,
   }
 }
+
+export function shouldPrioritizeEconomyForSystemPlayer({
+  production_energy_ratio,
+  resource_stock,
+  warehouses_capacity,
+  buildings,
+}: {
+  production_energy_ratio: number
+  resource_stock: Resource
+  warehouses_capacity: WarehouseCapacity
+  buildings: { code: BuildingCode, level: number }[]
+}): boolean {
+  if (production_energy_ratio < 1) {
+    return true
+  }
+  if (isCityWarehouseUnderPressure({
+    resource_stock,
+    warehouses_capacity,
+  })) {
+    return true
+  }
+  if (needsCoreProductionBootstrap(buildings)) {
+    return true
+  }
+  return false
+}

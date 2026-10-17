@@ -22,6 +22,9 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { WorldGetCellsQuery } from '#query/world/get-cells'
+import { CellEntity } from '#core/world/cell/entity'
+import { CellType } from '#core/world/value/cell-type'
 import { BuildingEntity } from '#core/building/entity'
 import { id } from '#shared/identification'
 import {
@@ -632,6 +635,75 @@ describe('systemTickActions', () => {
       outpost_id,
       city_name: 'Core II'
     })
+  })
+
+  it('explores the highest-value unexplored cell in the viewport', async () => {
+    const weak_cell = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 1,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 1,
+    })
+    const strong_cell = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x,
+        y: city_cell.coordinates.y + 1,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1.8,
+        mushroom: 1.8,
+        plasma: 1,
+      },
+      solar_coefficient: 2,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.SEEKER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell, weak_cell, strong_cell ],
+      explored_cell_ids: [ city_cell.id ],
+    })
+
+    const acted = await systemTickActions.explore(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(acted?.destination, strong_cell.coordinates)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].action, MovementAction.EXPLORE)
   })
 
   it('does not create a transport movement for explore', async () => {

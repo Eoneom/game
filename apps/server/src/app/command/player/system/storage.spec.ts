@@ -2,6 +2,7 @@ import assert from 'assert'
 import {
   isCityWarehouseUnderPressure,
   resourcesForTransportToDestination,
+  shouldPrioritizeEconomyForSystemPlayer,
   sortBuildingsForSystemUpgrade,
   SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO
 } from './storage'
@@ -10,6 +11,75 @@ import { BuildingCode } from '#core/building/constant/code'
 describe('system player storage policy', () => {
   it('uses the same fill ratio as the web warehouse warn threshold', () => {
     assert.strictEqual(SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO, 0.7)
+  })
+
+  it('prioritizes economy when energy, storage, or core production is strained', () => {
+    assert.strictEqual(shouldPrioritizeEconomyForSystemPlayer({
+      production_energy_ratio: 0.5,
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      buildings: [
+        {
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1,
+        },
+        {
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+        },
+      ],
+    }), true)
+    assert.strictEqual(shouldPrioritizeEconomyForSystemPlayer({
+      production_energy_ratio: 1,
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      buildings: [
+        {
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 0,
+        },
+        {
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+        },
+      ],
+    }), true)
+    assert.strictEqual(shouldPrioritizeEconomyForSystemPlayer({
+      production_energy_ratio: 1,
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      buildings: [
+        {
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1,
+        },
+        {
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+        },
+      ],
+    }), false)
   })
 
   it('detects pressure when plastic or mushroom is at least 70% full', () => {

@@ -4,7 +4,7 @@
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job rotates scripted actions (upgrade, research, recruit, explore, base, settle, make-permanent, transport) until one succeeds per tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job rotates scripted actions (explore, base, settle, make-permanent, upgrade, research, recruit, transport) until one succeeds per tick. By default the ring is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the ring flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`003`](../003-player-registration-signup/spec.md)), all game commands invoked by tick actions.
 
@@ -29,9 +29,11 @@ Constants (`core/player/constant/system.ts`):
 | --- | --- |
 | `SYSTEM_PLAYER_TICK_QUEUE` | pg-boss stately queue |
 | `tickSystemPlayers` | Lists `repository.player.listSystemControlled()`, runs `actForSystemPlayer` per player, schedules next tick |
-| `categoriesForTick` | Rotates action order by `tick_index` |
+| `categoriesForTick` | Rotates expansion vs economy blocks by `tick_index`; optional `economy_first` swaps block order |
+| `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first rotation (`storage.ts`) |
+| `expansion-cell` | Scout / outpost / city-site cell scores for explore, base, settle, make-permanent |
 | `systemTickActions` | Per-category handlers in `app/command/player/system/actions.ts` |
-| `actForSystemPlayer` | First action returning `true` wins the tick |
+| `actForSystemPlayer` | First action returning a payload wins the tick |
 | `storage.ts` | Warehouse pressure threshold and upgrade / transport helpers |
 
 Interval: `SYSTEM_PLAYER_TICK_INTERVAL_MS` (`app/scheduling/intervals`).
@@ -58,7 +60,24 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Recruit** (`tryRecruit`): troop choice uses `sortTroopsForSystemRecruit` (`system/troops.ts`) instead of roster `troop_order`. Per-**city** caps (garrison in that city’s cell only; outpost troops do not count): `SYSTEM_MAX_SCOUT_TROOPS = 2`, `SYSTEM_MAX_FOUNDER_TROOPS = 1`. Economy roles (cultivator / salvager / carrier) are preferred; scout and founder are deprioritized when that city is at cap. When a permanent outpost has stock but no cultivator or salvager on that outpost, recruiting that role is boosted empire-wide for the next city recruit attempt.
 
-**Production-ready research priority** (`tickSystemPlayers`): when `isEmpireProductionReadyForResearch(player_id)` is true for the first city — projected building levels satisfy `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure (`isCityWarehouseUnderPressure`) — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s rotated category list so research is attempted before building upgrades when research would otherwise run later on the same tick.
+**Production-ready research priority** (`tickSystemPlayers`): when `isEmpireProductionReadyForResearch(player_id)` is true for the first city — projected building levels satisfy `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure (`isCityWarehouseUnderPressure`) — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s category list so research is attempted before building upgrades when research would otherwise run later on the same tick.
+
+## Expansion focus
+
+**Tick priority (default)**: `explore` → `base` → `settle` → `make-permanent` → `upgrade` → `research` → `recruit` → `transport`, rotated by `tick_index` so each category leads periodically.
+
+**Economy override**: when `shouldPrioritizeEconomyForSystemPlayer` is true for the first city, the economy block (`upgrade`, `research`, `recruit`, `transport`) is tried before expansion for that tick.
+
+**Cell heuristics** (`core/player/system/expansion-cell.ts`):
+
+| Action | Candidate filter | Score |
+| --- | --- | --- |
+| `explore` | Unexplored cells in viewport (server has full coefficients) | `solar × 1.25 + plastic + mushroom` |
+| `base` | Explored, unoccupied | City site: `solar` when below city cap; else `plastic + mushroom` for gathering outposts |
+| `settle` | Temporary outposts with founder | Highest `solar` first |
+| `make-permanent` | Temporary outposts | Highest `plastic + mushroom` first |
+
+Tie-break: ascending coordinates for stable ordering.
 
 ## Requirement gating (upgrade, research, recruit)
 
@@ -72,8 +91,6 @@ Before calling `upgradeBuilding`, `researchTechnology`, or `recruitTroop`, syste
 | `meetsTroopRecruitRequirement` | `RequirementService.checkTroopRequirement` (always current levels) |
 
 Candidates that fail a check are skipped; the tick does not invoke the command (avoiding requirement errors and wasted queue slots). Sorting (`sortBuildingsForSystemUpgrade`, `sortTechnologiesForSystemResearch`) is unchanged — filtering happens immediately before enqueue/start.
-
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
 
 ## Player errors (relevant)
 
@@ -92,4 +109,6 @@ Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-
 | --- | --- |
 | Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,requirements}.ts` |
 | Jobs | `apps/server/src/adapter/job-queue/player/system-tick.ts` |
-| Core | `apps/server/src/core/player/constant/system.ts` |
+| Core | `apps/server/src/core/player/constant/system.ts`, `core/player/system/expansion-cell.ts` |
+
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.
