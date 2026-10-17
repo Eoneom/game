@@ -14,6 +14,11 @@ export function registerTroopWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
   })
 
+  wsClient.on(AppEvent.BattleFinished, () => {
+    queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
+    queryClient.invalidateQueries({ queryKey: ['reports'] })
+  })
+
   wsClient.on<{ city_id: string }>(AppEvent.TroopRecruitmentUpdated, ({ city_id }) => {
     queryClient.invalidateQueries({ queryKey: troopKeys.cityList(city_id) })
     queryClient.invalidateQueries({ queryKey: cityKeys.detail(city_id) })

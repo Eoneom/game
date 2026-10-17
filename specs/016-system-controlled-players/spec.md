@@ -94,7 +94,7 @@ Before calling `upgradeBuilding`, `researchTechnology`, or `recruitTroop`, syste
 
 Candidates that fail a check are skipped; the tick does not invoke the command (avoiding requirement errors and wasted queue slots). Sorting (`sortBuildingsForSystemUpgrade`, `sortTechnologiesForSystemResearch`) is unchanged — filtering happens immediately before enqueue/start.
 
-When PvP combat codes ship ([`024`](../024-player-combat-pvp/spec.md)), Alpha’s **`war_machine`** / **`disruptor`** recruits go through the same `recruitTroop` path and **`meetsTroopRecruitRequirement`** gate as economy troops (`TroopRequirement` per 024: **`cloning_factory`** + **`replication_catalyst`** only — not `architecture` or `photovoltaic_optimization`); combat policy in `system/troops.ts` does not bypass requirement checks.
+Alpha’s **`war_machine`** / **`disruptor`** recruits (024 on `main`) go through the same `recruitTroop` path and **`meetsTroopRecruitRequirement`** gate as economy troops (`TroopRequirement` per 024: **`cloning_factory`** + **`replication_catalyst`** only — not `architecture` or `photovoltaic_optimization`); combat policy in `system/troops.ts` does not bypass requirement checks.
 
 ## Player errors (relevant)
 

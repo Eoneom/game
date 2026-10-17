@@ -4,7 +4,7 @@
 
 ## Summary
 
-Players create **movements** between map coordinates with an action (`MovementAction`: explore, base, transport, rebase). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport finish handlers. Outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)). There is no separate real-time battle resolver on `main` today—peaceful outcomes are encoded in saga + report generation. Planned **`attack`** action (with `combat_strategy`), five-round simultaneous battles, and battle sagas: [`024`](../024-player-combat-pvp/spec.md).
+Players create **movements** between map coordinates with an action (`MovementAction`: explore, base, transport, rebase). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport finish handlers. Outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)). Peaceful outcomes are encoded in saga + report generation. **`attack`** (with `combat_strategy`), five-round combat jobs, and battle reports: implemented per [`024`](../024-player-combat-pvp/spec.md) (`sagaFinishAttack`, `combat.round.advance`).
 
 **Depends on**: troops ([`009`](../009-troops-stationary/spec.md)), world ([`005`](../005-world-grid-visibility/spec.md)), outposts ([`011`](../011-outposts/spec.md)), cities ([`006`](../006-city-lifecycle-gathering/spec.md)).
 

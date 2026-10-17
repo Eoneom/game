@@ -189,6 +189,8 @@ Postgres (Kysely) under `apps/server/src/adapter/database/`:
 
 **City resource gathering** runs on a self-rescheduling `city.resources.gather` job (`singletonKey` = `global`, every 5 seconds). On each tick the worker gathers resources for all cities, then schedules the next run. The loop is ensured on server boot. City GET still applies a display-only virtual gather without writing the DB; the UI refreshes via `city:resources-gathered` WebSocket events.
 
+**PvP combat rounds** (`combat.round.advance`, slice 024): when an `attack` movement arrives, the server snapshots the battle and schedules round **1** immediately; each worker runs `advanceCombatRound` and, if the fight continues, schedules the next round after `COMBAT_ROUND_INTERVAL_MS` (30s). `singletonKey` = `{battle_id}:{round}`.
+
 ### App
 
 Features split into commands and queries.

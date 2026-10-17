@@ -1,6 +1,6 @@
 # Slice 024 — Player combat (PvP)
 
-**Status**: Design locked (interview + five-round strategy combat); **not implemented** on `main` (brownfield movement has no `attack` action yet).
+**Status**: Implemented on `main` (slice 024): `attack` movement, five-round combat jobs, battle reports, web attack flow, system AI attacks.
 
 ## Summary
 

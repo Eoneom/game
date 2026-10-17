@@ -13,6 +13,7 @@ import {
   TechnologyError,
   TroopError,
   WorldError,
+  CombatError,
 } from '@eoneom/api-client'
 
 const FALLBACK_MESSAGE = 'Une erreur est survenue'
@@ -74,6 +75,13 @@ const ErrorTranslations: Record<string, string> = {
   [TroopError.TRANSPORT_RESOURCES_REQUIRED]: 'Des ressources sont requises pour ce transport',
   [TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED]: 'Les ressources ne sont pas autorisées pour cette action',
   [TroopError.NOT_IN_FACTION_ROSTER]: 'Cette unité n\'appartient pas à votre faction',
+
+  [CombatError.SAME_FACTION_ATTACK]: 'Impossible d\'attaquer un allié de faction',
+  [CombatError.NO_VALID_TARGET]: 'Aucune cible ennemie à cette destination',
+  [CombatError.COMBAT_TROOP_REQUIRED]: 'Au moins une unité de combat est requise',
+  [CombatError.SCOUT_NOT_ALLOWED_ON_ATTACK]: 'Les éclaireurs ne peuvent pas participer à une attaque',
+  [CombatError.STRATEGY_REQUIRED]: 'Choisissez une stratégie de combat',
+  [CombatError.BATTLE_NOT_FOUND]: 'Bataille introuvable',
 
   [WorldError.ALREADY_EXISTS]: 'Ce monde existe déjà',
   [WorldError.CELL_NOT_FOUND]: 'Case introuvable',

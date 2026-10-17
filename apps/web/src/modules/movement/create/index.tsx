@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { Coordinates, MovementAction, OutpostType, TroopCode, resource_transport_weight } from '@eoneom/api-client'
+import {
+  CombatStrategy,
+  Coordinates,
+  MovementAction,
+  OutpostType,
+  TroopCode,
+  resource_transport_weight,
+} from '@eoneom/api-client'
 
 import { MovementCreateAction } from './action'
 import { MovementCreateDestination } from './destination'
@@ -7,6 +14,7 @@ import { MovementCreateEstimation } from './estimation'
 import { MovementCreateResources } from './resources'
 import { MovementCreateTroops } from './troops'
 import { MovementCreateWarning } from './warning'
+import { MovementCreateCombatStrategy } from './strategy'
 import { MovementEstimation } from '#types'
 import { useGetOutpost } from '#outpost/hooks'
 import { useGetCity } from '#city/hooks'
@@ -40,6 +48,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     destination_capacity_exceeded: false,
   })
   const [ action, setAction ] = useState<MovementAction>(MovementAction.BASE)
+  const [ combatStrategy, setCombatStrategy ] = useState<CombatStrategy>(CombatStrategy.BALANCED)
   const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0, plasma: 0 })
 
   const cityCoordinates = city?.coordinates ?? null
@@ -142,11 +151,13 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
       destination,
       troops: selectedTroopList,
       resources: action === MovementAction.TRANSPORT ? resources : undefined,
+      combat_strategy: action === MovementAction.ATTACK ? combatStrategy : undefined,
     })
   }
 
   const canSubmit = Boolean(estimation.distance)
     && (action !== MovementAction.TRANSPORT || usedCapacity > 0)
+    && (action !== MovementAction.ATTACK || combatStrategy)
 
   return (
     <form
@@ -172,6 +183,12 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
 
         <div id="movement-submit" className="flex flex-col gap-4">
           <MovementCreateAction action={action} onChange={setAction} />
+          {action === MovementAction.ATTACK && (
+            <MovementCreateCombatStrategy
+              strategy={combatStrategy}
+              onChange={setCombatStrategy}
+            />
+          )}
           <MovementCreateDestination
             destination={destination}
             onChange={setDestination}

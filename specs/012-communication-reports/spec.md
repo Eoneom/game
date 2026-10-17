@@ -52,3 +52,4 @@ Boot: `ensureReportCleanupScheduled` in `index.ts`.
 | Queries | `apps/server/src/app/query/communication/report/` |
 | Jobs | `apps/server/src/adapter/job-queue/communication/cleanup-old-read-reports.ts` |
 | HTTP | `apps/server/src/web/handler/communication/report/` |
+| Battle (024) | `ReportType.BATTLE`, `report_battle`, `create-battle.ts`, `AppEvent.BattleFinished`, web `report/details.tsx` |

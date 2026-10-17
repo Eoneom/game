@@ -28,7 +28,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 020 | [`specs/020-system-player-observability/`](../specs/020-system-player-observability/spec.md) | System Player observability (admin live feed) |
 | 022 | [`specs/022-timing-and-resources/`](../specs/022-timing-and-resources/spec.md) | Timing and resource pacing |
 | 023 | [`specs/023-technology-research-queue/`](../specs/023-technology-research-queue/spec.md) | Technology research queue |
-| 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — design locked (`4257ad3`, `3b25dcc`), not implemented |
+| 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — implemented (`attack`, battle jobs, reports, UI) |
 
 ## Brownfield inventory (dependency order)
 

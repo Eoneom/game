@@ -56,5 +56,25 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     name: 'Récupérateur',
     description: 'Unité dédiée à l\'extraction et à la valorisation du plastique sur les avant-postes.',
     effect: 'Récolte du plastique.'
-  }
+  },
+  [TroopCode.LEGIONNAIRE]: {
+    name: 'Légionnaire',
+    description: 'Ligne d\'infanterie organo-synthétique ; tient les garnisons et mène les assauts.',
+    effect: 'Unité de combat de la Confédération.',
+  },
+  [TroopCode.INTERCEPTOR]: {
+    name: 'Intercepteur',
+    description: 'Chasseur rapide optimisé pour frapper en premier.',
+    effect: 'Unité de frappe rapide.',
+  },
+  [TroopCode.WAR_MACHINE]: {
+    name: 'Machine de guerre',
+    description: 'Plateforme d\'assaut autonome, lente mais blindée.',
+    effect: 'Unité de combat de la Singularité.',
+  },
+  [TroopCode.DISRUPTOR]: {
+    name: 'Perturbateur',
+    description: 'Unité légère de harcèlement et de saturation.',
+    effect: 'Unité d\'harcelement rapide.',
+  },
 }

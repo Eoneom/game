@@ -5,4 +5,5 @@ export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.BASE]: 'Base',
   [ReportType.REBASE]: 'Rebase',
   [ReportType.TRANSPORT]: 'Transport',
+  [ReportType.BATTLE]: 'Bataille',
 }

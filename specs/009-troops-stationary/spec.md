@@ -60,3 +60,4 @@ Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, 
 | Queries | `apps/server/src/app/query/troop/` (except movement) |
 | Jobs | `apps/server/src/adapter/job-queue/troop/recruit-progress.ts` |
 | HTTP | `apps/server/src/web/handler/troop/` (except `movement/`) |
+| Combat (024) | `characteristic.ts` combat stats; codes `legionnaire`/`interceptor`/`war_machine`/`disruptor`; `TroopRequirement` + `troop_costs` rows |
