@@ -42,14 +42,38 @@ function formatProductionLine(earnings_per_second: Resource): string {
   ].join(' · ')
 }
 
-function formatTroopsLine(troops: AdminSystemPlayerTroopCount[]): string | null {
+function TroopsList({
+  troops,
+  pending,
+}: {
+  troops: AdminSystemPlayerTroopCount[]
+  pending?: AdminSystemPlayerPendingRecruitment | null
+}): React.ReactElement | null {
   const present = troops.filter(troop => troop.count > 0)
-  if (present.length === 0) {
+  if (present.length === 0 && !pending) {
     return null
   }
-  return present
-    .map(troop => `${translateTroopCode(troop.code as TroopCode)} ×${troop.count}`)
-    .join(' · ')
+
+  return (
+    <div>
+      <h5 className="field-label m-0 mb-1 text-label">Troupes</h5>
+      {present.length > 0 && (
+        <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
+          {present.map(troop => (
+            <li key={troop.code}>
+              {translateTroopCode(troop.code as TroopCode)}
+              <span className="text-amber-dim"> — ×{troop.count}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {pending ? (
+        <div className={present.length > 0 ? 'mt-1' : undefined}>
+          <CityPendingRecruitment pending={pending} />
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 const CityPendingRecruitment: React.FC<{
@@ -148,8 +172,6 @@ function CityStatsSection({
   city: AdminSystemPlayerCitySummary
   buildings: { code: BuildingCode, level: number }[]
 }): React.ReactElement {
-  const troops_line = formatTroopsLine(city.troops)
-
   return (
     <section className="admin-surface-nested rounded-sm p-2.5">
       <header className="mb-2 border-b border-rust/25 pb-2">
@@ -168,18 +190,14 @@ function CityStatsSection({
           production={city.energy}
           productionEnergyRatio={city.production_energy_ratio}
           lede=""
+          dense
         />
         <WarehouseStockBars
           resources={city.resources}
           warehouses_capacity={city.warehouses_capacity}
           warehouse_space_remaining={city.warehouse_space_remaining}
         />
-        {troops_line && (
-          <p className="m-0 text-xs text-amber-dim">Troupes : {troops_line}</p>
-        )}
-        {city.pending_recruitment && (
-          <CityPendingRecruitment pending={city.pending_recruitment} />
-        )}
+        <TroopsList troops={city.troops} pending={city.pending_recruitment} />
         <div>
           <h5 className="field-label m-0 mb-1 text-label">Bâtiments</h5>
           <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
@@ -240,6 +258,18 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
             </header>
 
             <div className="space-y-3">
+              <section>
+                <h3 className="field-label m-0 mb-1 text-label">Technologies</h3>
+                <ul className="m-0 list-none space-y-0.5 p-0 text-sm text-amber">
+                  {snapshot.technologies.map(tech => (
+                    <li key={tech.code}>
+                      {translateTechnologyCode(tech.code as TechnologyCode)}
+                      <span className="text-amber-dim"> — niveau {tech.level}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
               <div className="space-y-2">
                 <h3 className="field-label m-0 text-label">
                   Colonies ({snapshot.cities.length})
@@ -259,22 +289,22 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     Avant-postes ({snapshot.outposts.length})
                   </h3>
                   <ul className="m-0 list-none space-y-2 p-0">
-                    {snapshot.outposts.map(outpost => {
-                      const troops_line = formatTroopsLine(outpost.troops)
-                      return (
+                    {snapshot.outposts.map(outpost => (
                         <li
                           key={outpost.id}
-                          className="admin-surface-nested rounded-sm p-2 text-sm text-amber"
+                          className="admin-surface-nested space-y-2 rounded-sm p-2 text-sm text-amber"
                         >
-                          {translateOutpostType(outpost.type)}
-                          <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
-                          {(outpost.earnings_per_second.plastic > 0
-                            || outpost.earnings_per_second.mushroom > 0
-                            || outpost.earnings_per_second.plasma > 0) && (
-                            <p className="m-0 mt-1 text-xs text-amber-dim">
-                              Prod. : {formatProductionLine(outpost.earnings_per_second)}
-                            </p>
-                          )}
+                          <div>
+                            {translateOutpostType(outpost.type)}
+                            <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
+                            {(outpost.earnings_per_second.plastic > 0
+                              || outpost.earnings_per_second.mushroom > 0
+                              || outpost.earnings_per_second.plasma > 0) && (
+                              <p className="m-0 mt-1 text-xs text-amber-dim">
+                                Prod. : {formatProductionLine(outpost.earnings_per_second)}
+                              </p>
+                            )}
+                          </div>
                           {outpost.warehouses_capacity.plastic > 0 && (
                             <WarehouseStockBars
                               resources={outpost.resources}
@@ -282,27 +312,12 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                               warehouse_space_remaining={outpost.warehouse_space_remaining}
                             />
                           )}
-                          {troops_line && (
-                            <p className="m-0 mt-1 text-xs text-amber-dim">Troupes : {troops_line}</p>
-                          )}
+                          <TroopsList troops={outpost.troops} />
                         </li>
-                      )
-                    })}
+                    ))}
                   </ul>
                 </section>
               )}
-
-              <section>
-                <h3 className="field-label m-0 mb-1 text-label">Technologies</h3>
-                <ul className="m-0 list-none space-y-0.5 p-0 text-sm text-amber">
-                  {snapshot.technologies.map(tech => (
-                    <li key={tech.code}>
-                      {translateTechnologyCode(tech.code as TechnologyCode)}
-                      <span className="text-amber-dim"> — niveau {tech.level}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             </div>
           </article>
         )
