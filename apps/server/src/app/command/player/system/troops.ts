@@ -12,11 +12,7 @@ export const SYSTEM_MAX_SCOUT_TROOPS = 2
 /** Per-city cap on founder-role troops garrisoned in that city (e.g. Assembler). */
 export const SYSTEM_MAX_FOUNDER_TROOPS = 1
 
-const ECONOMY_ROLES = new Set([
-  TroopRole.CULTIVATOR,
-  TroopRole.SALVAGER,
-  TroopRole.CARRIER,
-])
+const ECONOMY_ROLES = new Set([ TroopRole.CARRIER ])
 
 function hasStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
@@ -31,6 +27,10 @@ function countRole(troops: TroopEntity[], role: TroopRole): number {
 export type SystemOutpostRecruitHints = {
   needs_harvester_on_outpost: boolean
   needs_reclaimer_on_outpost: boolean
+  /** At least one permanent outpost on a cell that can gather mushroom (cultivator). */
+  has_harvester_outpost: boolean
+  /** At least one permanent outpost on a cell that can gather plastic (salvager). */
+  has_reclaimer_outpost: boolean
 }
 
 export type SystemRecruitSortHints = SystemOutpostRecruitHints & {
@@ -50,6 +50,8 @@ export function recruitSortHintsForCity({
     founder_count: countRole(city_troops, TroopRole.FOUNDER),
     needs_harvester_on_outpost: outpost_hints.needs_harvester_on_outpost,
     needs_reclaimer_on_outpost: outpost_hints.needs_reclaimer_on_outpost,
+    has_harvester_outpost: outpost_hints.has_harvester_outpost,
+    has_reclaimer_outpost: outpost_hints.has_reclaimer_outpost,
   }
 }
 
@@ -71,10 +73,16 @@ function recruitPriority({
     return 1000 + TroopService.getOrder(code)
   }
 
-  if (role === TroopRole.CULTIVATOR && hints.needs_harvester_on_outpost) {
+  if (role === TroopRole.CULTIVATOR) {
+    if (!hints.has_harvester_outpost || !hints.needs_harvester_on_outpost) {
+      return 1000 + TroopService.getOrder(code)
+    }
     return 0
   }
-  if (role === TroopRole.SALVAGER && hints.needs_reclaimer_on_outpost) {
+  if (role === TroopRole.SALVAGER) {
+    if (!hints.has_reclaimer_outpost || !hints.needs_reclaimer_on_outpost) {
+      return 1000 + TroopService.getOrder(code)
+    }
     return 0
   }
 
@@ -154,6 +162,16 @@ export function systemRecruitBatchCount({
   hints: SystemRecruitSortHints
 }): number {
   const role = troop_role[troop_code]
+  if (role === TroopRole.CULTIVATOR) {
+    if (!hints.has_harvester_outpost || !hints.needs_harvester_on_outpost) {
+      return 0
+    }
+  }
+  if (role === TroopRole.SALVAGER) {
+    if (!hints.has_reclaimer_outpost || !hints.needs_reclaimer_on_outpost) {
+      return 0
+    }
+  }
   const headroom = maxRoleRecruitHeadroom(role, hints)
   if (headroom === 0) {
     return 0
@@ -168,11 +186,14 @@ export function systemRecruitBatchCount({
 export async function loadOutpostRecruitHints(player_id: string): Promise<SystemOutpostRecruitHints> {
   const {
     outposts,
+    cells,
     resource_stocks,
   } = await new OutpostListQuery().run({ player_id })
 
   let needs_harvester_on_outpost = false
   let needs_reclaimer_on_outpost = false
+  let has_harvester_outpost = false
+  let has_reclaimer_outpost = false
 
   for (const [
     index,
@@ -180,6 +201,13 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
   ] of outposts.entries()) {
     if (outpost.type !== OutpostType.PERMANENT) {
       continue
+    }
+    const cell = cells[index]
+    if (cell?.resource_coefficient.mushroom > 0) {
+      has_harvester_outpost = true
+    }
+    if (cell?.resource_coefficient.plastic > 0) {
+      has_reclaimer_outpost = true
     }
     const stock = resource_stocks[index]
     if (!stock || !hasStock(stock)) {
@@ -212,5 +240,7 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
   return {
     needs_harvester_on_outpost,
     needs_reclaimer_on_outpost,
+    has_harvester_outpost,
+    has_reclaimer_outpost,
   }
 }

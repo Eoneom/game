@@ -12,6 +12,8 @@ import { OutpostListQuery } from '#query/outpost/list'
 import { TroopListQuery } from '#query/troop/list'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
+import { CellEntity } from '#core/world/cell/entity'
+import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { id } from '#shared/identification'
@@ -32,10 +34,12 @@ function troop(code: TroopCode, count: number): TroopEntity {
 const no_outpost_hints = {
   needs_harvester_on_outpost: false,
   needs_reclaimer_on_outpost: false,
+  has_harvester_outpost: false,
+  has_reclaimer_outpost: false,
 }
 
 describe('sortTroopsForSystemRecruit', () => {
-  it('prioritizes economy troops over scouts when scout cap is not reached', () => {
+  it('prioritizes carriers over scouts when scout cap is not reached', () => {
     const sorted = sortTroopsForSystemRecruit({
       troops: [
         troop(TroopCode.SEEKER, 0),
@@ -49,8 +53,25 @@ describe('sortTroopsForSystemRecruit', () => {
       },
     })
 
-    assert.strictEqual(sorted[0].code, TroopCode.HARVESTER)
-    assert.strictEqual(sorted[sorted.length - 1].code, TroopCode.SEEKER)
+    assert.strictEqual(sorted[0].code, TroopCode.HAULER)
+    assert.strictEqual(sorted[sorted.length - 1].code, TroopCode.HARVESTER)
+  })
+
+  it('deprioritizes harvesters without a permanent gathering outpost', () => {
+    const sorted = sortTroopsForSystemRecruit({
+      troops: [
+        troop(TroopCode.HARVESTER, 0),
+        troop(TroopCode.SEEKER, 0),
+      ],
+      hints: {
+        scout_count: 0,
+        founder_count: 0,
+        ...no_outpost_hints,
+      },
+    })
+
+    assert.strictEqual(sorted[0].code, TroopCode.SEEKER)
+    assert.strictEqual(sorted[sorted.length - 1].code, TroopCode.HARVESTER)
   })
 
   it('deprioritizes scouts when that city scout cap is reached', () => {
@@ -58,6 +79,7 @@ describe('sortTroopsForSystemRecruit', () => {
       troops: [
         troop(TroopCode.SEEKER, 0),
         troop(TroopCode.HARVESTER, 0),
+        troop(TroopCode.HAULER, 0),
       ],
       hints: {
         scout_count: SYSTEM_MAX_SCOUT_TROOPS,
@@ -66,8 +88,11 @@ describe('sortTroopsForSystemRecruit', () => {
       },
     })
 
-    assert.strictEqual(sorted[0].code, TroopCode.HARVESTER)
-    assert.strictEqual(sorted[sorted.length - 1].code, TroopCode.SEEKER)
+    assert.strictEqual(sorted[0].code, TroopCode.HAULER)
+    assert.ok(
+      sorted.findIndex(t => t.code === TroopCode.SEEKER)
+      > sorted.findIndex(t => t.code === TroopCode.HAULER)
+    )
   })
 
   it('boosts harvester when a stocked permanent outpost lacks one', () => {
@@ -81,6 +106,8 @@ describe('sortTroopsForSystemRecruit', () => {
         founder_count: 0,
         needs_harvester_on_outpost: true,
         needs_reclaimer_on_outpost: false,
+        has_harvester_outpost: true,
+        has_reclaimer_outpost: false,
       },
     })
 
@@ -126,9 +153,11 @@ describe('systemRecruitBatchCount', () => {
     founder_count: 0,
     needs_harvester_on_outpost: false,
     needs_reclaimer_on_outpost: false,
+    has_harvester_outpost: false,
+    has_reclaimer_outpost: false,
   }
 
-  it('recruits multiple economy troops when resources allow', () => {
+  it('does not batch-recruit harvesters without an outpost that needs one', () => {
     const count = systemRecruitBatchCount({
       troop_code: TroopCode.HARVESTER,
       stock: {
@@ -142,6 +171,29 @@ describe('systemRecruitBatchCount', () => {
         plasma: 0,
       },
       hints: base_hints,
+    })
+
+    assert.strictEqual(count, 0)
+  })
+
+  it('recruits multiple harvesters when a permanent outpost needs one', () => {
+    const count = systemRecruitBatchCount({
+      troop_code: TroopCode.HARVESTER,
+      stock: {
+        plastic: 500,
+        mushroom: 0,
+        plasma: 0,
+      },
+      unit_cost: {
+        plastic: 100,
+        mushroom: 0,
+        plasma: 0,
+      },
+      hints: {
+        ...base_hints,
+        needs_harvester_on_outpost: true,
+        has_harvester_outpost: true,
+      },
     })
 
     assert.strictEqual(count, 5)
@@ -216,7 +268,22 @@ describe('loadOutpostRecruitHints', () => {
           type: OutpostType.PERMANENT,
         }),
       ],
-      cells: [],
+      cells: [
+        CellEntity.create({
+          id: outpost_cell_id,
+          coordinates: {
+            x: 2,
+            y: 2,
+          },
+          type: CellType.LAKE,
+          resource_coefficient: {
+            plastic: 0,
+            mushroom: 1,
+            plasma: 0,
+          },
+          solar_coefficient: 1,
+        }),
+      ],
       resource_stocks: [
         testResourceStock({
           cell_id: outpost_cell_id,
@@ -235,5 +302,7 @@ describe('loadOutpostRecruitHints', () => {
     const hints = await loadOutpostRecruitHints(player_id)
 
     assert.strictEqual(hints.needs_harvester_on_outpost, true)
+    assert.strictEqual(hints.has_harvester_outpost, true)
+    assert.strictEqual(hints.has_reclaimer_outpost, false)
   })
 })

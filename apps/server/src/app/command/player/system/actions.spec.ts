@@ -515,7 +515,7 @@ describe('systemTickActions', () => {
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
   })
 
-  it('recruits economy troops before scouts when the city scout cap is reached', async () => {
+  it('recruits carriers before scouts when the city scout cap is reached and there are no outposts', async () => {
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
       count_limit: 5,
@@ -554,16 +554,16 @@ describe('systemTickActions', () => {
       count: 2,
       movement_id: null,
     })
-    const harvester = TroopEntity.create({
+    const hauler = TroopEntity.create({
       id: id(),
       player_id,
       cell_id: city_cell.id,
-      code: TroopCode.HARVESTER,
+      code: TroopCode.HAULER,
       count: 0,
       movement_id: null,
     })
     vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
-      troops: [ seeker, harvester ],
+      troops: [ seeker, hauler ],
       costs: {
         [TroopCode.SEEKER]: {
           resource: {
@@ -573,7 +573,7 @@ describe('systemTickActions', () => {
           },
           duration: 1,
         },
-        [TroopCode.HARVESTER]: {
+        [TroopCode.HAULER]: {
           resource: {
             plastic: 1,
             mushroom: 0,
@@ -588,19 +588,34 @@ describe('systemTickActions', () => {
     const acted = await systemTickActions.recruit(player_id)
 
     assert.ok(acted)
-    assert.deepStrictEqual(vi.mocked(recruitTroop).mock.calls[0][0].troop_code, TroopCode.HARVESTER)
+    assert.deepStrictEqual(vi.mocked(recruitTroop).mock.calls[0][0].troop_code, TroopCode.HAULER)
   })
 
-  it('recruits multiple troops in one batch when affordable', async () => {
+  it('recruits multiple harvesters in one batch when a permanent outpost needs one', async () => {
+    const outpost_id = id()
+    const outpost_cell = testCityCell({ cell_id: id() })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
       count_limit: 5,
     })
     vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
     vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
-      outposts: [],
-      cells: [],
-      resource_stocks: [],
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 0,
+          mushroom: 50,
+        }),
+      ],
       count_limit: 10,
     })
     vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
@@ -622,28 +637,37 @@ describe('systemTickActions', () => {
       ],
       upgrade_queue: [],
     })
-    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
-      troops: [
-        TroopEntity.create({
-          id: id(),
-          player_id,
-          cell_id: city_cell.id,
-          code: TroopCode.HARVESTER,
-          count: 0,
-          movement_id: null,
-        }),
-      ],
-      costs: {
-        [TroopCode.HARVESTER]: {
-          resource: {
-            plastic: 100,
-            mushroom: 0,
-            plasma: 0,
+    vi.spyOn(TroopListQuery.prototype, 'run').mockImplementation(async request => {
+      if (request.location?.type === 'outpost') {
+        return {
+          troops: [],
+          costs: {} as never,
+          pending_recruitment: null,
+        }
+      }
+      return {
+        troops: [
+          TroopEntity.create({
+            id: id(),
+            player_id,
+            cell_id: city_cell.id,
+            code: TroopCode.HARVESTER,
+            count: 0,
+            movement_id: null,
+          }),
+        ],
+        costs: {
+          [TroopCode.HARVESTER]: {
+            resource: {
+              plastic: 100,
+              mushroom: 0,
+              plasma: 0,
+            },
+            duration: 1,
           },
-          duration: 1,
-        },
-      } as never,
-      pending_recruitment: null,
+        } as never,
+        pending_recruitment: null,
+      }
     })
 
     const acted = await systemTickActions.recruit(player_id)
