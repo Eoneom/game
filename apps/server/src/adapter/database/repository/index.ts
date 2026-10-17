@@ -21,6 +21,7 @@ import { ResourceStockRepository } from '#app/port/repository/resource-stock'
 import { PostgresAuthRepository } from '#adapter/database/repository/auth'
 import { PostgresBuildingRepository } from '#adapter/database/repository/building'
 import { PostgresBuildingUpgradeQueueRepository } from '#adapter/database/repository/building-upgrade-queue'
+import { PostgresTechnologyResearchQueueRepository } from '#adapter/database/repository/technology-research-queue'
 import { PostgresCellRepository } from '#adapter/database/repository/cell'
 import { PostgresCityRepository } from '#adapter/database/repository/city'
 import { PostgresExplorationRepository } from '#adapter/database/repository/exploration'
@@ -40,6 +41,7 @@ export class PostgresRepository implements Repository {
   auth: AuthRepository
   building: BuildingRepository
   building_upgrade_queue: BuildingUpgradeQueueRepository
+  technology_research_queue: TechnologyResearchQueueRepository
   cell: CellRepository
   resource_stock: ResourceStockRepository
   city: CityRepository
@@ -61,6 +63,7 @@ export class PostgresRepository implements Repository {
     this.auth = new PostgresAuthRepository(this.db)
     this.building = new PostgresBuildingRepository(this.db)
     this.building_upgrade_queue = new PostgresBuildingUpgradeQueueRepository(this.db)
+    this.technology_research_queue = new PostgresTechnologyResearchQueueRepository(this.db)
     this.cell = new PostgresCellRepository(this.db)
     this.resource_stock = new PostgresResourceStockRepository(this.db)
     this.city = new PostgresCityRepository(this.db)

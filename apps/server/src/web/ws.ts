@@ -138,10 +138,44 @@ export function setupWebSocketServer(
     }
   })
 
+  eventBus.on(AppEvent.BuildingQueueItemDropped, ({
+    player_id,
+    city_id,
+    building_code,
+    error_code
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.BuildingQueueItemDropped,
+        city_id,
+        building_code,
+        error_code
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.TechnologyResearchFinished, ({ player_id }) => {
     const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: AppEvent.TechnologyResearchFinished }))
+    }
+  })
+
+  eventBus.on(AppEvent.TechnologyQueueItemDropped, ({
+    player_id,
+    city_id,
+    technology_code,
+    error_code
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.TechnologyQueueItemDropped,
+        city_id,
+        technology_code,
+        error_code
+      }))
     }
   })
 

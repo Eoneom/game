@@ -1,8 +1,11 @@
 import assert from 'assert'
 import { BuildingCode } from '#core/building/constant/code'
+import { TechnologyCode } from '#core/technology/constant/code'
 import {
   hasPendingBuildingUpgrade,
+  hasPendingTechnologyResearchByCode,
   projectBuildingLevelsForPolicy,
+  projectTechnologyLevelsForPolicy,
   projectWarehousesCapacity,
 } from './pending-upgrades'
 
@@ -87,5 +90,49 @@ describe('system player pending upgrades', () => {
     })
 
     assert.strictEqual(projected[0].level, 3)
+  })
+
+  it('projects technology levels from active research and queued items', () => {
+    const projected = projectTechnologyLevelsForPolicy({
+      technologies: [
+        {
+          id: 'arch',
+          code: TechnologyCode.ARCHITECTURE,
+          level: 1,
+          research_at: 1000,
+          research_started_at: 0,
+        },
+      ],
+      research_queue: [
+        {
+          id: 'queue-1',
+          technology_code: TechnologyCode.ARCHITECTURE,
+          city_id: 'city-1',
+          city_name: 'Lab',
+        },
+      ],
+    })
+
+    assert.strictEqual(projected[0].level, 3)
+    assert.strictEqual(hasPendingTechnologyResearchByCode({
+      technology_code: TechnologyCode.ARCHITECTURE,
+      technologies: [
+        {
+          id: 'arch',
+          code: TechnologyCode.ARCHITECTURE,
+          level: 1,
+          research_at: 1000,
+          research_started_at: 0,
+        },
+      ],
+      research_queue: [
+        {
+          id: 'queue-1',
+          technology_code: TechnologyCode.ARCHITECTURE,
+          city_id: 'city-1',
+          city_name: 'Lab',
+        },
+      ],
+    }), true)
   })
 })

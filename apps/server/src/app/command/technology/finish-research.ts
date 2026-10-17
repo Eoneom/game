@@ -1,17 +1,22 @@
 import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
+import { processTechnologyResearchQueue } from '#app/command/technology/start-research'
 import { AppEvent } from '#core/events'
 
 export interface FinishTechnologyResearchParams {
   player_id: string
+  city_id: string
   technology_id: string
   level: number
+  researched_at?: number
 }
 
 export async function finishTechnologyResearch({
   player_id,
+  city_id,
   technology_id,
   level,
+  researched_at,
 }: FinishTechnologyResearchParams): Promise<void> {
   return runCommand('technology:finish-research', async () => {
     const repository = Factory.getRepository()
@@ -33,11 +38,20 @@ export async function finishTechnologyResearch({
         expected_level: level,
         actual_level: technology_to_finish.level
       })
+      await processTechnologyResearchQueue({
+        player_id,
+        started_at: researched_at
+      })
       return
     }
 
     await repository.technology.updateOne(technology_to_finish.finishResearch())
 
     Factory.getEventBus().emit(AppEvent.TechnologyResearchFinished, { player_id })
+
+    await processTechnologyResearchQueue({
+      player_id,
+      started_at: researched_at
+    })
   })
 }

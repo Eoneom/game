@@ -1,4 +1,5 @@
 import React from 'react'
+import { RESEARCH_QUEUE_LIMIT } from '@eoneom/api-client'
 
 import { hasEnoughResources } from '#city/helper'
 import { Technology, TechnologyItem } from '#types'
@@ -14,7 +15,9 @@ interface Props {
 
 export const TechnologyDetailsResearch: React.FC<Props> = ({ cityId, technology }) => {
   const { data: city } = useGetCity(cityId)
-  const { data: technologies = [] } = useListTechnologies()
+  const { data } = useListTechnologies()
+  const technologies = data?.technologies ?? []
+  const researchQueue = data?.research_queue ?? []
   const research = useResearchTechnology(cityId)
   const { isRequirementMet } = useRequirement({ cityId, requirement: technology.requirement })
 
@@ -22,9 +25,13 @@ export const TechnologyDetailsResearch: React.FC<Props> = ({ cityId, technology 
     (t): t is Extract<TechnologyItem, { research_at: number }> => 'research_at' in t
   )
 
-  const canResearch = !inProgress &&
+  const canStart = !inProgress &&
     hasEnoughResources({ city: city ?? null, cost: technology.research_cost }) &&
     isRequirementMet
+
+  const canEnqueue = Boolean(inProgress) && researchQueue.length < RESEARCH_QUEUE_LIMIT
+
+  const canResearch = canStart || canEnqueue
 
   return <Button
     disabled={!canResearch}

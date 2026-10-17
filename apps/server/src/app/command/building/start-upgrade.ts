@@ -2,6 +2,7 @@ import { Factory } from '#adapter/factory'
 import { AppService } from '#app/service'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
+import { AppEvent } from '#core/events'
 import { PricingService } from '#core/pricing/service'
 import { RequirementError } from '#core/requirement/error'
 import { RequirementService } from '#core/requirement/service'
@@ -120,7 +121,7 @@ export async function tryStartBuildingUpgrade({
   building_code: BuildingCode
   started_at?: number
   skip_in_progress_check?: boolean
-}): Promise<boolean> {
+}): Promise<{ started: boolean, error_code?: string }> {
   try {
     await startBuildingUpgrade({
       player_id,
@@ -129,10 +130,13 @@ export async function tryStartBuildingUpgrade({
       started_at,
       skip_in_progress_check
     })
-    return true
+    return { started: true }
   } catch (error) {
     if (error instanceof Error && SKIPPABLE_START_ERRORS.has(error.message)) {
-      return false
+      return {
+        started: false,
+        error_code: error.message
+      }
     }
     throw error
   }
@@ -157,7 +161,7 @@ export async function processBuildingUpgradeQueue({
       return
     }
 
-    const started = await tryStartBuildingUpgrade({
+    const { started, error_code } = await tryStartBuildingUpgrade({
       player_id,
       city_id,
       building_code: next.building_code,
@@ -179,7 +183,15 @@ export async function processBuildingUpgradeQueue({
     logger.info('dropped queued building upgrade', {
       city_id,
       building_code: next.building_code,
-      queue_item_id: next.id
+      queue_item_id: next.id,
+      error_code
+    })
+
+    Factory.getEventBus().emit(AppEvent.BuildingQueueItemDropped, {
+      player_id,
+      city_id,
+      building_code: next.building_code,
+      error_code: error_code ?? 'unknown'
     })
   }
 }

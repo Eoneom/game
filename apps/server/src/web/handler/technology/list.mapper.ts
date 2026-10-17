@@ -4,7 +4,8 @@ import {
 import { TechnologyListQueryResponse } from '#query/technology/list'
 
 export const technologyListResponseMapper = ({
-  technologies
+  technologies,
+  research_queue
 }: TechnologyListQueryResponse): TechnologyListDataResponse => {
   return {
     technologies: technologies.map(technology => {
@@ -22,6 +23,7 @@ export const technologyListResponseMapper = ({
         code: technology.code,
         level: technology.level
       }
-    })
+    }),
+    research_queue
   }
 }

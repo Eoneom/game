@@ -13,6 +13,7 @@ type MockRes = {
 }
 
 const queryResult = {
+  research_queue: [],
   technologies: [
     {
       id: 't1',
@@ -68,6 +69,7 @@ describe('technologyListHandler', () => {
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
       data: {
+        research_queue: [],
         technologies: [
           {
             id: 't1',

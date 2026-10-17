@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events'
 import { AppEvent } from '#core/events'
+import type { BuildingCode } from '#core/building/constant/code'
+import type { TechnologyCode } from '#core/technology/constant/code'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import { AppLogger } from '#app/port/logger'
@@ -14,8 +16,22 @@ export type BuildingUpgradeFinishedPayload = {
   player_id: string
 }
 
+export type BuildingQueueItemDroppedPayload = {
+  player_id: string
+  city_id: string
+  building_code: BuildingCode
+  error_code: string
+}
+
 export type TechnologyResearchFinishedPayload = {
   player_id: string
+}
+
+export type TechnologyQueueItemDroppedPayload = {
+  player_id: string
+  city_id: string
+  technology_code: TechnologyCode
+  error_code: string
 }
 
 export type TroopMovementFinishedPayload = {
@@ -60,7 +76,9 @@ export type SystemPlayerStatsUpdatedPayload = import('@eoneom/api-client/src/end
 export type AppEventMap = {
   [AppEvent.CityResourcesGathered]: CityResourcesGatheredPayload
   [AppEvent.BuildingUpgradeFinished]: BuildingUpgradeFinishedPayload
+  [AppEvent.BuildingQueueItemDropped]: BuildingQueueItemDroppedPayload
   [AppEvent.TechnologyResearchFinished]: TechnologyResearchFinishedPayload
+  [AppEvent.TechnologyQueueItemDropped]: TechnologyQueueItemDroppedPayload
   [AppEvent.TroopMovementFinished]: TroopMovementFinishedPayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.OutpostCreated]: OutpostCreatedPayload

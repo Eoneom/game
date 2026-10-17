@@ -1,10 +1,14 @@
 import { BuildingService } from '#core/building/service'
 import { BuildingCode } from '#core/building/constant/code'
+import { TechnologyCode } from '#core/technology/constant/code'
 import type {
   BuildingListEntry,
   BuildingUpgradeQueueEntry
 } from '#query/building/list'
-import type { TechnologyListEntry } from '#query/technology/list'
+import type {
+  TechnologyListEntry,
+  TechnologyResearchQueueEntry
+} from '#query/technology/list'
 import { WarehouseCapacity } from '#shared/resource'
 
 export function countPendingBuildingUpgradesByCode({
@@ -106,6 +110,49 @@ export function projectWarehousesCapacity({
   }
 }
 
+export function countPendingTechnologyResearchByCode({
+  technologies,
+  research_queue,
+}: {
+  technologies: TechnologyListEntry[]
+  research_queue: TechnologyResearchQueueEntry[]
+}): Map<TechnologyCode, number> {
+  const pending_by_code = new Map<TechnologyCode, number>()
+
+  for (const technology of technologies) {
+    if ('research_at' in technology) {
+      pending_by_code.set(
+        technology.code,
+        (pending_by_code.get(technology.code) ?? 0) + 1
+      )
+    }
+  }
+
+  for (const queue_item of research_queue) {
+    pending_by_code.set(
+      queue_item.technology_code,
+      (pending_by_code.get(queue_item.technology_code) ?? 0) + 1
+    )
+  }
+
+  return pending_by_code
+}
+
+export function hasPendingTechnologyResearchByCode({
+  technology_code,
+  technologies,
+  research_queue,
+}: {
+  technology_code: TechnologyCode
+  technologies: TechnologyListEntry[]
+  research_queue: TechnologyResearchQueueEntry[]
+}): boolean {
+  return (countPendingTechnologyResearchByCode({
+    technologies,
+    research_queue
+  }).get(technology_code) ?? 0) > 0
+}
+
 export function hasPendingTechnologyResearch(
   technologies: TechnologyListEntry[]
 ): boolean {
@@ -113,15 +160,27 @@ export function hasPendingTechnologyResearch(
 }
 
 export function projectTechnologyLevelsForPolicy<
-  T extends { code: string, level: number }
->(technologies: T[]): T[] {
+  T extends { code: TechnologyCode, level: number }
+>({
+  technologies,
+  research_queue = [],
+}: {
+  technologies: T[]
+  research_queue?: TechnologyResearchQueueEntry[]
+}): T[] {
+  const pending_by_code = countPendingTechnologyResearchByCode({
+    technologies: technologies as TechnologyListEntry[],
+    research_queue
+  })
+
   return technologies.map((technology) => {
-    if (!('research_at' in technology)) {
+    const pending_count = pending_by_code.get(technology.code) ?? 0
+    if (pending_count === 0) {
       return technology
     }
     return {
       ...technology,
-      level: technology.level + 1,
+      level: technology.level + pending_count,
     }
   })
 }

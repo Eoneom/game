@@ -13,7 +13,8 @@ export const useRequirement = ({
 }) => {
   const { data } = useListBuildings(cityId)
   const buildings = data?.buildings ?? []
-  const { data: technologies = [] } = useListTechnologies()
+  const { data } = useListTechnologies()
+  const technologies = data?.technologies ?? []
 
   const isRequirementMet = useMemo(() => {
     return areRequirementsMet({ requirement, technologies, buildings })

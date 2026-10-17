@@ -1,6 +1,10 @@
 import { Fetcher } from '../../fetcher'
 import { TechnologyCancelResponse } from './cancel'
 import {
+  TechnologyCancelQueuedRequest,
+  TechnologyCancelQueuedResponse
+} from './cancel-queued'
+import {
   TechnologyGetRequest,
   TechnologyGetResponse
 } from './get'
@@ -33,5 +37,15 @@ export class TechnologyEndpoint {
 
   public async cancel(token: string): Promise<TechnologyCancelResponse> {
     return this.fetcher.put('/technology/cancel', { token })
+  }
+
+  public async cancelQueued(
+    token: string,
+    body: TechnologyCancelQueuedRequest
+  ): Promise<TechnologyCancelQueuedResponse> {
+    return this.fetcher.put('/technology/queue/cancel', {
+      body,
+      token
+    })
   }
 }

@@ -66,7 +66,10 @@ describe('systemTickActions', () => {
       cities: [ city ],
       count_limit: 5
     })
-    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [],
+      research_queue: []
+    })
     vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
       city,
       cell: city_cell,
@@ -136,7 +139,10 @@ describe('systemTickActions', () => {
       cities: [ city ],
       count_limit: 5
     })
-    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [],
+      research_queue: []
+    })
     vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
       city,
       cell: city_cell,
@@ -215,7 +221,10 @@ describe('systemTickActions', () => {
       cities: [ city ],
       count_limit: 5
     })
-    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [],
+      research_queue: []
+    })
     vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
       city,
       cell: city_cell,

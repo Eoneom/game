@@ -32,6 +32,7 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 | --- | --- |
 | `PricingService.getBuildingLevelCost` | Plastic/mushroom + duration; `ARCHITECTURE_REDUCTION_PER_LEVEL` |
 | `PricingService.getBuildingUpgradeRefund` | Partial refund on cancel |
+| `PricingService.getTechnologyResearchRefund` | Partial refund on research cancel |
 | `PricingService.getTechnologyLevelCost` | Research lab duration reduction |
 | `PricingService.getTroopCost` | Per-count cost; cloning factory + replication catalyst reductions |
 | `scaleGameDurationSeconds` | Applies `gameTimeScale` from `shared/game-time-scale` |

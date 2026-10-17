@@ -15,8 +15,16 @@ export type TechnologyListEntry =
       level: number
     }
 
+export interface TechnologyResearchQueueEntry {
+  id: string
+  technology_code: TechnologyCode
+  city_id: string
+  city_name: string
+}
+
 export interface TechnologyListDataResponse {
   technologies: TechnologyListEntry[]
+  research_queue: TechnologyResearchQueueEntry[]
 }
 
 export type TechnologyListResponse = GenericResponse<TechnologyListDataResponse>

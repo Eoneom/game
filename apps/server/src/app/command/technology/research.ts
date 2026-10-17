@@ -1,10 +1,15 @@
 import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
-import { AppService } from '#app/service'
-import { BuildingCode } from '#core/building/constant/code'
-import { PricingService } from '#core/pricing/service'
-import { RequirementService } from '#core/requirement/service'
+import {
+  processTechnologyResearchQueue,
+  startTechnologyResearch
+} from '#app/command/technology/start-research'
+import { CityError } from '#core/city/error'
+import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyError } from '#core/technology/error'
+import { TechnologyResearchQueueEntity } from '#core/technology/research-queue-entity'
+import { id } from '#shared/identification'
 import { now } from '#shared/time'
 
 export interface ResearchTechnologyParams {
@@ -13,76 +18,69 @@ export interface ResearchTechnologyParams {
   technology_code: TechnologyCode
 }
 
+async function enqueueTechnologyResearch({
+  player_id,
+  city_id,
+  technology_code
+}: {
+  player_id: string
+  city_id: string
+  technology_code: TechnologyCode
+}): Promise<void> {
+  const repository = Factory.getRepository()
+
+  const city = await repository.city.get(city_id)
+  if (!city.isOwnedBy(player_id)) {
+    throw new Error(CityError.NOT_OWNER)
+  }
+
+  await repository.technology.get({
+    player_id,
+    code: technology_code
+  })
+
+  const queue_count = await repository.technology_research_queue.countByPlayer({ player_id })
+  if (queue_count >= RESEARCH_QUEUE_LIMIT) {
+    throw new Error(TechnologyError.QUEUE_FULL)
+  }
+
+  await repository.technology_research_queue.create(TechnologyResearchQueueEntity.create({
+    id: id(),
+    player_id,
+    city_id,
+    technology_code,
+    created_at: now()
+  }))
+}
+
 export async function researchTechnology({
   city_id,
   player_id,
   technology_code,
 }: ResearchTechnologyParams): Promise<void> {
   return runCommand('technology:research', async () => {
-    const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
-    const pending_research = await job_queue.getPendingTechnologyResearch({ player_id })
-    const is_technology_in_progress = pending_research !== null
+    let pending_research = await job_queue.getPendingTechnologyResearch({ player_id })
 
-    const [
-      city,
-      technology,
-    ] = await Promise.all([
-      repository.city.get(city_id),
-      repository.technology.get({
+    if (!pending_research) {
+      await processTechnologyResearchQueue({ player_id })
+      pending_research = await job_queue.getPendingTechnologyResearch({ player_id })
+    }
+
+    if (!pending_research) {
+      await startTechnologyResearch({
         player_id,
-        code: technology_code
-      }),
-    ])
-    const city_cell = await repository.cell.getById(city.cell_id)
+        city_id,
+        technology_code
+      })
+      return
+    }
 
-    technology.assertCanResearch({ is_technology_in_progress })
-
-    const levels = await AppService.getTechnologyRequirementLevels({
-      city_id,
-      player_id,
-      technology_code,
-      technology_level: technology.level
-    })
-
-    RequirementService.checkTechnologyRequirement({
-      technology_code: technology.code,
-      technology_level: technology.level,
-      levels,
-    })
-
-    const research_lab = await repository.building.get({
-      city_id,
-      code: BuildingCode.RESEARCH_LAB
-    })
-
-    const {
-      resource,
-      duration
-    } = PricingService.getTechnologyLevelCost({
-      code: technology.code,
-      level: technology.level + 1,
-      research_lab_level: research_lab.level
-    })
-    const stock = await repository.resource_stock.getByCellId({ cell_id: city_cell.id })
-    AppService.assertCityResourceStockContext({
-      city,
-      city_cell,
-      stock,
-      player_id
-    })
-    const updated_stock = stock.purchase({ resource })
-    const execute_at = now() + duration * 1000
-
-    await repository.resource_stock.updateOne(updated_stock)
-
-    await job_queue.scheduleTechnologyResearchFinish({
+    await enqueueTechnologyResearch({
       player_id,
       city_id,
-      technology_id: technology.id,
-      level: technology.level,
-      execute_at
+      technology_code
     })
   })
 }

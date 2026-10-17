@@ -24,7 +24,8 @@ export const useListTechnologies = () => {
       if (!token) throw new Error('no token')
       const res = await client.technology.list(token)
       if (isError(res)) throw new Error(res.error_code)
-      return res.data?.technologies ?? []
+      if (!res.data) throw new Error('empty response')
+      return res.data
     },
     enabled: !!token,
   })
@@ -79,6 +80,24 @@ export const useCancelTechnology = () => {
     mutationFn: async () => {
       if (!token) throw new Error('no token')
       const res = await client.technology.cancel(token)
+      if (isError(res)) throw new Error(res.error_code)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: technologyKeys.all })
+      queryClient.invalidateQueries({ queryKey: cityKeys.all })
+    },
+    onError: (err: Error) => toast.error(translateError(err.message)),
+  })
+}
+
+export const useCancelQueuedTechnologyResearch = () => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (queue_item_id: string) => {
+      if (!token) throw new Error('no token')
+      const res = await client.technology.cancelQueued(token, { queue_item_id })
       if (isError(res)) throw new Error(res.error_code)
     },
     onSuccess: () => {

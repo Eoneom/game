@@ -4,7 +4,7 @@
 
 ## Summary
 
-Per-player **technologies** (levels per `TechnologyCode`) are researched from a city’s research lab. Starting research deducts resources, enforces requirements, schedules `technology.research.finish`, and blocks concurrent research. Cancel clears in-progress state. Finish increments level and emits `technology:research-finished`.
+Per-player **technologies** (levels per `TechnologyCode`) are researched from a city’s research lab. Starting research deducts resources, enforces requirements, and schedules `technology.research.finish`. When research is already active, further requests **enqueue** (see [`023`](../023-technology-research-queue/spec.md)). Cancel in-progress research refunds 50% and advances the queue. Finish increments level and emits `technology:research-finished`.
 
 **Depends on**: city/buildings ([`006`](../006-city-lifecycle-gathering/spec.md), [`007`](../007-buildings-upgrade-queue/spec.md)), requirements/pricing ([`014`](../014-requirements-pricing/spec.md)).
 
@@ -16,12 +16,14 @@ Per-player **technologies** (levels per `TechnologyCode`) are researched from a 
 | `GET` | `/city/:city_id/technology/:technology_code` | yes | `technologyGetHandler` |
 | `PUT` | `/technology/research` | yes | `technologyResearchHandler` |
 | `PUT` | `/technology/cancel` | yes | `technologyCancelHandler` |
+| `PUT` | `/technology/queue/cancel` | yes | `technologyCancelQueuedHandler` |
 
 | `TechnologyError` | Meaning |
 | --- | --- |
-| `technology:already-in-progress` | Another research active |
 | `technology:not-found` | Unknown technology |
 | `technology:not-in-progress` | Cancel when idle |
+| `technology:queue-full` | Queue length cap |
+| `technology:queue-item-not-found` | Unknown queue id |
 
 Tests: `apps/server/src/web/handler/technology/*.spec.ts`, `apps/server/src/app/command/technology/*.spec.ts`, `apps/server/src/app/query/technology/*.spec.ts`.
 

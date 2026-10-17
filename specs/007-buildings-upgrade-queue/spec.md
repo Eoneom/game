@@ -47,7 +47,7 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 
 ## Web UI
 
-`apps/web/src/modules/building/` — list, details, upgrade UI, metadata (production, consumption, warehouse), `ws-listener` on `building:upgrade-finished`.
+`apps/web/src/modules/building/` — list, details, upgrade UI, metadata (production, consumption, warehouse), `ws-listener` on `building:upgrade-finished` and `building:queue-item-dropped` (toast).
 
 ## API client
 

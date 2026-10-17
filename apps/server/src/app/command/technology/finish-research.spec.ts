@@ -14,7 +14,8 @@ describe('finishTechnologyResearch', () => {
   let technology_to_finish: TechnologyEntity
   let technologyUpdateOne: MockInstance
   let emit: MockInstance
-  let repository: Pick<Repository, 'technology'>
+  let listByPlayer: MockInstance
+  let repository: Pick<Repository, 'technology' | 'technology_research_queue'>
 
   beforeEach(() => {
     technology_to_finish = TechnologyEntity.create({
@@ -27,11 +28,17 @@ describe('finishTechnologyResearch', () => {
     technologyUpdateOne = vi.fn().mockResolvedValue(undefined)
     emit = vi.fn()
 
+    listByPlayer = vi.fn().mockResolvedValue([])
+
     repository = {
       technology: {
         getById: vi.fn().mockResolvedValue(technology_to_finish),
         updateOne: technologyUpdateOne
-      } as unknown as Repository['technology']
+      } as unknown as Repository['technology'],
+      technology_research_queue: {
+        listByPlayer,
+        delete: vi.fn().mockResolvedValue(undefined)
+      } as unknown as Repository['technology_research_queue']
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -45,6 +52,7 @@ describe('finishTechnologyResearch', () => {
   it('should not update when technology level does not match the job', async () => {
     await finishTechnologyResearch({
       player_id,
+      city_id: id(),
       technology_id: technology_to_finish.id,
       level: 1,
     })
@@ -56,6 +64,7 @@ describe('finishTechnologyResearch', () => {
   it('should not update when technology belongs to another player', async () => {
     await finishTechnologyResearch({
       player_id: id(),
+      city_id: id(),
       technology_id: technology_to_finish.id,
       level: 0,
     })
@@ -67,6 +76,7 @@ describe('finishTechnologyResearch', () => {
   it('should finish the technology research', async () => {
     await finishTechnologyResearch({
       player_id,
+      city_id: id(),
       technology_id: technology_to_finish.id,
       level: 0,
     })

@@ -1,6 +1,6 @@
 # Slice 023 — Technology research queue
 
-**Status**: Specified (interview 2026-10-17, Valentin). Not yet implemented.
+**Status**: As implemented on `main` (brownfield).
 
 ## Summary
 

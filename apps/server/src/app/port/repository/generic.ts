@@ -1,6 +1,7 @@
 import { AuthRepository } from '#app/port/repository/auth'
 import { BuildingRepository } from '#app/port/repository/building'
 import { BuildingUpgradeQueueRepository } from '#app/port/repository/building-upgrade-queue'
+import { TechnologyResearchQueueRepository } from '#app/port/repository/technology-research-queue'
 import { CityRepository } from '#app/port/repository/city'
 import { PlayerRepository } from '#app/port/repository/player'
 import { TechnologyRepository } from '#app/port/repository/technology'
@@ -25,6 +26,7 @@ export interface Repository {
   auth: AuthRepository
   building: BuildingRepository
   building_upgrade_queue: BuildingUpgradeQueueRepository
+  technology_research_queue: TechnologyResearchQueueRepository
   cell: CellRepository
   resource_stock: ResourceStockRepository
   city: CityRepository

@@ -86,8 +86,10 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
 
         await finishTechnologyResearch({
           player_id: data.player_id,
+          city_id: data.city_id,
           technology_id: data.technology_id,
           level: data.level,
+          researched_at: job.startAfter.getTime(),
         })
       }
     }

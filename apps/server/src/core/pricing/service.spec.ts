@@ -186,6 +186,33 @@ describe('PricingService', () => {
     })
   })
 
+  describe('getTechnologyResearchRefund', () => {
+    it('returns half of research cost resources rounded', () => {
+      const code = TechnologyCode.ARCHITECTURE
+      const level = 2
+      const research_lab_level = 1
+      const costs = PricingService.getTechnologyLevelCost({
+        code,
+        level,
+        research_lab_level
+      })
+      const refund = PricingService.getTechnologyResearchRefund({
+        code,
+        level,
+        research_lab_level
+      })
+
+      assert.strictEqual(
+        refund.plastic,
+        Math.round(costs.resource.plastic / 2)
+      )
+      assert.strictEqual(
+        refund.mushroom,
+        Math.round(costs.resource.mushroom / 2)
+      )
+    })
+  })
+
   describe('getBuildingUpgradeRefund', () => {
     it('returns half of upgrade cost resources rounded', () => {
       const code = BuildingCode.MUSHROOM_FARM

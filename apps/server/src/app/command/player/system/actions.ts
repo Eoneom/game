@@ -14,6 +14,7 @@ import { TechnologyGetQuery } from '#query/technology/get'
 import { TroopListQuery } from '#query/troop/list'
 import { WorldGetCellsQuery } from '#query/world/get-cells'
 import { BUILDING_UPGRADE_QUEUE_LIMIT } from '#core/building/constant/upgrade-queue'
+import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -36,6 +37,7 @@ import type { SystemTickAction } from '#command/player/system/policy'
 import {
   hasPendingBuildingUpgrade,
   hasPendingTechnologyResearch,
+  hasPendingTechnologyResearchByCode,
   projectBuildingLevelsForPolicy,
   projectTechnologyLevelsForPolicy,
   projectWarehousesCapacity,
@@ -114,7 +116,7 @@ function sortCells(cells: CellEntity[]): CellEntity[] {
 
 async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
-  const { technologies } = await new TechnologyListQuery().run({ player_id })
+  const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
 
   for (const city of cities) {
     const [
@@ -151,7 +153,10 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
 
     const levels = levelsFrom({
       buildings: projected_buildings,
-      technologies: projectTechnologyLevelsForPolicy(technologies),
+      technologies: projectTechnologyLevelsForPolicy({
+        technologies,
+        research_queue
+      }),
     })
 
     const buildings_to_try = sortBuildingsForSystemUpgrade({
@@ -217,8 +222,13 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
 
 async function tryResearch(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
-  const { technologies } = await new TechnologyListQuery().run({ player_id })
-  if (hasPendingTechnologyResearch(technologies)) {
+  const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
+
+  const in_progress = hasPendingTechnologyResearch(technologies)
+  const can_enqueue = in_progress && research_queue.length < RESEARCH_QUEUE_LIMIT
+  const can_start = !in_progress
+
+  if (!can_start && !can_enqueue) {
     return null
   }
 
@@ -235,7 +245,10 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
       buildings: building_list.buildings,
       upgrade_queue: building_list.upgrade_queue,
     })
-    const projected_technologies = projectTechnologyLevelsForPolicy(technologies)
+    const projected_technologies = projectTechnologyLevelsForPolicy({
+      technologies,
+      research_queue
+    })
 
     const levels = levelsFrom({
       buildings: projected_buildings,
@@ -243,7 +256,11 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
     })
 
     for (const technology of projected_technologies) {
-      if ('research_at' in technology) {
+      if (hasPendingTechnologyResearchByCode({
+        technology_code: technology.code,
+        technologies,
+        research_queue
+      })) {
         continue
       }
 
@@ -263,7 +280,12 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
       if (!requirements_met) {
         continue
       }
-      if (!canAfford(city_details.resource_stock, details.cost.resource)) {
+
+      if (can_start && !canAfford(city_details.resource_stock, details.cost.resource)) {
+        continue
+      }
+
+      if (!can_start && !can_enqueue) {
         continue
       }
 
@@ -285,7 +307,7 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
 
 async function tryRecruit(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
-  const { technologies } = await new TechnologyListQuery().run({ player_id })
+  const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
 
   for (const city of cities) {
     const [
@@ -319,7 +341,10 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
         buildings: building_list.buildings,
         upgrade_queue: building_list.upgrade_queue,
       }),
-      technologies: projectTechnologyLevelsForPolicy(technologies),
+      technologies: projectTechnologyLevelsForPolicy({
+        technologies,
+        research_queue
+      }),
     })
 
     for (const troop of troop_list.troops) {

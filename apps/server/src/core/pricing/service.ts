@@ -112,6 +112,28 @@ export class PricingService {
     }
   }
 
+  static getTechnologyResearchRefund({
+    code,
+    level,
+    research_lab_level
+  }: {
+    code: TechnologyCode
+    level: number
+    research_lab_level: number
+  }): Resource {
+    const costs = this.getTechnologyLevelCost({
+      code,
+      level,
+      research_lab_level
+    })
+
+    return {
+      plastic: Math.round(costs.resource.plastic / 2),
+      mushroom: Math.round(costs.resource.mushroom / 2),
+      plasma: 0
+    }
+  }
+
   static getTechnologyLevelCost({
     code,
     level,

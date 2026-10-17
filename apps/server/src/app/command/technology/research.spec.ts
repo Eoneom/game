@@ -11,7 +11,9 @@ import { CityError } from '#core/city/error'
 import { RequirementError } from '#core/requirement/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
+import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { TechnologyError } from '#core/technology/error'
+import { TechnologyResearchQueueEntity } from '#core/technology/research-queue-entity'
 import assert from 'assert'
 import {
   testResourceStock, testCityCell 
@@ -29,7 +31,13 @@ describe('researchTechnology', () => {
   let stockUpdateOne: MockInstance
   let scheduleTechnologyResearchFinish: MockInstance
   let getPendingTechnologyResearch: MockInstance
-  let repository: Pick<Repository, 'city' | 'technology' | 'building' | 'cell' | 'resource_stock'>
+  let queueCreate: MockInstance
+  let queueCountByPlayer: MockInstance
+  let listByPlayer: MockInstance
+  let repository: Pick<
+    Repository,
+    'city' | 'technology' | 'building' | 'cell' | 'resource_stock' | 'technology_research_queue'
+  >
 
   beforeEach(() => {
     city_cell = testCityCell({ cell_id: id() })
@@ -58,6 +66,9 @@ describe('researchTechnology', () => {
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
     scheduleTechnologyResearchFinish = vi.fn().mockResolvedValue('job-id')
     getPendingTechnologyResearch = vi.fn().mockResolvedValue(null)
+    queueCreate = vi.fn().mockResolvedValue(id())
+    queueCountByPlayer = vi.fn().mockResolvedValue(0)
+    listByPlayer = vi.fn().mockResolvedValue([])
 
     repository = {
       city: { get: vi.fn().mockResolvedValue(city) } as unknown as Repository['city'],
@@ -69,7 +80,13 @@ describe('researchTechnology', () => {
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
         updateOne: stockUpdateOne
-      } as unknown as Repository['resource_stock']
+      } as unknown as Repository['resource_stock'],
+      technology_research_queue: {
+        create: queueCreate,
+        countByPlayer: queueCountByPlayer,
+        listByPlayer,
+        delete: vi.fn().mockResolvedValue(undefined)
+      } as unknown as Repository['technology_research_queue']
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -123,7 +140,7 @@ describe('researchTechnology', () => {
     assert.strictEqual(scheduleTechnologyResearchFinish.mock.calls.length, 0)
   })
 
-  it('should prevent a player to research if another technology is in progress', async () => {
+  it('should enqueue when another technology research is in progress', async () => {
     getPendingTechnologyResearch.mockResolvedValue({
       player_id,
       city_id: city.id,
@@ -133,17 +150,39 @@ describe('researchTechnology', () => {
       job_id: 'job'
     })
 
+    await researchTechnology({
+      city_id: city.id,
+      player_id,
+      technology_code: TechnologyCode.ARCHITECTURE
+    })
+
+    assert.strictEqual(queueCreate.mock.calls.length, 1)
+    const queued = queueCreate.mock.calls[0][0] as TechnologyResearchQueueEntity
+    assert.strictEqual(queued.city_id, city.id)
+    assert.strictEqual(queued.technology_code, TechnologyCode.ARCHITECTURE)
+    assert.strictEqual(scheduleTechnologyResearchFinish.mock.calls.length, 0)
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+  })
+
+  it('should reject enqueue when the research queue is full', async () => {
+    getPendingTechnologyResearch.mockResolvedValue({
+      player_id,
+      city_id: city.id,
+      technology_id: id(),
+      level: 0,
+      execute_at: Date.now() + 60_000,
+      job_id: 'job'
+    })
+    queueCountByPlayer.mockResolvedValue(RESEARCH_QUEUE_LIMIT)
+
     await assert.rejects(
       () => researchTechnology({
         city_id: city.id,
         player_id,
         technology_code: TechnologyCode.ARCHITECTURE
       }),
-      new RegExp(TechnologyError.ALREADY_IN_PROGRESS)
+      new RegExp(TechnologyError.QUEUE_FULL)
     )
-
-    assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
-    assert.strictEqual(scheduleTechnologyResearchFinish.mock.calls.length, 0)
   })
 
   it('should prevent player to research if building requirements are not met', async () => {

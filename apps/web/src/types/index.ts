@@ -26,6 +26,7 @@ export type BuildingUpgradeQueueItem = BuildingListDataResponse['upgrade_queue']
 
 export type Technology = TechnologyGetDataResponse
 export type TechnologyItem = TechnologyListDataResponse['technologies'][number]
+export type TechnologyResearchQueueItem = TechnologyListDataResponse['research_queue'][number]
 
 export type WorldViewport = WorldGetCellsDataResponse & {
   bounds: {

@@ -275,6 +275,14 @@ export interface Technology {
   player_id: string;
 }
 
+export interface TechnologyResearchQueue {
+  city_id: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  player_id: string;
+  technology_code: string;
+}
+
 export interface Troop {
   cell_id: string | null;
   code: string;
@@ -308,5 +316,6 @@ export interface DB {
   report_troop: ReportTroop;
   resource_stock: ResourceStock;
   technology: Technology;
+  technology_research_queue: TechnologyResearchQueue;
   troop: Troop;
 }

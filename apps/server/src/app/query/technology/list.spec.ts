@@ -16,7 +16,7 @@ describe('TechnologyListQuery', () => {
   const technology_id_research = id()
   let t_idle: TechnologyEntity
   let t_research: TechnologyEntity
-  let repository: Pick<Repository, 'technology' | 'building'>
+  let repository: Pick<Repository, 'technology' | 'building' | 'city' | 'technology_research_queue'>
   let getPendingTechnologyResearch: MockInstance
 
   beforeEach(() => {
@@ -51,7 +51,16 @@ describe('TechnologyListQuery', () => {
       } as unknown as Repository['technology'],
       building: {
         getLevel: vi.fn().mockResolvedValue(1)
-      } as unknown as Repository['building']
+      } as unknown as Repository['building'],
+      city: {
+        get: vi.fn().mockResolvedValue({
+          id: city_id,
+          name: 'Lab Town'
+        })
+      } as unknown as Repository['city'],
+      technology_research_queue: {
+        listByPlayer: vi.fn().mockResolvedValue([])
+      } as unknown as Repository['technology_research_queue']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingTechnologyResearch } as unknown as JobQueue)

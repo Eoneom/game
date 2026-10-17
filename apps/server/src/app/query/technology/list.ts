@@ -23,8 +23,16 @@ export type TechnologyListEntry =
       level: number
     }
 
+export interface TechnologyResearchQueueEntry {
+  id: string
+  technology_code: TechnologyCode
+  city_id: string
+  city_name: string
+}
+
 export interface TechnologyListQueryResponse {
   technologies: TechnologyListEntry[]
+  research_queue: TechnologyResearchQueueEntry[]
 }
 
 export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, TechnologyListQueryResponse> {
@@ -37,9 +45,11 @@ export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, Tec
     const [
       technologies,
       pending_research,
+      research_queue,
     ] = await Promise.all([
       repository.technology.list({ player_id }),
       Factory.getJobQueue().getPendingTechnologyResearch({ player_id }),
+      repository.technology_research_queue.listByPlayer({ player_id }),
     ])
 
     const sorted = TechnologyService.sortTechnologies({ technologies })
@@ -51,6 +61,13 @@ export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, Tec
         code: BuildingCode.RESEARCH_LAB
       })
     }
+
+    const city_ids = [ ...new Set(research_queue.map(item => item.city_id)) ]
+    const cities = await Promise.all(city_ids.map(city_id => repository.city.get(city_id)))
+    const city_names = new Map(cities.map(city => [
+      city.id,
+      city.name
+    ]))
 
     const response_technologies: TechnologyListEntry[] = sorted.map(technology => {
       if (!pending_research || pending_research.technology_id !== technology.id) {
@@ -76,6 +93,14 @@ export class TechnologyListQuery extends GenericQuery<TechnologyListRequest, Tec
       }
     })
 
-    return { technologies: response_technologies }
+    return {
+      technologies: response_technologies,
+      research_queue: research_queue.map(item => ({
+        id: item.id,
+        technology_code: item.technology_code,
+        city_id: item.city_id,
+        city_name: city_names.get(item.city_id) ?? ''
+      }))
+    }
   }
 }

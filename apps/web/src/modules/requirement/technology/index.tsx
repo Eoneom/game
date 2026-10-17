@@ -10,7 +10,8 @@ interface Props {
 }
 
 export const RequirementTechnology: React.FC<Props> = ({ requirement }) => {
-  const { data: technologies = [] } = useListTechnologies()
+  const { data } = useListTechnologies()
+  const technologies = data?.technologies ?? []
 
   const requiredTechnologyLevel = useMemo(() => {
     return technologies.find(technology => technology.code === requirement.code)?.level ?? 0

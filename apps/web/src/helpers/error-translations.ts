@@ -59,6 +59,8 @@ const ErrorTranslations: Record<string, string> = {
   [TechnologyError.ALREADY_IN_PROGRESS]: 'Une recherche est déjà en cours',
   [TechnologyError.NOT_FOUND]: 'Technologie introuvable',
   [TechnologyError.NOT_IN_PROGRESS]: 'Aucune recherche en cours',
+  [TechnologyError.QUEUE_FULL]: 'La file de recherche est pleine',
+  [TechnologyError.QUEUE_ITEM_NOT_FOUND]: 'Élément de file de recherche introuvable',
 
   [TroopError.NOT_FOUND]: 'Troupe introuvable',
   [TroopError.ALREADY_IN_PROGRESS]: 'Un recrutement est déjà en cours',

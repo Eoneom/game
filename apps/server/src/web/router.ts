@@ -11,6 +11,7 @@ import { communicationListReportHandler } from '#web/handler/communication/repor
 import { loginHandler } from '#web/handler/player/login'
 import { signupHandler } from '#web/handler/player/signup'
 import { technologyCancelHandler } from '#web/handler/technology/cancel'
+import { technologyCancelQueuedHandler } from '#web/handler/technology/cancel-queued'
 import { technologyListHandler } from '#web/handler/technology/list'
 import { technologyResearchHandler } from '#web/handler/technology/research'
 import { troopCancelHandler } from '#web/handler/troop/cancel'
@@ -72,6 +73,7 @@ export const router = (): Router => {
 
   r.get('/technology', authMiddleware, technologyListHandler)
   r.put('/technology/cancel', authMiddleware, technologyCancelHandler)
+  r.put('/technology/queue/cancel', authMiddleware, technologyCancelQueuedHandler)
   r.put('/technology/research', authMiddleware, technologyResearchHandler)
   r.get('/city/:city_id/technology/:technology_code', authMiddleware, technologyGetHandler)
 
