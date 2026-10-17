@@ -4,7 +4,9 @@ import {
   actForSystemPlayer,
   categoriesForTick,
   prioritizeResearchBeforeUpgrade,
+  systemTickExpansionCategories,
 } from '#command/player/system/policy'
+import { OutpostListQuery } from '#query/outpost/list'
 import { isEmpireProductionReadyForResearch } from '#command/player/system/production'
 import { systemTickActions } from '#command/player/system/actions'
 import { shouldPrioritizeEconomyForSystemPlayer } from '#command/player/system/storage'
@@ -26,7 +28,12 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
   for (const player of players) {
     try {
       const economy_first = await isSystemPlayerEconomyPriority({ player_id: player.id })
-      let categories = categoriesForTick(tick_index, { economy_first })
+      const { outposts } = await new OutpostListQuery().run({ player_id: player.id })
+      const expansion_categories = systemTickExpansionCategories({ outpost_count: outposts.length })
+      let categories = categoriesForTick(tick_index, {
+        economy_first,
+        expansion_categories,
+      })
       const production_ready = await isEmpireProductionReadyForResearch(player.id)
       if (production_ready) {
         categories = prioritizeResearchBeforeUpgrade(categories)

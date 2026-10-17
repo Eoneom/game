@@ -25,11 +25,13 @@ import {
   INITIAL_VIEWPORT_HALF_EXTENT,
   WORLD_SIZE
 } from '#core/world/constant/size'
+import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import {
+  shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
+  systemExpansionBaseCellScore,
   systemExpansionCitySiteScore,
-  systemExpansionOutpostResourceScore,
   systemExpansionScoutScore,
 } from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
@@ -454,7 +456,28 @@ async function ownedLocationCells(player_id: string): Promise<{
 }
 
 async function tryExplore(player_id: string): Promise<Record<string, unknown> | null> {
-  const { origins } = await ownedLocationCells(player_id)
+  const [
+    { origins, occupied_cell_ids },
+    { cities, count_limit },
+    { outposts },
+  ] = await Promise.all([
+    ownedLocationCells(player_id),
+    new CityListQuery().run({ player_id }),
+    new OutpostListQuery().run({ player_id }),
+  ])
+  const can_found_city = cities.length < count_limit
+  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
+
+  if (await shouldSkipExploreForBasing({
+    player_id,
+    origins,
+    occupied_cell_ids,
+    outpost_count: outposts.length,
+    can_found_city,
+    base_cell_score,
+  })) {
+    return null
+  }
 
   for (const origin of origins) {
     const { troops } = await new TroopListQuery().run({
@@ -512,14 +535,74 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
   return null
 }
 
+async function shouldSkipExploreForBasing({
+  player_id,
+  origins,
+  occupied_cell_ids,
+  outpost_count,
+  can_found_city,
+  base_cell_score,
+}: {
+  player_id: string
+  origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
+  occupied_cell_ids: Set<string>
+  outpost_count: number
+  can_found_city: boolean
+  base_cell_score: (cell: CellEntity) => number
+}): Promise<boolean> {
+  for (const origin of origins) {
+    const { troops } = await new TroopListQuery().run({
+      player_id,
+      location: origin.location,
+    })
+    const founder = TroopService.findByRole({
+      troops,
+      role: TroopRole.FOUNDER,
+    })
+    if (!founder || founder.count < 1) {
+      continue
+    }
+
+    const viewport = await new WorldGetCellsQuery().run({
+      player_id,
+      ...viewportAround(origin.coordinates),
+    })
+    const explored = new Set(viewport.explored_cell_ids)
+    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
+      && !occupied_cell_ids.has(cell.id)
+      && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const best_base = sortCellsByExpansionScore({
+      cells: base_candidates,
+      score: base_cell_score,
+    })[0]
+    const unexplored = viewport.cells.filter(cell => !explored.has(cell.id)
+      && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const best_unexplored = sortCellsByExpansionScore({
+      cells: unexplored,
+      score: systemExpansionScoutScore,
+    })[0]
+
+    if (shouldDeferExploreForBasing({
+      outpost_count,
+      best_base_score: best_base ? base_cell_score(best_base) : null,
+      best_unexplored_scout_score: best_unexplored
+        ? systemExpansionScoutScore(best_unexplored)
+        : null,
+      can_found_city,
+    })) {
+      return true
+    }
+  }
+
+  return false
+}
+
 async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
   const {
     cities, count_limit 
   } = await new CityListQuery().run({ player_id })
   const can_found_city = cities.length < count_limit
-  const base_cell_score = can_found_city
-    ? systemExpansionCitySiteScore
-    : systemExpansionOutpostResourceScore
+  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
   const {
     origins, occupied_cell_ids 

@@ -31,6 +31,17 @@ describe('system player tick policy', () => {
     assert.deepStrictEqual(prioritizeResearchBeforeUpgrade(categories), categories)
   })
 
+  it('rotates a base-first expansion ring from the tick index', () => {
+    const base_first = [
+      'base',
+      'explore',
+      'settle',
+      'make-permanent',
+    ] as const
+    assert.strictEqual(categoriesForTick(0, { expansion_categories: base_first })[0], 'base')
+    assert.strictEqual(categoriesForTick(1, { expansion_categories: base_first })[0], 'explore')
+  })
+
   it('rotates the expansion-first category ring from the tick index', () => {
     assert.strictEqual(categoriesForTick(0)[0], 'explore')
     assert.strictEqual(categoriesForTick(1)[0], 'base')

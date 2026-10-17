@@ -2,10 +2,12 @@ import assert from 'assert'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import {
+  shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
   systemExpansionCitySiteScore,
   systemExpansionOutpostResourceScore,
   systemExpansionScoutScore,
+  systemTickExpansionCategories,
 } from './expansion-cell'
 
 function testCell({
@@ -80,5 +82,50 @@ describe('system expansion cell scoring', () => {
 
     assert.ok(systemExpansionCitySiteScore(solar_rich) > systemExpansionCitySiteScore(resource_rich))
     assert.ok(systemExpansionOutpostResourceScore(resource_rich) > systemExpansionOutpostResourceScore(solar_rich))
+  })
+
+  it('defers explore when a good base site beats marginal fog', () => {
+    assert.strictEqual(
+      shouldDeferExploreForBasing({
+        outpost_count: 0,
+        best_base_score: 2.5,
+        best_unexplored_scout_score: 3.25,
+        can_found_city: true,
+      }),
+      true,
+    )
+    assert.strictEqual(
+      shouldDeferExploreForBasing({
+        outpost_count: 0,
+        best_base_score: 1,
+        best_unexplored_scout_score: 4,
+        can_found_city: true,
+      }),
+      false,
+    )
+    assert.strictEqual(
+      shouldDeferExploreForBasing({
+        outpost_count: 3,
+        best_base_score: 3,
+        best_unexplored_scout_score: 2,
+        can_found_city: true,
+      }),
+      false,
+    )
+  })
+
+  it('uses base-first expansion categories while outpost count is low', () => {
+    assert.deepStrictEqual(systemTickExpansionCategories({ outpost_count: 0 }), [
+      'base',
+      'explore',
+      'settle',
+      'make-permanent',
+    ])
+    assert.deepStrictEqual(systemTickExpansionCategories({ outpost_count: 2 }), [
+      'explore',
+      'base',
+      'settle',
+      'make-permanent',
+    ])
   })
 })

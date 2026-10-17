@@ -66,6 +66,8 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Tick priority (default)**: `explore` → `base` → `settle` → `make-permanent` → `upgrade` → `research` → `recruit` → `transport`, rotated by `tick_index` so each category leads periodically.
 
+**Early outposts**: while the empire has fewer than two outposts (`SYSTEM_EXPANSION_LOW_OUTPOST_COUNT`), the expansion block rotates as **`base` → `explore` → …** (`systemTickExpansionCategories`) so temporary outposts are attempted before further scouting. `tryExplore` also returns idle when a founder can base on an explored, unoccupied cell whose score meets the minimum for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target in the same viewport — the same tick can then succeed on `base` without mapping the whole viewport first.
+
 **Economy override**: when `shouldPrioritizeEconomyForSystemPlayer` is true for the first city, the economy block (`upgrade`, `research`, `recruit`, `transport`) is tried before expansion for that tick.
 
 **Cell heuristics** (`core/player/system/expansion-cell.ts`):

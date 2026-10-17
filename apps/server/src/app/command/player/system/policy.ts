@@ -1,9 +1,12 @@
+import { systemTickExpansionCategories } from '#core/player/system/expansion-cell'
 import {
   SYSTEM_TICK_CATEGORIES,
   SYSTEM_TICK_ECONOMY_CATEGORIES,
   SYSTEM_TICK_EXPANSION_CATEGORIES,
   type SystemTickCategory,
 } from '#core/player/system/tick-category'
+
+export { systemTickExpansionCategories } from '#core/player/system/expansion-cell'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 
 export { SYSTEM_TICK_CATEGORIES, type SystemTickCategory } from '#core/player/system/tick-category'
@@ -11,15 +14,21 @@ export type { SystemPlayerTickAttempt } from '#core/system-player/observability/
 
 export function categoriesForTick(
   tick_index: number,
-  { economy_first = false }: { economy_first?: boolean } = {},
+  {
+    economy_first = false,
+    expansion_categories = SYSTEM_TICK_EXPANSION_CATEGORIES,
+  }: {
+    economy_first?: boolean
+    expansion_categories?: readonly SystemTickCategory[]
+  } = {},
 ): SystemTickCategory[] {
   const ring: SystemTickCategory[] = economy_first
     ? [
       ...SYSTEM_TICK_ECONOMY_CATEGORIES,
-      ...SYSTEM_TICK_EXPANSION_CATEGORIES,
+      ...expansion_categories,
     ]
     : [
-      ...SYSTEM_TICK_EXPANSION_CATEGORIES,
+      ...expansion_categories,
       ...SYSTEM_TICK_ECONOMY_CATEGORIES,
     ]
   const count = ring.length

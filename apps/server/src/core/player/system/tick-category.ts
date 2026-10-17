@@ -5,6 +5,14 @@ export const SYSTEM_TICK_EXPANSION_CATEGORIES = [
   'make-permanent',
 ] as const
 
+/** Expansion ring while the empire has few outposts — base before explore. */
+export const SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST = [
+  'base',
+  'explore',
+  'settle',
+  'make-permanent',
+] as const
+
 export const SYSTEM_TICK_ECONOMY_CATEGORIES = [
   'upgrade',
   'research',

@@ -15,6 +15,7 @@ import { SYSTEM_TICK_CATEGORIES } from '#core/player/system/tick-category'
 import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
 import { BuildingListQuery } from '#query/building/list'
+import { OutpostListQuery } from '#query/outpost/list'
 import { CityEntity } from '#core/city/entity'
 import { BuildingCode } from '#core/building/constant/code'
 import { id } from '#shared/identification'
@@ -81,6 +82,12 @@ describe('tickSystemPlayers', () => {
       ],
       upgrade_queue: [],
     } as never)
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
     vi.mocked(actForSystemPlayer).mockResolvedValue({
       outcome: 'success',
       category: 'upgrade',
@@ -169,8 +176,8 @@ describe('tickSystemPlayers', () => {
     assert.deepStrictEqual(
       vi.mocked(actForSystemPlayer).mock.calls[0][0].categories,
       [
-        'explore',
         'base',
+        'explore',
         'settle',
         'make-permanent',
         'research',
@@ -179,6 +186,24 @@ describe('tickSystemPlayers', () => {
         'transport',
       ],
     )
+  })
+
+  it('uses base-first expansion categories while the empire has few outposts', async () => {
+    vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
+    vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
+      player_id: player.id,
+      player_name: player.name,
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: tick_at,
+    })
+
+    await tickSystemPlayers({ tick_index: 0 })
+
+    assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls[0][0].categories?.[0], 'base')
   })
 
   it('acts for each system-controlled player and reschedules the next tick', async () => {
