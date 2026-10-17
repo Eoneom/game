@@ -3,12 +3,16 @@ import { createTroopMovement } from '#app/command/troop/movement/create'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
+import { TroopRepository } from '#app/port/repository/troop'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
 import { AppEvent } from '#core/events'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopEntity } from '#core/troop/entity'
+import { CombatError } from '#core/combat/error'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { FactionCode } from '#core/faction/constant/code'
 import { TroopError } from '#core/troop/error'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
@@ -505,6 +509,98 @@ describe('createTroopMovement', () => {
             plasma: 0
           } }),
         new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
+    })
+  })
+
+  describe('attack movement', () => {
+    beforeEach(() => {
+      const legionnaire = TroopEntity.create({
+        id: id(),
+        code: TroopCode.LEGIONNAIRE,
+        count: 5,
+        player_id,
+        cell_id,
+        movement_id: null,
+      })
+      listInCell = vi.fn().mockResolvedValue([legionnaire])
+      repository.troop = {
+        ...repository.troop,
+        listInCell,
+      } as unknown as Repository['troop']
+      ;(repository as Repository).player = {
+        get: vi.fn().mockResolvedValue({ faction_code: FactionCode.THE_CONFEDERATION }),
+      } as Repository['player']
+      ;(repository as Repository).city = {
+        searchByCell: vi.fn().mockResolvedValue(null),
+      } as Repository['city']
+      ;(repository as Repository).outpost = {
+        ...repository.outpost,
+        searchByCell: vi.fn().mockResolvedValue(null),
+      } as Repository['outpost']
+      ;(repository.troop as TroopRepository).listAllInCell = vi.fn().mockResolvedValue([
+        TroopEntity.create({
+          id: id(),
+          player_id: id(),
+          cell_id,
+          code: TroopCode.WAR_MACHINE,
+          count: 2,
+          movement_id: null,
+        }),
+      ])
+      vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    })
+
+    it('rejects attack without combat_strategy', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.ATTACK,
+          move_troops: [{ code: TroopCode.LEGIONNAIRE, count: 1 }],
+        }),
+        new RegExp(CombatError.STRATEGY_REQUIRED),
+      )
+    })
+
+    it('rejects scouts on attack payload', async () => {
+      listInCell = vi.fn().mockResolvedValue([
+        TroopEntity.create({
+          id: id(),
+          code: TroopCode.LEGIONNAIRE,
+          count: 2,
+          player_id,
+          cell_id,
+          movement_id: null,
+        }),
+        TroopEntity.create({
+          id: id(),
+          code: TroopCode.EXPLORER,
+          count: 1,
+          player_id,
+          cell_id,
+          movement_id: null,
+        }),
+      ])
+      repository.troop = {
+        ...repository.troop,
+        listInCell,
+      } as unknown as Repository['troop']
+
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.ATTACK,
+          combat_strategy: CombatStrategy.BALANCED,
+          move_troops: [
+            { code: TroopCode.LEGIONNAIRE, count: 1 },
+            { code: TroopCode.EXPLORER, count: 1 },
+          ],
+        }),
+        new RegExp(CombatError.SCOUT_NOT_ALLOWED_ON_ATTACK),
       )
     })
   })
