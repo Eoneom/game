@@ -138,7 +138,7 @@ No per-player recruit cap beyond existing city recruitment concurrency ([`009`](
 
 ### Recruitment (requirements + pricing)
 
-Mirror **numeric** rows per faction pair; requirements use `TroopRequirement` + `troop_costs` ([`014`](../014-requirements-pricing/spec.md)).
+**Recruitment cost** rows are paired by role slot (anchor vs striker per faction); requirements use `TroopRequirement` + `troop_costs` ([`014`](../014-requirements-pricing/spec.md)). Combat stat columns are **not** paired across factions.
 
 | Faction anchor unit | `CLONING_FACTORY` level | plastic | mushroom | duration (s) |
 | --- | --- | --- | --- | --- |
