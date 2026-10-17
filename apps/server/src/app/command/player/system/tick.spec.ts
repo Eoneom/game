@@ -18,6 +18,7 @@ import { BuildingListQuery } from '#query/building/list'
 import { OutpostListQuery } from '#query/outpost/list'
 import { CityEntity } from '#core/city/entity'
 import { BuildingCode } from '#core/building/constant/code'
+import { OutpostType } from '#core/outpost/constant/type'
 import { id } from '#shared/identification'
 import * as time from '#shared/time'
 import assert from 'assert'
@@ -186,6 +187,36 @@ describe('tickSystemPlayers', () => {
         'transport',
       ],
     )
+  })
+
+  it('uses commit-first expansion categories while temp outposts exist', async () => {
+    const outpost_id = id()
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        {
+          id: outpost_id,
+          type: OutpostType.TEMPORARY,
+        },
+      ],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
+    vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
+      player_id: player.id,
+      player_name: player.name,
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: tick_at,
+    })
+
+    await tickSystemPlayers({ tick_index: 0 })
+
+    assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls[0][0].categories?.[0], 'settle')
   })
 
   it('uses base-first expansion categories while the empire has few outposts', async () => {

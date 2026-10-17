@@ -3,6 +3,7 @@ import { Coordinates } from '#core/world/value/coordinates'
 import {
   SYSTEM_TICK_EXPANSION_CATEGORIES,
   SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST,
+  SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST,
   type SystemTickCategory,
 } from '#core/player/system/tick-category'
 
@@ -48,6 +49,9 @@ export function sortCellsByExpansionScore<T extends ScoredCell>({
 /** While the empire has fewer outposts than this, prefer basing over further explore. */
 export const SYSTEM_EXPANSION_LOW_OUTPOST_COUNT = 2
 
+/** Cities + outposts at or below this count keep base-before-explore tick rotation. */
+export const SYSTEM_EXPANSION_SMALL_EMPIRE_MAX_SETTLEMENTS = 4
+
 export function systemExpansionBaseCellScore({
   can_found_city,
 }: {
@@ -71,19 +75,14 @@ export function systemExpansionMinBaseScore({
  * needs early outposts — avoids clearing the whole viewport before basing.
  */
 export function shouldDeferExploreForBasing({
-  outpost_count,
   best_base_score,
   best_unexplored_scout_score,
   can_found_city,
 }: {
-  outpost_count: number
   best_base_score: number | null
   best_unexplored_scout_score: number | null
   can_found_city: boolean
 }): boolean {
-  if (outpost_count >= SYSTEM_EXPANSION_LOW_OUTPOST_COUNT) {
-    return false
-  }
   if (best_base_score === null) {
     return false
   }
@@ -99,10 +98,22 @@ export function shouldDeferExploreForBasing({
 
 export function systemTickExpansionCategories({
   outpost_count,
+  city_count,
+  temporary_outpost_count,
 }: {
   outpost_count: number
+  city_count: number
+  temporary_outpost_count: number
 }): SystemTickCategory[] {
-  return outpost_count < SYSTEM_EXPANSION_LOW_OUTPOST_COUNT
-    ? [ ...SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST ]
-    : [ ...SYSTEM_TICK_EXPANSION_CATEGORIES ]
+  if (temporary_outpost_count > 0) {
+    return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST ]
+  }
+  const settlement_count = city_count + outpost_count
+  if (
+    outpost_count < SYSTEM_EXPANSION_LOW_OUTPOST_COUNT
+    || settlement_count <= SYSTEM_EXPANSION_SMALL_EMPIRE_MAX_SETTLEMENTS
+  ) {
+    return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST ]
+  }
+  return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES ]
 }

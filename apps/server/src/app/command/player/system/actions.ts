@@ -459,11 +459,9 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
   const [
     { origins, occupied_cell_ids },
     { cities, count_limit },
-    { outposts },
   ] = await Promise.all([
     ownedLocationCells(player_id),
     new CityListQuery().run({ player_id }),
-    new OutpostListQuery().run({ player_id }),
   ])
   const can_found_city = cities.length < count_limit
   const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
@@ -472,7 +470,6 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
     player_id,
     origins,
     occupied_cell_ids,
-    outpost_count: outposts.length,
     can_found_city,
     base_cell_score,
   })) {
@@ -539,30 +536,19 @@ async function shouldSkipExploreForBasing({
   player_id,
   origins,
   occupied_cell_ids,
-  outpost_count,
   can_found_city,
   base_cell_score,
 }: {
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
-  outpost_count: number
   can_found_city: boolean
   base_cell_score: (cell: CellEntity) => number
 }): Promise<boolean> {
-  for (const origin of origins) {
-    const { troops } = await new TroopListQuery().run({
-      player_id,
-      location: origin.location,
-    })
-    const founder = TroopService.findByRole({
-      troops,
-      role: TroopRole.FOUNDER,
-    })
-    if (!founder || founder.count < 1) {
-      continue
-    }
+  let best_base_score: number | null = null
+  let best_unexplored_scout_score: number | null = null
 
+  for (const origin of origins) {
     const viewport = await new WorldGetCellsQuery().run({
       player_id,
       ...viewportAround(origin.coordinates),
@@ -575,26 +561,30 @@ async function shouldSkipExploreForBasing({
       cells: base_candidates,
       score: base_cell_score,
     })[0]
+    if (best_base) {
+      const score = base_cell_score(best_base)
+      best_base_score = best_base_score === null ? score : Math.max(best_base_score, score)
+    }
+
     const unexplored = viewport.cells.filter(cell => !explored.has(cell.id)
       && !sameCoordinates(cell.coordinates, origin.coordinates))
     const best_unexplored = sortCellsByExpansionScore({
       cells: unexplored,
       score: systemExpansionScoutScore,
     })[0]
-
-    if (shouldDeferExploreForBasing({
-      outpost_count,
-      best_base_score: best_base ? base_cell_score(best_base) : null,
-      best_unexplored_scout_score: best_unexplored
-        ? systemExpansionScoutScore(best_unexplored)
-        : null,
-      can_found_city,
-    })) {
-      return true
+    if (best_unexplored) {
+      const score = systemExpansionScoutScore(best_unexplored)
+      best_unexplored_scout_score = best_unexplored_scout_score === null
+        ? score
+        : Math.max(best_unexplored_scout_score, score)
     }
   }
 
-  return false
+  return shouldDeferExploreForBasing({
+    best_base_score,
+    best_unexplored_scout_score,
+    can_found_city,
+  })
 }
 
 async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {

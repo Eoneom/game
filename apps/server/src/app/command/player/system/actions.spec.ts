@@ -798,6 +798,77 @@ describe('systemTickActions', () => {
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].action, MovementAction.EXPLORE)
   })
 
+  it('skips explore when a strong explored base site beats marginal fog with many outposts', async () => {
+    const base_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 1,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 2.5,
+    })
+    const far_unexplored = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 5,
+        y: city_cell.coordinates.y + 5,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 1,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        { id: id(), type: OutpostType.TEMPORARY },
+        { id: id(), type: OutpostType.TEMPORARY },
+      ],
+      cells: [ city_cell, city_cell ],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.SEEKER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell, base_site, far_unexplored ],
+      explored_cell_ids: [ city_cell.id, base_site.id ],
+    })
+
+    const acted = await systemTickActions.explore(player_id)
+
+    assert.strictEqual(acted, null)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
+  })
+
   it('skips explore when a founder can base on a strong explored cell with few outposts', async () => {
     const base_site = CellEntity.create({
       id: id(),
@@ -971,6 +1042,10 @@ describe('systemTickActions', () => {
       ],
       costs: {} as never,
       pending_recruitment: null
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell ],
+      explored_cell_ids: [ city_cell.id ],
     })
 
     const acted = await systemTickActions.explore(player_id)

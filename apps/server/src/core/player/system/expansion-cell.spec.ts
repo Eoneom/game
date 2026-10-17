@@ -87,7 +87,6 @@ describe('system expansion cell scoring', () => {
   it('defers explore when a good base site beats marginal fog', () => {
     assert.strictEqual(
       shouldDeferExploreForBasing({
-        outpost_count: 0,
         best_base_score: 2.5,
         best_unexplored_scout_score: 3.25,
         can_found_city: true,
@@ -96,7 +95,6 @@ describe('system expansion cell scoring', () => {
     )
     assert.strictEqual(
       shouldDeferExploreForBasing({
-        outpost_count: 0,
         best_base_score: 1,
         best_unexplored_scout_score: 4,
         can_found_city: true,
@@ -105,27 +103,57 @@ describe('system expansion cell scoring', () => {
     )
     assert.strictEqual(
       shouldDeferExploreForBasing({
-        outpost_count: 3,
         best_base_score: 3,
         best_unexplored_scout_score: 2,
         can_found_city: true,
       }),
-      false,
+      true,
     )
   })
 
   it('uses base-first expansion categories while outpost count is low', () => {
-    assert.deepStrictEqual(systemTickExpansionCategories({ outpost_count: 0 }), [
+    assert.deepStrictEqual(systemTickExpansionCategories({
+      outpost_count: 0,
+      city_count: 1,
+      temporary_outpost_count: 0,
+    }), [
       'base',
       'explore',
       'settle',
       'make-permanent',
     ])
-    assert.deepStrictEqual(systemTickExpansionCategories({ outpost_count: 2 }), [
+    assert.deepStrictEqual(systemTickExpansionCategories({
+      outpost_count: 2,
+      city_count: 1,
+      temporary_outpost_count: 0,
+    }), [
+      'base',
+      'explore',
+      'settle',
+      'make-permanent',
+    ])
+    assert.deepStrictEqual(systemTickExpansionCategories({
+      outpost_count: 5,
+      city_count: 2,
+      temporary_outpost_count: 0,
+    }), [
       'explore',
       'base',
       'settle',
       'make-permanent',
+    ])
+  })
+
+  it('uses commit-first expansion categories while temp outposts exist', () => {
+    assert.deepStrictEqual(systemTickExpansionCategories({
+      outpost_count: 3,
+      city_count: 1,
+      temporary_outpost_count: 2,
+    }), [
+      'settle',
+      'make-permanent',
+      'base',
+      'explore',
     ])
   })
 })

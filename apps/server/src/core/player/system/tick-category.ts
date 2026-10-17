@@ -13,6 +13,14 @@ export const SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST = [
   'make-permanent',
 ] as const
 
+/** Commit temp outposts (settle / permanent) before further scouting. */
+export const SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST = [
+  'settle',
+  'make-permanent',
+  'base',
+  'explore',
+] as const
+
 export const SYSTEM_TICK_ECONOMY_CATEGORIES = [
   'upgrade',
   'research',
