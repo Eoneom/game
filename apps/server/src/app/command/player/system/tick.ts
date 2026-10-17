@@ -6,11 +6,11 @@ import {
   prioritizeResearchBeforeUpgrade,
   systemTickExpansionCategories,
 } from '#command/player/system/policy'
-import { OutpostListQuery } from '#query/outpost/list'
 import { isEmpireProductionReadyForResearch } from '#command/player/system/production'
 import { systemTickActions } from '#command/player/system/actions'
 import { shouldPrioritizeEconomyForSystemPlayer } from '#command/player/system/storage'
 import { OutpostType } from '#core/outpost/constant/type'
+import { OutpostListQuery } from '#query/outpost/list'
 import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
 import { BuildingListQuery } from '#query/building/list'
@@ -29,14 +29,11 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
   for (const player of players) {
     try {
       const economy_first = await isSystemPlayerEconomyPriority({ player_id: player.id })
-      const { cities } = await new CityListQuery().run({ player_id: player.id })
       const { outposts } = await new OutpostListQuery().run({ player_id: player.id })
       const temporary_outpost_count = outposts.filter(
         outpost => outpost.type !== OutpostType.PERMANENT,
       ).length
       const expansion_categories = systemTickExpansionCategories({
-        outpost_count: outposts.length,
-        city_count: cities.length,
         temporary_outpost_count,
       })
       let categories = categoriesForTick(tick_index, {

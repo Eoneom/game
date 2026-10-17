@@ -84,7 +84,7 @@ describe('system expansion cell scoring', () => {
     assert.ok(systemExpansionOutpostResourceScore(resource_rich) > systemExpansionOutpostResourceScore(solar_rich))
   })
 
-  it('defers explore when a good base site beats marginal fog', () => {
+  it('defers explore when a good base site beats marginal fog at any empire size', () => {
     assert.strictEqual(
       shouldDeferExploreForBasing({
         best_base_score: 2.5,
@@ -105,51 +105,29 @@ describe('system expansion cell scoring', () => {
       shouldDeferExploreForBasing({
         best_base_score: 3,
         best_unexplored_scout_score: 2,
-        can_found_city: true,
+        can_found_city: false,
       }),
       true,
     )
   })
 
-  it('uses base-first expansion categories while outpost count is low', () => {
-    assert.deepStrictEqual(systemTickExpansionCategories({
-      outpost_count: 0,
-      city_count: 1,
-      temporary_outpost_count: 0,
-    }), [
+  it('uses the resource-first expansion category ring at every empire size', () => {
+    assert.deepStrictEqual(systemTickExpansionCategories({ temporary_outpost_count: 0 }), [
       'base',
-      'explore',
       'settle',
       'make-permanent',
+      'explore',
     ])
-    assert.deepStrictEqual(systemTickExpansionCategories({
-      outpost_count: 2,
-      city_count: 1,
-      temporary_outpost_count: 0,
-    }), [
-      'base',
-      'explore',
-      'settle',
-      'make-permanent',
-    ])
-    assert.deepStrictEqual(systemTickExpansionCategories({
-      outpost_count: 5,
-      city_count: 2,
-      temporary_outpost_count: 0,
-    }), [
-      'explore',
+    assert.deepStrictEqual(systemTickExpansionCategories({ temporary_outpost_count: 0 }), [
       'base',
       'settle',
       'make-permanent',
+      'explore',
     ])
   })
 
   it('uses commit-first expansion categories while temp outposts exist', () => {
-    assert.deepStrictEqual(systemTickExpansionCategories({
-      outpost_count: 3,
-      city_count: 1,
-      temporary_outpost_count: 2,
-    }), [
+    assert.deepStrictEqual(systemTickExpansionCategories({ temporary_outpost_count: 2 }), [
       'settle',
       'make-permanent',
       'base',

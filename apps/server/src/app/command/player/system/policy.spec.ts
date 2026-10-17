@@ -3,6 +3,7 @@ import {
   actForSystemPlayer,
   categoriesForTick,
   prioritizeResearchBeforeUpgrade,
+  systemTickExpansionCategories,
   SYSTEM_TICK_CATEGORIES,
   type SystemTickAction,
   type SystemTickCategory
@@ -42,11 +43,19 @@ describe('system player tick policy', () => {
     assert.strictEqual(categoriesForTick(1, { expansion_categories: base_first })[0], 'explore')
   })
 
-  it('rotates the expansion-first category ring from the tick index', () => {
-    assert.strictEqual(categoriesForTick(0)[0], 'explore')
-    assert.strictEqual(categoriesForTick(1)[0], 'base')
+  it('rotates the resource-first expansion category ring from the tick index', () => {
+    assert.strictEqual(categoriesForTick(0)[0], 'base')
+    assert.strictEqual(categoriesForTick(1)[0], 'settle')
     assert.strictEqual(categoriesForTick(4)[0], 'upgrade')
     assert.deepStrictEqual(categoriesForTick(9), [ ...SYSTEM_TICK_CATEGORIES ])
+  })
+
+  it('large empires still lead expansion ticks with base before explore', () => {
+    const expansion = systemTickExpansionCategories({ temporary_outpost_count: 0 })
+    assert.strictEqual(expansion[0], 'base')
+    assert.strictEqual(expansion[expansion.length - 1], 'explore')
+    assert.strictEqual(categoriesForTick(0, { expansion_categories: expansion })[0], 'base')
+    assert.strictEqual(categoriesForTick(3, { expansion_categories: expansion })[0], 'explore')
   })
 
   it('rotates economy-first when the main city needs baseline upkeep', () => {

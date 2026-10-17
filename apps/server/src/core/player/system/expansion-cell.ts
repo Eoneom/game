@@ -2,7 +2,6 @@ import type { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import {
   SYSTEM_TICK_EXPANSION_CATEGORIES,
-  SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST,
   SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST,
   type SystemTickCategory,
 } from '#core/player/system/tick-category'
@@ -46,12 +45,6 @@ export function sortCellsByExpansionScore<T extends ScoredCell>({
   })
 }
 
-/** While the empire has fewer outposts than this, prefer basing over further explore. */
-export const SYSTEM_EXPANSION_LOW_OUTPOST_COUNT = 2
-
-/** Cities + outposts at or below this count keep base-before-explore tick rotation. */
-export const SYSTEM_EXPANSION_SMALL_EMPIRE_MAX_SETTLEMENTS = 4
-
 export function systemExpansionBaseCellScore({
   can_found_city,
 }: {
@@ -71,8 +64,8 @@ export function systemExpansionMinBaseScore({
 }
 
 /**
- * Skip explore when a viable explored base site exists and the empire still
- * needs early outposts — avoids clearing the whole viewport before basing.
+ * Skip explore when a viable explored base site exists — commit known high-value
+ * cells before scouting for marginally better fog.
  */
 export function shouldDeferExploreForBasing({
   best_base_score,
@@ -96,24 +89,14 @@ export function shouldDeferExploreForBasing({
   return best_base_score >= best_unexplored_scout_score * 0.75
 }
 
+/** Resource-driven expansion ring; commit temps before further scouting when needed. */
 export function systemTickExpansionCategories({
-  outpost_count,
-  city_count,
   temporary_outpost_count,
 }: {
-  outpost_count: number
-  city_count: number
   temporary_outpost_count: number
 }): SystemTickCategory[] {
   if (temporary_outpost_count > 0) {
     return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST ]
-  }
-  const settlement_count = city_count + outpost_count
-  if (
-    outpost_count < SYSTEM_EXPANSION_LOW_OUTPOST_COUNT
-    || settlement_count <= SYSTEM_EXPANSION_SMALL_EMPIRE_MAX_SETTLEMENTS
-  ) {
-    return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES_BASE_FIRST ]
   }
   return [ ...SYSTEM_TICK_EXPANSION_CATEGORIES ]
 }

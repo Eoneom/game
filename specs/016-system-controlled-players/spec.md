@@ -64,9 +64,11 @@ When not pressured, building iteration order is unchanged (repository list order
 
 ## Expansion focus
 
-**Tick priority (default)**: `explore` → `base` → `settle` → `make-permanent` → `upgrade` → `research` → `recruit` → `transport`, rotated by `tick_index` so each category leads periodically.
+**Tick priority (default)**: expansion block **`base` → `settle` → `make-permanent` → `explore`**, then economy (`upgrade` → `research` → `recruit` → `transport`), rotated by `tick_index` so each category leads periodically. The goal is ongoing territorial and resource expansion at every empire size — committing high-value scouted cells before frontier scouting.
 
-**Early outposts / small empire**: while the empire has fewer than two outposts (`SYSTEM_EXPANSION_LOW_OUTPOST_COUNT`) or total settlements (cities + outposts) are at most `SYSTEM_EXPANSION_SMALL_EMPIRE_MAX_SETTLEMENTS` (4), the expansion block rotates as **`base` → `explore` → …** (`systemTickExpansionCategories`). While any **temporary** outposts exist, rotation is **`settle` → `make-permanent` → `base` → `explore`** so commits run before further scouting. `tryExplore` returns idle when an explored, unoccupied cell meets the minimum score for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target across owned viewports (founder need not be idle at that origin) — the same tick can then succeed on `base` / `settle` without mapping the whole viewport first.
+**Temporary outposts**: while any **temporary** outposts exist, rotation is **`settle` → `make-permanent` → `base` → `explore`** (`SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST`) so commits run before further scouting.
+
+**Explore deferral**: `tryExplore` returns idle when an explored, unoccupied cell meets the minimum score for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target across owned viewports — the same tick can then succeed on `base` / `settle` without mapping the whole viewport first. Explore runs only when there is no such committable site and more intel is needed.
 
 **Economy override**: when `shouldPrioritizeEconomyForSystemPlayer` is true for the first city, the economy block (`upgrade`, `research`, `recruit`, `transport`) is tried before expansion for that tick.
 

@@ -178,9 +178,9 @@ describe('tickSystemPlayers', () => {
       vi.mocked(actForSystemPlayer).mock.calls[0][0].categories,
       [
         'base',
-        'explore',
         'settle',
         'make-permanent',
+        'explore',
         'research',
         'upgrade',
         'recruit',
@@ -220,7 +220,7 @@ describe('tickSystemPlayers', () => {
     assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls[0][0].categories?.[0], 'settle')
   })
 
-  it('uses base-first expansion categories while the empire has few outposts', async () => {
+  it('uses resource-first expansion categories regardless of outpost count', async () => {
     vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
     vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
     vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
@@ -232,10 +232,25 @@ describe('tickSystemPlayers', () => {
       buildings_by_city: [],
       updated_at: tick_at,
     })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: Array.from({ length: 8 }, () => ({
+        id: id(),
+        player_id: player.id,
+        cell_id: id(),
+        type: 'permanent',
+      })),
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
 
     await tickSystemPlayers({ tick_index: 0 })
 
     assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls[0][0].categories?.[0], 'base')
+    assert.strictEqual(
+      vi.mocked(actForSystemPlayer).mock.calls[0][0].categories?.[3],
+      'explore',
+    )
   })
 
   it('acts for each system-controlled player and reschedules the next tick', async () => {
