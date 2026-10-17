@@ -1,4 +1,5 @@
 import { systemTickActions } from './actions'
+import * as combatPolicy from './combat-policy'
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import { researchTechnology } from '#app/command/technology/research'
 import { citySettle } from '#app/command/city/settle'
@@ -23,6 +24,9 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { FactionCode } from '#core/faction/constant/code'
+import { SYSTEM_TARGET_WAR_MACHINE } from './troops'
 import { WorldGetCellsQuery } from '#query/world/get-cells'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
@@ -1210,5 +1214,72 @@ describe('systemTickActions', () => {
         count: 1,
       },
     ])
+  })
+
+  it('skips attack when the empire combat army is not ready', async () => {
+    vi.spyOn(combatPolicy, 'loadEmpireCombatArmyCounts').mockResolvedValue({
+      war_machine: 3,
+      disruptor: 0,
+      legionnaire: 0,
+      interceptor: 0,
+      total_combat: 3,
+    })
+    const pick = vi.spyOn(combatPolicy, 'pickSystemAttack')
+
+    const acted = await systemTickActions.attack(player_id)
+
+    assert.strictEqual(acted, null)
+    assert.strictEqual(pick.mock.calls.length, 0)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
+  })
+
+  it('creates an attack movement when the army is ready and a target is chosen', async () => {
+    const destination = {
+      x: city_cell.coordinates.x + 1,
+      y: city_cell.coordinates.y,
+    }
+    vi.spyOn(combatPolicy, 'loadEmpireCombatArmyCounts').mockResolvedValue({
+      war_machine: SYSTEM_TARGET_WAR_MACHINE,
+      disruptor: 9,
+      legionnaire: 0,
+      interceptor: 0,
+      total_combat: SYSTEM_TARGET_WAR_MACHINE + 9,
+    })
+    vi.spyOn(combatPolicy, 'pickSystemAttack').mockResolvedValue({
+      origin: city_cell.coordinates,
+      destination,
+      score: 500,
+      move_troops: [
+        {
+          code: TroopCode.WAR_MACHINE,
+          count: SYSTEM_TARGET_WAR_MACHINE,
+        },
+      ],
+    })
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      player: {
+        get: vi.fn().mockResolvedValue({
+          faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+        }),
+      },
+    } as Repository)
+
+    const acted = await systemTickActions.attack(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0], {
+      player_id,
+      action: MovementAction.ATTACK,
+      origin: city_cell.coordinates,
+      destination,
+      move_troops: [
+        {
+          code: TroopCode.WAR_MACHINE,
+          count: SYSTEM_TARGET_WAR_MACHINE,
+        },
+      ],
+      combat_strategy: CombatStrategy.OPENING_STRIKE,
+    })
   })
 })

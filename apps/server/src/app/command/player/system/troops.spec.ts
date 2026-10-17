@@ -6,6 +6,7 @@ import {
   systemRecruitBatchCount,
   SYSTEM_MAX_FOUNDER_TROOPS,
   SYSTEM_MAX_SCOUT_TROOPS,
+  SYSTEM_TARGET_WAR_MACHINE,
 } from './troops'
 import { TroopRole } from '#core/troop/constant/role'
 import { OutpostListQuery } from '#query/outpost/list'
@@ -38,6 +39,41 @@ const no_outpost_hints = {
   has_reclaimer_outpost: false,
 }
 
+const army_ready_combat = {
+  army_counts: {
+    war_machine: SYSTEM_TARGET_WAR_MACHINE,
+    disruptor: 10,
+    legionnaire: 0,
+    interceptor: 0,
+    total_combat: SYSTEM_TARGET_WAR_MACHINE + 10,
+  },
+  boost_combat_recruit: false,
+}
+
+const boost_war_machine_combat = {
+  army_counts: {
+    war_machine: 2,
+    disruptor: 0,
+    legionnaire: 0,
+    interceptor: 0,
+    total_combat: 2,
+  },
+  boost_combat_recruit: true,
+}
+
+function recruit_hints(overrides: Partial<{
+  scout_count: number
+  founder_count: number
+}> & Partial<typeof no_outpost_hints> = {}) {
+  return {
+    scout_count: 0,
+    founder_count: 0,
+    ...no_outpost_hints,
+    combat: army_ready_combat,
+    ...overrides,
+  }
+}
+
 describe('sortTroopsForSystemRecruit', () => {
   it('prioritizes carriers over scouts when scout cap is not reached', () => {
     const sorted = sortTroopsForSystemRecruit({
@@ -46,11 +82,7 @@ describe('sortTroopsForSystemRecruit', () => {
         troop(TroopCode.HARVESTER, 0),
         troop(TroopCode.HAULER, 0),
       ],
-      hints: {
-        scout_count: 0,
-        founder_count: 0,
-        ...no_outpost_hints,
-      },
+      hints: recruit_hints(),
     })
 
     assert.strictEqual(sorted[0].code, TroopCode.HAULER)
@@ -63,11 +95,7 @@ describe('sortTroopsForSystemRecruit', () => {
         troop(TroopCode.HARVESTER, 0),
         troop(TroopCode.SEEKER, 0),
       ],
-      hints: {
-        scout_count: 0,
-        founder_count: 0,
-        ...no_outpost_hints,
-      },
+      hints: recruit_hints(),
     })
 
     assert.strictEqual(sorted[0].code, TroopCode.SEEKER)
@@ -81,11 +109,7 @@ describe('sortTroopsForSystemRecruit', () => {
         troop(TroopCode.HARVESTER, 0),
         troop(TroopCode.HAULER, 0),
       ],
-      hints: {
-        scout_count: SYSTEM_MAX_SCOUT_TROOPS,
-        founder_count: 0,
-        ...no_outpost_hints,
-      },
+      hints: recruit_hints({ scout_count: SYSTEM_MAX_SCOUT_TROOPS }),
     })
 
     assert.strictEqual(sorted[0].code, TroopCode.HAULER)
@@ -101,27 +125,40 @@ describe('sortTroopsForSystemRecruit', () => {
         troop(TroopCode.RECLAIMER, 0),
         troop(TroopCode.HARVESTER, 0),
       ],
-      hints: {
-        scout_count: 0,
-        founder_count: 0,
+      hints: recruit_hints({
         needs_harvester_on_outpost: true,
-        needs_reclaimer_on_outpost: false,
         has_harvester_outpost: true,
-        has_reclaimer_outpost: false,
-      },
+      }),
     })
 
     assert.strictEqual(sorted[0].code, TroopCode.HARVESTER)
+  })
+
+  it('prioritizes war_machine when combat army is below target', () => {
+    const sorted = sortTroopsForSystemRecruit({
+      troops: [
+        troop(TroopCode.HAULER, 0),
+        troop(TroopCode.WAR_MACHINE, 0),
+      ],
+      hints: {
+        ...recruit_hints(),
+        combat: boost_war_machine_combat,
+      },
+    })
+
+    assert.strictEqual(sorted[0].code, TroopCode.WAR_MACHINE)
   })
 
   it('applies scout cap per city independently', () => {
     const capped_hints = recruitSortHintsForCity({
       city_troops: [ troop(TroopCode.SEEKER, SYSTEM_MAX_SCOUT_TROOPS) ],
       outpost_hints: no_outpost_hints,
+      combat: army_ready_combat,
     })
     const fresh_city_hints = recruitSortHintsForCity({
       city_troops: [],
       outpost_hints: no_outpost_hints,
+      combat: army_ready_combat,
     })
 
     assert.strictEqual(capped_hints.scout_count, SYSTEM_MAX_SCOUT_TROOPS)
@@ -148,14 +185,7 @@ describe('sortTroopsForSystemRecruit', () => {
 })
 
 describe('systemRecruitBatchCount', () => {
-  const base_hints = {
-    scout_count: 0,
-    founder_count: 0,
-    needs_harvester_on_outpost: false,
-    needs_reclaimer_on_outpost: false,
-    has_harvester_outpost: false,
-    has_reclaimer_outpost: false,
-  }
+  const base_hints = recruit_hints()
 
   it('does not batch-recruit harvesters without an outpost that needs one', () => {
     const count = systemRecruitBatchCount({

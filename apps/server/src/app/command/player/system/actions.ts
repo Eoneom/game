@@ -18,9 +18,7 @@ import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
-import { CombatStrategy } from '#core/combat/value/combat-strategy'
-import { combatRoleFor } from '#core/combat/troop-combat'
-import { CombatRole } from '#core/troop/constant/combat-role'
+import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
@@ -55,6 +53,13 @@ import {
   sortBuildingsForSystemUpgrade
 } from '#command/player/system/storage'
 import {
+  loadEmpireCombatArmyCounts,
+  pickSystemAttack,
+  SYSTEM_ATTACK_COMBAT_STRATEGY,
+} from '#command/player/system/combat-policy'
+import {
+  combatRecruitHints,
+  isSystemCombatArmyReady,
   loadOutpostRecruitHints,
   recruitSortHintsForCity,
   sortTroopsForSystemRecruit,
@@ -299,7 +304,29 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
 async function tryRecruit(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
-  const outpost_hints = await loadOutpostRecruitHints(player_id)
+  const [
+    outpost_hints,
+    army_counts,
+  ] = await Promise.all([
+    loadOutpostRecruitHints(player_id),
+    loadEmpireCombatArmyCounts(player_id),
+  ])
+  const main_city = cities[0]
+  const main_city_stock = main_city
+    ? (await new CityGetQuery().run({
+      city_id: main_city.id,
+      player_id,
+    })).resource_stock
+    : {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    }
+  const combat_hints = combatRecruitHints({
+    army_counts,
+    has_city: cities.length > 0,
+    main_city_stock,
+  })
   const recruits: {
     city_id: string
     city_name: string
@@ -345,6 +372,7 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     const recruit_hints = recruitSortHintsForCity({
       city_troops: troop_list.troops,
       outpost_hints,
+      combat: combat_hints,
     })
     const sorted_troops = sortTroopsForSystemRecruit({
       troops: troop_list.troops,
@@ -872,45 +900,35 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
 }
 
 async function tryAttack(player_id: string): Promise<Record<string, unknown> | null> {
-  const { cities } = await new CityListQuery().run({ player_id })
-  for (const city of cities) {
-    const { troops } = await new TroopListQuery().run({ city_id: city.id, player_id })
-    const combat_stacks = troops.filter(
-      t => t.count > 0 && combatRoleFor(t.code) === CombatRole.COMBAT
-    )
-    if (!combat_stacks.length) {
-      continue
-    }
-
-    const origin = city.coordinates
-    const viewport = viewportAround(origin)
-    const { cells } = await new WorldGetCellsQuery().run(viewport)
-
-    for (const cell of cells) {
-      if (sameCoordinates(cell.coordinates, origin)) {
-        continue
-      }
-      try {
-        await createTroopMovement({
-          player_id,
-          action: MovementAction.ATTACK,
-          origin,
-          destination: cell.coordinates,
-          move_troops: combat_stacks.map(t => ({ code: t.code, count: Math.min(t.count, 5) })),
-          combat_strategy: CombatStrategy.OPENING_STRIKE,
-        })
-        return {
-          action: 'attack',
-          origin,
-          destination: cell.coordinates,
-        }
-      } catch {
-        continue
-      }
-    }
+  const army_counts = await loadEmpireCombatArmyCounts(player_id)
+  if (!isSystemCombatArmyReady(army_counts)) {
+    return null
+  }
+  const attacker = await Factory.getRepository().player.get(player_id)
+  const attack = await pickSystemAttack({
+    player_id,
+    attacker_faction_code: attacker.faction_code,
+    army_counts,
+  })
+  if (!attack) {
+    return null
   }
 
-  return null
+  await createTroopMovement({
+    player_id,
+    action: MovementAction.ATTACK,
+    origin: attack.origin,
+    destination: attack.destination,
+    move_troops: attack.move_troops,
+    combat_strategy: SYSTEM_ATTACK_COMBAT_STRATEGY,
+  })
+  return {
+    action: MovementAction.ATTACK,
+    origin: attack.origin,
+    destination: attack.destination,
+    move_troops: attack.move_troops,
+    combat_strategy: SYSTEM_ATTACK_COMBAT_STRATEGY,
+  }
 }
 
 export const systemTickActions: Record<SystemTickCategory, SystemTickAction> = {

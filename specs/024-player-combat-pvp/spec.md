@@ -352,6 +352,8 @@ Arrival is one saga trigger; rounds use [`018`](../018-app-composition-jobs/spec
 
 Same rules; Alpha uses singularity combat codes and art. Humans see **Machine de guerre** / **Perturbateur** in UI when fighting singularity stacks.
 
+**Tick AI policy** (army readiness before attacking, expansion-oriented target scoring, combat recruit boost): [`016`](../016-system-controlled-players/spec.md#combat-expansion-policy-pvp) — `system/combat-policy.ts`, `system/troops.ts` (`SYSTEM_TARGET_WAR_MACHINE`, `SYSTEM_DISRUPTOR_RATIO`).
+
 ## Communication reports (battle inbox)
 
 Extend [`012`](../012-communication-reports/spec.md) with a new persisted report type when a **fight finishes** (after the last combat round and outcome application — not when the attack movement merely arrives).

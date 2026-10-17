@@ -98,6 +98,20 @@ Candidates that fail a check are skipped; the tick does not invoke the command (
 
 Alpha’s **`war_machine`** / **`disruptor`** recruits (024 on `main`) go through the same `recruitTroop` path and **`meetsTroopRecruitRequirement`** gate as economy troops (`TroopRequirement` per 024: **`cloning_factory`** + **`replication_catalyst`** only — not `architecture` or `photovoltaic_optimization`); combat policy in `system/troops.ts` does not bypass requirement checks.
 
+## Combat expansion policy (PvP)
+
+System AI does **not** launch `attack` movements until the empire meets **army readiness** thresholds (`system/troops.ts` + `system/combat-policy.ts`):
+
+| Signal | Rule |
+| --- | --- |
+| `SYSTEM_TARGET_WAR_MACHINE` | Empire-wide garrison count of `war_machine` (combat role) ≥ **20** |
+| `SYSTEM_DISRUPTOR_RATIO` | `disruptor` count ≥ **30%** of total combat-role troops (legionnaire / interceptor / war_machine / disruptor), counted across all cities and outposts |
+| Economy gate for combat recruiting | At least one city and the main city has **any** resource stock; while below readiness, `sortTroopsForSystemRecruit` **boosts** `war_machine` then `disruptor` before other non-economy troops |
+
+**Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit` (unchanged category order). Returns idle when the army is not ready, when no cross-faction target exists in range, or when no origin has a combat garrison. Otherwise `pickSystemAttack` scores valid enemy **cities**, **outposts**, and **field stacks** (via `resolveAttackTarget`) in each origin viewport — preferring high-value locations and weaker garrisons — and sends **full** combat stacks (no per-code cap). Strategy: `opening_strike` (`SYSTEM_ATTACK_COMBAT_STRATEGY`).
+
+See also [`024`](../024-player-combat-pvp/spec.md) (system AI note).
+
 ## Player errors (relevant)
 
 | `PlayerError` | Meaning |
@@ -113,8 +127,8 @@ Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-
 
 | Area | Paths |
 | --- | --- |
-| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,requirements,transport,troops,technologies,production}.ts` |
+| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,combat-policy,requirements,transport,troops,technologies,production}.ts` |
 | Jobs | `apps/server/src/adapter/job-queue/player/system-tick.ts` |
 | Core | `apps/server/src/core/player/constant/system.ts`, `core/player/system/expansion-cell.ts` |
 
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/transport.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/combat-policy.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/transport.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.
