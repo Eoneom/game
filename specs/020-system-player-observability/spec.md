@@ -88,7 +88,7 @@ As implemented on `main` (read-only **État** column; no new requirements beyond
 | Concern | Behavior |
 | --- | --- |
 | Layered surfaces | Admin chrome uses `admin-surface-page`, `admin-surface-panel`, `admin-surface-card`, `admin-surface-nested`, `admin-surface-toolbar`, and `admin-surface-code` (`apps/web/src/index.css`; wired from `modules/admin/layout.tsx` and observability `page.tsx`). |
-| Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (outposts omitted when empty). |
+| Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (always shown with count; empty empires show a short French placeholder). |
 | Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** two-column grid (counts only; optional in-progress recruit with countdown). |
 | Per-outpost row | Same nested surface: coordinates, optional production, warehouse bars when capacity > 0, troops grid. |
 

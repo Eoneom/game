@@ -283,41 +283,45 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                 ))}
               </div>
 
-              {snapshot.outposts.length > 0 && (
-                <section>
-                  <h3 className="field-label m-0 mb-1 text-label">
-                    Avant-postes ({snapshot.outposts.length})
-                  </h3>
+              <section>
+                <h3 className="field-label m-0 mb-1 text-label">
+                  Avant-postes ({snapshot.outposts.length})
+                </h3>
+                {snapshot.outposts.length === 0 ? (
+                  <p className="m-0 text-sm text-amber-dim">
+                    Aucun avant-poste (temporaire ou permanent) pour ce joueur.
+                  </p>
+                ) : (
                   <ul className="m-0 list-none space-y-2 p-0">
                     {snapshot.outposts.map(outpost => (
-                        <li
-                          key={outpost.id}
-                          className="admin-surface-nested space-y-2 rounded-sm p-2 text-sm text-amber"
-                        >
-                          <div>
-                            {translateOutpostType(outpost.type)}
-                            <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
-                            {(outpost.earnings_per_second.plastic > 0
-                              || outpost.earnings_per_second.mushroom > 0
-                              || outpost.earnings_per_second.plasma > 0) && (
-                              <p className="m-0 mt-1 text-xs text-amber-dim">
-                                Prod. : {formatProductionLine(outpost.earnings_per_second)}
-                              </p>
-                            )}
-                          </div>
-                          {outpost.warehouses_capacity.plastic > 0 && (
-                            <WarehouseStockBars
-                              resources={outpost.resources}
-                              warehouses_capacity={outpost.warehouses_capacity}
-                              warehouse_space_remaining={outpost.warehouse_space_remaining}
-                            />
+                      <li
+                        key={outpost.id}
+                        className="admin-surface-nested space-y-2 rounded-sm p-2 text-sm text-amber"
+                      >
+                        <div>
+                          {translateOutpostType(outpost.type)}
+                          <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
+                          {(outpost.earnings_per_second.plastic > 0
+                            || outpost.earnings_per_second.mushroom > 0
+                            || outpost.earnings_per_second.plasma > 0) && (
+                            <p className="m-0 mt-1 text-xs text-amber-dim">
+                              Prod. : {formatProductionLine(outpost.earnings_per_second)}
+                            </p>
                           )}
-                          <TroopsList troops={outpost.troops} />
-                        </li>
+                        </div>
+                        {outpost.warehouses_capacity.plastic > 0 && (
+                          <WarehouseStockBars
+                            resources={outpost.resources}
+                            warehouses_capacity={outpost.warehouses_capacity}
+                            warehouse_space_remaining={outpost.warehouse_space_remaining}
+                          />
+                        )}
+                        <TroopsList troops={outpost.troops} />
+                      </li>
                     ))}
                   </ul>
-                </section>
-              )}
+                )}
+              </section>
             </div>
           </article>
         )
