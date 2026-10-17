@@ -69,23 +69,23 @@ Extend `MovementAction` with `ATTACK = 'attack'` (see [`010`](../010-troop-movem
 
 ## Combat troops (faction-exclusive `TroopCode`s)
 
-Four new codes — **two per faction**, **mirrored combat stats** but **unique identity** (wire enum, `troop_faction`, French copy, PNG art). Follow the same exclusivity model as `explorer`/`seeker` ([`009`](../009-troops-stationary/spec.md), `apps/server/src/core/troop/constant/faction.ts`).
+Four new codes — **two per faction**, each with **unique combat stats** and **unique identity** (wire enum, `troop_faction`, French copy, PNG art). Follow the same exclusivity model as `explorer`/`seeker` ([`009`](../009-troops-stationary/spec.md), `apps/server/src/core/troop/constant/faction.ts`).
 
 ### Roster (names, faction, stats)
 
 | Faction | Enum member | Wire `TroopCode` | FR display name (UI) | Lore (spec) | `combat_role` | `combat_troop_class` | speed | transport_capacity | attack | defense | life |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | `legionnaire` | 1.0 | 0 | 11 | 13 | 15 |
+| `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | `legionnaire` | 1.00 | 0 | 11 | 13 | 15 |
 | `the_confederation` | `INTERCEPTOR` | `interceptor` | **Intercepteur** | Chasseur rapide confédéré, optimisé pour frapper en premier et rompre les formations. | `combat` | `interceptor` | 1.35 | 0 | 18 | 4 | 5 |
-| `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; ancre la ligne singularity sur le champ de bataille. | `combat` | `war_machine` | 1.0 | 0 | 11 | 13 | 15 |
-| `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; fragile mais mortelle en rafale. | `combat` | `disruptor` | 1.35 | 0 | 18 | 4 | 5 |
+| `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; lente mais blindée, elle absorbe les tirs et avance sous le feu. | `combat` | `war_machine` | 0.90 | 0 | 13 | 16 | 17 |
+| `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; rafales courtes, repositionnement constant, coque minimale. | `combat` | `disruptor` | 1.25 | 0 | 15 | 5 | 4 |
 
 - **`troop_faction`**: each code maps to exactly one `FactionCode` ([`004`](../004-faction-domain/spec.md)); no code appears on both factions.
 - **`TroopService.codesForFaction`**: confederation humans bootstrap/recruit **legionnaire** + **interceptor** only; singularity system player gets **war_machine** + **disruptor** (humans never recruit singularity codes via normal signup).
 - **Recruitment (v1)**:
   - **Humans** (`the_confederation`): `PUT /troop/recruit` for `legionnaire` and `interceptor` only ([`009`](../009-troops-stationary/spec.md)).
   - **System AI** (`the_technological_singularity`): same recruit pipeline for `war_machine` and `disruptor` on Alpha’s cities ([`016`](../016-system-controlled-players/spec.md)).
-- **Parity**: `legionnaire` ↔ `war_machine` and `interceptor` ↔ `disruptor` share **identical attack / defense / life** (cross-faction mirrors). Each of the **four** classes has a **distinct** stat profile (anchor vs striker); only names, art, and faction mapping differ between mirror pairs.
+- **Stat uniqueness**: all four `TroopCode`s have **distinct** `attack_capacity`, `defense_capacity`, `life_capacity`, and `speed`. Cross-faction pairs are **not** numeric mirrors — confederation fields **heavy line** (`legionnaire`) and **fast striker** (`interceptor`); singularity fields **slow assault platform** (`war_machine`) and **harassment skirmisher** (`disruptor`).
 
 ### Web: translations and artwork convention
 
@@ -149,7 +149,7 @@ Technologies: **none** in v1.
 
 ### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
 
-- **Parity**: Alpha uses **`war_machine`** / **`disruptor`** with the same costs and requirements as confederation counterparts.
+- **Recruitment costs**: Alpha uses **`war_machine`** / **`disruptor`** with the same **requirements and pricing** rows as confederation counterparts (economic parity only — combat stats differ per [Roster](#roster-names-faction-stats)).
 - **Policy (v1)**: below garrison threshold, prefer **`war_machine`** until ~20 count, then up to ~30% **`disruptor`** before `attack` tick actions.
 - **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
 - **Strategy (v1)**: Alpha picks `opening_strike` when attacker advantage ≥ 1.2 projected pools, else `balanced` (see [Combat strategies](#combat-strategies)).
@@ -162,8 +162,8 @@ Each faction combat `TroopCode` maps to exactly one **`combat_troop_class`** (sa
 | --- | --- | --- | --- |
 | `legionnaire` | `legionnaire` | `the_confederation` | Anchor; high **life**, moderate attack |
 | `interceptor` | `interceptor` | `the_confederation` | Striker; high attack, low **life** |
-| `war_machine` | `war_machine` | `the_technological_singularity` | Singularity anchor (stats mirror `legionnaire`) |
-| `disruptor` | `disruptor` | `the_technological_singularity` | Singularity striker (stats mirror `interceptor`) |
+| `war_machine` | `war_machine` | `the_technological_singularity` | Slow assault platform; highest **life**, high **defense**, moderate **attack** |
+| `disruptor` | `disruptor` | `the_technological_singularity` | Harassment skirmisher; high **attack** and **speed**, lowest **life** |
 
 Strategy multipliers apply **per `combat_troop_class` per round** (four independent columns in tables below). Non-combat `TroopCode`s omit `combat_troop_class`.
 
@@ -178,7 +178,7 @@ Strategy multipliers apply **per `combat_troop_class` per round** (four independ
 
 Wire enum (example): `balanced`, `opening_strike`, `hold_the_line`. All factions share the same strategy definitions.
 
-Each strategy provides **Attack %** and **Life %** multipliers per `combat_troop_class` for rounds **1–5** (values are factors on base capacities, e.g. `1.00` = 100%). For this spec the battle **never runs round 6+**; round **5** values apply only to round 5. **`war_machine`** rows match **`legionnaire`**; **`disruptor`** rows match **`interceptor`** (faction parity).
+Each strategy provides **Attack %** and **Life %** multipliers per `combat_troop_class` for rounds **1–5** (values are factors on base capacities, e.g. `1.00` = 100%). For this spec the battle **never runs round 6+**; round **5** values apply only to round 5. Each of the **four** classes has its **own** multiplier row (curves may differ by role — e.g. `war_machine` gains less from `opening_strike` spike, more from `hold_the_line` durability).
 
 ### `balanced` (default)
 
@@ -190,21 +190,21 @@ Each strategy provides **Attack %** and **Life %** multipliers per `combat_troop
 
 | Round | `legionnaire` Att% | `legionnaire` Life% | `interceptor` Att% | `interceptor` Life% | `war_machine` Att% | `war_machine` Life% | `disruptor` Att% | `disruptor` Life% |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 1.12 | 0.92 | 1.32 | 0.78 | 1.12 | 0.92 | 1.32 | 0.78 |
-| 2 | 1.08 | 0.96 | 1.22 | 0.83 | 1.08 | 0.96 | 1.22 | 0.83 |
-| 3 | 1.04 | 1.00 | 1.12 | 0.88 | 1.04 | 1.00 | 1.12 | 0.88 |
-| 4 | 1.00 | 1.00 | 1.06 | 0.94 | 1.00 | 1.00 | 1.06 | 0.94 |
+| 1 | 1.12 | 0.92 | 1.32 | 0.78 | 1.08 | 0.94 | 1.28 | 0.74 |
+| 2 | 1.08 | 0.96 | 1.22 | 0.83 | 1.06 | 0.97 | 1.20 | 0.80 |
+| 3 | 1.04 | 1.00 | 1.12 | 0.88 | 1.04 | 1.02 | 1.14 | 0.86 |
+| 4 | 1.00 | 1.00 | 1.06 | 0.94 | 1.02 | 1.00 | 1.08 | 0.92 |
 | 5 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 | 1.00 |
 
 ### `hold_the_line`
 
 | Round | `legionnaire` Att% | `legionnaire` Life% | `interceptor` Att% | `interceptor` Life% | `war_machine` Att% | `war_machine` Life% | `disruptor` Att% | `disruptor` Life% |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 0.88 | 1.18 | 0.82 | 1.08 | 0.88 | 1.18 | 0.82 | 1.08 |
-| 2 | 0.93 | 1.22 | 0.87 | 1.13 | 0.93 | 1.22 | 0.87 | 1.13 |
-| 3 | 0.98 | 1.28 | 0.92 | 1.18 | 0.98 | 1.28 | 0.92 | 1.18 |
-| 4 | 1.03 | 1.32 | 0.97 | 1.23 | 1.03 | 1.32 | 0.97 | 1.23 |
-| 5 | 1.08 | 1.38 | 1.02 | 1.28 | 1.08 | 1.38 | 1.02 | 1.28 |
+| 1 | 0.88 | 1.18 | 0.82 | 1.08 | 0.85 | 1.22 | 0.84 | 1.05 |
+| 2 | 0.93 | 1.22 | 0.87 | 1.13 | 0.90 | 1.28 | 0.88 | 1.10 |
+| 3 | 0.98 | 1.28 | 0.92 | 1.18 | 0.96 | 1.34 | 0.92 | 1.14 |
+| 4 | 1.03 | 1.32 | 0.97 | 1.23 | 1.02 | 1.38 | 0.96 | 1.18 |
+| 5 | 1.08 | 1.38 | 1.02 | 1.28 | 1.08 | 1.45 | 1.00 | 1.22 |
 
 **Lookup**: for round `r`, use column `r`; if `r > 5` (not used in v1), keep round **5** multipliers.
 
