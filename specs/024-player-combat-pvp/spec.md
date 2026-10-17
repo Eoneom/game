@@ -16,7 +16,7 @@ Players launch **`attack`** troop movements ([`010`](../010-troop-movement-comba
 | --- | --- |
 | **Targets (v1)** | Attack **enemy troops on cells**, **cities**, and **outposts** (all in scope). |
 | **War / diplomacy** | **Always-on hostility** between players of **different** factions; **cannot attack** players of the **same** faction. No separate war declaration or peace treaty in v1. |
-| **Resolution** | **One-shot trigger** when the attack movement **arrives** (starts exactly one battle). Combat **resolves in multiple rounds** within that battle (scheduled rounds / jobs), not a single instant resolve at arrival. |
+| **Resolution** | **One-shot trigger** when the attack movement **arrives** (starts exactly one battle). Combat **resolves in exactly five rounds** (fixed strike) using scheduled round jobs — not a single instant resolve at arrival. No timeout victory; see [Multi-round resolution](#multi-round-resolution-mechanics). |
 | **Combat stats** | Each `TroopCode` has **`attack_capacity`** and **`defense_capacity`** (extend `troop_characteristics`). |
 | **Outcomes (v1)** | **Loot**, **destroy**, and **occupy** are all in scope; see [Outcomes matrix](#outcomes-matrix) and [Outcomes vs army composition](#outcomes-vs-army-composition). |
 | **Defenders** | **Auto-defend only**: all eligible defender troops on the target cell join the battle automatically; no optional decline, no manual intercept from other cells. |
@@ -173,8 +173,10 @@ At battle **start**, snapshot defender cell stacks or attacker movement payload:
 
 ### Scheduling
 
-- **Round interval**: `COMBAT_ROUND_INTERVAL_MS` — propose **30_000** ([`022`](../022-timing-and-resources/spec.md)).
-- **Max rounds**: **20** → **defender wins** (hold); no attacker loot/occupy.
+- **Combat rounds**: each battle runs a fixed **strike of exactly 5 rounds** (rounds **1** through **5**). Casualties from each round apply before the next round begins.
+- **Early end**: if, after any round **1–4**, one side has **zero** `combat` units and the other has **≥ 1** `combat`, the battle **ends immediately** (no further rounds).
+- **Round interval**: `COMBAT_ROUND_INTERVAL_MS` — propose **30_000** ([`022`](../022-timing-and-resources/spec.md)) for **pacing between scheduled round jobs only**. It is **not** a battle timeout and does **not** award victory to either side.
+- **After round 5**: if the battle has not already ended early, it **always ends** when round 5 finishes — even when both sides still have `combat` troops.
 
 ### Per-round algorithm (simultaneous exchange)
 
@@ -182,18 +184,34 @@ At battle **start**, snapshot defender cell stacks or attacker movement payload:
 2. **Strike order**: **Simultaneous** each round (no first-strike in v1).
 3. **Casualties (whole units)** attacker → defender:  
    `losses = min(defender_units_in_priority_order, max(1, floor(attack_pool(attacker) / max(1, defense_pool(defender)))))` when `attack_pool(attacker) > 0`; symmetric for defender → attacker.
-4. **End round**: if one side has **zero** `combat` units and the other has ≥ 1 `combat`, battle ends; if both lack `combat`, **defender wins**.
+4. **End round**: apply casualties, then evaluate [Battle end summary](#battle-end-summary). If the battle continues, schedule the next round (until round 5 completes or an early-end condition fires).
 
 ### Battle end summary
 
-| Condition | Winner |
+| Condition | Result |
 | --- | --- |
-| Defender 0 `combat`, attacker ≥ 1 `combat` | Attacker |
-| Attacker 0 `combat` | Defender |
-| Round 20 | Defender |
-| Both 0 `combat` same round | Defender |
+| Defender 0 `combat`, attacker ≥ 1 `combat` (any round 1–5) | **Attacker wins** |
+| Attacker 0 `combat`, defender ≥ 1 `combat` (any round 1–5) | **Defender wins** |
+| Round **5** completes and **both** sides have ≥ 1 `combat` | **Draw** (stalemate) — no winner |
+| Both sides 0 `combat` in the same round | **Draw** — no winner |
 
-**Attacker defeat (spec default):** survivors **return to attack movement origin cell**.
+There is **no** defender-wins-on-timeout, **no** maximum round count beyond the fixed five, and **no** automatic defender victory when time elapses.
+
+### Draw (stalemate) outcomes
+
+When the result is **draw**:
+
+| Effect | Spec |
+| --- | --- |
+| **Casualties** | All losses from rounds **1–5** (or fewer if ended early on a draw) **remain applied**; surviving stacks stay on the battle cell. |
+| **Occupy** | **No** — city/outpost ownership unchanged; attacker does not hold the cell as occupier. |
+| **Destroy** | **No** — temp outposts, field stacks, and garrison structures are **not** destroyed solely because of a draw. |
+| **Loot** | **No** — no resource transfer. |
+| **Attacker movement** | Surviving attacker troops **remain on the destination cell** (not treated as a defeat retreat). |
+
+**Attacker defeat (spec default):** on **defender win** only, survivors **return to attack movement origin cell**. Draw is not a defender win.
+
+Draw does **not** apply when one side eliminated the other’s **combat** force in round 5 (or earlier): that battle ends with a normal **attacker** or **defender** win and full [Outcomes matrix](#outcomes-matrix) applies.
 
 ### Defender snapshot (auto-defend)
 
@@ -201,12 +219,12 @@ All defender stacks on cell with `movement_id` null; no reinforcements; no build
 
 ## Outcomes matrix
 
-| Target | Attacker **wins** | Attacker **loses** |
-| --- | --- | --- |
-| **Field stack** | Destroy defender troops; loot if carriers survive; occupy with survivors. | Retreat to origin. |
-| **City** | Destroy garrison; loot warehouse; transfer **city** ownership. | City stays defender; retreat. |
-| **Outpost (temporary)** | Destroy garrison; **destroy** temp outpost; loot; hold cell. | Outpost remains; retreat. |
-| **Outpost (permanent)** | Destroy garrison; loot; transfer **outpost** ownership. | Outpost remains; retreat. |
+| Target | Attacker **wins** | Attacker **loses** | **Draw** (after 5 rounds or mutual wipe) |
+| --- | --- | --- | --- |
+| **Field stack** | Destroy defender troops; loot if carriers survive; occupy with survivors. | Retreat to origin. | Casualties only; stacks remain; no loot/occupy/destroy. |
+| **City** | Destroy garrison; loot warehouse; transfer **city** ownership. | City stays defender; retreat. | City stays defender; casualties only; no loot. |
+| **Outpost (temporary)** | Destroy garrison; **destroy** temp outpost; loot; hold cell. | Outpost remains; retreat. | Outpost remains; casualties only. |
+| **Outpost (permanent)** | Destroy garrison; loot; transfer **outpost** ownership. | Outpost remains; retreat. | Outpost remains; casualties only; no loot. |
 
 City buildings are **not** deleted on capture.
 
@@ -287,7 +305,7 @@ interface ReportBattleMetadata {
   defender_faction_code: FactionCode
   target_kind: 'field' | 'city' | 'outpost'
   target_id?: string // city_id | outpost_id when applicable
-  winner: 'attacker' | 'defender'
+  winner: 'attacker' | 'defender' | 'draw'
   rounds_played: number
   outcome: {
     occupied: boolean
