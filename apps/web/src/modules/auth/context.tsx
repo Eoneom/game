@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+
+import { SESSION_CLEARED_EVENT } from '#auth/session'
 
 interface AuthContextValue {
   token: string | null
@@ -26,6 +28,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     window.localStorage.removeItem('token')
     setTokenState(null)
   }
+
+  useEffect(() => {
+    const onSessionCleared = () => setTokenState(null)
+    window.addEventListener(SESSION_CLEARED_EVENT, onSessionCleared)
+    return () => window.removeEventListener(SESSION_CLEARED_EVENT, onSessionCleared)
+  }, [])
 
   return (
     <AuthContext.Provider value={{ token, setToken, clearToken }}>

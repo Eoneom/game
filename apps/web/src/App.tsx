@@ -10,6 +10,7 @@ import { ActivityStrip } from '#ui/activity'
 import { FxLayer } from '#ui/fx'
 import { useAuth } from '#auth/context'
 import { useClearInvalidSession, useInitStoredToken } from '#auth/hooks'
+import { isInvalidSessionError } from '#auth/session'
 import { useListCities } from '#city/hooks'
 
 const App: React.FC = () => {
@@ -22,13 +23,21 @@ const App: React.FC = () => {
   const { data: citiesData, error, isPending } = useListCities()
   useClearInvalidSession(error)
 
+  const sessionInvalid = error != null && isInvalidSessionError(error.message)
+
   let content: React.ReactNode
 
-  if (!token) {
+  if (!token || sessionInvalid) {
     content = <AuthUnauthenticated />
   } else if (is_admin_route) {
     content = <Outlet />
-  } else if (isPending || !citiesData?.cities.length) {
+  } else if (isPending) {
+    content = (
+      <div className="flex min-h-screen items-center justify-center text-amber">
+        Chargement du terminal…
+      </div>
+    )
+  } else if (!citiesData?.cities.length) {
     content = (
       <div className="flex min-h-screen items-center justify-center text-amber">
         Chargement du terminal…

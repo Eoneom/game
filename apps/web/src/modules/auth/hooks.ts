@@ -1,12 +1,11 @@
 import { useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { FactionCode } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
 import { translateError } from '#helpers/error-translations'
-import { adminObservabilityWsClient } from '#helpers/admin-observability-websocket'
 import { wsClient } from '#helpers/websocket'
 import { useAuth } from '#auth/context'
 import { registerCityWsListeners } from '#city/ws-listener'
@@ -16,6 +15,7 @@ import { registerTroopWsListeners } from '#troop/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
 import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
 import { clearSystemPlayerStatsSnapshots } from '#admin/system-player-observability/stats-store'
+import { invalidateSession, isInvalidSessionError } from '#auth/session'
 
 const doLogin = async (playerName: string): Promise<string> => {
   const res = await client.player.login({ player_name: playerName })
@@ -117,8 +117,7 @@ export const useSignup = () => {
 }
 
 export const useLogout = () => {
-  const { token, clearToken } = useAuth()
-  const queryClient = useQueryClient()
+  const { token } = useAuth()
 
   return useMutation({
     mutationFn: async () => {
@@ -129,14 +128,13 @@ export const useLogout = () => {
       }
     },
     onSuccess: () => {
-      clearToken()
-      clearSystemPlayerObservabilityEvents()
-      clearSystemPlayerStatsSnapshots()
-      adminObservabilityWsClient.disconnect()
-      wsClient.disconnect()
-      queryClient.clear()
+      invalidateSession()
     },
     onError: (err: Error) => {
+      if (isInvalidSessionError(err.message)) {
+        invalidateSession()
+        return
+      }
       toast.error(translateError(err.message))
     },
   })
@@ -158,16 +156,9 @@ export const useInitStoredToken = () => {
   }, [])
 }
 
-const AUTH_ERROR_CODES = new Set(['auth:not-found', 'token:not_found'])
-
 export const useClearInvalidSession = (error: Error | null) => {
-  const { clearToken } = useAuth()
-  const queryClient = useQueryClient()
-
   useEffect(() => {
-    if (!error || !AUTH_ERROR_CODES.has(error.message)) return
-    clearToken()
-    wsClient.disconnect()
-    queryClient.clear()
-  }, [error, clearToken, queryClient])
+    if (!error || !isInvalidSessionError(error.message)) return
+    invalidateSession()
+  }, [error])
 }
