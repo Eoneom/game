@@ -2,17 +2,21 @@ import { BuildingCode } from '@server-core/building/constant/code'
 import { OutpostType } from '@server-core/outpost/constant/type'
 import { TechnologyCode } from '@server-core/technology/constant/code'
 import { GenericResponse } from '../../response'
+import { Coordinates } from '../shared/coordinates'
+import { Resource } from '../shared/resource'
 
 export type AdminSystemPlayerCitySummary = {
   id: string
   name: string
-  cell_id: string
+  coordinates: Coordinates
+  resources: Resource
 }
 
 export type AdminSystemPlayerOutpostSummary = {
   id: string
   type: OutpostType
-  cell_id: string
+  coordinates: Coordinates
+  resources: Resource
 }
 
 export type AdminSystemPlayerBuildingLevel = {

@@ -59,11 +59,13 @@ Idle ticks omit `category` and use an empty `payload`. Error ticks set `outcome`
 
 | Field | Content |
 | --- | --- |
-| `cities` | `id`, `name`, `cell_id` |
-| `outposts` | `id`, `type`, `cell_id` |
+| `cities` | `id`, `name`, `coordinates` (`x`, `y` — same as city/outpost APIs), `resources` (`plastic`, `mushroom`, `plasma` gathered as-of snapshot time) |
+| `outposts` | `id`, `type`, `coordinates`, `resources` (permanent outposts gathered; temporary uses stored stock) |
 | `technologies` | `code`, `level` (sorted like player UI) |
 | `buildings_by_city` | per city: `city_id`, `city_name`, `buildings[]` with `code`, `level` |
 | `updated_at` | server ms timestamp when snapshot was built |
+
+Admin UI shows map coordinates via the same `formatCoordinates` helper as nav/map (`x.y`), French labels for building/technology/outpost type/resource names (reuses web translation tables), and does **not** surface raw `cell_id`.
 
 After each successful system tick action, server emits `system-player:stats-updated` with the same shape (plus `type`) for that player only.
 
@@ -71,7 +73,7 @@ After each successful system tick action, server emits `system-player:stats-upda
 
 | Route | Behavior |
 | --- | --- |
-| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; attempt chain; JSON details |
+| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; French attempt chain and summaries (codes translated client-side); JSON details |
 | `/admin/system-players` | Redirect to `/admin` (legacy URL) |
 
 Nav: « Observabilité IA » when `is_admin` → `/admin`. Non-admins: link hidden; direct `/admin` navigates away (e.g. to inbox). Admin observability WebSocket connects **only** while the admin console route is mounted (not on game login).

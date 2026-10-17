@@ -11,6 +11,11 @@ import {
 } from './hooks'
 import type { SystemPlayerTickObservabilityOutcome } from './types'
 import { SystemPlayerStatsPanel } from './stats-panel'
+import {
+  formatObservabilityAttemptLabel,
+  formatObservabilityEventSummary,
+} from './format-event'
+import type { ObservabilityTickCategory } from './labels'
 
 const OUTCOME_LABEL: Record<SystemPlayerTickObservabilityOutcome, string> = {
   success: 'Succès',
@@ -115,7 +120,7 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                   >
                     {OUTCOME_LABEL[event.outcome]}
                   </span>
-                  <p className="m-0 text-sm text-amber">{event.summary}</p>
+                  <p className="m-0 text-sm text-amber">{formatObservabilityEventSummary(event)}</p>
                 </div>
                 <time className="shrink-0 text-xs text-amber-dim" dateTime={String(event.committed_at)}>
                   tick {event.tick_index} · {formatDate(event.committed_at)}
@@ -128,8 +133,10 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                     <span key={`${attempt.category}-${attempt_index}`}>
                       {attempt_index > 0 ? ' → ' : ''}
                       <span className={attempt.result === 'success' ? 'text-emerald-400' : ''}>
-                        {attempt.category}
-                        {attempt.result === 'skipped' ? ' (ignoré)' : ''}
+                        {formatObservabilityAttemptLabel(
+                          attempt.category as ObservabilityTickCategory,
+                          attempt.result,
+                        )}
                       </span>
                     </span>
                   ))}

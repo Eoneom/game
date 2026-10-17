@@ -1,12 +1,28 @@
 import React, { useMemo } from 'react'
 
-import { formatDate } from '#helpers/transform'
-import type { AdminSystemPlayerStatsSnapshot } from '@eoneom/api-client'
+import { formatCoordinates, formatDate, transformDecimals } from '#helpers/transform'
+import type { AdminSystemPlayerStatsSnapshot, Resource } from '@eoneom/api-client'
+import { BuildingCode, TechnologyCode } from '@eoneom/api-client'
+
+import {
+  RESOURCE_LABEL,
+  translateBuildingCode,
+  translateOutpostType,
+  translateTechnologyCode,
+} from './labels'
 
 type Props = {
   snapshots: AdminSystemPlayerStatsSnapshot[]
   name_filter: string
   is_loading: boolean
+}
+
+function formatResourceLine(resources: Resource): string {
+  return [
+    `${RESOURCE_LABEL.plastic} ${transformDecimals(resources.plastic)}`,
+    `${RESOURCE_LABEL.mushroom} ${transformDecimals(resources.mushroom)}`,
+    `${RESOURCE_LABEL.plasma} ${transformDecimals(resources.plasma)}`,
+  ].join(' · ')
 }
 
 export const SystemPlayerStatsPanel: React.FC<Props> = ({
@@ -56,7 +72,13 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                 {snapshot.cities.map(city => (
                   <li key={city.id}>
                     {city.name}
-                    <span className="text-amber-dim"> — cellule {city.cell_id}</span>
+                    <span className="text-amber-dim">
+                      {' '}
+                      — {formatCoordinates(city.coordinates)}
+                    </span>
+                    <span className="block text-xs text-amber-dim">
+                      {formatResourceLine(city.resources)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -72,8 +94,14 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                 <ul className="m-0 list-none space-y-1 p-0 text-sm text-amber">
                   {snapshot.outposts.map(outpost => (
                     <li key={outpost.id}>
-                      {outpost.type}
-                      <span className="text-amber-dim"> — cellule {outpost.cell_id}</span>
+                      {translateOutpostType(outpost.type)}
+                      <span className="text-amber-dim">
+                        {' '}
+                        — {formatCoordinates(outpost.coordinates)}
+                      </span>
+                      <span className="block text-xs text-amber-dim">
+                        {formatResourceLine(outpost.resources)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -87,7 +115,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
               <ul className="m-0 list-none space-y-1 p-0 text-sm text-amber">
                 {snapshot.technologies.map(tech => (
                   <li key={tech.code}>
-                    {tech.code}
+                    {translateTechnologyCode(tech.code as TechnologyCode)}
                     <span className="text-amber-dim"> — niveau {tech.level}</span>
                   </li>
                 ))}
@@ -105,7 +133,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     <ul className="m-0 grid list-none gap-1 p-0 text-sm text-amber sm:grid-cols-2">
                       {city_buildings.buildings.map(building => (
                         <li key={`${city_buildings.city_id}-${building.code}`}>
-                          {building.code}
+                          {translateBuildingCode(building.code as BuildingCode)}
                           <span className="text-amber-dim"> — niv. {building.level}</span>
                         </li>
                       ))}
