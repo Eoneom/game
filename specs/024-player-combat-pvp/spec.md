@@ -142,15 +142,15 @@ Combat troops are **not** recruitable at game start. Gates live in `TroopRequire
 
 **Building + technology requirements** (per `TroopCode`; wire codes from [`007`](../007-buildings-upgrade-queue/spec.md) / [`008`](../008-technology-research/spec.md)):
 
-| `TroopCode` | Faction | `cloning_factory` level | `replication_catalyst` level | `outpost_logistics` level |
-| --- | --- | ---: | ---: | ---: |
-| `legionnaire` | `the_confederation` | 4 | 1 | — |
-| `interceptor` | `the_confederation` | 6 | 2 | 1 |
-| `war_machine` | `the_technological_singularity` | 4 | 1 | — |
-| `disruptor` | `the_technological_singularity` | 6 | 2 | 1 |
+| `TroopCode` | Faction | `cloning_factory` level | `replication_catalyst` level |
+| --- | --- | ---: | ---: |
+| `legionnaire` | `the_confederation` | 4 | 1 |
+| `interceptor` | `the_confederation` | 6 | 3 |
+| `war_machine` | `the_technological_singularity` | 4 | 1 |
+| `disruptor` | `the_technological_singularity` | 6 | 3 |
 
 - **Anchor** (`legionnaire`, `war_machine`): mid-game military cloning after the factory is upgraded past light haulers (`light_transporter` / `hauler` require `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)) and **`replication_catalyst` 1** is researched (military-grade replication — same tech family that shortens recruit duration today).
-- **Striker** (`interceptor`, `disruptor`): late-mid assault troops need a higher factory tier plus **`replication_catalyst` 2** and **`outpost_logistics` 1** (expeditionary strike capacity aligned with outpost play in [`011`](../011-outposts/spec.md)).
+- **Striker** (`interceptor`, `disruptor`): late-mid assault troops need a higher factory tier plus **`replication_catalyst` 3** (advanced replication tier — troop-linked tech only; **no** `outpost_logistics` gate).
 - **Singularity parity**: Alpha cities use the **same requirement rows** for `war_machine` / `disruptor` as confederation uses for `legionnaire` / `interceptor` (faction differs; gates do not).
 - **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the rows above are met.
 
@@ -161,7 +161,7 @@ Combat troops are **not** recruitable at game start. Gates live in `TroopRequire
 | Anchor | `legionnaire`, `war_machine` | 2_500 | 2_500 | 200 |
 | Striker | `interceptor`, `disruptor` | 3_500 | 2_000 | 280 |
 
-Implementation maps each row to `RequirementValue` `{ buildings: [{ code, level }], technologies: [{ code, level }] }` with `BuildingCode.CLONING_FACTORY` and `TechnologyCode.REPLICATION_CATALYST` / `TechnologyCode.OUTPOST_LOGISTICS` as applicable.
+Implementation maps each row to `RequirementValue` `{ buildings: [{ code, level }], technologies: [{ code, level }] }` with `BuildingCode.CLONING_FACTORY` and `TechnologyCode.REPLICATION_CATALYST` as applicable.
 
 ### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
 
