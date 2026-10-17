@@ -183,6 +183,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
         city_id: city.id,
         city_name: city.name,
         building_code: building.code,
+        building_level: building.level + 1,
       }
     }
   }

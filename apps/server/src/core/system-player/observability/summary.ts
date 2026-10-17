@@ -34,7 +34,10 @@ export function formatSystemPlayerActionSummary({
   const details: string[] = []
 
   if (typeof payload.building_code === 'string') {
-    details.push(payload.building_code)
+    const level_suffix = category === 'upgrade' && typeof payload.building_level === 'number'
+      ? ` → niv. ${payload.building_level}`
+      : ''
+    details.push(`${payload.building_code}${level_suffix}`)
   }
   if (typeof payload.technology_code === 'string') {
     details.push(payload.technology_code)

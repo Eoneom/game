@@ -29,7 +29,12 @@ function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
   const details: string[] = []
 
   if (typeof payload.building_code === 'string') {
-    details.push(translateBuildingCode(payload.building_code as BuildingCode))
+    const building_label = translateBuildingCode(payload.building_code as BuildingCode)
+    if (category === 'upgrade' && typeof payload.building_level === 'number') {
+      details.push(`${building_label} → niv. ${payload.building_level}`)
+    } else {
+      details.push(building_label)
+    }
   }
   if (typeof payload.technology_code === 'string') {
     details.push(translateTechnologyCode(payload.technology_code as TechnologyCode))
