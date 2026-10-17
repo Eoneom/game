@@ -176,6 +176,35 @@ describe('system player storage policy', () => {
     assert.strictEqual(sorted[0].code, BuildingCode.SOLAR_PANEL)
   })
 
+  it('prefers recycling plant when mushroom farm is far ahead even if mushrooms are low', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1
+        },
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 6
+        },
+      ],
+      resource_stock: {
+        plastic: 5000,
+        mushroom: 10,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 40000,
+        mushroom: 3000
+      },
+      production_energy_ratio: 1,
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.RECYCLING_PLANT)
+  })
+
   it('prefers the lower-level production building to keep plastic and mushroom in sync', () => {
     const sorted = sortBuildingsForSystemUpgrade({
       buildings: [

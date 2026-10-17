@@ -54,6 +54,18 @@ export function isCoreProductionSatisfied<
   return Math.abs(mushroom_farm.level - recycling_plant.level) <= 1
 }
 
+function getCoreProductionLevels<
+  T extends { code: BuildingCode, level: number }
+>(buildings: T[]): {
+  mushroom_farm_level: number
+  recycling_plant_level: number
+} {
+  return {
+    mushroom_farm_level: buildings.find(building => building.code === BuildingCode.MUSHROOM_FARM)?.level ?? 0,
+    recycling_plant_level: buildings.find(building => building.code === BuildingCode.RECYCLING_PLANT)?.level ?? 0,
+  }
+}
+
 function isWarehouseResourceFull({
   stock,
   capacity,
@@ -161,6 +173,8 @@ function systemUpgradeRank({
   production_energy_ratio,
   production_bootstrap,
   core_production_satisfied,
+  mushroom_farm_level,
+  recycling_plant_level,
 }: {
   building_code: BuildingCode
   resource_stock: Resource
@@ -168,6 +182,8 @@ function systemUpgradeRank({
   production_energy_ratio: number
   production_bootstrap: boolean
   core_production_satisfied: boolean
+  mushroom_farm_level: number
+  recycling_plant_level: number
 }): number {
   const energy_starved = production_energy_ratio < 1
   if (energy_starved && isEnergyBuildingCode(building_code)) {
@@ -187,10 +203,34 @@ function systemUpgradeRank({
     stock: resource_stock.plastic,
     capacity: warehouses_capacity.plastic,
   })
+  const mushroom_warehouse_full = isWarehouseResourceFull({
+    stock: resource_stock.mushroom,
+    capacity: warehouses_capacity.mushroom,
+  })
+
+  if (!production_bootstrap && !core_production_satisfied) {
+    if (building_code === BuildingCode.RECYCLING_PLANT
+      && recycling_plant_level < mushroom_farm_level) {
+      return Math.min(rank, 0)
+    }
+    if (building_code === BuildingCode.MUSHROOM_FARM
+      && mushroom_farm_level < recycling_plant_level) {
+      return Math.min(rank, 0)
+    }
+  }
+
   if (building_code === BuildingCode.MUSHROOM_FARM
     && resource_stock.mushroom < resource_stock.plastic
     && !plastic_warehouse_full
-    && !core_production_satisfied) {
+    && !core_production_satisfied
+    && mushroom_farm_level <= recycling_plant_level) {
+    return Math.min(rank, 0)
+  }
+  if (building_code === BuildingCode.RECYCLING_PLANT
+    && resource_stock.plastic < resource_stock.mushroom
+    && !mushroom_warehouse_full
+    && !core_production_satisfied
+    && recycling_plant_level <= mushroom_farm_level) {
     return Math.min(rank, 0)
   }
   return rank
@@ -220,16 +260,47 @@ function utilityUpgradeLevelTiebreaker<
 
 function mushroomIncomeTiebreaker<
   T extends { code: BuildingCode, level: number }
->(left: T, right: T, resource_stock: Resource): number {
+>(left: T, right: T, {
+  resource_stock,
+  mushroom_farm_level,
+  recycling_plant_level,
+}: {
+  resource_stock: Resource
+  mushroom_farm_level: number
+  recycling_plant_level: number
+}): number {
   const mushroom_tight = resource_stock.mushroom < resource_stock.plastic
-  if (!mushroom_tight) {
+  const plastic_tight = resource_stock.plastic < resource_stock.mushroom
+
+  if (left.code === BuildingCode.MUSHROOM_FARM && right.code === BuildingCode.RECYCLING_PLANT) {
+    if (mushroom_farm_level > recycling_plant_level) {
+      return 1
+    }
+    if (mushroom_farm_level < recycling_plant_level) {
+      return -1
+    }
+    if (mushroom_tight) {
+      return -1
+    }
+    if (plastic_tight) {
+      return 1
+    }
     return 0
   }
-  if (left.code === BuildingCode.MUSHROOM_FARM && right.code === BuildingCode.RECYCLING_PLANT) {
-    return -1
-  }
   if (left.code === BuildingCode.RECYCLING_PLANT && right.code === BuildingCode.MUSHROOM_FARM) {
-    return 1
+    if (recycling_plant_level > mushroom_farm_level) {
+      return -1
+    }
+    if (recycling_plant_level < mushroom_farm_level) {
+      return 1
+    }
+    if (plastic_tight) {
+      return -1
+    }
+    if (mushroom_tight) {
+      return 1
+    }
+    return 0
   }
   return 0
 }
@@ -249,6 +320,10 @@ export function sortBuildingsForSystemUpgrade<
 }): T[] {
   const production_bootstrap = needsCoreProductionBootstrap(buildings)
   const core_production_satisfied = isCoreProductionSatisfied(buildings)
+  const {
+    mushroom_farm_level,
+    recycling_plant_level,
+  } = getCoreProductionLevels(buildings)
 
   return [ ...buildings ].sort((left, right) => {
     const rank_difference = systemUpgradeRank({
@@ -258,6 +333,8 @@ export function sortBuildingsForSystemUpgrade<
       production_energy_ratio,
       production_bootstrap,
       core_production_satisfied,
+      mushroom_farm_level,
+      recycling_plant_level,
     }) - systemUpgradeRank({
       building_code: right.code,
       resource_stock,
@@ -265,11 +342,17 @@ export function sortBuildingsForSystemUpgrade<
       production_energy_ratio,
       production_bootstrap,
       core_production_satisfied,
+      mushroom_farm_level,
+      recycling_plant_level,
     })
     if (rank_difference !== 0) {
       return rank_difference
     }
-    const mushroom_income_difference = mushroomIncomeTiebreaker(left, right, resource_stock)
+    const mushroom_income_difference = mushroomIncomeTiebreaker(left, right, {
+      resource_stock,
+      mushroom_farm_level,
+      recycling_plant_level,
+    })
     if (mushroom_income_difference !== 0) {
       return mushroom_income_difference
     }
