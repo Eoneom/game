@@ -53,6 +53,7 @@ import {
   loadOutpostRecruitHints,
   recruitSortHintsForCity,
   sortTroopsForSystemRecruit,
+  systemRecruitBatchCount,
 } from '#command/player/system/troops'
 import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
 import {
@@ -289,6 +290,12 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
   const outpost_hints = await loadOutpostRecruitHints(player_id)
+  const recruits: {
+    city_id: string
+    city_name: string
+    troop_code: string
+    count: number
+  }[] = []
 
   for (const city of cities) {
     const [
@@ -346,7 +353,13 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       })) {
         continue
       }
-      if (!canAfford(city_details.resource_stock, cost.resource)) {
+      const count = systemRecruitBatchCount({
+        troop_code: troop.code,
+        stock: city_details.resource_stock,
+        unit_cost: cost.resource,
+        hints: recruit_hints,
+      })
+      if (count < 1) {
         continue
       }
 
@@ -354,18 +367,32 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
         player_id,
         city_id: city.id,
         troop_code: troop.code,
-        count: 1
+        count,
       })
-      return {
+      recruits.push({
         city_id: city.id,
         city_name: city.name,
         troop_code: troop.code,
-        count: 1,
-      }
+        count,
+      })
+      break
     }
   }
 
-  return null
+  if (recruits.length === 0) {
+    return null
+  }
+
+  const total_count = recruits.reduce((sum, recruit) => sum + recruit.count, 0)
+  const first = recruits[0]
+  return {
+    recruits,
+    total_count,
+    city_id: first.city_id,
+    city_name: first.city_name,
+    troop_code: first.troop_code,
+    count: total_count,
+  }
 }
 
 async function ownedLocationCells(player_id: string): Promise<{

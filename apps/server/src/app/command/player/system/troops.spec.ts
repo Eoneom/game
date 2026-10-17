@@ -1,9 +1,13 @@
 import {
   loadOutpostRecruitHints,
+  maxRoleRecruitHeadroom,
   recruitSortHintsForCity,
   sortTroopsForSystemRecruit,
+  systemRecruitBatchCount,
+  SYSTEM_MAX_FOUNDER_TROOPS,
   SYSTEM_MAX_SCOUT_TROOPS,
 } from './troops'
+import { TroopRole } from '#core/troop/constant/role'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TroopListQuery } from '#query/troop/list'
 import { OutpostEntity } from '#core/outpost/entity'
@@ -113,6 +117,83 @@ describe('sortTroopsForSystemRecruit', () => {
 
     assert.deepStrictEqual(capped_order[0], TroopCode.ASSEMBLER)
     assert.ok(fresh_order.indexOf(TroopCode.SEEKER) < fresh_order.indexOf(TroopCode.ASSEMBLER))
+  })
+})
+
+describe('systemRecruitBatchCount', () => {
+  const base_hints = {
+    scout_count: 0,
+    founder_count: 0,
+    needs_harvester_on_outpost: false,
+    needs_reclaimer_on_outpost: false,
+  }
+
+  it('recruits multiple economy troops when resources allow', () => {
+    const count = systemRecruitBatchCount({
+      troop_code: TroopCode.HARVESTER,
+      stock: {
+        plastic: 500,
+        mushroom: 0,
+        plasma: 0,
+      },
+      unit_cost: {
+        plastic: 100,
+        mushroom: 0,
+        plasma: 0,
+      },
+      hints: base_hints,
+    })
+
+    assert.strictEqual(count, 5)
+  })
+
+  it('limits scouts to remaining per-city headroom', () => {
+    const count = systemRecruitBatchCount({
+      troop_code: TroopCode.SEEKER,
+      stock: {
+        plastic: 10_000,
+        mushroom: 0,
+        plasma: 0,
+      },
+      unit_cost: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+      hints: {
+        ...base_hints,
+        scout_count: 1,
+      },
+    })
+
+    assert.strictEqual(count, SYSTEM_MAX_SCOUT_TROOPS - 1)
+  })
+
+  it('returns zero when founder cap is reached', () => {
+    const headroom = maxRoleRecruitHeadroom(TroopRole.FOUNDER, {
+      scout_count: 0,
+      founder_count: SYSTEM_MAX_FOUNDER_TROOPS,
+    })
+    assert.strictEqual(headroom, 0)
+
+    const count = systemRecruitBatchCount({
+      troop_code: TroopCode.ASSEMBLER,
+      stock: {
+        plastic: 10_000,
+        mushroom: 0,
+        plasma: 0,
+      },
+      unit_cost: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+      hints: {
+        ...base_hints,
+        founder_count: SYSTEM_MAX_FOUNDER_TROOPS,
+      },
+    })
+    assert.strictEqual(count, 0)
   })
 })
 

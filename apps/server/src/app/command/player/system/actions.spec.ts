@@ -586,6 +586,69 @@ describe('systemTickActions', () => {
     assert.deepStrictEqual(vi.mocked(recruitTroop).mock.calls[0][0].troop_code, TroopCode.HARVESTER)
   })
 
+  it('recruits multiple troops in one batch when affordable', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 500,
+        mushroom: 0,
+      }),
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.CLONING_FACTORY,
+          level: 5,
+        },
+      ],
+      upgrade_queue: [],
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.HARVESTER,
+          count: 0,
+          movement_id: null,
+        }),
+      ],
+      costs: {
+        [TroopCode.HARVESTER]: {
+          resource: {
+            plastic: 100,
+            mushroom: 0,
+            plasma: 0,
+          },
+          duration: 1,
+        },
+      } as never,
+      pending_recruitment: null,
+    })
+
+    const acted = await systemTickActions.recruit(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(recruitTroop).mock.calls.length, 1)
+    assert.strictEqual(vi.mocked(recruitTroop).mock.calls[0][0].count, 5)
+    assert.strictEqual(acted?.total_count, 5)
+  })
+
   it('settles the next Core roman name when a temporary outpost has a founder', async () => {
     const outpost_id = id()
     const outpost_cell = testCityCell({ cell_id: id() })

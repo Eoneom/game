@@ -111,6 +111,60 @@ export function sortTroopsForSystemRecruit({
   })
 }
 
+function maxAffordableRecruitCount(stock: Resource, unit_cost: Resource): number {
+  const limits: number[] = []
+  if (unit_cost.plastic > 0) {
+    limits.push(Math.floor(stock.plastic / unit_cost.plastic))
+  }
+  if (unit_cost.mushroom > 0) {
+    limits.push(Math.floor(stock.mushroom / unit_cost.mushroom))
+  }
+  if (unit_cost.plasma > 0) {
+    limits.push(Math.floor(stock.plasma / unit_cost.plasma))
+  }
+  if (limits.length === 0) {
+    return Number.MAX_SAFE_INTEGER
+  }
+  return Math.min(...limits)
+}
+
+export function maxRoleRecruitHeadroom(
+  role: TroopRole,
+  hints: Pick<SystemRecruitSortHints, 'scout_count' | 'founder_count'>
+): number {
+  if (role === TroopRole.SCOUT) {
+    return Math.max(0, SYSTEM_MAX_SCOUT_TROOPS - hints.scout_count)
+  }
+  if (role === TroopRole.FOUNDER) {
+    return Math.max(0, SYSTEM_MAX_FOUNDER_TROOPS - hints.founder_count)
+  }
+  return Number.MAX_SAFE_INTEGER
+}
+
+/** How many of `troop_code` the system player may start recruiting in one job for this city. */
+export function systemRecruitBatchCount({
+  troop_code,
+  stock,
+  unit_cost,
+  hints,
+}: {
+  troop_code: TroopCode
+  stock: Resource
+  unit_cost: Resource
+  hints: SystemRecruitSortHints
+}): number {
+  const role = troop_role[troop_code]
+  const headroom = maxRoleRecruitHeadroom(role, hints)
+  if (headroom === 0) {
+    return 0
+  }
+  const affordable = maxAffordableRecruitCount(stock, unit_cost)
+  if (affordable < 1) {
+    return 0
+  }
+  return Math.min(affordable, headroom)
+}
+
 export async function loadOutpostRecruitHints(player_id: string): Promise<SystemOutpostRecruitHints> {
   const {
     outposts,
