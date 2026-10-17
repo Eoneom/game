@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -15,6 +16,7 @@ import {
   subscribeSystemPlayerStatsSnapshots,
 } from './stats-store'
 import { registerSystemPlayerObservabilityWsListener } from './ws-listener'
+import { translateError } from '#helpers/error-translations'
 
 export const useObservabilitySession = () => {
   const { token } = useAuth()
@@ -96,4 +98,29 @@ export const useSystemPlayerStats = (is_admin: boolean | undefined) => {
     isPending: query.isPending,
     refetch: query.refetch,
   }
+}
+
+export const useForceSystemPlayerTick = (is_admin: boolean | undefined) => {
+  const { token } = useAuth()
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!token) {
+        throw new Error('token:not-found')
+      }
+      const res = await client.admin.forceSystemPlayerTick(token)
+      if (isError(res)) {
+        throw new Error(res.error_code)
+      }
+      return res.data
+    },
+    onSuccess: data => {
+      toast.success(
+        `Tick ${data.tick_index} exécuté pour ${data.system_player_count} joueur(s) système. Prochain tick ${data.next_tick_index}.`,
+      )
+    },
+    onError: (err: Error) => {
+      toast.error(translateError(err.message))
+    },
+  })
 }

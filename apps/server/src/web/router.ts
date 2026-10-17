@@ -36,6 +36,7 @@ import { citySettleHandler } from '#web/handler/city/settle'
 import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
 import { healthGetHandler } from '#web/handler/health/get'
 import { adminSystemPlayerObservabilityGetHandler } from '#web/handler/admin/system-player-observability/get'
+import { adminForceSystemPlayerTickPostHandler } from '#web/handler/admin/system-player-tick/post'
 import { adminSystemPlayerStatsGetHandler } from '#web/handler/admin/system-player-stats/get'
 import { adminMiddleware } from '#web/middleware/admin'
 
@@ -100,6 +101,7 @@ export const router = (): Router => {
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)
+  r.post('/admin/system-player-tick', authMiddleware, adminMiddleware, adminForceSystemPlayerTickPostHandler)
 
   return r
 }

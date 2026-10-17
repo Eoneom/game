@@ -4,7 +4,7 @@
 
 ## Summary
 
-Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open a **dedicated admin console** (not the in-game workspace shell) at `/admin`. The nav link « Observabilité IA » (visible only when `is_admin`) points to that console. The console streams **every** system-controlled Player tick over a **narrow admin WebSocket** — not the game event socket — and shows a **read-only stats panel** (cities, outposts, building levels per city, technology levels per player). Each tick event shows outcome (`success` | `idle` | `error`), an ordered **attempts** trace, a concise French **summary**, and **expandable JSON**. Combined god-view stream with optional **filter by system Player name** (applies to feed and stats). Stats: HTTP snapshot on load/refresh; live patches via admin WebSocket after each **successful** tick action only. No DB persistence for feed or stats. v1 does not change tick policy, replay/export, or alerts. Existing `logs/system-tick.log` remains.
+Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open a **dedicated admin console** (not the in-game workspace shell) at `/admin`. The nav link « Observabilité IA » (visible only when `is_admin`) points to that console. The console streams **every** system-controlled Player tick over a **narrow admin WebSocket** — not the game event socket — and shows a **read-only stats panel** (cities, outposts, building levels per city, technology levels per player). Each tick event shows outcome (`success` | `idle` | `error`), an ordered **attempts** trace, a concise French **summary**, and **expandable JSON**. Combined god-view stream with optional **filter by system Player name** (applies to feed and stats). Stats: HTTP snapshot on load/refresh; live patches via admin WebSocket after each **successful** tick action only. No DB persistence for feed or stats. Operators may **force one tick on demand** (admin HTTP); the 60s singleton schedule is rescheduled from force time. No replay/export or alerts. Existing `logs/system-tick.log` remains.
 
 **Depends on**: [`016`](../016-system-controlled-players/spec.md), [`017`](../017-realtime-websocket/spec.md), session auth ([`002`](../002-player-session-auth/spec.md)).
 
@@ -16,6 +16,7 @@ Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open a **dedicated a
 | Check | Server compares logged-in `PlayerEntity.name` to allowlist (not client-only) |
 | HTTP | `GET /admin/system-player-observability` — `{ is_admin, system_players? }` |
 | HTTP | `GET /admin/system-player-stats` — `{ players: [...] }` (admin middleware; `admin:forbidden` otherwise) |
+| HTTP | `POST /admin/system-player-tick` — runs one immediate system-player tick for **all** system-controlled players (same job body as pg-boss `player.system.tick`); reschedules the singleton next tick at `now + SYSTEM_PLAYER_TICK_INTERVAL_MS` with `tick_index + 1` (replaces any pending singleton job). Admin middleware. Response: `{ tick_index, next_tick_index, next_execute_at, system_player_count }` |
 | Game WS | Default upgrade path (`/?token=`): **game** `AppEvent` fan-out only; observability events **not** sent here |
 | Admin WS | Path `/admin/observability/ws?token=` — allowlisted admins only (`4003` + `forbidden` otherwise); fan-out **only** `system-player:action-committed` and `system-player:stats-updated` |
 
@@ -73,7 +74,7 @@ After each successful system tick action, server emits `system-player:stats-upda
 
 | Route | Behavior |
 | --- | --- |
-| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; French attempt chain and summaries (codes translated client-side); JSON details |
+| `/admin` | Admin shell + stats panel (« État des joueurs système ») + live tick feed (newest first); shared name filter; outcome badge; French attempt chain and summaries (codes translated client-side); JSON details; **« Forcer un tick IA »** calls `POST /admin/system-player-tick` (toast on success/error) |
 | `/admin/system-players` | Redirect to `/admin` (legacy URL) |
 
 Nav: « Observabilité IA » when `is_admin` → `/admin`. Non-admins: link hidden; direct `/admin` navigates away (e.g. to inbox). Admin observability WebSocket connects **only** while the admin console route is mounted (not on game login).
@@ -82,7 +83,7 @@ Copy in French covers succès, inactif, and erreur — not only successful actio
 
 ## Out of scope
 
-AI tick policy changes, replay/export, alerts.
+Automated tick interval changes, per-player-only force tick, replay/export, alerts.
 
 ## Evidence index
 

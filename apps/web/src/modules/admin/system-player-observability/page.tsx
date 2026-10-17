@@ -8,6 +8,7 @@ import {
   useRegisterObservabilityWsWhenAdmin,
   useSystemPlayerNameFilter,
   useSystemPlayerStats,
+  useForceSystemPlayerTick,
 } from './hooks'
 import type { SystemPlayerTickObservabilityOutcome } from './types'
 import { SystemPlayerStatsPanel } from './stats-panel'
@@ -39,6 +40,10 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
     isPending: stats_pending,
     refetch: refetch_stats,
   } = useSystemPlayerStats(session?.is_admin)
+  const {
+    mutate: force_tick,
+    isPending: force_tick_pending,
+  } = useForceSystemPlayerTick(session?.is_admin)
 
   const filtered_events = useMemo(() => {
     if (!filter) {
@@ -92,6 +97,14 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
           onClick={() => refetch_stats()}
         >
           Actualiser les stats
+        </button>
+        <button
+          type="button"
+          className="rounded-sm border border-amber/40 bg-chrome px-2 py-1 text-sm text-amber hover:border-amber/60 disabled:opacity-50"
+          disabled={force_tick_pending}
+          onClick={() => force_tick()}
+        >
+          {force_tick_pending ? 'Tick en cours…' : 'Forcer un tick IA'}
         </button>
       </div>
 
