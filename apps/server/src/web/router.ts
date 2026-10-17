@@ -34,12 +34,19 @@ import { troopCreateMovementHandler } from '#web/handler/troop/movement/create'
 import { troopGetHandler } from '#web/handler/troop/get'
 import { citySettleHandler } from '#web/handler/city/settle'
 import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
+import { healthGetHandler } from '#web/handler/health/get'
+
+const CANONICAL_HEALTH_PATH = '/api/v1/health'
 
 export const router = (): Router => {
   const r = Router()
 
-  r.get('/', (req, res) => {
-    res.send({ status: 'ok' })
+  r.get(CANONICAL_HEALTH_PATH, healthGetHandler)
+  r.get('/health', (_req, res) => {
+    res.redirect(308, CANONICAL_HEALTH_PATH)
+  })
+  r.get('/', (_req, res) => {
+    res.redirect(308, CANONICAL_HEALTH_PATH)
   })
 
   // Unauthenticated routes
