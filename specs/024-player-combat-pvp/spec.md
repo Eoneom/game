@@ -1,357 +1,268 @@
-# Slice 024 — Player-vs-player combat
+# Slice 024 — Player combat (PvP)
 
-**Status**: Proposed (not implemented on `main`).
+**Status**: Design locked (interview + combat mechanics); **not implemented** on `main` (brownfield movement has no `attack` action yet).
 
 ## Summary
 
-Introduce **explicit combat** when a player's troops **attack** a map cell occupied by another player (troops, outpost, or city). Today [`010`](../010-troop-movement-combat/spec.md) handles peaceful `MovementAction` values only; arrival always merges friendly stacks or creates outposts—**no hostility check**, **no casualties**, **no capture/loot**.
+Players launch **`attack`** troop movements ([`010`](../010-troop-movement-combat/spec.md)) against **enemy** map locations: **field stacks** (troops on a cell), **cities** ([`006`](../006-city-lifecycle-gathering/spec.md)), and **outposts** ([`011`](../011-outposts/spec.md)). When the movement **arrives**, the server **starts one battle** (single trigger). That battle **resolves over multiple combat rounds** using **attack/defense pools** and **whole-unit casualties**. Outcomes can **loot** resources (requires surviving **carriers**), **destroy** structures or stacks, and **occupy** locations (requires surviving **combat** troops). New **faction-exclusive combat `TroopCode`s** (same pattern as `explorer` / `seeker` in [`004`](../004-faction-domain/spec.md) + [`009`](../009-troops-stationary/spec.md)) each have **unique wire codes, French display names, and troop artwork**. **Defenders** are **auto-only**. **System-controlled** singularity players ([`016`](../016-system-controlled-players/spec.md)) recruit and fight with their faction’s combat codes. Battles emit **`battle`** reports ([`012`](../012-communication-reports/spec.md)).
 
-This slice defines scope, preconditions, resolution, defenders, outcomes, movement integration, notifications, system-AI behavior, and edge cases. Implementation should extend movement/saga patterns (pg-boss finish job + `Communication` reports + WebSocket events) rather than a separate real-time battle server.
+**Depends on**: faction ([`004`](../004-faction-domain/spec.md)), troops ([`009`](../009-troops-stationary/spec.md)), movement ([`010`](../010-troop-movement-combat/spec.md)), cities ([`006`](../006-city-lifecycle-gathering/spec.md)), outposts ([`011`](../011-outposts/spec.md)), reports ([`012`](../012-communication-reports/spec.md)), requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), system players ([`016`](../016-system-controlled-players/spec.md)), timing ([`022`](../022-timing-and-resources/spec.md)).
 
-**Depends on**: troops ([`009`](../009-troops-stationary/spec.md)), movement ([`010`](../010-troop-movement-combat/spec.md)), outposts ([`011`](../011-outposts/spec.md)), cities ([`006`](../006-city-lifecycle-gathering/spec.md)), reports ([`012`](../012-communication-reports/spec.md)), world grid ([`005`](../005-world-grid-visibility/spec.md)), requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), technology ([`008`](../008-technology-research/spec.md)), buildings ([`007`](../007-buildings-upgrade-queue/spec.md)), system players ([`016`](../016-system-controlled-players/spec.md)), realtime ([`017`](../017-realtime-websocket/spec.md)), location activity ([`013`](../013-location-activity/spec.md)).
+**Related (today)**: [`010`](../010-troop-movement-combat/spec.md) documents peaceful `MovementAction` values only; PvP adds `attack` and battle sagas.
 
-**Out of scope (unless decided otherwise in Interview)**: alliance diplomacy UI, trade embargoes, PvE wildlife/neutral factions, multi-day sieges with separate siege engines, manual micro per combat round in the client.
+## Decisions (interview — locked)
 
----
+| Topic | Decision |
+| --- | --- |
+| **Targets (v1)** | Attack **enemy troops on cells**, **cities**, and **outposts** (all in scope). |
+| **War / diplomacy** | **Always-on hostility** between players of **different** factions; **cannot attack** players of the **same** faction. No separate war declaration or peace treaty in v1. |
+| **Resolution** | **One-shot trigger** when the attack movement **arrives** (starts exactly one battle). Combat **resolves in multiple rounds** within that battle (scheduled rounds / jobs), not a single instant resolve at arrival. |
+| **Combat stats** | Each `TroopCode` has **`attack_capacity`** and **`defense_capacity`** (extend `troop_characteristics`). |
+| **Outcomes (v1)** | **Loot**, **destroy**, and **occupy** are all in scope; see [Outcomes matrix](#outcomes-matrix) and [Outcomes vs army composition](#outcomes-vs-army-composition). |
+| **Defenders** | **Auto-defend only**: all eligible defender troops on the target cell join the battle automatically; no optional decline, no manual intercept from other cells. |
+| **System players** | **Yes** — system-controlled players are valid attackers and defenders under the same faction and combat rules (e.g. singularity `Alpha` vs confederation humans). |
+| **Faction identity** | **No shared generic combat unit** across factions; each new combat troop is **one faction only** (`troop_faction`), with **distinct name + art** like `explorer` vs `seeker`. |
+
+## Faction gating
+
+- Resolve **attacker** and **defender** `player_id` → `faction_code` ([`004`](../004-faction-domain/spec.md)).
+- **Allow** attack only if `attacker.faction_code !== defender.faction_code`.
+- **Reject** same-faction attacks.
+- Playable signup today: **`the_confederation`** (humans). **`the_technological_singularity`** is non-playable but used by system AI ([`004`](../004-faction-domain/spec.md)); singularity combat troops still need **full name + art** for PvP UI, reports, and map tooltips when fighting Alpha.
+
+## Attack targets
+
+| Target kind | How identified at arrival | Defender owner |
+| --- | --- | --- |
+| **Field stack** | Destination `cell_id` has enemy troops; no enemy city/outpost on cell (or exposed stack per implementation). | Owner of troops on the cell. |
+| **City** | Destination cell hosts an enemy **city** (`city_id`). | City owner. |
+| **Outpost** | Destination cell hosts an enemy **outpost** (`outpost_id`). | Outpost owner. |
+
+If city/outpost and garrison share a cell, the **location** is the assault target; **all stacks on that cell** enter the battle snapshot.
+
+## Movement: `attack` action
+
+Extend `MovementAction` with `ATTACK = 'attack'` (see [`010`](../010-troop-movement-combat/spec.md)).
+
+| Concern | Spec |
+| --- | --- |
+| Create | `POST /troop/movement` with `action: 'attack'`, origin/destination, troop selection. |
+| Faction check | Enforce [Faction gating](#faction-gating) before persist. |
+| Troop mix | At least **one combat-role** unit required (see [Composition rules](#composition-rules)). |
+| Finish | On `troop.movement.finish`, start **battle** instead of peaceful sagas. |
+| Estimate | `POST /troop/movement/estimate` accepts `attack`; ETA from slowest selected unit **speed**. |
+
+**Allowed movement actions by role** (v1):
+
+| `combat_role` | `explore` | `base` / rebase | `transport` | `attack` |
+| --- | --- | --- | --- | --- |
+| `combat` | no | yes | no (payload) | yes |
+| `carrier` | no | yes | yes | yes (escort) |
+| `civilian` | no* | yes | no* | yes (vulnerable) |
+| `scout` | yes | yes | no | no |
+
+\*Existing earning troops keep today’s explore/transport rules for non-combat codes.
+
+## Combat troops (faction-exclusive `TroopCode`s)
+
+Four new codes — **two per faction**, **mirrored combat stats** but **unique identity** (wire enum, `troop_faction`, French copy, PNG art). Follow the same exclusivity model as `explorer`/`seeker` ([`009`](../009-troops-stationary/spec.md), `apps/server/src/core/troop/constant/faction.ts`).
+
+### Roster (names, faction, stats)
+
+| Faction | Enum member | Wire `TroopCode` | FR display name (UI) | Lore (spec) | `combat_role` | speed | transport_capacity | attack | defense |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | 1.0 | 0 | 12 | 12 |
+| `the_confederation` | `INTERCEPTOR` | `interceptor` | **Intercepteur** | Chasseur rapide confédéré, optimisé pour frapper en premier et rompre les formations. | `combat` | 1.35 | 0 | 16 | 6 |
+| `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; ancre la ligne singularity sur le champ de bataille. | `combat` | 1.0 | 0 | 12 | 12 |
+| `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; fragile mais mortelle en rafale. | `combat` | 1.35 | 0 | 16 | 6 |
+
+- **`troop_faction`**: each code maps to exactly one `FactionCode` ([`004`](../004-faction-domain/spec.md)); no code appears on both factions.
+- **`TroopService.codesForFaction`**: confederation humans bootstrap/recruit **legionnaire** + **interceptor** only; singularity system player gets **war_machine** + **disruptor** (humans never recruit singularity codes via normal signup).
+- **Recruitment (v1)**:
+  - **Humans** (`the_confederation`): `PUT /troop/recruit` for `legionnaire` and `interceptor` only ([`009`](../009-troops-stationary/spec.md)).
+  - **System AI** (`the_technological_singularity`): same recruit pipeline for `war_machine` and `disruptor` on Alpha’s cities ([`016`](../016-system-controlled-players/spec.md)).
+- **Parity**: confederation pair and singularity pair use **identical numeric columns** above; only names, art, and faction mapping differ.
+
+### Web: translations and artwork convention
+
+Align with existing troops (`explorer`, `seeker`, etc.):
+
+| Concern | Location | Convention |
+| --- | --- | --- |
+| **Image file** | `apps/web/public/troops/<wire_code>.png` | One PNG per `TroopCode` wire value (snake_case), e.g. `legionnaire.png`, `war_machine.png`. Same layout as `explorer.png` / `seeker.png`. |
+| **Image URL** | `apps/web/src/modules/troop/image.ts` | `troopImageSrc(code)` → `` `/troops/${code}.png` `` (no change to helper; new files only). |
+| **French name / description** | `apps/web/src/modules/troop/translations.ts` | Add `TroopTranslations` entries: `name` = FR display name from table above; `description` / `effect` = short combat flavor (implement with product copy). |
+| **Alt text** | Troop list/detail components | Use `TroopTranslations[code].name` for `image.alt` (today `list/item` uses empty `alt` — implementation should set alt to troop name for accessibility). |
+| **API client** | `packages/api-client` | Export new enum members after server `TroopCode` extension. |
+
+**Required new assets (implementation checklist, not in repo until art lands):**
+
+| Wire code | PNG path | Suggested alt (FR) |
+| --- | --- | --- |
+| `legionnaire` | `apps/web/public/troops/legionnaire.png` | Légionnaire |
+| `interceptor` | `apps/web/public/troops/interceptor.png` | Intercepteur |
+| `war_machine` | `apps/web/public/troops/war_machine.png` | Machine de guerre |
+| `disruptor` | `apps/web/public/troops/disruptor.png` | Perturbateur |
+
+Enemy-faction troops must render correctly in battle reports, movement troop picker, and location troop lists (read-only stacks), even if the local player cannot recruit that code.
+
+### Extended `troop_characteristics` schema
+
+Extend `TroopCharacteristic` (`apps/server/src/core/troop/constant/characteristic.ts`) per [`009`](../009-troops-stationary/spec.md):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `speed` | number | Travel ETA |
+| `transport_capacity` | number | Loot haul when `combat_role` is `carrier` |
+| `attack_capacity` | number | Per unit per round |
+| `defense_capacity` | number | Per unit per round |
+| `combat_role` | enum | `combat` \| `carrier` \| `civilian` \| `scout` |
+
+**Existing troops** — add combat fields (unchanged codes):
+
+| `TroopCode` | `combat_role` | attack | defense |
+| --- | --- | --- | --- |
+| `explorer` / `seeker` | `scout` | 2 | 3 |
+| `settler` / `assembler` | `civilian` | 0 | 4 |
+| `light_transporter` / `hauler` | `carrier` | 1 | 6 |
+| `farmer` / `harvester` | `civilian` | 0 | 3 |
+| `recycler` / `reclaimer` | `civilian` | 0 | 3 |
+
+No per-player recruit cap beyond existing city recruitment concurrency ([`009`](../009-troops-stationary/spec.md)).
+
+### Recruitment (requirements + pricing)
+
+Mirror **numeric** rows per faction pair; requirements use `TroopRequirement` + `troop_costs` ([`014`](../014-requirements-pricing/spec.md)).
+
+| Faction line unit | `CLONING_FACTORY` level | plastic | mushroom | duration (s) |
+| --- | --- | --- | --- | --- |
+| `legionnaire` / `war_machine` | 4 | 2_500 | 2_500 | 200 |
+| `interceptor` / `disruptor` | 6 | 3_500 | 2_000 | 280 |
+
+Technologies: **none** in v1.
+
+### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
+
+- **Parity**: Alpha uses **`war_machine`** / **`disruptor`** with the same costs and requirements as confederation counterparts.
+- **Policy (v1)**: below garrison threshold, prefer **line** unit until ~20 count, then up to ~30% **skirmisher** before `attack` tick actions.
+- **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
+
+## Composition rules
+
+### Who fights
+
+At battle **start**, snapshot defender cell stacks or attacker movement payload:
+
+| `combat_role` | In battle? | Attack pool | Defense pool |
+| --- | --- | --- | --- |
+| `combat` | yes | 100% `attack_capacity × count` | 100% `defense_capacity × count` |
+| `carrier` | yes | 0 | 50% `defense_capacity × count` |
+| `civilian` | yes | 0 | 25% `defense_capacity × count` |
+| `scout` | yes (if on cell) | 25% attack | 50% defense |
+
+- **Attack** requires ≥ 1 `combat` unit; scouts cannot join `attack` movements.
+- Exclude troops with non-null `movement_id`.
+
+### Carriers and civilians under fire
+
+- Carriers deal no damage; casualties hit **combat** stacks first, then **carrier**, then **civilian**, then **scout** (lowest `defense_capacity` first within role).
+- **Loot** requires surviving **`carrier`** on winning attacker ([Outcomes vs army composition](#outcomes-vs-army-composition)).
+- On successful **occupation**, default: remaining **defender civilians** on cell are **destroyed** (see open questions in project `docs/combat-spec-interview.md`).
+
+## Multi-round resolution (mechanics)
+
+### Scheduling
+
+- **Round interval**: `COMBAT_ROUND_INTERVAL_MS` — propose **30_000** ([`022`](../022-timing-and-resources/spec.md)).
+- **Max rounds**: **20** → **defender wins** (hold); no attacker loot/occupy.
+
+### Per-round algorithm (simultaneous exchange)
+
+1. **Pools**: `attack_pool(S) = Σ (count × effective_attack)`, `defense_pool(S) = Σ (count × effective_defense)` with [composition multipliers](#who-fights).
+2. **Strike order**: **Simultaneous** each round (no first-strike in v1).
+3. **Casualties (whole units)** attacker → defender:  
+   `losses = min(defender_units_in_priority_order, max(1, floor(attack_pool(attacker) / max(1, defense_pool(defender)))))` when `attack_pool(attacker) > 0`; symmetric for defender → attacker.
+4. **End round**: if one side has **zero** `combat` units and the other has ≥ 1 `combat`, battle ends; if both lack `combat`, **defender wins**.
+
+### Battle end summary
+
+| Condition | Winner |
+| --- | --- |
+| Defender 0 `combat`, attacker ≥ 1 `combat` | Attacker |
+| Attacker 0 `combat` | Defender |
+| Round 20 | Defender |
+| Both 0 `combat` same round | Defender |
+
+**Attacker defeat (spec default):** survivors **return to attack movement origin cell**.
+
+### Defender snapshot (auto-defend)
+
+All defender stacks on cell with `movement_id` null; no reinforcements; no building HP in v1.
+
+## Outcomes matrix
+
+| Target | Attacker **wins** | Attacker **loses** |
+| --- | --- | --- |
+| **Field stack** | Destroy defender troops; loot if carriers survive; occupy with survivors. | Retreat to origin. |
+| **City** | Destroy garrison; loot warehouse; transfer **city** ownership. | City stays defender; retreat. |
+| **Outpost (temporary)** | Destroy garrison; **destroy** temp outpost; loot; hold cell. | Outpost remains; retreat. |
+| **Outpost (permanent)** | Destroy garrison; loot; transfer **outpost** ownership. | Outpost remains; retreat. |
+
+City buildings are **not** deleted on capture.
+
+## Outcomes vs army composition
+
+| Outcome | Winning attacker requirement |
+| --- | --- |
+| **Occupy** | ≥ 1 surviving `combat` unit. |
+| **Loot** | Surviving `carrier` stacks with total `transport_capacity` ≥ 1; transfer `min(50%` of each lootable resource`, remaining capacity)` ([`015`](../015-resources-model/spec.md)). |
+| **Destroy** (temp outpost / troops) | Attacker win per matrix. |
+
+## Battle lifecycle (jobs)
+
+```text
+attack movement arrives → snapshot → Battle round 0 → schedule round 1
+each round: pools + casualties → end or schedule next
+battle end → outcomes + battle reports
+```
+
+Arrival is one saga trigger; rounds use [`018`](../018-app-composition-jobs/spec.md).
+
+## System-controlled players
+
+Same rules; Alpha uses singularity combat codes and art. Humans see **Machine de guerre** / **Perturbateur** in UI when fighting singularity stacks.
+
+## Communication reports
+
+Add `ReportType.BATTLE` (`battle`) in [`012`](../012-communication-reports/spec.md): battle id, cell, target, rounds, winner, casualties, loot, occupation, movement id; include **troop codes and counts** so both factions’ named units appear in copy.
 
 ## Brownfield inventory (as of `main`)
 
-### Troop types and stats
-
-| `TroopCode` | `TroopRole` | `speed` | `transport_capacity` | Combat stats |
-| --- | --- | --- | --- | --- |
-| `explorer` / `seeker` | scout | 1.5 | 200 | **None** |
-| `settler` / `assembler` | founder | 0.75 | 1000 | **None** |
-| `light_transporter` / `hauler` | carrier | 1 | 10000 | **None** |
-| `farmer` / `harvester` | cultivator | 1 | 200 | Earnings only (outpost gather) |
-| `recycler` / `reclaimer` | salvager | 1 | 200 | Earnings only |
-
-Source: `apps/server/src/core/troop/constant/{code,role,characteristic}.ts`, `TroopService` (`apps/server/src/core/troop/service.ts`). Faction roster: `troop_faction` + `TroopService.codesForFaction`.
-
-### Movement
-
-- Actions: `explore`, `base`, `transport` only (`MovementAction`).
-- Duration: Manhattan distance × `10000`, limited by slowest stack speed (`TroopService.getMovementDuration`).
-- Finish: `troop.movement.finish` → `sagaFinishOneMovement` → explore/base/transport sagas.
-- Troops on a cell are scoped per **owner** (`repository.troop.listInCell({ cell_id, player_id })`); multiple players may coexist on one cell without interaction.
-
-### Garrison / defenders (implicit today)
-
-- **City**: all `TroopEntity` rows for the owner on the city's `cell_id` (listed via `GET /city/:city_id/troop`).
-- **Outpost**: same via `GET /outpost/:outpost_id/troop`.
-- **No** separate garrison table, wall HP, or auto-defender spawn.
-- **No** city energy field applied to combat (energy is production ratio on cities via buildings).
-
-### Web UI
-
-- `apps/web/src/modules/troop/` — recruit, list (no battle UI).
-- `apps/web/src/modules/movement/` — create/list; warnings for transport capacity and emptying temporary outpost only.
-- `apps/web/src/modules/map/` — explore uses scout role to enable explore action.
-- `apps/web/src/modules/communication/` — report types: `exploration`, `base`, `rebase`, `transport` (no combat).
-
-### System AI ([`016`](../016-system-controlled-players/spec.md))
-
-- Tick actions: upgrade, research, recruit, explore, base, settle, make-permanent, transport — **no attack**.
-
----
-
-## Scope
-
-### In scope (target)
-
-| Target | Description |
+| Area | Today |
 | --- | --- |
-| Hostile movement | New movement action (or equivalent command) that declares an attack on a **destination cell** |
-| Resolution at arrival | Combat resolved in the **movement finish saga** (or chained job), deterministic server-side |
-| Casualties | Reduce `TroopEntity.count` (and delete empty stacks) |
-| Location outcomes | At minimum: defeat enemy field troops; optional capture/loot rules for outpost/city per Interview |
-| Reports + WS | Both attacker and defender notified (report + events) |
+| Movement | `explore`, `base`, `transport` only; no hostility ([`010`](../010-troop-movement-combat/spec.md)). |
+| Troops | No `attack_capacity` / `defense_capacity`; roles via `TroopRole` + `troop_characteristics` speed/capacity ([`009`](../009-troops-stationary/spec.md)). |
+| Faction troops | `troop_faction` exclusive codes per faction ([`004`](../004-faction-domain/spec.md)). |
+| Art | `apps/web/public/troops/*.png` + `troopImageSrc` + `TroopTranslations`. |
+| System AI | No `attack` tick ([`016`](../016-system-controlled-players/spec.md)). |
 
-### Interview — scope boundaries
+## Deferred (follow-up)
 
-| Topic | **Decision:** *(choose one or define)* | Recommended default (grounded in current design) |
-| --- | --- | --- |
-| PvP only vs PvE | **Decision:** | **PvP + system-controlled players** as defenders/attackers ([`016`](../016-system-controlled-players/spec.md)); no neutral mobs until a PvE slice exists |
-| Attackable locations | **Decision:** | **Field stacks**, **outposts** (temp + permanent), **cities** — all on a single `cell_id` |
-| Friendly fire / same faction | **Decision:** | **Block** attacks on same `player_id`; **Decision:** whether confederation co-op (same human faction) can attack each other — default **allow** (only one playable faction today) |
-| Peaceful coexistence | **Decision:** | After combat slice, **forbid** `base`/`transport` arrival on enemy-occupied cell without `attack` (or auto-convert to attack) |
+See project `docs/combat-spec-interview.md` (max 5 open questions): exploration gate, attack preview, civilian fate on capture, peaceful movement into hostile cells, attack movement cost.
 
----
+## Implementation outline (non-normative)
 
-## Preconditions
-
-| Rule | Brownfield | Proposed |
-| --- | --- | --- |
-| Troop presence | Attacker selects stacks on origin cell | Unchanged |
-| Exploration | Explore reveals cells | **Decision:** require destination **explored** by attacker? Default **yes** (consistent with map UX) |
-| Adjacency | Not required today (any coordinate pair) | **Decision:** **no adjacency gate** (keep global movement; siege flavor via travel time) |
-| War / hostility | None | **Decision:** see Interview |
-| Movement in progress | Troops with `movement_id` cannot be re-selected | Unchanged |
-| Founder/settler rules | Settlers required for settle | **Decision:** founders **cannot** be sole attackers on city capture? Default **allow** but vulnerable (no combat stats) |
-
-### Interview — war declaration
-
-| Topic | **Decision:** | Options |
-| --- | --- | --- |
-| Hostility model | **Decision:** | **A)** Implicit hostility — any attack allowed on any non-owned cell with enemy presence. **B)** Explicit war flag per player pair (DB + UI). **C)** Faction-wide war (future multi-faction). **D)** “Raid” cooldown without formal war |
-| Energy / plasma cost | **Decision:** | **A)** No combat energy (align with current troop model). **B)** Plasma flat fee per attack movement. **C)** City energy must be ≥ threshold to launch offensive |
-| Minimum attacker stack | **Decision:** | **A)** ≥1 troop any role. **B)** Require at least one scout or future military role. **C)** Minimum total count N |
-
----
-
-## Initiation and tick integration
-
-### Proposed flow
-
-```mermaid
-sequenceDiagram
-  participant Client
-  participant HTTP as POST movement attack
-  participant Job as troop.movement.finish
-  participant Saga as sagaFinishAttack
-  participant DB as Postgres
-
-  Client->>HTTP: attack action + troops + destination
-  HTTP->>DB: split stacks, schedule finish job
-  Note over Job: arrive_at = now + duration
-  Job->>Saga: sagaFinishAttack
-  Saga->>DB: resolve combat, casualties, outcomes
-  Saga->>Client: reports + WS events
-```
-
-| Piece | Proposal |
+| Area | Direction |
 | --- | --- |
-| API | Extend `POST /troop/movement` with `MovementAction.ATTACK` **or** dedicated `POST /troop/attack` (mirror movement estimate) |
-| Estimate | `POST /troop/movement/estimate` returns duration + **projected** outcome optional (**Decision:** show preview or hide for fog-of-war) |
-| Job queue | Reuse `troop.movement.finish`; saga router adds attack branch ([`010`](../010-troop-movement-combat/spec.md) pattern) |
-| System tick | New `tryAttack` in `system/actions.ts` when war model allows; rotate with explore/transport |
+| Core | `core/combat/`, `troop/constant/{code,characteristic,faction}.ts`, pricing/requirement tables |
+| Web | New PNGs + `TroopTranslations`; optional `image.alt` fix |
+| Sagas / jobs | `sagaFinishAttack`, `combat.round.advance` |
 
-### Interview — initiation
+## Evidence index (expected after implementation)
 
-| Topic | **Decision:** | Recommended |
-| --- | --- | --- |
-| Action enum | **Decision:** | Add `MovementAction.ATTACK` to keep one movement pipeline |
-| Cancel recall | **Decision:** | **A)** No cancel after commit (current movement has no cancel). **B)** Allow recall before arrival with speed penalty |
-| Combat during travel | **Decision:** | **A)** No — combat only at arrival. **B)** Intercept if enemy enters cell mid-flight (complex) |
-
----
-
-## Resolution model
-
-### Interview — core formula
-
-| Topic | **Decision:** | Options |
-| --- | --- | --- |
-| Model | **Decision:** | **A)** Single **auto-resolve** at arrival (Travian-like). **B)** Multi-round ticks (1 round per N seconds job). **C)** Hybrid — auto-resolve under stack cap, rounds above |
-| Stats source | **Decision:** | **A)** New `attack`/`defense`/`hp` per `TroopCode`. **B)** Role-based templates (scout weak, carrier tough). **C)** Technology + building modifiers only on **city** defenders |
-| Randomness | **Decision:** | **A)** Deterministic from seeds (movement id + arrive_at). **B)** Small RNG band (±5%). **C)** Pure RNG |
-| Stalemates | **Decision:** | **A)** Attacker retreats with casualties. **B)** Both retain remnants. **C)** Draw destroys both field stacks |
-
-### Recommended default (if no product input)
-
-**Auto-resolve** at arrival using aggregate **attack power** vs **defense power**:
-
-1. **Attacker power** = Σ `count × attack_value(code)` × optional tech multipliers.
-2. **Defender power** = Σ `count × defense_value(code)` on cell for **defending player** + **location bonus** (city buildings / outpost type).
-3. Compare powers `A` and `D` with ratio `r = A / (A + D)` (or classic `A/D` threshold table).
-4. **Casualties**: proportional loss on loser side; winner takes `loss_rate_winner` % (Interview tunables).
-5. **Zero defender troops** but city/outpost exists: **Decision:** auto-win vs **Decision:** building “wall” HP phase.
-
-Domain service (new): `CombatService.resolve({ attacker_troops, defender_troops, location_context })` — pure, no I/O (`core/combat/service.ts` pattern).
-
-### Technology and buildings (modifiers)
-
-Pull existing levels via `AppService` / `RequirementService` patterns:
-
-| Modifier | **Decision:** use? | Existing hooks |
-| --- | --- | --- |
-| Research lab techs | **Decision:** | `TechnologyCode` constants — no combat techs today; add new codes in pricing/requirement maps |
-| City buildings | **Decision:** | e.g. `central_inductor` level → defense %; warehouses → loot cap |
-| Troop earnings | **Decision:** | Default **no** — cultivator/salvager remain economic |
-
----
-
-## Defenders
-
-| Defender source | Inclusion | Notes |
-| --- | --- | --- |
-| Field troops | All enemy `TroopEntity` on `destination_cell_id` | Multiple stacks merged by code |
-| City garrison | Troops owned by city owner on cell | City entity optional wall phase |
-| Outpost garrison | Troops on outpost cell | Temporary outpost may be deleted when empty ([`011`](../011-outposts/spec.md)) |
-| Reinforcement mid-combat | **Decision:** | Default **no** — snapshot at arrival |
-| Online defender bonus | **Decision:** | Default **no** |
-
-### Interview — defender priority
-
-| Topic | **Decision:** | Recommended |
-| --- | --- | --- |
-| Multi-defender players | **Decision:** | **A)** Single defender `player_id` per cell (owner of city/outpost; else largest stack). **B)** All enemy players on cell fight separately in sequence |
-| Owner absent | **Decision:** | Troops still fight; city/outpost follows outcome rules |
-
----
-
-## Outcomes
-
-| Outcome | **Decision:** enabled? | Behavior sketch |
-| --- | --- | --- |
-| Attacker victory + enemy troops wiped | **Decision:** | Merge surviving attacker troops on cell (like `base` finish) |
-| Attacker defeat | **Decision:** | Survivors retreat to **origin** or **perish on cell** |
-| Outpost capture | **Decision:** | Transfer `OutpostEntity.player_id` or destroy temp outpost |
-| City capture | **Decision:** | **High impact** — transfer city + stocks vs **forbid** city attacks in v1 |
-| Loot | **Decision:** | % of `resource_stock` on cell capped by attacker **carrier** capacity (`transport_capacity`) |
-| Occupation | **Decision:** | Debuff production without transfer vs full owner change |
-| Building destruction | **Decision:** | Default **no** in v1 (only troop casualties) |
-| Exploration | **Decision:** | Attacker explores cell on successful entry? Default **yes** if not explored |
-
-### Interview — city capture (critical)
-
-| Topic | **Decision:** | Options |
-| --- | --- | --- |
-| City assault | **Decision:** | **A)** v1: cannot attack city tile — only field/outpost. **B)** Can attack but only garrison skirmish. **C)** Full conquest with owner transfer |
-
----
-
-## Movement before and during combat
-
-| Rule | Proposal |
+| Area | Paths (TBD) |
 | --- | --- |
-| Origin | Same as movement create — own cell with sufficient stacks |
-| Destination | Enemy presence required (**Decision:** or allow scorched-earth attack on empty enemy outpost site?) |
-| Path | Straight-line Manhattan timing; no pathfinding |
-| Blocking | **Decision:** whether a cell with **friendly** troops blocks enemy **attack** movement through — default **N/A** (teleport-style movement to destination coordinate) |
-| After victory | **Decision:** auto-`base` if attacker included founder? Default **no** — separate actions |
-
----
-
-## Notifications, UI, observability
-
-### Reports ([`012`](../012-communication-reports/spec.md))
-
-| Item | Proposal |
-| --- | --- |
-| New `ReportType` | `combat` (attacker + defender copies) |
-| Payload | Coordinates, sides, troop before/after counts, outcome enum, loot |
-| Unread | Same list/mark-read flows |
-
-### WebSocket ([`017`](../017-realtime-websocket/spec.md))
-
-| Event | When |
-| --- | --- |
-| `troop:movement-finished` | Existing (refresh troop lists) |
-| `combat:resolved` | **Decision:** dedicated event for both players with summary |
-| `outpost:deleted` / city events | If outcome changes ownership |
-
-### Web UI (new work)
-
-| Surface | Proposal |
-| --- | --- |
-| Movement create | Action `attack`; enemy cell picker; warning if no defenders detected |
-| Map | Hostile cell indicator (enemy troops / city) |
-| Inbox | Combat report detail template in `communication/report/` |
-| Activity strip ([`013`](../013-location-activity/spec.md)) | **Decision:** show incoming attack ETA |
-
-### Admin / system observability ([`020`](../020-system-player-observability/spec.md))
-
-**Decision:** include system-player attacks in tick feed summaries.
-
----
-
-## System AI behavior
-
-| Topic | **Decision:** | Recommended |
-| --- | --- | --- |
-| Attack human cities | **Decision:** | Default **off** in v1 — system player harasses outposts/field only |
-| Target selection | **Decision:** | Nearest human outpost with weak garrison within exploration |
-| War model | Follow hostility **Decision:** above |
-| Tick category | Add `attack` to `categoriesForTick` rotation after `tryAttack` preconditions |
-
----
-
-## Edge cases
-
-| Case | Handling |
-| --- | --- |
-| Empty destination (no enemy) | **Decision:** reject at create vs allow “raid” that explores only |
-| Same cell, both moving | **Decision:** job ordering by `arrive_at`; second arrival re-evaluates battlefield |
-| Simultaneous attacks same cell | **Decision:** serialize with DB lock per `cell_id` during finish sagas |
-| Attacker arrives while defender movement away | Defender troops on movement **excluded** from defense snapshot |
-| Only carriers attack | Allowed but weak; loot capacity if loot enabled |
-| Temporary outpost emptied | Existing delete rules; combat must not orphan movements |
-| Defender city with 0 troops | **Decision:** building defense phase vs instant capture |
-| Draw | Per Interview stalemate rule |
-| System player defender | Same resolver; login still blocked |
-
----
-
-## Data model (proposed)
-
-| Entity | **Decision:** needed? | Purpose |
-| --- | --- | --- |
-| `combat_report` detail JSON | In `ReportEntity` payload | Avoid new table if reports suffice |
-| `war_declaration` | If explicit war | `attacker_player_id`, `defender_player_id`, `expires_at` |
-| `cell_combat_lock` | Optional | Transactional mutex — may use pg advisory lock instead |
-
----
-
-## HTTP (proposed)
-
-| Method | Path | Auth | Notes |
-| --- | --- | --- | --- |
-| `POST` | `/troop/movement` | yes | `action: attack` if using enum extension |
-| `POST` | `/troop/movement/estimate` | yes | Include attack preview if **Decision:** allows |
-
-### Errors (proposed `CombatError` / extend `TroopError`)
-
-| Code | Meaning |
-| --- | --- |
-| `combat:destination-not-hostile` | No enemy to attack |
-| `combat:war-required` | If explicit war model |
-| `combat:city-attack-forbidden` | If v1 forbids city assault |
-| `combat:target-not-explored` | If exploration required |
-
----
-
-## Background jobs
-
-| Queue | Command |
-| --- | --- |
-| `troop.movement.finish` | `sagaFinishOneMovement` → `sagaFinishAttack` |
-
-Optional future: `combat.round` queue if multi-round **Decision:** chosen.
-
----
-
-## API client
-
-Extend `MovementAction`, report types, and movement create/estimate payloads in `packages/api-client/src/endpoints/troop/movement/`.
-
----
-
-## Tests (when implemented)
-
-Mirror [`010`](../010-troop-movement-combat/spec.md): handler specs, `create` command, `sagaFinishAttack`, `CombatService` pure unit tests, system `tryAttack` policy spec.
-
----
-
-## Evidence index (brownfield references)
-
-| Area | Paths |
-| --- | --- |
-| Troop domain | `apps/server/src/core/troop/` |
-| Movement commands | `apps/server/src/app/command/troop/movement/` |
-| Sagas | `apps/server/src/app/saga/finish/` |
-| Reports | `apps/server/src/core/communication/` |
-| Web movement/troop | `apps/web/src/modules/movement/`, `apps/web/src/modules/troop/` |
-| System AI | `apps/server/src/app/command/player/system/actions.ts` |
-
----
-
-## Interview summary checklist
-
-Product must resolve all rows marked **Decision:** before implementation. Priority order suggested:
-
-1. City capture allowed?  
-2. War declaration model?  
-3. Auto-resolve vs rounds?  
-4. Troop combat stat design?  
-5. Loot and carrier linkage?
+| Core | `apps/server/src/core/combat/`, `core/troop/constant/` |
+| Web art | `apps/web/public/troops/{legionnaire,interceptor,war_machine,disruptor}.png` |
+| Web UI | `apps/web/src/modules/troop/{image,translations}.ts` |
+| Reports | `core/communication/value/report-type.ts` |

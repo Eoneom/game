@@ -4,7 +4,7 @@
 
 ## Summary
 
-**Troop stacks** (`TroopEntity`) sit on a `cell_id`, belong to a `player_id`, have a `TroopCode` and `count`, and may reference an active `movement_id`. Players **recruit** (batched job `troop.recruit.progress`), **cancel** recruitment, and **list/get** troops by city or outpost. Faction determines which troop codes exist at bootstrap (`TroopService.codesForFaction`). Movement creation is [`010`](../010-troop-movement-combat/spec.md).
+**Troop stacks** (`TroopEntity`) sit on a `cell_id`, belong to a `player_id`, have a `TroopCode` and `count`, and may reference an active `movement_id`. Players **recruit** (batched job `troop.recruit.progress`), **cancel** recruitment, and **list/get** troops by city or outpost. Faction determines which troop codes exist at bootstrap (`TroopService.codesForFaction`). Movement creation is [`010`](../010-troop-movement-combat/spec.md). Planned PvP extends `troop_characteristics` with `attack_capacity`, `defense_capacity`, and `combat_role`; faction-exclusive combat `TroopCode`s (`legionnaire` / `interceptor` vs `war_machine` / `disruptor`) with `troop_faction`, recruit, and web art in [`024`](../024-player-combat-pvp/spec.md).
 
 **Depends on**: city/outpost location, requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), faction ([`004`](../004-faction-domain/spec.md)).
 

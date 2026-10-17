@@ -4,7 +4,7 @@
 
 ## Summary
 
-Factions are string enum codes shared between server core, API client, and web UI. The server distinguishes **known** factions (defined in code) from **playable** factions (known minus a non-playable set). Signup and troop initialization use playable checks; system-controlled singularity players use the non-playable faction code.
+Factions are string enum codes shared between server core, API client, and web UI. The server distinguishes **known** factions (defined in code) from **playable** factions (known minus a non-playable set). Signup and troop initialization use playable checks; system-controlled singularity players use the non-playable faction code. **PvP**: cross-faction attacks are always allowed; same-faction attacks are forbidden ([`024`](../024-player-combat-pvp/spec.md)).
 
 ## Faction codes
 
