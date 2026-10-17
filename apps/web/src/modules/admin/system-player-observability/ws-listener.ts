@@ -19,6 +19,8 @@ export function registerSystemPlayerObservabilityWsListener(): void {
       player_id: message.player_id,
       player_name: message.player_name,
       tick_index: message.tick_index,
+      outcome: message.outcome ?? 'success',
+      attempts: message.attempts ?? [],
       category: message.category,
       summary: message.summary,
       payload: message.payload,

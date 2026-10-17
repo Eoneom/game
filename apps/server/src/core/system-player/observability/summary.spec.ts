@@ -1,5 +1,8 @@
 import assert from 'assert'
-import { formatSystemPlayerActionSummary } from './summary'
+import {
+  formatSystemPlayerActionSummary,
+  formatSystemPlayerIdleSummary,
+} from './summary'
 
 describe('formatSystemPlayerActionSummary', () => {
   it('uses French labels and system Player wording', () => {
@@ -16,5 +19,27 @@ describe('formatSystemPlayerActionSummary', () => {
     assert.match(summary, /Amélioration de bâtiment/)
     assert.match(summary, /mushroom_farm/)
     assert.match(summary, /colonie Core I/)
+  })
+})
+
+describe('formatSystemPlayerIdleSummary', () => {
+  it('lists tried categories in order', () => {
+    const summary = formatSystemPlayerIdleSummary({
+      player_name: 'Beta',
+      attempts: [
+        {
+          category: 'upgrade',
+          result: 'skipped',
+        },
+        {
+          category: 'research',
+          result: 'skipped',
+        },
+      ],
+    })
+
+    assert.match(summary, /Aucune action réussie/)
+    assert.match(summary, /Amélioration de bâtiment/)
+    assert.match(summary, /Recherche technologique/)
   })
 })

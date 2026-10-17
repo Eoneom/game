@@ -31,15 +31,28 @@ describe('system player tick policy', () => {
       actions
     })
 
-    assert.strictEqual(acted?.category, 'recruit')
-    assert.deepStrictEqual(acted?.payload, { troop_code: 'scout' })
+    assert.strictEqual(acted.outcome, 'success')
+    if (acted.outcome === 'success') {
+      assert.strictEqual(acted.category, 'recruit')
+      assert.deepStrictEqual(acted.payload, { troop_code: 'scout' })
+    }
+    assert.deepStrictEqual(acted.attempts, [
+      {
+        category: 'research',
+        result: 'skipped',
+      },
+      {
+        category: 'recruit',
+        result: 'success',
+      },
+    ])
     assert.deepStrictEqual(calls, [
       'research',
       'recruit' 
     ])
   })
 
-  it('returns null when no category can act', async () => {
+  it('returns idle with skipped attempts when no category can act', async () => {
     const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
       category,
       async () => null,
@@ -51,6 +64,8 @@ describe('system player tick policy', () => {
       actions
     })
 
-    assert.strictEqual(acted, null)
+    assert.strictEqual(acted.outcome, 'idle')
+    assert.strictEqual(acted.attempts.length, SYSTEM_TICK_CATEGORIES.length)
+    assert.ok(acted.attempts.every(attempt => attempt.result === 'skipped'))
   })
 })

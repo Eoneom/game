@@ -4,7 +4,7 @@
 
 ## Summary
 
-Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open an **in-game** screen (nav link when admin) that streams **successful** system-controlled Player actions **after commit** over **WebSocket**. Each event shows a concise French summary (CONTEXT.md terms) plus **expandable full JSON payload**. Combined god-view stream with optional **filter by system Player name**. No DB, no history, no failed/idle rows. v1 does not change tick policy, replay/export, or alerts. Existing `logs/system-tick.log` remains.
+Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open an **in-game** screen (nav link when admin) that streams **every** system-controlled Player tick over **WebSocket** — not only successful commits. Each event shows outcome (`success` | `idle` | `error`), an ordered **attempts** trace for the tick, a concise French **summary**, and **expandable JSON** (includes `attempts`). Combined god-view stream with optional **filter by system Player name**. No DB, no history. v1 does not change tick policy, replay/export, or alerts. Existing `logs/system-tick.log` remains.
 
 **Depends on**: [`016`](../016-system-controlled-players/spec.md), [`017`](../017-realtime-websocket/spec.md), session auth ([`002`](../002-player-session-auth/spec.md)).
 
@@ -17,11 +17,19 @@ Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open an **in-game** 
 | HTTP | `GET /admin/system-player-observability` — `{ is_admin, system_players? }` |
 | WS | On connect, admin sockets registered; `system-player:action-committed` fan-out to admins only |
 
-## Event emission (Q14=A, Q8=C, Q9=A, Q16=A)
+## Event emission
 
-After `actForSystemPlayer` returns a category + payload (post-command commit), `tickSystemPlayers` emits `AppEvent.SystemPlayerActionCommitted` on `AppEventBus`. No persistence.
+After each `actForSystemPlayer` run (or on tick error), `tickSystemPlayers` emits `AppEvent.SystemPlayerActionCommitted` on `AppEventBus`. No persistence.
 
-## WebSocket message (Q11=B, Q12=A, Q13=A, Q19=C)
+| `outcome` | When | `attempts` | `payload` / `summary` |
+| --- | --- | --- | --- |
+| `success` | First category returns a payload (post-commit) | Skipped categories then one `success`; rotation from `categoriesForTick` | Full action `payload`; French summary via existing formatter |
+| `idle` | All categories skipped | Every category `skipped` | Empty object; summary lists tried categories in order |
+| `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Safe `error_message` / `error_code` (no stack) |
+
+`actForSystemPlayer` returns the attempt trace without changing game logic.
+
+## WebSocket message
 
 ```json
 {
@@ -30,17 +38,24 @@ After `actForSystemPlayer` returns a category + payload (post-command commit), `
   "player_id": "…",
   "player_name": "Alpha",
   "tick_index": 4,
-  "category": "upgrade",
-  "summary": "Joueur système Alpha — Amélioration de bâtiment (mushroom_farm)",
+  "outcome": "success",
+  "attempts": [
+    { "category": "research", "result": "skipped" },
+    { "category": "recruit", "result": "success" }
+  ],
+  "category": "recruit",
+  "summary": "Joueur système Alpha — Recrutement de troupes (scout)",
   "payload": { }
 }
 ```
 
-## Web UI (Q4=D, Q15=C, Q18=B)
+Idle ticks omit `category` and use an empty `payload`. Error ticks set `outcome` to `error` and put error fields in `payload`.
 
-Route `/admin/system-players`: live list (newest first), name filter, `<details>` for JSON. Nav link « Observabilité IA » when `is_admin`.
+## Web UI
 
-## Out of scope (Q22=D)
+Route `/admin/system-players`: live list (newest first), name filter, outcome badge, inline attempt chain, `<details>` for JSON (`outcome`, `attempts`, `payload`). Nav link « Observabilité IA » when `is_admin`. Copy in French covers succès, inactif, and erreur — not only successful actions.
+
+## Out of scope
 
 AI tick policy changes, replay/export, alerts.
 
@@ -49,6 +64,6 @@ AI tick policy changes, replay/export, alerts.
 | Area | Paths |
 | --- | --- |
 | Spec | `specs/020-system-player-observability/` |
-| Server | `core/admin/`, `app/query/admin/`, `web/handler/admin/`, `web/ws.ts`, `system/tick.ts` |
+| Server | `core/admin/`, `app/query/admin/`, `web/handler/admin/`, `web/ws.ts`, `system/tick.ts`, `system/policy.ts` |
 | Web | `apps/web/src/modules/admin/`, `routes/admin/` |
 | Client | `packages/api-client/src/endpoints/admin/` |

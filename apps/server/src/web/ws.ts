@@ -151,6 +151,8 @@ export function setupWebSocketServer(
           player_id: payload.player_id,
           player_name: payload.player_name,
           tick_index: payload.tick_index,
+          outcome: payload.outcome,
+          attempts: payload.attempts,
           category: payload.category,
           summary: payload.summary,
           payload: payload.payload,

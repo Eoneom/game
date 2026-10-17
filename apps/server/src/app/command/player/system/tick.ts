@@ -2,7 +2,7 @@ import { Factory } from '#adapter/factory'
 import { SYSTEM_PLAYER_TICK_INTERVAL_MS } from '#app/scheduling/intervals'
 import { actForSystemPlayer } from '#command/player/system/policy'
 import { systemTickActions } from '#command/player/system/actions'
-import { emitSystemPlayerActionCommitted } from '#command/player/system/emit-observability'
+import { emitSystemPlayerTickObservability } from '#command/player/system/emit-observability'
 import { now } from '#shared/time'
 
 export async function tickSystemPlayers({ tick_index }: { tick_index: number }): Promise<void> {
@@ -22,16 +22,28 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
       logger.info('system player tick', {
         player_id: player.id,
         tick_index,
-        category: result?.category ?? null
+        outcome: result.outcome,
+        category: result.outcome === 'success' ? result.category : null,
       })
-      if (result) {
-        emitSystemPlayerActionCommitted({
+      if (result.outcome === 'success') {
+        emitSystemPlayerTickObservability({
           player_id: player.id,
           player_name: player.name,
           tick_index,
+          committed_at: tick_at,
+          outcome: 'success',
+          attempts: result.attempts,
           category: result.category,
           payload: result.payload,
+        })
+      } else {
+        emitSystemPlayerTickObservability({
+          player_id: player.id,
+          player_name: player.name,
+          tick_index,
           committed_at: tick_at,
+          outcome: 'idle',
+          attempts: result.attempts,
         })
       }
     } catch (err) {
@@ -39,6 +51,15 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
         player_id: player.id,
         tick_index,
         err
+      })
+      emitSystemPlayerTickObservability({
+        player_id: player.id,
+        player_name: player.name,
+        tick_index,
+        committed_at: tick_at,
+        outcome: 'error',
+        attempts: [],
+        error: err,
       })
     }
   }

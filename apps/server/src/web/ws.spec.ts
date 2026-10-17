@@ -284,6 +284,13 @@ describe('setupWebSocketServer', () => {
       player_id: 'system-1',
       player_name: 'Alpha',
       tick_index: 3,
+      outcome: 'success',
+      attempts: [
+        {
+          category: 'upgrade',
+          result: 'success',
+        },
+      ],
       category: 'upgrade',
       summary: 'Joueur système Alpha — test',
       payload: { building_code: 'mushroom_farm' },
@@ -295,6 +302,13 @@ describe('setupWebSocketServer', () => {
       player_id: 'system-1',
       player_name: 'Alpha',
       tick_index: 3,
+      outcome: 'success',
+      attempts: [
+        {
+          category: 'upgrade',
+          result: 'success',
+        },
+      ],
       category: 'upgrade',
       summary: 'Joueur système Alpha — test',
       payload: { building_code: 'mushroom_farm' },

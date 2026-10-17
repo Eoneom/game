@@ -1,4 +1,5 @@
 import type { SystemTickCategory } from '#core/player/system/tick-category'
+import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 
 const CATEGORY_LABEL: Record<SystemTickCategory, string> = {
   upgrade: 'Amélioration de bâtiment',
@@ -60,4 +61,25 @@ export function formatSystemPlayerActionSummary({
   }
 
   return `${head} (${details.join(', ')})`
+}
+
+export function formatSystemPlayerIdleSummary({
+  player_name,
+  attempts,
+}: {
+  player_name: string
+  attempts: SystemPlayerTickAttempt[]
+}): string {
+  const tried = attempts.map(attempt => CATEGORY_LABEL[attempt.category]).join(' → ')
+  return `Joueur système ${player_name} — Aucune action réussie (essais : ${tried})`
+}
+
+export function formatSystemPlayerErrorSummary({
+  player_name,
+  message,
+}: {
+  player_name: string
+  message: string
+}): string {
+  return `Joueur système ${player_name} — Erreur : ${message}`
 }

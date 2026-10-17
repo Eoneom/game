@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events'
 import { AppEvent } from '#core/events'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
+import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import { AppLogger } from '#app/port/logger'
 
 export type CityResourcesGatheredPayload = {
@@ -40,13 +41,17 @@ export type OutpostResourcesGatheredPayload = {
   player_id: string
 }
 
+export type SystemPlayerTickObservabilityOutcome = 'success' | 'idle' | 'error'
+
 export type SystemPlayerActionCommittedPayload = {
   committed_at: number
   player_id: string
   player_name: string
   tick_index: number
-  category: SystemTickCategory
+  outcome: SystemPlayerTickObservabilityOutcome
+  attempts: SystemPlayerTickAttempt[]
   summary: string
+  category?: SystemTickCategory
   payload: Record<string, unknown>
 }
 
