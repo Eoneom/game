@@ -36,10 +36,22 @@ export function setupWebSocketServer(
     logger: AppLogger
   }
 ): void {
-  const game_wss = new WebSocketServer({ server })
-  const admin_observability_wss = new WebSocketServer({
-    server,
-    path: ADMIN_OBSERVABILITY_WS_PATH,
+  const game_wss = new WebSocketServer({ noServer: true })
+  const admin_observability_wss = new WebSocketServer({ noServer: true })
+
+  server.on('upgrade', (request, socket, head) => {
+    const pathname = new URL(request.url ?? '', 'http://localhost').pathname
+
+    if (pathname === ADMIN_OBSERVABILITY_WS_PATH) {
+      admin_observability_wss.handleUpgrade(request, socket, head, (ws) => {
+        admin_observability_wss.emit('connection', ws, request)
+      })
+      return
+    }
+
+    game_wss.handleUpgrade(request, socket, head, (ws) => {
+      game_wss.emit('connection', ws, request)
+    })
   })
 
   game_wss.on('connection', async (ws, req) => {

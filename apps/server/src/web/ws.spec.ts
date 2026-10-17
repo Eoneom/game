@@ -63,7 +63,7 @@ describe('setupWebSocketServer', () => {
       }),
     }
 
-    setupWebSocketServer({} as Server, {
+    setupWebSocketServer({ on: vi.fn() } as Server, {
       eventBus: eventBus as any,
       logger: mockLogger as any
     })
