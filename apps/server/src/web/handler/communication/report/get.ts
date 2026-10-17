@@ -44,7 +44,10 @@ export const communicationGetReportHandler = async (
   }
 }
 
-const response_mapper = ({ report }: CommunicationGetReportQueryResponse): CommunicationGetReportDataResponse => {
+const response_mapper = ({
+  report,
+  battle,
+}: CommunicationGetReportQueryResponse): CommunicationGetReportDataResponse => {
   const report_response: CommunicationGetReportDataResponse = {
     id: report.id,
     type: report.type,
@@ -66,6 +69,7 @@ const response_mapper = ({ report }: CommunicationGetReportQueryResponse): Commu
       mushroom: report.remaining_resources.mushroom,
       plasma: report.remaining_resources.plasma,
     },
+    battle,
   }
 
   return report_response

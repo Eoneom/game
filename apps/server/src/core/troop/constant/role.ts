@@ -5,7 +5,8 @@ export enum TroopRole {
   FOUNDER = 'founder',
   CARRIER = 'carrier',
   CULTIVATOR = 'cultivator',
-  SALVAGER = 'salvager'
+  SALVAGER = 'salvager',
+  COMBAT = 'combat',
 }
 
 export const troop_role: Record<TroopCode, TroopRole> = {
@@ -18,5 +19,9 @@ export const troop_role: Record<TroopCode, TroopRole> = {
   [TroopCode.ASSEMBLER]: TroopRole.FOUNDER,
   [TroopCode.HAULER]: TroopRole.CARRIER,
   [TroopCode.HARVESTER]: TroopRole.CULTIVATOR,
-  [TroopCode.RECLAIMER]: TroopRole.SALVAGER
+  [TroopCode.RECLAIMER]: TroopRole.SALVAGER,
+  [TroopCode.LEGIONNAIRE]: TroopRole.COMBAT,
+  [TroopCode.INTERCEPTOR]: TroopRole.COMBAT,
+  [TroopCode.WAR_MACHINE]: TroopRole.COMBAT,
+  [TroopCode.DISRUPTOR]: TroopRole.COMBAT,
 }

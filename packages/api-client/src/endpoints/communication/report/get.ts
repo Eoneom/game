@@ -1,3 +1,4 @@
+import { ReportBattleMetadata } from '../../../types/report-battle'
 import { ReportType } from '@server-core/communication/value/report-type'
 import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../../response'
@@ -21,6 +22,7 @@ export interface CommunicationGetReportDataResponse {
   }[]
   resources: Resource
   remaining_resources: Resource
+  battle?: ReportBattleMetadata
 }
 
 export type CommunicationGetReportResponse = GenericResponse<CommunicationGetReportDataResponse>

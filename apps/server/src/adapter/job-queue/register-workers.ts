@@ -15,7 +15,9 @@ import {
   TROOP_MOVEMENT_FINISH_QUEUE,
   TROOP_RECRUIT_PROGRESS_QUEUE,
   type TroopMovementFinishJobData,
-  type TroopRecruitProgressJobData
+  type TroopRecruitProgressJobData,
+  COMBAT_ROUND_ADVANCE_QUEUE,
+  type CombatRoundAdvanceJobData,
 } from '#adapter/job-queue'
 import type { JobQueue } from '#app/port/job-queue'
 import { finishBuildingUpgrade } from '#app/command/building/finish-upgrade'
@@ -26,6 +28,7 @@ import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progress-gather-all'
 import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
 import { tickSystemPlayers } from '#app/command/player/system/tick'
+import { advanceCombatRound } from '#app/command/combat/advance-round'
 import { Factory } from '#adapter/factory'
 
 const asPgBossJobQueue = (queue: JobQueue): PgBossJobQueue => {
@@ -198,6 +201,32 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
           tick_index
         })
         await tickSystemPlayers({ tick_index })
+      }
+    }
+  )
+
+  await queue.work<CombatRoundAdvanceJobData, void, { includeMetadata: true }>(
+    COMBAT_ROUND_ADVANCE_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        const data = job.data
+        if (!data) {
+          logger.warn('combat round advance job missing data', { job_id: job.id })
+          continue
+        }
+
+        logger.info('processing combat round advance', {
+          job_id: job.id,
+          battle_id: data.battle_id,
+          round: data.round,
+        })
+
+        await advanceCombatRound({
+          battle_id: data.battle_id,
+          round: data.round,
+          advanced_at: job.startAfter.getTime(),
+        })
       }
     }
   )

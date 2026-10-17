@@ -26,6 +26,7 @@ export const SYSTEM_TICK_ECONOMY_CATEGORIES = [
   'research',
   'recruit',
   'transport',
+  'attack',
 ] as const
 
 export const SYSTEM_TICK_CATEGORIES = [

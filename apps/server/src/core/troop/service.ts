@@ -1,9 +1,12 @@
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { CombatRole } from '#core/troop/constant/combat-role'
+import { troop_characteristics } from '#core/troop/constant/characteristic'
 import { FactionCode } from '#core/faction/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import { troop_faction } from '#core/troop/constant/faction'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
-import { troop_characteristics } from '#core/troop/constant/characteristic'
+import { CombatError } from '#core/combat/error'
 import {
   EarningTroopCode,
   troop_earnings
@@ -235,6 +238,7 @@ export class TroopService {
     player_id,
     action,
     resources = { plastic: 0, mushroom: 0, plasma: 0 },
+    combat_strategy = null,
   }: {
     troops: TroopCount[]
     start_at: number
@@ -244,6 +248,7 @@ export class TroopService {
     player_id: string
     action: MovementAction
     resources?: Resource
+    combat_strategy?: CombatStrategy | null
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
@@ -258,9 +263,30 @@ export class TroopService {
       origin,
       destination,
       resources,
+      combat_strategy,
     })
 
     return { movement, arrive_at }
+  }
+
+  static combatRoleFor(code: TroopCode): CombatRole {
+    return troop_characteristics[code].combat_role
+  }
+
+  static assertAttackArmy({ move_troops }: { move_troops: TroopCount[] }): void {
+    const has_combat = move_troops.some(
+      troop => troop.count > 0 && this.combatRoleFor(troop.code) === CombatRole.COMBAT
+    )
+    if (!has_combat) {
+      throw new Error(CombatError.COMBAT_TROOP_REQUIRED)
+    }
+
+    const has_scout = move_troops.some(
+      troop => troop.count > 0 && this.combatRoleFor(troop.code) === CombatRole.SCOUT
+    )
+    if (has_scout) {
+      throw new Error(CombatError.SCOUT_NOT_ALLOWED_ON_ATTACK)
+    }
   }
 
   static getTotalTransportCapacity({ troops }: { troops: TroopCount[] }): number {

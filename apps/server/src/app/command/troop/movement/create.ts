@@ -3,7 +3,10 @@ import { runCommand } from '#command/run'
 import { AppEvent } from '#core/events'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
+import { CombatError } from '#core/combat/error'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { resolveAttackTarget } from '#app/command/troop/movement/attack-target'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -21,6 +24,7 @@ export interface CreateTroopMovementParams {
   action: MovementAction
   move_troops: TroopCount[]
   resources?: Resource
+  combat_strategy?: CombatStrategy
 }
 
 export interface CreateTroopMovementResult {
@@ -36,10 +40,24 @@ export async function createTroopMovement({
   destination,
   move_troops,
   resources = EMPTY_RESOURCES,
+  combat_strategy,
 }: CreateTroopMovementParams): Promise<CreateTroopMovementResult> {
   return runCommand('troop:move', async () => {
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
+
+    if (action === MovementAction.ATTACK) {
+      if (!combat_strategy) {
+        throw new Error(CombatError.STRATEGY_REQUIRED)
+      }
+      TroopService.assertAttackArmy({ move_troops })
+      const attacker = await repository.player.get(player_id)
+      await resolveAttackTarget({
+        attacker_player_id: player_id,
+        attacker_faction_code: attacker.faction_code,
+        destination,
+      })
+    }
 
     TroopService.assertTransportResources({
       action,
@@ -90,6 +108,7 @@ export async function createTroopMovement({
       troops: split_troops,
       start_at: now(),
       resources,
+      combat_strategy: action === MovementAction.ATTACK ? combat_strategy ?? null : null,
     })
 
     const movement_troops = TroopService.assignToMovement({

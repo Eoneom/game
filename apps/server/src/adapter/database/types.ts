@@ -56,8 +56,27 @@ export interface Cell {
   y: number;
 }
 
+export interface Battle {
+  attacker_player_id: string;
+  attacker_strategy: string;
+  cell_id: string;
+  current_round: Generated<number>;
+  defender_player_id: string;
+  defender_strategy: string;
+  finished_at: Timestamp | null;
+  id: Generated<string>;
+  movement_id: string;
+  started_at: Timestamp;
+  state_json: Json;
+  status: string;
+  target_id: string | null;
+  target_kind: string;
+  winner: string | null;
+}
+
 export interface City {
   cell_id: string;
+  default_combat_strategy: string | null;
   id: Generated<string>;
   name: string;
   player_id: string;
@@ -75,6 +94,7 @@ export interface ExplorationCell {
 
 export interface Movement {
   action: string;
+  combat_strategy: string | null;
   destination_x: number;
   destination_y: number;
   id: Generated<string>;
@@ -88,6 +108,7 @@ export interface Movement {
 
 export interface Outpost {
   cell_id: string;
+  default_combat_strategy: string | null;
   id: Generated<string>;
   player_id: string;
   type: string;
@@ -250,6 +271,27 @@ export interface Report {
   was_read: Generated<boolean>;
 }
 
+export interface ReportBattle {
+  attacker_faction_code: string;
+  attacker_player_id: string;
+  attacker_strategy: string;
+  battle_id: string;
+  casualties_attacker_json: Json;
+  casualties_defender_json: Json;
+  defender_faction_code: string;
+  defender_player_id: string;
+  defender_strategy: string;
+  movement_id: string;
+  outcome_json: Json;
+  perspective: string;
+  report_id: string;
+  round_summaries_json: Json;
+  rounds_played: number;
+  target_id: string | null;
+  target_kind: string;
+  winner: string;
+}
+
 export interface ReportTroop {
   code: string;
   count: number;
@@ -294,6 +336,7 @@ export interface Troop {
 
 export interface DB {
   auth: Auth;
+  battle: Battle;
   building: Building;
   building_upgrade_queue: BuildingUpgradeQueue;
   cell: Cell;
@@ -313,6 +356,7 @@ export interface DB {
   "pgboss.warning": PgbossWarning;
   player: Player;
   report: Report;
+  report_battle: ReportBattle;
   report_troop: ReportTroop;
   resource_stock: ResourceStock;
   technology: Technology;

@@ -149,4 +149,10 @@ export interface JobQueue {
     execute_at: number
     tick_index: number
   }): Promise<string | null>
+
+  scheduleCombatRoundAdvance(args: {
+    battle_id: string
+    round: number
+    execute_at: number
+  }): Promise<string | null>
 }

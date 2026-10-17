@@ -1,6 +1,8 @@
 import { GenericQuery } from '#query/generic'
+import { ReportBattleMetadata } from '#core/combat/type/report-battle-metadata'
 import { ReportEntity } from '#core/communication/report/entity'
 import { CommunicationError } from '#core/communication/error'
+import { ReportType } from '#core/communication/value/report-type'
 
 export interface CommunicationGetReportQueryRequest {
   player_id: string
@@ -9,6 +11,7 @@ export interface CommunicationGetReportQueryRequest {
 
 export interface CommunicationGetReportQueryResponse {
   report: ReportEntity
+  battle?: ReportBattleMetadata
 }
 
 export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetReportQueryRequest, CommunicationGetReportQueryResponse> {
@@ -25,6 +28,13 @@ export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetRe
       throw new Error(CommunicationError.REPORT_NOT_OWNER)
     }
 
-    return { report }
+    const battle = report.type === ReportType.BATTLE
+      ? await this.repository.report.getBattleMetadataByReportId(report_id)
+      : null
+
+    return {
+      report,
+      battle: battle ?? undefined,
+    }
   }
 }

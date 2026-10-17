@@ -32,6 +32,16 @@ export class PostgresTroopRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async listAllInCell({ cell_id }: { cell_id: string }): Promise<TroopEntity[]> {
+    const rows = await this.db
+      .selectFrom('troop')
+      .selectAll()
+      .where('cell_id', '=', cell_id)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   async listInCell({
     cell_id,
     player_id

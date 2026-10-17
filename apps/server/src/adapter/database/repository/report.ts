@@ -15,6 +15,16 @@ import {
   fromTimestampRequired,
   toTimestampRequired
 } from '#adapter/database/repository/shared/time'
+import {
+  getReportBattleByReportId,
+  insertReportBattleRow,
+} from '#adapter/database/repository/report-battle'
+import { ReportBattleMetadata } from '#core/combat/type/report-battle-metadata'
+import { ReportPerspective } from '#core/combat/value/report-perspective'
+import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
+import { BattleWinner } from '#core/combat/value/battle-winner'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { FactionCode } from '#core/faction/constant/code'
 
 export class PostgresReportRepository
   extends PostgreSQLGenericRepository<'report', ReportEntity>
@@ -232,6 +242,89 @@ export class PostgresReportRepository
 
       await this.syncTroops(entity.id, entity.troops)
     })
+  }
+
+  async createBattleReports({
+    attacker_report,
+    defender_report,
+    attacker_metadata,
+    defender_metadata,
+  }: {
+    attacker_report: ReportEntity
+    defender_report: ReportEntity
+    attacker_metadata: ReportBattleMetadata
+    defender_metadata: ReportBattleMetadata
+  }): Promise<void> {
+    await withTransaction(async () => {
+      await this.create(attacker_report)
+      await this.create(defender_report)
+      await insertReportBattleRow(this.db, {
+        report_id: attacker_report.id,
+        battle_id: attacker_metadata.battle_id,
+        movement_id: attacker_metadata.movement_id,
+        perspective: attacker_metadata.perspective,
+        attacker_player_id: attacker_metadata.attacker_player_id,
+        defender_player_id: attacker_metadata.defender_player_id,
+        attacker_faction_code: attacker_metadata.attacker_faction_code,
+        defender_faction_code: attacker_metadata.defender_faction_code,
+        target_kind: attacker_metadata.target_kind,
+        target_id: attacker_metadata.target_id ?? null,
+        winner: attacker_metadata.winner,
+        attacker_strategy: attacker_metadata.attacker_strategy,
+        defender_strategy: attacker_metadata.defender_strategy,
+        rounds_played: attacker_metadata.rounds_played,
+        outcome_json: attacker_metadata.outcome,
+        casualties_attacker_json: attacker_metadata.casualties_attacker,
+        casualties_defender_json: attacker_metadata.casualties_defender,
+        round_summaries_json: attacker_metadata.round_summaries,
+      })
+      await insertReportBattleRow(this.db, {
+        report_id: defender_report.id,
+        battle_id: defender_metadata.battle_id,
+        movement_id: defender_metadata.movement_id,
+        perspective: defender_metadata.perspective,
+        attacker_player_id: defender_metadata.attacker_player_id,
+        defender_player_id: defender_metadata.defender_player_id,
+        attacker_faction_code: defender_metadata.attacker_faction_code,
+        defender_faction_code: defender_metadata.defender_faction_code,
+        target_kind: defender_metadata.target_kind,
+        target_id: defender_metadata.target_id ?? null,
+        winner: defender_metadata.winner,
+        attacker_strategy: defender_metadata.attacker_strategy,
+        defender_strategy: defender_metadata.defender_strategy,
+        rounds_played: defender_metadata.rounds_played,
+        outcome_json: defender_metadata.outcome,
+        casualties_attacker_json: defender_metadata.casualties_attacker,
+        casualties_defender_json: defender_metadata.casualties_defender,
+        round_summaries_json: defender_metadata.round_summaries,
+      })
+    })
+  }
+
+  async getBattleMetadataByReportId(report_id: string): Promise<ReportBattleMetadata | null> {
+    const row = await getReportBattleByReportId(this.db, report_id)
+    if (!row) {
+      return null
+    }
+    return {
+      battle_id: row.battle_id,
+      movement_id: row.movement_id,
+      perspective: row.perspective as ReportPerspective,
+      attacker_player_id: row.attacker_player_id,
+      defender_player_id: row.defender_player_id,
+      attacker_faction_code: row.attacker_faction_code as FactionCode,
+      defender_faction_code: row.defender_faction_code as FactionCode,
+      target_kind: row.target_kind as BattleTargetKind,
+      target_id: row.target_id,
+      winner: row.winner as BattleWinner,
+      attacker_strategy: row.attacker_strategy as CombatStrategy,
+      defender_strategy: row.defender_strategy as CombatStrategy,
+      rounds_played: row.rounds_played,
+      outcome: row.outcome_json as ReportBattleMetadata['outcome'],
+      casualties_attacker: row.casualties_attacker_json as ReportBattleMetadata['casualties_attacker'],
+      casualties_defender: row.casualties_defender_json as ReportBattleMetadata['casualties_defender'],
+      round_summaries: row.round_summaries_json as ReportBattleMetadata['round_summaries'],
+    }
   }
 
   private async loadEntity(row: Selectable<DB['report']>): Promise<ReportEntity> {

@@ -8,5 +8,9 @@ export enum TroopCode {
   ASSEMBLER = 'assembler',
   HAULER = 'hauler',
   HARVESTER = 'harvester',
-  RECLAIMER = 'reclaimer'
+  RECLAIMER = 'reclaimer',
+  LEGIONNAIRE = 'legionnaire',
+  INTERCEPTOR = 'interceptor',
+  WAR_MACHINE = 'war_machine',
+  DISRUPTOR = 'disruptor',
 }

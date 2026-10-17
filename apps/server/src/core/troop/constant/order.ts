@@ -10,5 +10,9 @@ export const troop_order: Record<TroopCode, number> = {
   [TroopCode.HARVESTER]: 2,
   [TroopCode.RECLAIMER]: 3,
   [TroopCode.HAULER]: 4,
-  [TroopCode.ASSEMBLER]: 5
+  [TroopCode.ASSEMBLER]: 5,
+  [TroopCode.LEGIONNAIRE]: 6,
+  [TroopCode.INTERCEPTOR]: 7,
+  [TroopCode.WAR_MACHINE]: 6,
+  [TroopCode.DISRUPTOR]: 7,
 }

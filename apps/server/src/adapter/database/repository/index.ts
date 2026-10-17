@@ -32,6 +32,7 @@ import { PostgresReportRepository } from '#adapter/database/repository/report'
 import { PostgresResourceStockRepository } from '#adapter/database/repository/resource-stock'
 import { PostgresTechnologyRepository } from '#adapter/database/repository/technology'
 import { PostgresTroopRepository } from '#adapter/database/repository/troop'
+import { PostgresBattleRepository } from '#adapter/database/repository/battle'
 import {
   Kysely,
   sql
@@ -52,6 +53,7 @@ export class PostgresRepository implements Repository {
   report: ReportRepository
   technology: TechnologyRepository
   troop: TroopRepository
+  battle: BattleRepository
 
   private db: Kysely<DB>
 
@@ -74,6 +76,7 @@ export class PostgresRepository implements Repository {
     this.player = new PostgresPlayerRepository(this.db)
     this.technology = new PostgresTechnologyRepository(this.db)
     this.troop = new PostgresTroopRepository(this.db)
+    this.battle = new PostgresBattleRepository(this.db)
   }
 
   async connect(): Promise<void> {

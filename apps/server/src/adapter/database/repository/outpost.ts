@@ -1,3 +1,4 @@
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostRepository } from '#app/port/repository/outpost'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
@@ -77,7 +78,8 @@ export class PostgresOutpostRepository
       id: row.id,
       player_id: row.player_id,
       cell_id: row.cell_id,
-      type: row.type as OutpostType
+      type: row.type as OutpostType,
+      default_combat_strategy: row.default_combat_strategy as CombatStrategy | null,
     })
   }
 
@@ -86,7 +88,8 @@ export class PostgresOutpostRepository
       id: entity.id,
       player_id: entity.player_id,
       cell_id: entity.cell_id,
-      type: entity.type
+      type: entity.type,
+      default_combat_strategy: entity.default_combat_strategy,
     }
   }
 }

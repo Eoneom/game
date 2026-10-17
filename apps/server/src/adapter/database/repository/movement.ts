@@ -2,6 +2,7 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { MovementRepository } from '#app/port/repository/movement'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { TroopError } from '#core/troop/error'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import type { DB } from '#adapter/database/types'
 import {
@@ -50,6 +51,7 @@ export class PostgresMovementRepository
         mushroom: row.mushroom,
         plasma: row.plasma,
       },
+      combat_strategy: row.combat_strategy as CombatStrategy | null,
     })
   }
 
@@ -65,6 +67,7 @@ export class PostgresMovementRepository
       plastic: entity.resources.plastic,
       mushroom: entity.resources.mushroom,
       plasma: entity.resources.plasma,
+      combat_strategy: entity.combat_strategy,
     }
   }
 }

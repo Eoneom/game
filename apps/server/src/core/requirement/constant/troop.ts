@@ -1,5 +1,6 @@
 import { BuildingCode } from '#core/building/constant/code'
 import { RequirementValue } from '#core/requirement/value/requirement'
+import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 
 export const TroopRequirement: Record<TroopCode, RequirementValue> = {
@@ -92,5 +93,61 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       }
     ],
     technologies: []
-  }
+  },
+  [TroopCode.LEGIONNAIRE]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 4
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 1
+      }
+    ]
+  },
+  [TroopCode.INTERCEPTOR]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 6
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 3
+      }
+    ]
+  },
+  [TroopCode.WAR_MACHINE]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 2
+      }
+    ]
+  },
+  [TroopCode.DISRUPTOR]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 7
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 4
+      }
+    ]
+  },
 }

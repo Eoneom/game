@@ -13,6 +13,7 @@ import { MovementRepository } from '#app/port/repository/movement'
 import { ReportRepository } from '#app/port/repository/report'
 import { OutpostRepository } from '#app/port/repository/outpost'
 import { ResourceStockRepository } from '#app/port/repository/resource-stock'
+import { BattleRepository } from '#app/port/battle-repository'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -37,4 +38,5 @@ export interface Repository {
   report: ReportRepository
   technology: TechnologyRepository
   troop: TroopRepository
+  battle: BattleRepository
 }

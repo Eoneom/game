@@ -11,4 +11,5 @@ export enum AppEvent {
   OutpostResourcesGathered = 'outpost:resources-gathered',
   SystemPlayerActionCommitted = 'system-player:action-committed',
   SystemPlayerStatsUpdated = 'system-player:stats-updated',
+  BattleFinished = 'battle:finished',
 }

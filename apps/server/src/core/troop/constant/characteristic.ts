@@ -1,49 +1,122 @@
+import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
+import { CombatRole } from '#core/troop/constant/combat-role'
 import { TroopCode } from '#core/troop/constant/code'
 
-interface TroopCharacteristic {
+export interface TroopCharacteristic {
   speed: number
   transport_capacity: number
+  attack_capacity: number
+  defense_capacity: number
+  combat_role: CombatRole
+  life_capacity?: number
+  combat_troop_class?: CombatTroopClass
 }
 
 export const troop_characteristics: Record<TroopCode, TroopCharacteristic> = {
   [TroopCode.SETTLER]: {
     speed: 0.75,
-    transport_capacity: 1000
+    transport_capacity: 1000,
+    attack_capacity: 0,
+    defense_capacity: 4,
+    combat_role: CombatRole.CIVILIAN,
   },
   [TroopCode.EXPLORER]: {
     speed: 1.5,
-    transport_capacity: 200
+    transport_capacity: 200,
+    attack_capacity: 2,
+    defense_capacity: 3,
+    combat_role: CombatRole.SCOUT,
   },
   [TroopCode.LIGHT_TRANSPORTER]: {
     speed: 1,
-    transport_capacity: 10000
+    transport_capacity: 10000,
+    attack_capacity: 1,
+    defense_capacity: 6,
+    combat_role: CombatRole.CARRIER,
   },
   [TroopCode.FARMER]: {
     speed: 1,
-    transport_capacity: 200
+    transport_capacity: 200,
+    attack_capacity: 0,
+    defense_capacity: 3,
+    combat_role: CombatRole.CIVILIAN,
   },
   [TroopCode.RECYCLER]: {
     speed: 1,
-    transport_capacity: 200
+    transport_capacity: 200,
+    attack_capacity: 0,
+    defense_capacity: 3,
+    combat_role: CombatRole.CIVILIAN,
   },
   [TroopCode.ASSEMBLER]: {
     speed: 0.75,
-    transport_capacity: 1000
+    transport_capacity: 1000,
+    attack_capacity: 0,
+    defense_capacity: 4,
+    combat_role: CombatRole.CIVILIAN,
   },
   [TroopCode.SEEKER]: {
     speed: 1.5,
-    transport_capacity: 200
+    transport_capacity: 200,
+    attack_capacity: 2,
+    defense_capacity: 3,
+    combat_role: CombatRole.SCOUT,
   },
   [TroopCode.HAULER]: {
     speed: 1,
-    transport_capacity: 10000
+    transport_capacity: 10000,
+    attack_capacity: 1,
+    defense_capacity: 6,
+    combat_role: CombatRole.CARRIER,
   },
   [TroopCode.HARVESTER]: {
     speed: 1,
-    transport_capacity: 200
+    transport_capacity: 200,
+    attack_capacity: 0,
+    defense_capacity: 3,
+    combat_role: CombatRole.CIVILIAN,
   },
   [TroopCode.RECLAIMER]: {
     speed: 1,
-    transport_capacity: 200
-  }
+    transport_capacity: 200,
+    attack_capacity: 0,
+    defense_capacity: 3,
+    combat_role: CombatRole.CIVILIAN,
+  },
+  [TroopCode.LEGIONNAIRE]: {
+    speed: 1.0,
+    transport_capacity: 0,
+    attack_capacity: 11,
+    defense_capacity: 13,
+    life_capacity: 15,
+    combat_role: CombatRole.COMBAT,
+    combat_troop_class: CombatTroopClass.LEGIONNAIRE,
+  },
+  [TroopCode.INTERCEPTOR]: {
+    speed: 1.35,
+    transport_capacity: 0,
+    attack_capacity: 18,
+    defense_capacity: 4,
+    life_capacity: 5,
+    combat_role: CombatRole.COMBAT,
+    combat_troop_class: CombatTroopClass.INTERCEPTOR,
+  },
+  [TroopCode.WAR_MACHINE]: {
+    speed: 0.9,
+    transport_capacity: 0,
+    attack_capacity: 13,
+    defense_capacity: 16,
+    life_capacity: 17,
+    combat_role: CombatRole.COMBAT,
+    combat_troop_class: CombatTroopClass.WAR_MACHINE,
+  },
+  [TroopCode.DISRUPTOR]: {
+    speed: 1.25,
+    transport_capacity: 0,
+    attack_capacity: 15,
+    defense_capacity: 5,
+    life_capacity: 4,
+    combat_role: CombatRole.COMBAT,
+    combat_troop_class: CombatTroopClass.DISRUPTOR,
+  },
 }

@@ -185,6 +185,7 @@ describe('tickSystemPlayers', () => {
         'upgrade',
         'recruit',
         'transport',
+        'attack',
       ],
     )
   })

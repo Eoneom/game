@@ -13,6 +13,8 @@ export const SYSTEM_MAX_SCOUT_TROOPS = 2
 export const SYSTEM_MAX_FOUNDER_TROOPS = 1
 
 const ECONOMY_ROLES = new Set([ TroopRole.CARRIER ])
+export const SYSTEM_TARGET_WAR_MACHINE = 20
+export const SYSTEM_DISRUPTOR_RATIO = 0.3
 
 function hasStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
@@ -88,6 +90,13 @@ function recruitPriority({
 
   if (ECONOMY_ROLES.has(role)) {
     return 10 + TroopService.getOrder(code)
+  }
+
+  if (code === TroopCode.WAR_MACHINE) {
+    return 5 + TroopService.getOrder(code)
+  }
+  if (code === TroopCode.DISRUPTOR) {
+    return 6 + TroopService.getOrder(code)
   }
 
   if (role === TroopRole.SCOUT || role === TroopRole.FOUNDER) {

@@ -1,3 +1,4 @@
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { CityEntity } from '#core/city/entity'
 import { CityRepository } from '#app/port/repository/city'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
@@ -79,7 +80,8 @@ export class PostgresCityRepository
       id: row.id,
       player_id: row.player_id,
       name: row.name,
-      cell_id: row.cell_id
+      cell_id: row.cell_id,
+      default_combat_strategy: row.default_combat_strategy as CombatStrategy | null,
     })
   }
 
@@ -88,7 +90,8 @@ export class PostgresCityRepository
       id: entity.id,
       player_id: entity.player_id,
       name: entity.name,
-      cell_id: entity.cell_id
+      cell_id: entity.cell_id,
+      default_combat_strategy: entity.default_combat_strategy,
     }
   }
 }

@@ -69,6 +69,10 @@ import {
   getPendingSystemPlayerTick,
   scheduleSystemPlayerTick
 } from '#adapter/job-queue/player/system-tick'
+import {
+  COMBAT_ROUND_ADVANCE_QUEUE,
+  scheduleCombatRoundAdvance,
+} from '#adapter/job-queue/combat/advance-round'
 
 export class JobQueue implements JobQueuePort {
   private readonly ctx: JobQueueContext
@@ -257,6 +261,14 @@ export class JobQueue implements JobQueuePort {
     tick_index: number
   }): Promise<string | null> {
     return ensureSystemPlayerTickScheduled(this.ctx, args)
+  }
+
+  async scheduleCombatRoundAdvance(args: {
+    battle_id: string
+    round: number
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleCombatRoundAdvance(this.ctx, args)
   }
 }
 

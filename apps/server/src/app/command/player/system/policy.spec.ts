@@ -46,13 +46,13 @@ describe('system player tick policy', () => {
     assert.strictEqual(categoriesForTick(0)[0], 'explore')
     assert.strictEqual(categoriesForTick(1)[0], 'base')
     assert.strictEqual(categoriesForTick(4)[0], 'upgrade')
-    assert.deepStrictEqual(categoriesForTick(8), [ ...SYSTEM_TICK_CATEGORIES ])
+    assert.deepStrictEqual(categoriesForTick(9), [ ...SYSTEM_TICK_CATEGORIES ])
   })
 
   it('rotates economy-first when the main city needs baseline upkeep', () => {
     assert.strictEqual(categoriesForTick(0, { economy_first: true })[0], 'upgrade')
     assert.strictEqual(categoriesForTick(1, { economy_first: true })[0], 'research')
-    assert.strictEqual(categoriesForTick(4, { economy_first: true })[0], 'explore')
+    assert.strictEqual(categoriesForTick(4, { economy_first: true })[0], 'attack')
   })
 
   it('walks from the rotated start until one action succeeds', async () => {

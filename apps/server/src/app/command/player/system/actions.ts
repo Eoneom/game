@@ -18,6 +18,9 @@ import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { combatRoleFor } from '#core/combat/troop-combat'
+import { CombatRole } from '#core/troop/constant/combat-role'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
@@ -868,6 +871,48 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
   return null
 }
 
+async function tryAttack(player_id: string): Promise<Record<string, unknown> | null> {
+  const { cities } = await new CityListQuery().run({ player_id })
+  for (const city of cities) {
+    const { troops } = await new TroopListQuery().run({ city_id: city.id, player_id })
+    const combat_stacks = troops.filter(
+      t => t.count > 0 && combatRoleFor(t.code) === CombatRole.COMBAT
+    )
+    if (!combat_stacks.length) {
+      continue
+    }
+
+    const origin = city.coordinates
+    const viewport = viewportAround(origin)
+    const { cells } = await new WorldGetCellsQuery().run(viewport)
+
+    for (const cell of cells) {
+      if (sameCoordinates(cell.coordinates, origin)) {
+        continue
+      }
+      try {
+        await createTroopMovement({
+          player_id,
+          action: MovementAction.ATTACK,
+          origin,
+          destination: cell.coordinates,
+          move_troops: combat_stacks.map(t => ({ code: t.code, count: Math.min(t.count, 5) })),
+          combat_strategy: CombatStrategy.OPENING_STRIKE,
+        })
+        return {
+          action: 'attack',
+          origin,
+          destination: cell.coordinates,
+        }
+      } catch {
+        continue
+      }
+    }
+  }
+
+  return null
+}
+
 export const systemTickActions: Record<SystemTickCategory, SystemTickAction> = {
   upgrade: tryUpgrade,
   research: tryResearch,
@@ -877,4 +922,5 @@ export const systemTickActions: Record<SystemTickCategory, SystemTickAction> = {
   settle: trySettle,
   'make-permanent': tryMakePermanent,
   transport: tryTransport,
+  attack: tryAttack,
 }

@@ -43,6 +43,11 @@ export {
 } from '#adapter/job-queue/player/system-tick'
 
 export {
+  COMBAT_ROUND_ADVANCE_QUEUE,
+  type CombatRoundAdvanceJobData,
+} from '#adapter/job-queue/combat/advance-round'
+
+export {
   JobQueue,
   createJobQueue
 } from '#adapter/job-queue/job-queue'
