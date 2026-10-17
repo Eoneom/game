@@ -97,8 +97,19 @@ function systemUpgradeRank({
   })
 }
 
+function productionUpgradeLevelTiebreaker<
+  T extends { code: BuildingCode, level: number }
+>(left: T, right: T): number {
+  const left_production = isProductionBuildingCode(left.code)
+  const right_production = isProductionBuildingCode(right.code)
+  if (left_production && right_production) {
+    return left.level - right.level
+  }
+  return 0
+}
+
 export function sortBuildingsForSystemUpgrade<
-  T extends { code: BuildingCode }
+  T extends { code: BuildingCode, level: number }
 >({
   buildings,
   resource_stock,
@@ -110,15 +121,6 @@ export function sortBuildingsForSystemUpgrade<
   warehouses_capacity: WarehouseCapacity
   production_energy_ratio?: number
 }): T[] {
-  const under_pressure = isCityWarehouseUnderPressure({
-    resource_stock,
-    warehouses_capacity,
-  })
-  const energy_starved = production_energy_ratio < 1
-  if (!under_pressure && !energy_starved) {
-    return buildings
-  }
-
   return [ ...buildings ].sort((left, right) => {
     const rank_difference = systemUpgradeRank({
       building_code: left.code,
@@ -133,6 +135,10 @@ export function sortBuildingsForSystemUpgrade<
     })
     if (rank_difference !== 0) {
       return rank_difference
+    }
+    const production_level_difference = productionUpgradeLevelTiebreaker(left, right)
+    if (production_level_difference !== 0) {
+      return production_level_difference
     }
     return building_order[left.code] - building_order[right.code]
   })

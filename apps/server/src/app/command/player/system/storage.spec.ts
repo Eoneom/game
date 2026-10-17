@@ -105,21 +105,20 @@ describe('system player storage policy', () => {
     assert.strictEqual(sorted[0].code, BuildingCode.SOLAR_PANEL)
   })
 
-  it('leaves building order unchanged when storage is not pressured', () => {
-    const buildings = [
-      {
-        id: 'farm',
-        code: BuildingCode.MUSHROOM_FARM,
-        level: 0
-      },
-      {
-        id: 'plastic',
-        code: BuildingCode.PLASTIC_WAREHOUSE,
-        level: 0
-      },
-    ]
+  it('prefers the lower-level production building to keep plastic and mushroom in sync', () => {
     const sorted = sortBuildingsForSystemUpgrade({
-      buildings,
+      buildings: [
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 4
+        },
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1
+        },
+      ],
       resource_stock: {
         plastic: 10,
         mushroom: 10,
@@ -128,10 +127,40 @@ describe('system player storage policy', () => {
       warehouses_capacity: {
         plastic: 4000,
         mushroom: 3000
-      }
+      },
+      production_energy_ratio: 1,
     })
 
-    assert.deepStrictEqual(sorted, buildings)
+    assert.strictEqual(sorted[0].code, BuildingCode.MUSHROOM_FARM)
+    assert.strictEqual(sorted[1].code, BuildingCode.RECYCLING_PLANT)
+  })
+
+  it('still prefers warehouses over production when storage is not pressured', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 0
+        },
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.PLASTIC_WAREHOUSE)
   })
 
   it('clamps transported plastic and mushroom to destination free space', () => {

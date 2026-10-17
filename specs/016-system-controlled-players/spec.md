@@ -48,7 +48,7 @@ System tick actions use `CityGetQuery` warehouse fields (`warehouses_capacity`, 
 2. Warehouse for each pressured resource (`plastic_warehouse` / `mushroom_warehouse`).
 3. Other warehouses.
 4. Non-production buildings (labs, etc.).
-5. Production buildings (`recycling_plant`, `mushroom_farm`, `central_inductor`) — deprioritized while energy-starved.
+5. Production buildings (`recycling_plant`, `mushroom_farm`, `central_inductor`) — deprioritized while energy-starved; among production buildings, **lower level first** so plastic and mushroom production stay roughly aligned (avoids mushroom starvation from one-sided upgrades).
 
 When not pressured, building iteration order is unchanged (repository list order).
 
