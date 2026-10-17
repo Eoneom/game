@@ -3,13 +3,19 @@ import { OutpostType } from '@server-core/outpost/constant/type'
 import { TechnologyCode } from '@server-core/technology/constant/code'
 import { GenericResponse } from '../../response'
 import { Coordinates } from '../shared/coordinates'
-import { Resource } from '../shared/resource'
+import { Resource, WarehouseCapacity } from '../shared/resource'
 
 export type AdminSystemPlayerCitySummary = {
   id: string
   name: string
   coordinates: Coordinates
   resources: Resource
+  earnings_per_second: Resource
+  energy: number
+  energy_consumption: number
+  production_energy_ratio: number
+  warehouses_capacity: WarehouseCapacity
+  warehouse_space_remaining: WarehouseCapacity
 }
 
 export type AdminSystemPlayerOutpostSummary = {
@@ -17,6 +23,9 @@ export type AdminSystemPlayerOutpostSummary = {
   type: OutpostType
   coordinates: Coordinates
   resources: Resource
+  earnings_per_second: Resource
+  warehouses_capacity: WarehouseCapacity
+  warehouse_space_remaining: WarehouseCapacity
 }
 
 export type AdminSystemPlayerBuildingLevel = {

@@ -60,13 +60,13 @@ Idle ticks omit `category` and use an empty `payload`. Error ticks set `outcome`
 
 | Field | Content |
 | --- | --- |
-| `cities` | `id`, `name`, `coordinates` (`x`, `y` — same as city/outpost APIs), `resources` (`plastic`, `mushroom`, `plasma` gathered as-of snapshot time) |
-| `outposts` | `id`, `type`, `coordinates`, `resources` (permanent outposts gathered; temporary uses stored stock) |
+| `cities` | `id`, `name`, `coordinates`, `resources` (projected gather at `now()`), `earnings_per_second`, `energy`, `energy_consumption`, `production_energy_ratio`, `warehouses_capacity`, `warehouse_space_remaining` (plastic/mushroom; same as city page) |
+| `outposts` | `id`, `type`, `coordinates`, `resources`, `earnings_per_second`, warehouse fields for permanent outposts |
 | `technologies` | `code`, `level` (sorted like player UI) |
 | `buildings_by_city` | per city: `city_id`, `city_name`, `buildings[]` with `code`, `level` |
 | `updated_at` | server ms timestamp when snapshot was built |
 
-Admin UI shows map coordinates via the same `formatCoordinates` helper as nav/map (`x.y`), French labels for building/technology/outpost type/resource names (reuses web translation tables), and does **not** surface raw `cell_id`.
+Admin UI shows map coordinates via the same `formatCoordinates` helper as nav/map (`x.y`), French labels for building/technology/outpost type/resource names (reuses web translation tables), stock/production/energy/warehouse readouts per city, and does **not** surface raw `cell_id`. Stats HTTP query **refetches every 5s** while the admin console is open (aligned with gather pulse).
 
 After each successful system tick action, server emits `system-player:stats-updated` with the same shape (plus `type`) for that player only.
 

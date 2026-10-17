@@ -80,6 +80,7 @@ export const useSystemPlayerStats = (is_admin: boolean | undefined) => {
   const query = useQuery({
     queryKey: [ 'admin', 'system-player-stats' ],
     enabled: Boolean(token) && Boolean(is_admin),
+    refetchInterval: is_admin ? 5_000 : false,
     queryFn: async () => {
       if (!token) {
         throw new Error('token:not-found')

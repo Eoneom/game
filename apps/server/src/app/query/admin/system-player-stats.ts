@@ -6,8 +6,9 @@ import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
 import { TechnologyService } from '#core/technology/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
+import { BuildingCode } from '#core/building/constant/code'
 import { now } from '#shared/time'
-import type { Resource } from '#shared/resource'
+import type { Resource, WarehouseCapacity } from '#shared/resource'
 import type {
   AdminSystemPlayerStatsSnapshot,
 } from '@eoneom/api-client/src/endpoints/admin/system-player-stats'
@@ -33,6 +34,8 @@ async function citySummary({
     cell,
     production,
     warehouses_capacity,
+    solar_panel_level,
+    energy_consumption_breakdown,
   ] = await Promise.all([
     repository.cell.getById(city.cell_id),
     AppService.getCityProductionBreakdown({
@@ -40,7 +43,21 @@ async function citySummary({
       player_id,
     }),
     AppService.getCityWarehousesCapacity({ city_id: city.id }),
+    repository.building.getLevel({
+      city_id: city.id,
+      code: BuildingCode.SOLAR_PANEL,
+    }),
+    AppService.getCityEnergyConsumptionBreakdown({
+      city_id: city.id,
+      player_id,
+    }),
   ])
+
+  const energy_breakdown = await AppService.getCityEnergyBreakdown({
+    city_id: city.id,
+    player_id,
+    solar_panel_level,
+  })
 
   const stock_row = await repository.resource_stock.getByCellId({ cell_id: cell.id })
   AppService.assertResourceStockMatchesCityCell({
@@ -55,6 +72,12 @@ async function citySummary({
     warehouses_capacity,
   })
 
+  const stock_resources = resourceFromStock(stock)
+  const warehouse_space_remaining: WarehouseCapacity = {
+    plastic: Math.max(0, warehouses_capacity.plastic - stock_resources.plastic),
+    mushroom: Math.max(0, warehouses_capacity.mushroom - stock_resources.mushroom),
+  }
+
   return {
     id: city.id,
     name: city.name,
@@ -62,7 +85,13 @@ async function citySummary({
       x: cell.coordinates.x,
       y: cell.coordinates.y,
     },
-    resources: resourceFromStock(stock),
+    resources: stock_resources,
+    earnings_per_second: production.earnings_per_second,
+    energy: energy_breakdown.energy,
+    energy_consumption: energy_consumption_breakdown.energy_consumption,
+    production_energy_ratio: energy_consumption_breakdown.production_energy_ratio,
+    warehouses_capacity,
+    warehouse_space_remaining,
   }
 }
 
@@ -78,26 +107,52 @@ async function outpostSummary({
   const stock_row = await repository.resource_stock.getByCellId({ cell_id: outpost.cell_id })
 
   let stock = stock_row
+  let earnings_per_second: Resource = {
+    plastic: 0,
+    mushroom: 0,
+    plasma: 0,
+  }
+  let warehouses_capacity: WarehouseCapacity = {
+    plastic: 0,
+    mushroom: 0,
+  }
+  let warehouse_space_remaining: WarehouseCapacity = {
+    plastic: 0,
+    mushroom: 0,
+  }
   if (outpost.type === OutpostType.PERMANENT) {
     const [
       production,
-      warehouses_capacity,
+      outpost_warehouses_capacity,
     ] = await Promise.all([
       AppService.getOutpostProductionBreakdown({ outpost_id: outpost.id }),
       AppService.getOutpostWarehousesCapacity({ player_id }),
     ])
+    warehouses_capacity = outpost_warehouses_capacity
+    earnings_per_second = production.earnings_per_second
     stock = stock_row.gather({
       gather_at_time: now(),
       earnings_per_second: production.earnings_per_second,
-      warehouses_capacity,
+      warehouses_capacity: outpost_warehouses_capacity,
     }).stock
+  }
+
+  const stock_resources = resourceFromStock(stock)
+  if (outpost.type === OutpostType.PERMANENT) {
+    warehouse_space_remaining = {
+      plastic: Math.max(0, warehouses_capacity.plastic - stock_resources.plastic),
+      mushroom: Math.max(0, warehouses_capacity.mushroom - stock_resources.mushroom),
+    }
   }
 
   return {
     id: outpost.id,
     type: outpost.type,
     coordinates: cell.coordinates,
-    resources: resourceFromStock(stock),
+    resources: stock_resources,
+    earnings_per_second,
+    warehouses_capacity,
+    warehouse_space_remaining,
   }
 }
 

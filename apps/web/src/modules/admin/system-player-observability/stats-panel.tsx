@@ -1,7 +1,16 @@
 import React, { useMemo } from 'react'
 
-import { formatCoordinates, formatDate, transformDecimals } from '#helpers/transform'
-import type { AdminSystemPlayerStatsSnapshot, Resource } from '@eoneom/api-client'
+import {
+  formatCoordinates,
+  formatDate,
+  transformDecimals,
+  transformHourlyEarnings,
+} from '#helpers/transform'
+import type {
+  AdminSystemPlayerStatsSnapshot,
+  Resource,
+  WarehouseCapacity,
+} from '@eoneom/api-client'
 import { BuildingCode, TechnologyCode } from '@eoneom/api-client'
 
 import {
@@ -23,6 +32,40 @@ function formatResourceLine(resources: Resource): string {
     `${RESOURCE_LABEL.mushroom} ${transformDecimals(resources.mushroom)}`,
     `${RESOURCE_LABEL.plasma} ${transformDecimals(resources.plasma)}`,
   ].join(' · ')
+}
+
+function formatProductionLine(earnings_per_second: Resource): string {
+  return [
+    `${RESOURCE_LABEL.plastic} ${transformHourlyEarnings(earnings_per_second.plastic)}`,
+    `${RESOURCE_LABEL.mushroom} ${transformHourlyEarnings(earnings_per_second.mushroom)}`,
+    `${RESOURCE_LABEL.plasma} ${transformHourlyEarnings(earnings_per_second.plasma)}`,
+  ].join(' · ')
+}
+
+function formatWarehouseLine({
+  warehouses_capacity,
+  warehouse_space_remaining,
+}: {
+  warehouses_capacity: WarehouseCapacity
+  warehouse_space_remaining: WarehouseCapacity
+}): string {
+  return [
+    `${RESOURCE_LABEL.plastic} ${transformDecimals(warehouse_space_remaining.plastic)} / ${transformDecimals(warehouses_capacity.plastic)}`,
+    `${RESOURCE_LABEL.mushroom} ${transformDecimals(warehouse_space_remaining.mushroom)} / ${transformDecimals(warehouses_capacity.mushroom)}`,
+  ].join(' · ')
+}
+
+function formatEnergyLine({
+  energy,
+  energy_consumption,
+  production_energy_ratio,
+}: {
+  energy: number
+  energy_consumption: number
+  production_energy_ratio: number
+}): string {
+  const ratio_percent = Math.round(production_energy_ratio * 100)
+  return `Énergie ${transformDecimals(energy)} / ${transformDecimals(energy_consumption)} (${ratio_percent} % prod.)`
 }
 
 export const SystemPlayerStatsPanel: React.FC<Props> = ({
@@ -77,7 +120,16 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                       — {formatCoordinates(city.coordinates)}
                     </span>
                     <span className="block text-xs text-amber-dim">
-                      {formatResourceLine(city.resources)}
+                      Stock : {formatResourceLine(city.resources)}
+                    </span>
+                    <span className="block text-xs text-amber-dim">
+                      Prod. : {formatProductionLine(city.earnings_per_second)}
+                    </span>
+                    <span className="block text-xs text-amber-dim">
+                      {formatEnergyLine(city)}
+                    </span>
+                    <span className="block text-xs text-amber-dim">
+                      Entrepôts (libre / cap.) : {formatWarehouseLine(city)}
                     </span>
                   </li>
                 ))}
@@ -100,8 +152,20 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                         — {formatCoordinates(outpost.coordinates)}
                       </span>
                       <span className="block text-xs text-amber-dim">
-                        {formatResourceLine(outpost.resources)}
+                        Stock : {formatResourceLine(outpost.resources)}
                       </span>
+                      {(outpost.earnings_per_second.plastic > 0
+                        || outpost.earnings_per_second.mushroom > 0
+                        || outpost.earnings_per_second.plasma > 0) && (
+                        <span className="block text-xs text-amber-dim">
+                          Prod. : {formatProductionLine(outpost.earnings_per_second)}
+                        </span>
+                      )}
+                      {outpost.warehouses_capacity.plastic > 0 && (
+                        <span className="block text-xs text-amber-dim">
+                          Entrepôts (libre / cap.) : {formatWarehouseLine(outpost)}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
