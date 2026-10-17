@@ -2,6 +2,7 @@ import { systemTickActions } from './actions'
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import { citySettle } from '#app/command/city/settle'
 import { createTroopMovement } from '#app/command/troop/movement/create'
+import { recruitTroop } from '#app/command/troop/recruit'
 import { BuildingListQuery } from '#query/building/list'
 import { BuildingGetQuery } from '#query/building/get'
 import { CityListQuery } from '#query/city/list'
@@ -28,6 +29,7 @@ import assert from 'assert'
 vi.mock('#app/command/building/upgrade', () => ({ upgradeBuilding: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('#app/command/city/settle', () => ({ citySettle: vi.fn().mockResolvedValue({ city_id: 'new-city' }) }))
 vi.mock('#app/command/troop/movement/create', () => ({ createTroopMovement: vi.fn().mockResolvedValue({}) }))
+vi.mock('#app/command/troop/recruit', () => ({ recruitTroop: vi.fn().mockResolvedValue(undefined) }))
 
 describe('systemTickActions', () => {
   const player_id = id()
@@ -53,6 +55,7 @@ describe('systemTickActions', () => {
     vi.mocked(upgradeBuilding).mockClear()
     vi.mocked(citySettle).mockClear()
     vi.mocked(createTroopMovement).mockClear()
+    vi.mocked(recruitTroop).mockClear()
     vi.spyOn(Factory, 'getRepository').mockReturnValue({} as Repository)
     vi.spyOn(Factory, 'getLogger').mockReturnValue(fakeLogger as never)
   })
@@ -349,6 +352,82 @@ describe('systemTickActions', () => {
 
     assert.strictEqual(acted, null)
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
+  })
+
+  it('recruits economy troops before scouts when the city scout cap is reached', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({ technologies: [] })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 10000,
+        mushroom: 10000,
+      }),
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.CLONING_FACTORY,
+          level: 5,
+        },
+      ],
+      upgrade_queue: [],
+    })
+    const seeker = TroopEntity.create({
+      id: id(),
+      player_id,
+      cell_id: city_cell.id,
+      code: TroopCode.SEEKER,
+      count: 2,
+      movement_id: null,
+    })
+    const harvester = TroopEntity.create({
+      id: id(),
+      player_id,
+      cell_id: city_cell.id,
+      code: TroopCode.HARVESTER,
+      count: 0,
+      movement_id: null,
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [ seeker, harvester ],
+      costs: {
+        [TroopCode.SEEKER]: {
+          resource: {
+            plastic: 1,
+            mushroom: 0,
+            plasma: 0,
+          },
+          duration: 1,
+        },
+        [TroopCode.HARVESTER]: {
+          resource: {
+            plastic: 1,
+            mushroom: 0,
+            plasma: 0,
+          },
+          duration: 1,
+        },
+      } as never,
+      pending_recruitment: null,
+    })
+
+    const acted = await systemTickActions.recruit(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(vi.mocked(recruitTroop).mock.calls[0][0].troop_code, TroopCode.HARVESTER)
   })
 
   it('settles the next Core roman name when a temporary outpost has a founder', async () => {

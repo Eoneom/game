@@ -54,7 +54,13 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Transport** (`tryTransport`): cargo sent to the first city is capped per resource to `min(origin stock, destination warehouse_space_remaining)`, matching `depositUpToCapacity` on arrival. Plasma is not warehouse-capped. If capped cargo is empty, the outpost is skipped.
 
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
+**Research** (`tryResearch`): technologies are ordered by `sortTechnologiesForSystemResearch` (`system/technologies.ts`) — highest priority first: `architecture`, `photovoltaic_optimization`, `replication_catalyst`, `outpost_logistics`; tiebreaker lower `level` first. Skips codes with in-flight research (`research_at` on list entries or pending job via `hasPendingTechnologyResearchByCode`). If any technology is already researching, the action returns idle (unchanged).
+
+**Recruit** (`tryRecruit`): troop choice uses `sortTroopsForSystemRecruit` (`system/troops.ts`) instead of roster `troop_order`. Per-**city** caps (garrison in that city’s cell only; outpost troops do not count): `SYSTEM_MAX_SCOUT_TROOPS = 2`, `SYSTEM_MAX_FOUNDER_TROOPS = 1`. Economy roles (cultivator / salvager / carrier) are preferred; scout and founder are deprioritized when that city is at cap. When a permanent outpost has stock but no cultivator or salvager on that outpost, recruiting that role is boosted empire-wide for the next city recruit attempt.
+
+**Production-ready research priority** (`tickSystemPlayers`): when `isEmpireProductionReadyForResearch(player_id)` is true for the first city — projected building levels satisfy `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure (`isCityWarehouseUnderPressure`) — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s rotated category list so research is attempted before building upgrades when research would otherwise run later on the same tick.
+
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/policy.spec.ts`, `core/player/constant/system.spec.ts`.
 
 ## Player errors (relevant)
 

@@ -7,6 +7,8 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { TechnologyService } from '#core/technology/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { BuildingCode } from '#core/building/constant/code'
+import { TroopCode } from '#core/troop/constant/code'
+import { TroopService } from '#core/troop/service'
 import { now } from '#shared/time'
 import type { Resource, WarehouseCapacity } from '#shared/resource'
 import type {
@@ -19,6 +21,57 @@ function resourceFromStock(stock: ResourceStockEntity): Resource {
     plastic: stock.plastic,
     mushroom: stock.mushroom,
     plasma: stock.plasma,
+  }
+}
+
+async function troopsInCell({
+  cell_id,
+  player_id,
+}: {
+  cell_id: string
+  player_id: string
+}): Promise<{ code: TroopCode, count: number }[]> {
+  const repository = Factory.getRepository()
+  const troops = await repository.troop.listInCell({
+    cell_id,
+    player_id,
+  })
+  return TroopService.sortTroops({ troops }).map(troop => ({
+    code: troop.code,
+    count: troop.count,
+  }))
+}
+
+async function pendingRecruitmentForCity({
+  city_id,
+  player_id,
+  cell_id,
+}: {
+  city_id: string
+  player_id: string
+  cell_id: string
+}): Promise<{
+  troop_code: TroopCode
+  finish_at: number
+  remaining_count: number
+} | null> {
+  const pending = await Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id })
+  if (!pending) {
+    return null
+  }
+  const repository = Factory.getRepository()
+  const troops = await repository.troop.listInCell({
+    cell_id,
+    player_id,
+  })
+  const recruiting = troops.find(troop => troop.id === pending.troop_id)
+  if (!recruiting) {
+    return null
+  }
+  return {
+    troop_code: recruiting.code,
+    finish_at: pending.finish_at,
+    remaining_count: pending.remaining_count,
   }
 }
 
@@ -36,6 +89,8 @@ async function citySummary({
     warehouses_capacity,
     solar_panel_level,
     energy_consumption_breakdown,
+    troops,
+    pending_recruitment,
   ] = await Promise.all([
     repository.cell.getById(city.cell_id),
     AppService.getCityProductionBreakdown({
@@ -50,6 +105,15 @@ async function citySummary({
     AppService.getCityEnergyConsumptionBreakdown({
       city_id: city.id,
       player_id,
+    }),
+    troopsInCell({
+      cell_id: city.cell_id,
+      player_id,
+    }),
+    pendingRecruitmentForCity({
+      city_id: city.id,
+      player_id,
+      cell_id: city.cell_id,
     }),
   ])
 
@@ -92,6 +156,8 @@ async function citySummary({
     production_energy_ratio: energy_consumption_breakdown.production_energy_ratio,
     warehouses_capacity,
     warehouse_space_remaining,
+    troops,
+    pending_recruitment,
   }
 }
 
@@ -103,7 +169,16 @@ async function outpostSummary({
   player_id: string
 }): Promise<AdminSystemPlayerStatsSnapshot['outposts'][number]> {
   const repository = Factory.getRepository()
-  const cell = await repository.cell.getById(outpost.cell_id)
+  const [
+    cell,
+    troops,
+  ] = await Promise.all([
+    repository.cell.getById(outpost.cell_id),
+    troopsInCell({
+      cell_id: outpost.cell_id,
+      player_id,
+    }),
+  ])
   const stock_row = await repository.resource_stock.getByCellId({ cell_id: outpost.cell_id })
 
   let stock = stock_row
@@ -153,6 +228,7 @@ async function outpostSummary({
     earnings_per_second,
     warehouses_capacity,
     warehouse_space_remaining,
+    troops,
   }
 }
 

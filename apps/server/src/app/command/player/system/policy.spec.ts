@@ -2,12 +2,35 @@ import assert from 'assert'
 import {
   actForSystemPlayer,
   categoriesForTick,
+  prioritizeResearchBeforeUpgrade,
   SYSTEM_TICK_CATEGORIES,
   type SystemTickAction,
   type SystemTickCategory
 } from './policy'
 
 describe('system player tick policy', () => {
+  it('swaps upgrade and research when research comes after upgrade', () => {
+    assert.deepStrictEqual(
+      prioritizeResearchBeforeUpgrade([
+        'recruit',
+        'upgrade',
+        'research',
+        'explore',
+      ]),
+      [
+        'recruit',
+        'research',
+        'upgrade',
+        'explore',
+      ],
+    )
+  })
+
+  it('leaves order unchanged when research is already before upgrade', () => {
+    const categories = categoriesForTick(1)
+    assert.deepStrictEqual(prioritizeResearchBeforeUpgrade(categories), categories)
+  })
+
   it('rotates the category ring from the tick index', () => {
     assert.strictEqual(categoriesForTick(0)[0], 'upgrade')
     assert.strictEqual(categoriesForTick(1)[0], 'research')

@@ -32,18 +32,36 @@ export type SystemPlayerTickResult =
       attempts: SystemPlayerTickAttempt[]
     }
 
+export function prioritizeResearchBeforeUpgrade(
+  categories: SystemTickCategory[]
+): SystemTickCategory[] {
+  const upgrade_index = categories.indexOf('upgrade')
+  const research_index = categories.indexOf('research')
+  if (upgrade_index === -1 || research_index === -1 || research_index <= upgrade_index) {
+    return categories
+  }
+
+  const prioritized = [ ...categories ]
+  prioritized[upgrade_index] = 'research'
+  prioritized[research_index] = 'upgrade'
+  return prioritized
+}
+
 export async function actForSystemPlayer({
   player_id,
   tick_index,
   actions,
+  categories,
 }: {
   player_id: string
   tick_index: number
   actions: Record<SystemTickCategory, SystemTickAction>
+  categories?: SystemTickCategory[]
 }): Promise<SystemPlayerTickResult> {
   const attempts: SystemPlayerTickAttempt[] = []
+  const category_order = categories ?? categoriesForTick(tick_index)
 
-  for (const category of categoriesForTick(tick_index)) {
+  for (const category of category_order) {
     const payload = await actions[category](player_id)
     if (payload) {
       attempts.push({

@@ -1,9 +1,21 @@
 import { BuildingCode } from '@server-core/building/constant/code'
 import { OutpostType } from '@server-core/outpost/constant/type'
 import { TechnologyCode } from '@server-core/technology/constant/code'
+import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../response'
 import { Coordinates } from '../shared/coordinates'
 import { Resource, WarehouseCapacity } from '../shared/resource'
+
+export type AdminSystemPlayerTroopCount = {
+  code: TroopCode
+  count: number
+}
+
+export type AdminSystemPlayerPendingRecruitment = {
+  troop_code: TroopCode
+  finish_at: number
+  remaining_count: number
+}
 
 export type AdminSystemPlayerCitySummary = {
   id: string
@@ -16,6 +28,8 @@ export type AdminSystemPlayerCitySummary = {
   production_energy_ratio: number
   warehouses_capacity: WarehouseCapacity
   warehouse_space_remaining: WarehouseCapacity
+  troops: AdminSystemPlayerTroopCount[]
+  pending_recruitment: AdminSystemPlayerPendingRecruitment | null
 }
 
 export type AdminSystemPlayerOutpostSummary = {
@@ -26,6 +40,7 @@ export type AdminSystemPlayerOutpostSummary = {
   earnings_per_second: Resource
   warehouses_capacity: WarehouseCapacity
   warehouse_space_remaining: WarehouseCapacity
+  troops: AdminSystemPlayerTroopCount[]
 }
 
 export type AdminSystemPlayerBuildingLevel = {

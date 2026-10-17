@@ -9,18 +9,23 @@ import {
 } from '#helpers/transform'
 import type {
   AdminSystemPlayerCitySummary,
+  AdminSystemPlayerPendingRecruitment,
   AdminSystemPlayerStatsSnapshot,
+  AdminSystemPlayerTroopCount,
   Resource,
   WarehouseCapacity,
 } from '@eoneom/api-client'
-import { BuildingCode, TechnologyCode } from '@eoneom/api-client'
+import { BuildingCode, TechnologyCode, TroopCode } from '@eoneom/api-client'
 import { EnergyReadout } from '#ui/energy-readout'
+import { CountdownProgress } from '#ui/countdown-progress'
+import { useCountdownProgress } from '#hook/countdown-progress'
 
 import {
   RESOURCE_LABEL,
   translateBuildingCode,
   translateOutpostType,
   translateTechnologyCode,
+  translateTroopCode,
 } from './labels'
 
 type Props = {
@@ -35,6 +40,39 @@ function formatProductionLine(earnings_per_second: Resource): string {
     `${RESOURCE_LABEL.mushroom} ${transformHourlyEarnings(earnings_per_second.mushroom)}`,
     `${RESOURCE_LABEL.plasma} ${transformHourlyEarnings(earnings_per_second.plasma)}`,
   ].join(' · ')
+}
+
+function formatTroopsLine(troops: AdminSystemPlayerTroopCount[]): string | null {
+  const present = troops.filter(troop => troop.count > 0)
+  if (present.length === 0) {
+    return null
+  }
+  return present
+    .map(troop => `${translateTroopCode(troop.code as TroopCode)} ×${troop.count}`)
+    .join(' · ')
+}
+
+const CityPendingRecruitment: React.FC<{
+  pending: AdminSystemPlayerPendingRecruitment
+}> = ({ pending }) => {
+  const { remainingSeconds, elapsedProgress } = useCountdownProgress({
+    endAt: pending.finish_at,
+    onDone: () => undefined,
+  })
+
+  return (
+    <div className="text-xs text-amber-dim">
+      <p className="m-0">
+        Recrutement : {pending.remaining_count}{' '}
+        {translateTroopCode(pending.troop_code as TroopCode)}
+      </p>
+      <CountdownProgress
+        summary={<>Fin dans {remainingSeconds} s</>}
+        elapsedProgress={elapsedProgress}
+        remainingSeconds={remainingSeconds}
+      />
+    </div>
+  )
 }
 
 const warehouseFillPercent = (capacity: number, space_remaining: number): number => {
@@ -110,6 +148,8 @@ function CityStatsSection({
   city: AdminSystemPlayerCitySummary
   buildings: { code: BuildingCode, level: number }[]
 }): React.ReactElement {
+  const troops_line = formatTroopsLine(city.troops)
+
   return (
     <section className="rounded-sm border border-rust/35 bg-chrome/20 p-2.5">
       <header className="mb-2 border-b border-rust/25 pb-2">
@@ -134,6 +174,12 @@ function CityStatsSection({
           warehouses_capacity={city.warehouses_capacity}
           warehouse_space_remaining={city.warehouse_space_remaining}
         />
+        {troops_line && (
+          <p className="m-0 text-xs text-amber-dim">Troupes : {troops_line}</p>
+        )}
+        {city.pending_recruitment && (
+          <CityPendingRecruitment pending={city.pending_recruitment} />
+        )}
         <div>
           <h5 className="m-0 mb-1 text-[10px] uppercase tracking-wider text-amber-dim">Bâtiments</h5>
           <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
@@ -213,29 +259,35 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     Avant-postes ({snapshot.outposts.length})
                   </h3>
                   <ul className="m-0 list-none space-y-2 p-0">
-                    {snapshot.outposts.map(outpost => (
-                      <li
-                        key={outpost.id}
-                        className="rounded-sm border border-rust/25 bg-chrome/15 p-2 text-sm text-amber"
-                      >
-                        {translateOutpostType(outpost.type)}
-                        <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
-                        {(outpost.earnings_per_second.plastic > 0
-                          || outpost.earnings_per_second.mushroom > 0
-                          || outpost.earnings_per_second.plasma > 0) && (
-                          <p className="m-0 mt-1 text-xs text-amber-dim">
-                            Prod. : {formatProductionLine(outpost.earnings_per_second)}
-                          </p>
-                        )}
-                        {outpost.warehouses_capacity.plastic > 0 && (
-                          <WarehouseStockBars
-                            resources={outpost.resources}
-                            warehouses_capacity={outpost.warehouses_capacity}
-                            warehouse_space_remaining={outpost.warehouse_space_remaining}
-                          />
-                        )}
-                      </li>
-                    ))}
+                    {snapshot.outposts.map(outpost => {
+                      const troops_line = formatTroopsLine(outpost.troops)
+                      return (
+                        <li
+                          key={outpost.id}
+                          className="rounded-sm border border-rust/25 bg-chrome/15 p-2 text-sm text-amber"
+                        >
+                          {translateOutpostType(outpost.type)}
+                          <span className="text-amber-dim"> — {formatCoordinates(outpost.coordinates)}</span>
+                          {(outpost.earnings_per_second.plastic > 0
+                            || outpost.earnings_per_second.mushroom > 0
+                            || outpost.earnings_per_second.plasma > 0) && (
+                            <p className="m-0 mt-1 text-xs text-amber-dim">
+                              Prod. : {formatProductionLine(outpost.earnings_per_second)}
+                            </p>
+                          )}
+                          {outpost.warehouses_capacity.plastic > 0 && (
+                            <WarehouseStockBars
+                              resources={outpost.resources}
+                              warehouses_capacity={outpost.warehouses_capacity}
+                              warehouse_space_remaining={outpost.warehouse_space_remaining}
+                            />
+                          )}
+                          {troops_line && (
+                            <p className="m-0 mt-1 text-xs text-amber-dim">Troupes : {troops_line}</p>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 </section>
               )}

@@ -46,6 +46,12 @@ import {
   resourcesForTransportToDestination,
   sortBuildingsForSystemUpgrade
 } from '#command/player/system/storage'
+import {
+  loadOutpostRecruitHints,
+  recruitSortHintsForCity,
+  sortTroopsForSystemRecruit,
+} from '#command/player/system/troops'
+import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
@@ -232,6 +238,16 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
     return null
   }
 
+  const projected_technology_levels = projectTechnologyLevelsForPolicy({
+    technologies,
+    research_queue,
+  })
+  const research_order = sortTechnologiesForSystemResearch({
+    technologies: projected_technology_levels,
+    all_technologies: technologies,
+    research_queue,
+  })
+
   for (const city of cities) {
     const city_details = await new CityGetQuery().run({
       city_id: city.id,
@@ -255,11 +271,11 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
       technologies: projected_technologies,
     })
 
-    for (const technology of projected_technologies) {
+    for (const technology of research_order) {
       if (hasPendingTechnologyResearchByCode({
         technology_code: technology.code,
         technologies,
-        research_queue
+        research_queue,
       })) {
         continue
       }
@@ -308,6 +324,7 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
 async function tryRecruit(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
+  const outpost_hints = await loadOutpostRecruitHints(player_id)
 
   for (const city of cities) {
     const [
@@ -347,7 +364,16 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       }),
     })
 
-    for (const troop of troop_list.troops) {
+    const recruit_hints = recruitSortHintsForCity({
+      city_troops: troop_list.troops,
+      outpost_hints,
+    })
+    const sorted_troops = sortTroopsForSystemRecruit({
+      troops: troop_list.troops,
+      hints: recruit_hints,
+    })
+
+    for (const troop of sorted_troops) {
       const cost = troop_list.costs[troop.code]
       if (!cost) {
         continue

@@ -1,6 +1,11 @@
 import { Factory } from '#adapter/factory'
 import { SYSTEM_PLAYER_TICK_INTERVAL_MS } from '#app/scheduling/intervals'
-import { actForSystemPlayer } from '#command/player/system/policy'
+import {
+  actForSystemPlayer,
+  categoriesForTick,
+  prioritizeResearchBeforeUpgrade,
+} from '#command/player/system/policy'
+import { isEmpireProductionReadyForResearch } from '#command/player/system/production'
 import { systemTickActions } from '#command/player/system/actions'
 import { emitSystemPlayerTickObservability } from '#command/player/system/emit-observability'
 import { emitSystemPlayerStatsUpdated } from '#command/player/system/emit-stats'
@@ -16,10 +21,16 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
   const players = await repository.player.listSystemControlled()
   for (const player of players) {
     try {
+      const base_categories = categoriesForTick(tick_index)
+      const production_ready = await isEmpireProductionReadyForResearch(player.id)
+      const categories = production_ready
+        ? prioritizeResearchBeforeUpgrade(base_categories)
+        : base_categories
       const result = await actForSystemPlayer({
         player_id: player.id,
         tick_index,
-        actions: systemTickActions
+        actions: systemTickActions,
+        categories,
       })
       logger.info('system player tick', {
         player_id: player.id,

@@ -4,6 +4,7 @@ import { actForSystemPlayer } from '#command/player/system/policy'
 import * as observabilityEmit from '#command/player/system/emit-observability'
 import * as statsEmit from '#command/player/system/emit-stats'
 import * as statsQuery from '#app/query/admin/system-player-stats'
+import * as productionModule from '#command/player/system/production'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
@@ -37,6 +38,7 @@ describe('tickSystemPlayers', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.spyOn(productionModule, 'isEmpireProductionReadyForResearch').mockResolvedValue(false)
     listSystemControlled = vi.fn().mockResolvedValue([ player ])
     scheduleSystemPlayerTick = vi.fn().mockResolvedValue('job-id')
     vi.mocked(actForSystemPlayer).mockResolvedValue({
@@ -106,6 +108,37 @@ describe('tickSystemPlayers', () => {
     assert.strictEqual(emit.mock.calls[0][0].outcome, 'idle')
     assert.deepStrictEqual(emit.mock.calls[0][0].attempts, skipped_attempts)
     assert.strictEqual(stats_emit.mock.calls.length, 0)
+  })
+
+  it('prioritizes research before upgrade when production is ready', async () => {
+    vi.spyOn(productionModule, 'isEmpireProductionReadyForResearch').mockResolvedValue(true)
+    vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
+    vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
+      player_id: player.id,
+      player_name: player.name,
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: tick_at,
+    })
+
+    await tickSystemPlayers({ tick_index: 0 })
+
+    assert.deepStrictEqual(
+      vi.mocked(actForSystemPlayer).mock.calls[0][0].categories,
+      [
+        'research',
+        'upgrade',
+        'recruit',
+        'explore',
+        'base',
+        'settle',
+        'make-permanent',
+        'transport',
+      ],
+    )
   })
 
   it('acts for each system-controlled player and reschedules the next tick', async () => {
