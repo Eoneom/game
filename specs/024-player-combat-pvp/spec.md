@@ -138,18 +138,34 @@ No per-player recruit cap beyond existing city recruitment concurrency ([`009`](
 
 ### Recruitment (requirements + pricing)
 
-**Recruitment cost** rows are paired by role slot (anchor vs striker per faction); requirements use `TroopRequirement` + `troop_costs` ([`014`](../014-requirements-pricing/spec.md)). Combat stat columns are **not** paired across factions.
+Combat troops are **not** recruitable at game start. Gates live in `TroopRequirement` (`apps/server/src/core/requirement/constant/troop.ts`) and are enforced by `RequirementService.checkTroopRequirement` on `PUT /troop/recruit` ([`014`](../014-requirements-pricing/spec.md), [`009`](../009-troops-stationary/spec.md)). Costs live in `troop_costs` (`apps/server/src/core/pricing/constant/troop.ts`).
 
-| Faction anchor unit | `CLONING_FACTORY` level | plastic | mushroom | duration (s) |
-| --- | --- | --- | --- | --- |
-| `legionnaire` / `war_machine` | 4 | 2_500 | 2_500 | 200 |
-| `interceptor` / `disruptor` | 6 | 3_500 | 2_000 | 280 |
+**Building + technology requirements** (per `TroopCode`; wire codes from [`007`](../007-buildings-upgrade-queue/spec.md) / [`008`](../008-technology-research/spec.md)):
 
-Technologies: **none** in v1.
+| `TroopCode` | Faction | `cloning_factory` level | `replication_catalyst` level | `outpost_logistics` level |
+| --- | --- | ---: | ---: | ---: |
+| `legionnaire` | `the_confederation` | 4 | 1 | — |
+| `interceptor` | `the_confederation` | 6 | 2 | 1 |
+| `war_machine` | `the_technological_singularity` | 4 | 1 | — |
+| `disruptor` | `the_technological_singularity` | 6 | 2 | 1 |
+
+- **Anchor** (`legionnaire`, `war_machine`): mid-game military cloning after the factory is upgraded past light haulers (`light_transporter` / `hauler` require `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)) and **`replication_catalyst` 1** is researched (military-grade replication — same tech family that shortens recruit duration today).
+- **Striker** (`interceptor`, `disruptor`): late-mid assault troops need a higher factory tier plus **`replication_catalyst` 2** and **`outpost_logistics` 1** (expeditionary strike capacity aligned with outpost play in [`011`](../011-outposts/spec.md)).
+- **Singularity parity**: Alpha cities use the **same requirement rows** for `war_machine` / `disruptor` as confederation uses for `legionnaire` / `interceptor` (faction differs; gates do not).
+- **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the rows above are met.
+
+**Recruitment cost** (paired by role slot; combat stats are **not** paired across factions):
+
+| Role slot | Codes | plastic | mushroom | duration (s) |
+| --- | --- | ---: | ---: | ---: |
+| Anchor | `legionnaire`, `war_machine` | 2_500 | 2_500 | 200 |
+| Striker | `interceptor`, `disruptor` | 3_500 | 2_000 | 280 |
+
+Implementation maps each row to `RequirementValue` `{ buildings: [{ code, level }], technologies: [{ code, level }] }` with `BuildingCode.CLONING_FACTORY` and `TechnologyCode.REPLICATION_CATALYST` / `TechnologyCode.OUTPOST_LOGISTICS` as applicable.
 
 ### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
 
-- **Recruitment costs**: Alpha uses **`war_machine`** / **`disruptor`** with the same **requirements and pricing** rows as confederation counterparts (economic parity only — combat stats differ per [Roster](#roster-names-faction-stats)).
+- **Recruitment gates + costs**: Alpha uses **`war_machine`** / **`disruptor`** with the same **`TroopRequirement`** and **`troop_costs`** rows as confederation **`legionnaire`** / **`interceptor`** (see [Recruitment (requirements + pricing)](#recruitment-requirements--pricing)); combat stats differ per [Roster](#roster-names-faction-stats).
 - **Policy (v1)**: below garrison threshold, prefer **`war_machine`** until ~20 count, then up to ~30% **`disruptor`** before `attack` tick actions.
 - **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
 - **Strategy (v1)**: Alpha picks `opening_strike` when attacker advantage ≥ 1.2 projected pools, else `balanced` (see [Combat strategies](#combat-strategies)).
