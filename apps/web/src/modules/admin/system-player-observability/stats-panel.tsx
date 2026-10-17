@@ -197,7 +197,6 @@ function CityStatsSection({
           warehouses_capacity={city.warehouses_capacity}
           warehouse_space_remaining={city.warehouse_space_remaining}
         />
-        <TroopsList troops={city.troops} pending={city.pending_recruitment} />
         <div>
           <h5 className="field-label m-0 mb-1 text-label">Bâtiments</h5>
           <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
@@ -209,6 +208,7 @@ function CityStatsSection({
             ))}
           </ul>
         </div>
+        <TroopsList troops={city.troops} pending={city.pending_recruitment} />
       </div>
     </section>
   )
