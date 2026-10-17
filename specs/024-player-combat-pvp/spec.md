@@ -1,10 +1,10 @@
 # Slice 024 — Player combat (PvP)
 
-**Status**: Design locked (interview + combat mechanics); **not implemented** on `main` (brownfield movement has no `attack` action yet).
+**Status**: Design locked (interview + five-round strategy combat); **not implemented** on `main` (brownfield movement has no `attack` action yet).
 
 ## Summary
 
-Players launch **`attack`** troop movements ([`010`](../010-troop-movement-combat/spec.md)) against **enemy** map locations: **field stacks** (troops on a cell), **cities** ([`006`](../006-city-lifecycle-gathering/spec.md)), and **outposts** ([`011`](../011-outposts/spec.md)). When the movement **arrives**, the server **starts one battle** (single trigger). That battle **resolves over multiple combat rounds** using **attack/defense pools** and **whole-unit casualties**. Outcomes can **loot** resources (requires surviving **carriers**), **destroy** structures or stacks, and **occupy** locations (requires surviving **combat** troops). New **faction-exclusive combat `TroopCode`s** (same pattern as `explorer` / `seeker` in [`004`](../004-faction-domain/spec.md) + [`009`](../009-troops-stationary/spec.md)) each have **unique wire codes, French display names, and troop artwork**. **Defenders** are **auto-only**. **System-controlled** singularity players ([`016`](../016-system-controlled-players/spec.md)) recruit and fight with their faction’s combat codes. Battles emit **`battle`** reports ([`012`](../012-communication-reports/spec.md)).
+Players launch **`attack`** troop movements ([`010`](../010-troop-movement-combat/spec.md)) against **enemy** map locations: **field stacks** (troops on a cell), **cities** ([`006`](../006-city-lifecycle-gathering/spec.md)), and **outposts** ([`011`](../011-outposts/spec.md)). When the movement **arrives**, the server **starts one battle** (single trigger). Before round **1**, each side locks a **combat strategy** that sets **per-round attack and structure multipliers** for **line** vs **skirmisher** combat classes. The battle then **resolves in exactly five simultaneous combat rounds** using **attack pools** vs **structure pools** (durability), optional **composition exposure**, **role-aware target priority**, and **whole-unit casualties**. Outcomes can **loot** resources (requires surviving **carriers**), **destroy** structures or stacks, and **occupy** locations (requires surviving **combat** troops). New **faction-exclusive combat `TroopCode`s** (same pattern as `explorer` / `seeker` in [`004`](../004-faction-domain/spec.md) + [`009`](../009-troops-stationary/spec.md)) each have **unique wire codes, French display names, and troop artwork**. **Defenders** are **auto-only**. **System-controlled** singularity players ([`016`](../016-system-controlled-players/spec.md)) recruit and fight with their faction’s combat codes. Battles emit **`battle`** reports with **per-round summaries** ([`012`](../012-communication-reports/spec.md)).
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), troops ([`009`](../009-troops-stationary/spec.md)), movement ([`010`](../010-troop-movement-combat/spec.md)), cities ([`006`](../006-city-lifecycle-gathering/spec.md)), outposts ([`011`](../011-outposts/spec.md)), reports ([`012`](../012-communication-reports/spec.md)), requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), system players ([`016`](../016-system-controlled-players/spec.md)), timing ([`022`](../022-timing-and-resources/spec.md)).
 
@@ -16,8 +16,11 @@ Players launch **`attack`** troop movements ([`010`](../010-troop-movement-comba
 | --- | --- |
 | **Targets (v1)** | Attack **enemy troops on cells**, **cities**, and **outposts** (all in scope). |
 | **War / diplomacy** | **Always-on hostility** between players of **different** factions; **cannot attack** players of the **same** faction. No separate war declaration or peace treaty in v1. |
-| **Resolution** | **One-shot trigger** when the attack movement **arrives** (starts exactly one battle). Combat **resolves in exactly five rounds** (fixed strike) using scheduled round jobs — not a single instant resolve at arrival. No timeout victory; see [Multi-round resolution](#multi-round-resolution-mechanics). |
-| **Combat stats** | Each `TroopCode` has **`attack_capacity`** and **`defense_capacity`** (extend `troop_characteristics`). |
+| **Resolution** | **One-shot trigger** when the attack movement **arrives** (starts exactly one battle). Combat **resolves in exactly five rounds** (fixed strike) of **simultaneous exchange** using scheduled round jobs — not a single instant resolve at arrival. No timeout victory; see [Multi-round resolution](#multi-round-resolution-mechanics). |
+| **Pre-battle strategy** | Attacker **must** choose a **`CombatStrategy`** when creating an `attack` movement. Defender uses a **garrison default strategy** on city/outpost when set, else **`balanced`**. Strategies define **per-round Attack % and Structure %** multipliers per [combat troop class](#combat-troop-classes). Round **5** column is the final round (battles never extend past 5). |
+| **Combat stats** | Each `TroopCode` has **`attack_capacity`**, **`defense_capacity`**, and (for `combat_role = combat`) **`structure_capacity`** + **`combat_troop_class`** (extend `troop_characteristics` per [`009`](../009-troops-stationary/spec.md)). **Structure** is the durability stat in the casualty formula; **defense** still drives role contribution weights for non-combat stacks. |
+| **Composition depth** | **Target priority** (v1): combat losses prefer the enemy class that matches the round’s dominant attacker profile. **Exposure** (v1): homogeneous combat armies (single `combat_troop_class`) take increased casualties via a structure-pool penalty. |
+| **Battle reports** | **`battle`** reports include **`round_summaries`** (per-round pools + casualties) in metadata ([`012`](../012-communication-reports/spec.md)). |
 | **Outcomes (v1)** | **Loot**, **destroy**, and **occupy** are all in scope; see [Outcomes matrix](#outcomes-matrix) and [Outcomes vs army composition](#outcomes-vs-army-composition). |
 | **Defenders** | **Auto-defend only**: all eligible defender troops on the target cell join the battle automatically; no optional decline, no manual intercept from other cells. |
 | **Attacker retreat** | On **defender win** or **draw** (when the attacker still has survivors), surviving attacker troops **return to the attack movement origin cell** — same as defeat retreat; draw does not leave attackers on the destination. |
@@ -47,7 +50,7 @@ Extend `MovementAction` with `ATTACK = 'attack'` (see [`010`](../010-troop-movem
 
 | Concern | Spec |
 | --- | --- |
-| Create | `POST /troop/movement` with `action: 'attack'`, origin/destination, troop selection. |
+| Create | `POST /troop/movement` with `action: 'attack'`, `combat_strategy` ([`CombatStrategy`](#combat-strategies)), origin/destination, troop selection. |
 | Faction check | Enforce [Faction gating](#faction-gating) before persist. |
 | Troop mix | At least **one combat-role** unit required (see [Composition rules](#composition-rules)). |
 | Finish | On `troop.movement.finish`, start **battle** instead of peaceful sagas. |
@@ -70,12 +73,12 @@ Four new codes — **two per faction**, **mirrored combat stats** but **unique i
 
 ### Roster (names, faction, stats)
 
-| Faction | Enum member | Wire `TroopCode` | FR display name (UI) | Lore (spec) | `combat_role` | speed | transport_capacity | attack | defense |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | 1.0 | 0 | 12 | 12 |
-| `the_confederation` | `INTERCEPTOR` | `interceptor` | **Intercepteur** | Chasseur rapide confédéré, optimisé pour frapper en premier et rompre les formations. | `combat` | 1.35 | 0 | 16 | 6 |
-| `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; ancre la ligne singularity sur le champ de bataille. | `combat` | 1.0 | 0 | 12 | 12 |
-| `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; fragile mais mortelle en rafale. | `combat` | 1.35 | 0 | 16 | 6 |
+| Faction | Enum member | Wire `TroopCode` | FR display name (UI) | Lore (spec) | `combat_role` | `combat_troop_class` | speed | transport_capacity | attack | defense | structure |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | `line` | 1.0 | 0 | 12 | 12 | 12 |
+| `the_confederation` | `INTERCEPTOR` | `interceptor` | **Intercepteur** | Chasseur rapide confédéré, optimisé pour frapper en premier et rompre les formations. | `combat` | `skirmisher` | 1.35 | 0 | 16 | 6 | 6 |
+| `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; ancre la ligne singularity sur le champ de bataille. | `combat` | `line` | 1.0 | 0 | 12 | 12 | 12 |
+| `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; fragile mais mortelle en rafale. | `combat` | `skirmisher` | 1.35 | 0 | 16 | 6 | 6 |
 
 - **`troop_faction`**: each code maps to exactly one `FactionCode` ([`004`](../004-faction-domain/spec.md)); no code appears on both factions.
 - **`TroopService.codesForFaction`**: confederation humans bootstrap/recruit **legionnaire** + **interceptor** only; singularity system player gets **war_machine** + **disruptor** (humans never recruit singularity codes via normal signup).
@@ -115,8 +118,10 @@ Extend `TroopCharacteristic` (`apps/server/src/core/troop/constant/characteristi
 | --- | --- | --- |
 | `speed` | number | Travel ETA |
 | `transport_capacity` | number | Loot haul when `combat_role` is `carrier` |
-| `attack_capacity` | number | Per unit per round |
-| `defense_capacity` | number | Per unit per round |
+| `attack_capacity` | number | Per unit per round (before strategy Attack %) |
+| `defense_capacity` | number | Role weighting for non-combat contributions; **not** used in combat-troop durability pool |
+| `structure_capacity` | number | **Durability** per unit per round (before strategy Structure %). Required when `combat_role = combat`; omit (treat as `defense_capacity`) for other roles |
+| `combat_troop_class` | enum | `line` \| `skirmisher` — only when `combat_role = combat`; drives strategy tables |
 | `combat_role` | enum | `combat` \| `carrier` \| `civilian` \| `scout` |
 
 **Existing troops** — add combat fields (unchanged codes):
@@ -147,6 +152,59 @@ Technologies: **none** in v1.
 - **Parity**: Alpha uses **`war_machine`** / **`disruptor`** with the same costs and requirements as confederation counterparts.
 - **Policy (v1)**: below garrison threshold, prefer **line** unit until ~20 count, then up to ~30% **skirmisher** before `attack` tick actions.
 - **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
+- **Strategy (v1)**: Alpha picks `opening_strike` when attacker advantage ≥ 1.2 projected pools, else `balanced` (see [Combat strategies](#combat-strategies)).
+
+## Combat troop classes
+
+Combat `TroopCode`s map to exactly one **`combat_troop_class`** (faction-agnostic):
+
+| `combat_troop_class` | Codes | Role in combat |
+| --- | --- | --- |
+| `line` | `legionnaire`, `war_machine` | Anchors formations; higher structure |
+| `skirmisher` | `interceptor`, `disruptor` | High burst attack; lower structure |
+
+Strategy multipliers apply **per class per round**, not per wire code.
+
+## Combat strategies
+
+`CombatStrategy` is chosen **before round 1** and stored on the battle snapshot (`attacker_strategy`, `defender_strategy`).
+
+| Side | How strategy is set (v1) |
+| --- | --- |
+| **Attacker** | Required field `combat_strategy` on `POST /troop/movement` when `action = attack` ([`010`](../010-troop-movement-combat/spec.md)). |
+| **Defender** | **City / outpost**: optional `default_combat_strategy` on garrison settings (persisted with location). **Field stack**: `balanced`. If unset, `balanced`. |
+
+Wire enum (example): `balanced`, `opening_strike`, `hold_the_line`. All factions share the same strategy definitions.
+
+Each strategy provides **Attack %** and **Structure %** multipliers per `combat_troop_class` for rounds **1–5** (values are factors on base capacities, e.g. `1.00` = 100%). For this spec the battle **never runs round 6+**; round **5** values apply only to round 5.
+
+### `balanced` (default)
+
+| Round | `line` Att% | `line` Str% | `skirmisher` Att% | `skirmisher` Str% |
+| --- | --- | --- | --- | --- |
+| 1–5 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+### `opening_strike`
+
+| Round | `line` Att% | `line` Str% | `skirmisher` Att% | `skirmisher` Str% |
+| --- | --- | --- | --- | --- |
+| 1 | 1.15 | 0.90 | 1.30 | 0.80 |
+| 2 | 1.10 | 0.95 | 1.20 | 0.85 |
+| 3 | 1.05 | 1.00 | 1.10 | 0.90 |
+| 4 | 1.00 | 1.00 | 1.05 | 0.95 |
+| 5 | 1.00 | 1.00 | 1.00 | 1.00 |
+
+### `hold_the_line`
+
+| Round | `line` Att% | `line` Str% | `skirmisher` Att% | `skirmisher` Str% |
+| --- | --- | --- | --- | --- |
+| 1 | 0.90 | 1.15 | 0.85 | 1.10 |
+| 2 | 0.95 | 1.20 | 0.90 | 1.15 |
+| 3 | 1.00 | 1.25 | 0.95 | 1.20 |
+| 4 | 1.05 | 1.30 | 1.00 | 1.25 |
+| 5 | 1.10 | 1.35 | 1.05 | 1.30 |
+
+**Lookup**: for round `r`, use column `r`; if `r > 5` (not used in v1), keep round **5** multipliers.
 
 ## Composition rules
 
@@ -154,12 +212,12 @@ Technologies: **none** in v1.
 
 At battle **start**, snapshot defender cell stacks or attacker movement payload:
 
-| `combat_role` | In battle? | Attack pool | Defense pool |
+| `combat_role` | In battle? | Attack pool contribution | Structure pool contribution |
 | --- | --- | --- | --- |
-| `combat` | yes | 100% `attack_capacity × count` | 100% `defense_capacity × count` |
-| `carrier` | yes | 0 | 50% `defense_capacity × count` |
+| `combat` | yes | `attack_capacity × count` (× strategy Att% per class) | `structure_capacity × count` (× strategy Str% per class) |
+| `carrier` | yes | 0 | 50% `defense_capacity × count` (no strategy) |
 | `civilian` | yes | 0 | 25% `defense_capacity × count` |
-| `scout` | yes (if on cell) | 25% attack | 50% defense |
+| `scout` | yes (if on cell) | 25% `attack_capacity × count` | 50% `defense_capacity × count` |
 
 - **Attack** requires ≥ 1 `combat` unit; scouts cannot join `attack` movements.
 - Exclude troops with non-null `movement_id`.
@@ -169,6 +227,20 @@ At battle **start**, snapshot defender cell stacks or attacker movement payload:
 - Carriers deal no damage; casualties hit **combat** stacks first, then **carrier**, then **civilian**, then **scout** (lowest `defense_capacity` first within role).
 - **Loot** requires surviving **`carrier`** on winning attacker ([Outcomes vs army composition](#outcomes-vs-army-composition)).
 - On successful **occupation**, default: remaining **defender civilians** on cell are **destroyed** (see open questions in project `docs/combat-spec-interview.md`).
+
+### Composition exposure (homogeneous combat)
+
+When a side’s surviving **`combat`** stacks all share the **same** `combat_troop_class` (only `line` **or** only `skirmisher`, no mix), that side’s **structure pool** for the round is multiplied by **`EXPOSURE_STRUCTURE_MULT = 0.85`** before casualties (≈15% more vulnerability). Mixed-class combat armies use multiplier **1.0**. Carriers/civilians/scouts do not affect this check.
+
+### Target priority (combat casualties)
+
+When applying **whole-unit** losses to **`combat`** stacks on a side:
+
+1. **Class focus**: let `dominant_class` be the attacker’s `combat_troop_class` with higher **attack pool** contribution this round. Prefer removing defender **combat** units whose class equals `dominant_class` first (focus fire). If tied, prefer `skirmisher` before `line`.
+2. **Within class**: lowest `structure_capacity` stack first, then lowest `count`.
+3. After **combat** stacks are exhausted for the round’s loss budget, continue with [carriers and civilians](#carriers-and-civilians-under-fire) ordering.
+
+Symmetric rules when the defender inflicts losses on the attacker.
 
 ## Multi-round resolution (mechanics)
 
@@ -181,11 +253,18 @@ At battle **start**, snapshot defender cell stacks or attacker movement payload:
 
 ### Per-round algorithm (simultaneous exchange)
 
-1. **Pools**: `attack_pool(S) = Σ (count × effective_attack)`, `defense_pool(S) = Σ (count × effective_defense)` with [composition multipliers](#who-fights).
-2. **Strike order**: **Simultaneous** each round (no first-strike in v1).
-3. **Casualties (whole units)** attacker → defender:  
-   `losses = min(defender_units_in_priority_order, max(1, floor(attack_pool(attacker) / max(1, defense_pool(defender)))))` when `attack_pool(attacker) > 0`; symmetric for defender → attacker.
-4. **End round**: apply casualties, then evaluate [Battle end summary](#battle-end-summary). If the battle continues, schedule the next round (until round 5 completes or an early-end condition fires).
+For round `r` ∈ {1…5}:
+
+1. **Strategy multipliers**: load Att%/Str% for each `combat_troop_class` from each side’s locked `CombatStrategy` (round **5** column when `r = 5`).
+2. **Pools** (side `S`):
+   - `attack_pool(S) = Σ_stack (count × effective_attack)` with [role weights](#who-fights) and, for combat stacks, `effective_attack = attack_capacity × att_multiplier(class, r)`.
+   - `structure_pool(S) = Σ_stack (count × effective_structure)` with role weights; combat stacks use `effective_structure = structure_capacity × str_multiplier(class, r)`; other roles use `defense_capacity` per table.
+   - Apply [composition exposure](#composition-exposure-homogeneous-combat) to `structure_pool(S)` when applicable.
+3. **Strike order**: **Simultaneous** each round (no first-strike in v1).
+4. **Casualties (whole units)** attacker → defender:  
+   `loss_budget = max(1, floor(attack_pool(attacker) / max(1, structure_pool(defender))))` when `attack_pool(attacker) > 0`; distribute losses using [target priority](#target-priority-combat-casualties). Symmetric for defender → attacker.
+5. **Round record**: append [round summary](#payload-per-report-row) (pools + losses) to battle state for reports.
+6. **End round**: apply casualties, then evaluate [Battle end summary](#battle-end-summary). If the battle continues, schedule the next round (until round 5 completes or an early-end condition fires).
 
 ### Battle end summary
 
@@ -240,9 +319,9 @@ City buildings are **not** deleted on capture.
 ## Battle lifecycle (jobs)
 
 ```text
-attack movement arrives → snapshot → Battle round 0 → schedule round 1
-each round: pools + casualties → end or schedule next
-battle end → outcomes + battle reports
+attack movement arrives → snapshot (strategies, stacks) → schedule round 1
+each round r=1..5: strategy multipliers → pools → simultaneous casualties → round summary
+battle end → outcomes + battle reports (with round_summaries)
 ```
 
 Arrival is one saga trigger; rounds use [`018`](../018-app-composition-jobs/spec.md).
@@ -307,6 +386,8 @@ interface ReportBattleMetadata {
   target_kind: 'field' | 'city' | 'outpost'
   target_id?: string // city_id | outpost_id when applicable
   winner: 'attacker' | 'defender' | 'draw'
+  attacker_strategy: CombatStrategy
+  defender_strategy: CombatStrategy
   rounds_played: number
   outcome: {
     occupied: boolean
@@ -316,11 +397,15 @@ interface ReportBattleMetadata {
   }
   casualties_attacker: { code: TroopCode; count: number }[] // units lost
   casualties_defender: { code: TroopCode; count: number }[]
-  round_summaries?: {
+  round_summaries: {
     round: number
+    attacker_attack_pool: number
+    defender_attack_pool: number
+    attacker_structure_pool: number
+    defender_structure_pool: number
     attacker_losses: { code: TroopCode; count: number }[]
     defender_losses: { code: TroopCode; count: number }[]
-  }[] // optional v1: final totals only; per-round rows if UX needs replay
+  }[] // required v1 — one row per round actually played (1..rounds_played)
 }
 ```
 
@@ -336,7 +421,7 @@ Follow `apps/web/src/modules/communication/` patterns:
 | --- | --- |
 | `report/translations.ts` | `ReportTypeLabels[ReportType.BATTLE] = 'Bataille'` (FR, like existing labels). |
 | `report/list.tsx` | No change required; list already shows `report.type` + origin → destination. |
-| `report/details.tsx` | Branch on `type === 'battle'`: show factions, winner, rounds, outcome flags (loot / occupy / destroy / **attacker retreated**), casualty tables for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
+| `report/details.tsx` | Branch on `type === 'battle'`: show factions, **strategies**, winner, rounds, **round-by-round table** (`round_summaries`), outcome flags (loot / occupy / destroy / **attacker retreated**), casualty totals for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
 | Troop lines | Use `TroopTranslations[troop.code].name` for all codes (confederation + singularity) per [Web artwork convention](#web-translations-and-artwork-convention). |
 
 Unread badge: existing `GET /communication/report/unread/count` includes new `battle` rows.
@@ -368,7 +453,7 @@ Extend `ReportFactory` (or `ReportFactory.generateBattleReport`) parallel to `ge
 | Area | Today |
 | --- | --- |
 | Movement | `explore`, `base`, `transport` only; no hostility ([`010`](../010-troop-movement-combat/spec.md)). |
-| Troops | No `attack_capacity` / `defense_capacity`; roles via `TroopRole` + `troop_characteristics` speed/capacity ([`009`](../009-troops-stationary/spec.md)). |
+| Troops | No `attack_capacity` / `structure_capacity` / `combat_troop_class`; roles via `TroopRole` + `troop_characteristics` speed/capacity ([`009`](../009-troops-stationary/spec.md)). |
 | Faction troops | `troop_faction` exclusive codes per faction ([`004`](../004-faction-domain/spec.md)). |
 | Art | `apps/web/public/troops/*.png` + `troopImageSrc` + `TroopTranslations`. |
 | System AI | No `attack` tick ([`016`](../016-system-controlled-players/spec.md)). |
