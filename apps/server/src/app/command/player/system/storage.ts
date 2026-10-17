@@ -1,8 +1,10 @@
 import { building_order } from '#core/building/constant/order'
 import { BuildingCode } from '#core/building/constant/code'
 import {
+  isCoreProductionBuildingCode,
   isEnergyBuildingCode,
   isProductionBuildingCode,
+  isSystemUtilityBuildingCode,
   isWarehouseBuildingCode
 } from '#core/building/helper'
 import { Resource, WarehouseCapacity } from '#shared/resource'
@@ -37,6 +39,21 @@ export function needsCoreProductionBootstrap<
   })
 }
 
+/** Core plastic/mushroom production is caught up; prefer labs and other utility buildings. */
+export function isCoreProductionSatisfied<
+  T extends { code: BuildingCode, level: number }
+>(buildings: T[]): boolean {
+  if (needsCoreProductionBootstrap(buildings)) {
+    return false
+  }
+  const mushroom_farm = buildings.find(building => building.code === BuildingCode.MUSHROOM_FARM)
+  const recycling_plant = buildings.find(building => building.code === BuildingCode.RECYCLING_PLANT)
+  if (!mushroom_farm || !recycling_plant) {
+    return false
+  }
+  return Math.abs(mushroom_farm.level - recycling_plant.level) <= 1
+}
+
 function isWarehouseResourceFull({
   stock,
   capacity,
@@ -69,13 +86,15 @@ function warehouseUpgradeRank({
   resource_stock,
   warehouses_capacity,
   production_bootstrap,
+  core_production_satisfied,
 }: {
   building_code: BuildingCode
   resource_stock: Resource
   warehouses_capacity: WarehouseCapacity
   production_bootstrap: boolean
+  core_production_satisfied: boolean
 }): number {
-  const warehouse_default_rank = production_bootstrap ? 2 : 1
+  const warehouse_default_rank = production_bootstrap || core_production_satisfied ? 2 : 1
 
   if (building_code === BuildingCode.PLASTIC_WAREHOUSE) {
     const full = isWarehouseResourceFull({
@@ -114,8 +133,23 @@ function warehouseUpgradeRank({
   if (isWarehouseBuildingCode(building_code)) {
     return warehouse_default_rank
   }
+  if (isSystemUtilityBuildingCode(building_code)) {
+    return core_production_satisfied ? 1 : 2
+  }
+  if (isCoreProductionBuildingCode(building_code)) {
+    if (production_bootstrap) {
+      return 0
+    }
+    if (core_production_satisfied) {
+      return 4
+    }
+    return 3
+  }
+  if (building_code === BuildingCode.CENTRAL_INDUCTOR) {
+    return core_production_satisfied ? 2 : 3
+  }
   if (isProductionBuildingCode(building_code)) {
-    return production_bootstrap ? 0 : 3
+    return 3
   }
   return 2
 }
@@ -126,12 +160,14 @@ function systemUpgradeRank({
   warehouses_capacity,
   production_energy_ratio,
   production_bootstrap,
+  core_production_satisfied,
 }: {
   building_code: BuildingCode
   resource_stock: Resource
   warehouses_capacity: WarehouseCapacity
   production_energy_ratio: number
   production_bootstrap: boolean
+  core_production_satisfied: boolean
 }): number {
   const energy_starved = production_energy_ratio < 1
   if (energy_starved && isEnergyBuildingCode(building_code)) {
@@ -145,6 +181,7 @@ function systemUpgradeRank({
     resource_stock,
     warehouses_capacity,
     production_bootstrap,
+    core_production_satisfied,
   })
   const plastic_warehouse_full = isWarehouseResourceFull({
     stock: resource_stock.plastic,
@@ -152,7 +189,8 @@ function systemUpgradeRank({
   })
   if (building_code === BuildingCode.MUSHROOM_FARM
     && resource_stock.mushroom < resource_stock.plastic
-    && !plastic_warehouse_full) {
+    && !plastic_warehouse_full
+    && !core_production_satisfied) {
     return Math.min(rank, 0)
   }
   return rank
@@ -161,9 +199,20 @@ function systemUpgradeRank({
 function productionUpgradeLevelTiebreaker<
   T extends { code: BuildingCode, level: number }
 >(left: T, right: T): number {
-  const left_production = isProductionBuildingCode(left.code)
-  const right_production = isProductionBuildingCode(right.code)
+  const left_production = isCoreProductionBuildingCode(left.code)
+  const right_production = isCoreProductionBuildingCode(right.code)
   if (left_production && right_production) {
+    return left.level - right.level
+  }
+  return 0
+}
+
+function utilityUpgradeLevelTiebreaker<
+  T extends { code: BuildingCode, level: number }
+>(left: T, right: T): number {
+  const left_utility = isSystemUtilityBuildingCode(left.code)
+  const right_utility = isSystemUtilityBuildingCode(right.code)
+  if (left_utility && right_utility) {
     return left.level - right.level
   }
   return 0
@@ -199,6 +248,7 @@ export function sortBuildingsForSystemUpgrade<
   production_energy_ratio?: number
 }): T[] {
   const production_bootstrap = needsCoreProductionBootstrap(buildings)
+  const core_production_satisfied = isCoreProductionSatisfied(buildings)
 
   return [ ...buildings ].sort((left, right) => {
     const rank_difference = systemUpgradeRank({
@@ -207,12 +257,14 @@ export function sortBuildingsForSystemUpgrade<
       warehouses_capacity,
       production_energy_ratio,
       production_bootstrap,
+      core_production_satisfied,
     }) - systemUpgradeRank({
       building_code: right.code,
       resource_stock,
       warehouses_capacity,
       production_energy_ratio,
       production_bootstrap,
+      core_production_satisfied,
     })
     if (rank_difference !== 0) {
       return rank_difference
@@ -220,6 +272,10 @@ export function sortBuildingsForSystemUpgrade<
     const mushroom_income_difference = mushroomIncomeTiebreaker(left, right, resource_stock)
     if (mushroom_income_difference !== 0) {
       return mushroom_income_difference
+    }
+    const utility_level_difference = utilityUpgradeLevelTiebreaker(left, right)
+    if (utility_level_difference !== 0) {
+      return utility_level_difference
     }
     const production_level_difference = productionUpgradeLevelTiebreaker(left, right)
     if (production_level_difference !== 0) {

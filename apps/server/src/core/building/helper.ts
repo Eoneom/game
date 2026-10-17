@@ -14,3 +14,7 @@ export const isConsumingBuildingCode = (code: string): code is BuildingCode.RECY
   code === BuildingCode.CLONING_FACTORY
 export const isNonProductionConsumingBuildingCode = (code: string): code is BuildingCode.RESEARCH_LAB | BuildingCode.CLONING_FACTORY =>
   code === BuildingCode.RESEARCH_LAB || code === BuildingCode.CLONING_FACTORY
+export const isSystemUtilityBuildingCode = (code: string): code is BuildingCode.RESEARCH_LAB | BuildingCode.CLONING_FACTORY =>
+  code === BuildingCode.RESEARCH_LAB || code === BuildingCode.CLONING_FACTORY
+export const isCoreProductionBuildingCode = (code: string): code is BuildingCode.RECYCLING_PLANT | BuildingCode.MUSHROOM_FARM =>
+  code === BuildingCode.RECYCLING_PLANT || code === BuildingCode.MUSHROOM_FARM

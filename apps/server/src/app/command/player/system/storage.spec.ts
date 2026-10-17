@@ -239,7 +239,7 @@ describe('system player storage policy', () => {
     assert.strictEqual(sorted[0].code, BuildingCode.MUSHROOM_FARM)
   })
 
-  it('still prefers warehouses over production when storage is not pressured and core production exists', () => {
+  it('prefers utility buildings over warehouses when core production is balanced', () => {
     const sorted = sortBuildingsForSystemUpgrade({
       buildings: [
         {
@@ -253,6 +253,11 @@ describe('system player storage policy', () => {
           level: 2
         },
         {
+          id: 'lab',
+          code: BuildingCode.RESEARCH_LAB,
+          level: 0
+        },
+        {
           id: 'plastic',
           code: BuildingCode.PLASTIC_WAREHOUSE,
           level: 0
@@ -260,6 +265,44 @@ describe('system player storage policy', () => {
       ],
       resource_stock: {
         plastic: 10,
+        mushroom: 10,
+        plasma: 0
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000
+      },
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.RESEARCH_LAB)
+  })
+
+  it('still prefers warehouses over satisfied core production when storage is pressured', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 2
+        },
+        {
+          id: 'plant',
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 2
+        },
+        {
+          id: 'lab',
+          code: BuildingCode.RESEARCH_LAB,
+          level: 0
+        },
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 0
+        },
+      ],
+      resource_stock: {
+        plastic: 3500,
         mushroom: 10,
         plasma: 0
       },
