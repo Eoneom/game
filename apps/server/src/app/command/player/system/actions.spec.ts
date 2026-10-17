@@ -1240,10 +1240,10 @@ describe('systemTickActions', () => {
     }
     vi.spyOn(combatPolicy, 'loadEmpireCombatArmyCounts').mockResolvedValue({
       war_machine: SYSTEM_TARGET_WAR_MACHINE,
-      disruptor: 9,
-      legionnaire: 0,
-      interceptor: 0,
-      total_combat: SYSTEM_TARGET_WAR_MACHINE + 9,
+      disruptor: 13,
+      legionnaire: 5,
+      interceptor: 5,
+      total_combat: SYSTEM_TARGET_WAR_MACHINE + 13 + 5 + 5,
     })
     vi.spyOn(combatPolicy, 'pickSystemAttack').mockResolvedValue({
       origin: city_cell.coordinates,

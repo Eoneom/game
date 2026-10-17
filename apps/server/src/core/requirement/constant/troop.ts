@@ -122,6 +122,34 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       }
     ]
   },
+  [TroopCode.ASSAULT_BEHEMOTH]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 2
+      }
+    ]
+  },
+  [TroopCode.SHOCK_TROOPER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 7
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 4
+      }
+    ]
+  },
   [TroopCode.WAR_MACHINE]: {
     buildings: [
       {
@@ -147,6 +175,34 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       {
         code: TechnologyCode.REPLICATION_CATALYST,
         level: 4
+      }
+    ]
+  },
+  [TroopCode.PRIME_UNIT]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 4
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 1
+      }
+    ]
+  },
+  [TroopCode.STRIKER_DRONE]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 6
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 3
       }
     ]
   },

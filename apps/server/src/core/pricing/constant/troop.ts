@@ -65,6 +65,16 @@ export const troop_costs: Record<TroopCode, CountCosts> = {
     mushroom: 2000,
     duration: 280
   },
+  [TroopCode.ASSAULT_BEHEMOTH]: {
+    plastic: 2800,
+    mushroom: 2200,
+    duration: 220
+  },
+  [TroopCode.SHOCK_TROOPER]: {
+    plastic: 3200,
+    mushroom: 1800,
+    duration: 265
+  },
   [TroopCode.WAR_MACHINE]: {
     plastic: 2700,
     mushroom: 2300,
@@ -74,5 +84,15 @@ export const troop_costs: Record<TroopCode, CountCosts> = {
     plastic: 3300,
     mushroom: 1750,
     duration: 270
+  },
+  [TroopCode.PRIME_UNIT]: {
+    plastic: 2400,
+    mushroom: 2600,
+    duration: 195
+  },
+  [TroopCode.STRIKER_DRONE]: {
+    plastic: 3600,
+    mushroom: 1900,
+    duration: 275
   },
 }

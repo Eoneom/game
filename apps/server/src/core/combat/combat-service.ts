@@ -13,6 +13,7 @@ import {
   isHomogeneousCombatArmy,
   lifeCapacityFor,
   lifeContribution,
+  maxAttackCapacityForCombatClass,
 } from '#core/combat/troop-combat'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -99,24 +100,14 @@ function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroop
       best_val = val
       best = cls
     } else if (val === best_val && best) {
-      const a = troop_characteristics[getCodeForClass(cls)].attack_capacity
-      const b = troop_characteristics[getCodeForClass(best)].attack_capacity
+      const a = maxAttackCapacityForCombatClass(cls)
+      const b = maxAttackCapacityForCombatClass(best)
       if (a > b) {
         best = cls
       }
     }
   }
   return best
-}
-
-function getCodeForClass(cls: CombatTroopClass): TroopCode {
-  const map: Record<CombatTroopClass, TroopCode> = {
-    [CombatTroopClass.LEGIONNAIRE]: TroopCode.LEGIONNAIRE,
-    [CombatTroopClass.INTERCEPTOR]: TroopCode.INTERCEPTOR,
-    [CombatTroopClass.WAR_MACHINE]: TroopCode.WAR_MACHINE,
-    [CombatTroopClass.DISRUPTOR]: TroopCode.DISRUPTOR,
-  }
-  return map[cls]
 }
 
 function casualtySortKey({

@@ -11,6 +11,10 @@ export enum TroopCode {
   RECLAIMER = 'reclaimer',
   LEGIONNAIRE = 'legionnaire',
   INTERCEPTOR = 'interceptor',
+  SHOCK_TROOPER = 'shock_trooper',
+  ASSAULT_BEHEMOTH = 'assault_behemoth',
   WAR_MACHINE = 'war_machine',
   DISRUPTOR = 'disruptor',
+  PRIME_UNIT = 'prime_unit',
+  STRIKER_DRONE = 'striker_drone',
 }

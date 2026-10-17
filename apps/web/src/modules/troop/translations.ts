@@ -67,6 +67,16 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     description: 'Chasseur rapide optimisé pour frapper en premier.',
     effect: 'Unité de frappe rapide.',
   },
+  [TroopCode.SHOCK_TROOPER]: {
+    name: 'Troupier de choc',
+    description: 'Brècheur d\'élite confédéré ; saturation électrique et percée des lignes.',
+    effect: 'Unité de perturbation de la Confédération.',
+  },
+  [TroopCode.ASSAULT_BEHEMOTH]: {
+    name: 'Béhémoth d\'assaut',
+    description: 'Colosse de siège organo-mécanique ; avance lourdement sous le feu.',
+    effect: 'Plateforme d\'assaut lourde de la Confédération.',
+  },
   [TroopCode.WAR_MACHINE]: {
     name: 'Machine de guerre',
     description: 'Plateforme d\'assaut autonome, lente mais blindée.',
@@ -76,5 +86,15 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     name: 'Perturbateur',
     description: 'Unité légère de harcèlement et de saturation.',
     effect: 'Unité d\'harcelement rapide.',
+  },
+  [TroopCode.PRIME_UNIT]: {
+    name: 'Unité prime',
+    description: 'Ligne synthétique d\'élite d\'Alpha ; cohésion et endurance de combat.',
+    effect: 'Infanterie de ligne de la Singularité.',
+  },
+  [TroopCode.STRIKER_DRONE]: {
+    name: 'Drone d\'assaut',
+    description: 'Essaim rapide à lames énergétiques ; frappe puis décrochage.',
+    effect: 'Intercepteur autonome de la Singularité.',
   },
 }

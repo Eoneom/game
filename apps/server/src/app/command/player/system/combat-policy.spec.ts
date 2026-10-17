@@ -10,6 +10,8 @@ import {
   emptySystemCombatArmyCounts,
   isSystemCombatArmyReady,
   shouldBoostCombatRecruit,
+  SYSTEM_MIN_INTERCEPTOR_CLASS,
+  SYSTEM_MIN_LEGIONNAIRE_CLASS,
   SYSTEM_DISRUPTOR_RATIO,
   SYSTEM_TARGET_WAR_MACHINE,
 } from './troops'
@@ -19,16 +21,18 @@ import {
 } from './combat-policy'
 
 describe('system combat army readiness', () => {
-  it('requires war_machine target and disruptor ratio', () => {
+  it('requires all four combat classes, war_machine target, and disruptor ratio', () => {
     const counts = emptySystemCombatArmyCounts()
     assert.strictEqual(isSystemCombatArmyReady(counts), false)
 
     counts.war_machine = SYSTEM_TARGET_WAR_MACHINE
-    counts.total_combat = SYSTEM_TARGET_WAR_MACHINE
+    counts.legionnaire = SYSTEM_MIN_LEGIONNAIRE_CLASS
+    counts.interceptor = SYSTEM_MIN_INTERCEPTOR_CLASS
+    counts.total_combat = counts.war_machine + counts.legionnaire + counts.interceptor
     assert.strictEqual(isSystemCombatArmyReady(counts), false)
 
-    counts.disruptor = 9
-    counts.total_combat = counts.war_machine + counts.disruptor
+    counts.disruptor = 13
+    counts.total_combat = counts.war_machine + counts.legionnaire + counts.interceptor + counts.disruptor
     assert.strictEqual(isSystemCombatArmyReady(counts), true)
   })
 

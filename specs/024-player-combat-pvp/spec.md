@@ -69,7 +69,7 @@ Extend `MovementAction` with `ATTACK = 'attack'` (see [`010`](../010-troop-movem
 
 ## Combat troops (faction-exclusive `TroopCode`s)
 
-Four new codes — **two per faction**, each with **unique combat stats** and **unique identity** (wire enum, `troop_faction`, French copy, PNG art). Follow the same exclusivity model as `explorer`/`seeker` ([`009`](../009-troops-stationary/spec.md), `apps/server/src/core/troop/constant/faction.ts`).
+**Eight** faction-exclusive combat codes — **four per faction**, one unique `TroopCode` per global `combat_troop_class` ([`Combat troop classes`](#combat-troop-classes)). Each has **unique combat stats** and **unique identity** (wire enum, `troop_faction`, French copy, PNG art). Follow the same exclusivity model as `explorer`/`seeker` ([`009`](../009-troops-stationary/spec.md), `apps/server/src/core/troop/constant/faction.ts`).
 
 ### Roster (names, faction, stats)
 
@@ -77,15 +77,19 @@ Four new codes — **two per faction**, each with **unique combat stats** and **
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `the_confederation` | `LEGIONNAIRE` | `legionnaire` | **Légionnaire** | Ligne d’infanterie organo-synthétique de la Confédération ; tient les garnisons et mène les assauts. | `combat` | `legionnaire` | 1.00 | 0 | 11 | 13 | 15 |
 | `the_confederation` | `INTERCEPTOR` | `interceptor` | **Intercepteur** | Chasseur rapide confédéré, optimisé pour frapper en premier et rompre les formations. | `combat` | `interceptor` | 1.35 | 0 | 18 | 4 | 5 |
+| `the_confederation` | `ASSAULT_BEHEMOTH` | `assault_behemoth` | **Béhémoth d’assaut** | Colosse de siège organo-mécanique ; avance lourdement sous le feu. | `combat` | `war_machine` | 0.85 | 0 | 12 | 15 | 16 |
+| `the_confederation` | `SHOCK_TROOPER` | `shock_trooper` | **Troupier de choc** | Brècheur d’élite ; saturation électrique et percée des lignes. | `combat` | `disruptor` | 1.20 | 0 | 14 | 6 | 6 |
+| `the_technological_singularity` | `PRIME_UNIT` | `prime_unit` | **Unité prime** | Ligne synthétique d’élite d’Alpha ; cohésion et endurance de combat. | `combat` | `legionnaire` | 0.95 | 0 | 10 | 14 | 14 |
+| `the_technological_singularity` | `STRIKER_DRONE` | `striker_drone` | **Drone d’assaut** | Essaim rapide à lames énergétiques ; frappe puis décrochage. | `combat` | `interceptor` | 1.40 | 0 | 17 | 3 | 4 |
 | `the_technological_singularity` | `WAR_MACHINE` | `war_machine` | **Machine de guerre** | Plateforme d’assaut autonome d’Alpha ; lente mais blindée, elle absorbe les tirs et avance sous le feu. | `combat` | `war_machine` | 0.90 | 0 | 13 | 16 | 17 |
 | `the_technological_singularity` | `DISRUPTOR` | `disruptor` | **Perturbateur** | Unité légère de saturation et de harcèlement ; rafales courtes, repositionnement constant, coque minimale. | `combat` | `disruptor` | 1.25 | 0 | 15 | 5 | 4 |
 
 - **`troop_faction`**: each code maps to exactly one `FactionCode` ([`004`](../004-faction-domain/spec.md)); no code appears on both factions.
-- **`TroopService.codesForFaction`**: confederation humans bootstrap/recruit **legionnaire** + **interceptor** only; singularity system player gets **war_machine** + **disruptor** (humans never recruit singularity codes via normal signup).
+- **`TroopService.codesForFaction`**: confederation humans bootstrap/recruit **four** combat codes (`legionnaire`, `interceptor`, `assault_behemoth`, `shock_trooper`); singularity system player gets **four** (`prime_unit`, `striker_drone`, `war_machine`, `disruptor`). Humans never recruit singularity codes via normal signup.
 - **Recruitment (v1)**:
-  - **Humans** (`the_confederation`): `PUT /troop/recruit` for `legionnaire` and `interceptor` only ([`009`](../009-troops-stationary/spec.md)).
-  - **System AI** (`the_technological_singularity`): same recruit pipeline for `war_machine` and `disruptor` on Alpha’s cities ([`016`](../016-system-controlled-players/spec.md)).
-- **Stat uniqueness**: all four `TroopCode`s have **distinct** `attack_capacity`, `defense_capacity`, `life_capacity`, and `speed`. Cross-faction pairs are **not** numeric mirrors — confederation fields **heavy line** (`legionnaire`) and **fast striker** (`interceptor`); singularity fields **slow assault platform** (`war_machine`) and **harassment skirmisher** (`disruptor`).
+  - **Humans** (`the_confederation`): `PUT /troop/recruit` for all four confederation combat codes ([`009`](../009-troops-stationary/spec.md)).
+  - **System AI** (`the_technological_singularity`): same recruit pipeline for all four singularity combat codes on Alpha’s cities ([`016`](../016-system-controlled-players/spec.md)).
+- **Stat uniqueness**: all **eight** `TroopCode`s have **distinct** `attack_capacity`, `defense_capacity`, `life_capacity`, and `speed`. Cross-faction pairs sharing a `combat_troop_class` are **not** numeric mirrors.
 
 ### Web: translations and artwork convention
 
@@ -99,12 +103,16 @@ Align with existing troops (`explorer`, `seeker`, etc.):
 | **Alt text** | Troop list/detail components | Use `TroopTranslations[code].name` for `image.alt` (today `list/item` uses empty `alt` — implementation should set alt to troop name for accessibility). |
 | **API client** | `packages/api-client` | Export new enum members after server `TroopCode` extension. |
 
-**Combat troop artwork (present on `main`):** portrait-card PNGs (~1024²), painterly sci-fi, same layout as `explorer.png` / `seeker.png`. **Confederation** (`legionnaire`, `interceptor`): human troops, warm desert/orange tactical palette (see `explorer.png`). **Singularity** (`war_machine`, `disruptor`): robotic troops, cold gray metal and cyan optics (see `seeker.png`). Each file is a distinct asset (not a duplicate of explorer/seeker or of each other).
+**Combat troop artwork (present on `main`):** portrait-card PNGs (~1024²), painterly sci-fi, same layout as `explorer.png` / `seeker.png`. **Confederation** (four codes): human troops, warm desert/orange tactical palette (see `explorer.png`). **Singularity** (four codes): robotic troops, cold gray metal and cyan optics (see `seeker.png`). Each file is a distinct asset (not a duplicate of explorer/seeker or of each other).
 
 | Wire code | PNG path | Alt (FR) |
 | --- | --- | --- |
 | `legionnaire` | `apps/web/public/troops/legionnaire.png` | Légionnaire |
 | `interceptor` | `apps/web/public/troops/interceptor.png` | Intercepteur |
+| `assault_behemoth` | `apps/web/public/troops/assault_behemoth.png` | Béhémoth d’assaut |
+| `shock_trooper` | `apps/web/public/troops/shock_trooper.png` | Troupier de choc |
+| `prime_unit` | `apps/web/public/troops/prime_unit.png` | Unité prime |
+| `striker_drone` | `apps/web/public/troops/striker_drone.png` | Drone d’assaut |
 | `war_machine` | `apps/web/public/troops/war_machine.png` | Machine de guerre |
 | `disruptor` | `apps/web/public/troops/disruptor.png` | Perturbateur |
 
@@ -121,7 +129,7 @@ Extend `TroopCharacteristic` (`apps/server/src/core/troop/constant/characteristi
 | `attack_capacity` | number | Per unit per round (before strategy Attack %) |
 | `defense_capacity` | number | Role weighting for non-combat contributions; **not** used in combat-troop durability pool |
 | `life_capacity` | number | **Life** (durability) per unit per round (before strategy Life %). Required when `combat_role = combat`; omit (treat as `defense_capacity`) for other roles |
-| `combat_troop_class` | enum | `legionnaire` \| `interceptor` \| `war_machine` \| `disruptor` — only when `combat_role = combat`; **1:1** with combat `TroopCode` wire value; drives strategy tables |
+| `combat_troop_class` | enum | `legionnaire` \| `interceptor` \| `war_machine` \| `disruptor` — only when `combat_role = combat`; **one wire code per faction per class** (eight codes total); drives strategy tables |
 | `combat_role` | enum | `combat` \| `carrier` \| `civilian` \| `scout` |
 
 **Existing troops** — add combat fields (unchanged codes):
@@ -146,13 +154,17 @@ Combat troops are **not** recruitable at game start. Each combat `TroopCode` has
 | --- | --- | ---: | ---: |
 | `legionnaire` | `the_confederation` | 4 | 1 |
 | `interceptor` | `the_confederation` | 6 | 3 |
+| `assault_behemoth` | `the_confederation` | 5 | 2 |
+| `shock_trooper` | `the_confederation` | 7 | 4 |
+| `prime_unit` | `the_technological_singularity` | 4 | 1 |
+| `striker_drone` | `the_technological_singularity` | 6 | 3 |
 | `war_machine` | `the_technological_singularity` | 5 | 2 |
 | `disruptor` | `the_technological_singularity` | 7 | 4 |
 
-- **`legionnaire`**: first confederation line troops after hauler-tier cloning (`light_transporter` / `hauler` need `cloning_factory` 5 in [`014`](../014-requirements-pricing/spec.md)); baseline military replication at **`replication_catalyst` 1** with **`cloning_factory` 4** (below hauler tier so line infantry unlocks on a distinct factory step).
-- **`interceptor`**: elite fast-hull replication at **`cloning_factory` 6** and **`replication_catalyst` 3** — highest catalyst demand among confederation combat codes.
-- **`war_machine`**: singularity assault platforms at **`cloning_factory` 5** and **`replication_catalyst` 2** — **not** the same factory/catalyst pair as `legionnaire` or `interceptor`.
-- **`disruptor`**: harassment units need peak factory output (**`cloning_factory` 7**) and advanced replication (**`replication_catalyst` 4**) — a distinct singularity progression path from `war_machine`.
+- **`legionnaire` / `prime_unit`**: baseline line replication (**`cloning_factory` 4**, **`replication_catalyst` 1**) — confederation infantry vs singularity synth line.
+- **`interceptor` / `striker_drone`**: fast-hull replication (**`cloning_factory` 6**, **`replication_catalyst` 3**).
+- **`assault_behemoth` / `war_machine`**: heavy assault platforms (**`cloning_factory` 5**, **`replication_catalyst` 2**).
+- **`shock_trooper` / `disruptor`**: peak factory + catalyst (**`cloning_factory` 7**, **`replication_catalyst` 4**).
 - **Faction differentiation**: confederation and singularity combat codes differ in **both** [stats](#roster-names-faction-stats) and **requirement rows**; implementers must not mirror confederation gates onto singularity codes.
 - **No day-one combat**: explorers/seekers remain `cloning_factory` 1 with no combat tech; combat codes stay locked until the row for that code is met.
 
@@ -162,6 +174,10 @@ Combat troops are **not** recruitable at game start. Each combat `TroopCode` has
 | --- | ---: | ---: | ---: |
 | `legionnaire` | 2_500 | 2_500 | 200 |
 | `interceptor` | 3_500 | 2_000 | 280 |
+| `assault_behemoth` | 2_800 | 2_200 | 220 |
+| `shock_trooper` | 3_200 | 1_800 | 265 |
+| `prime_unit` | 2_400 | 2_600 | 195 |
+| `striker_drone` | 3_600 | 1_900 | 275 |
 | `war_machine` | 2_700 | 2_300 | 210 |
 | `disruptor` | 3_300 | 1_750 | 270 |
 
@@ -169,21 +185,21 @@ Implementation maps each requirement row to `RequirementValue` `{ buildings: [{ 
 
 ### System AI recruitment ([`016`](../016-system-controlled-players/spec.md))
 
-- **Recruitment gates + costs**: Alpha recruits **`war_machine`** / **`disruptor`** only through [`009`](../009-troops-stationary/spec.md) with [`RequirementService.checkTroopRequirement`](../014-requirements-pricing/spec.md) (`TroopRequirement` per code) using the **singularity-specific** rows and **per-code** `troop_costs` in [Recruitment (requirements + pricing)](#recruitment-requirements--pricing) (not confederation `legionnaire` / `interceptor` gates). Combat stats differ per [Roster](#roster-names-faction-stats).
-- **Policy (v1)**: below garrison threshold, prefer **`war_machine`** until ~20 count, then up to ~30% **`disruptor`** before `attack` tick actions.
+- **Recruitment gates + costs**: Alpha recruits all **four** singularity combat codes (`prime_unit`, `striker_drone`, `war_machine`, `disruptor`) through [`009`](../009-troops-stationary/spec.md) with [`RequirementService.checkTroopRequirement`](../014-requirements-pricing/spec.md) (`TroopRequirement` per code) using singularity rows and **per-code** `troop_costs` in [Recruitment (requirements + pricing)](#recruitment-requirements--pricing).
+- **Policy (v1)**: while below army readiness, boost recruitment by **missing `combat_troop_class`** (see [`016`](../016-system-controlled-players/spec.md)): `war_machine` class to **20**, `legionnaire` / `interceptor` classes to minimum stacks, then **`disruptor` class** to **30%** of total combat troops before `attack` tick actions.
 - **Attack tick**: requires ≥1 **combat** stack on origin and a valid cross-faction target.
 - **Strategy (v1)**: Alpha picks `opening_strike` when attacker advantage ≥ 1.2 projected pools, else `balanced` (see [Combat strategies](#combat-strategies)).
 
 ## Combat troop classes
 
-Each faction combat `TroopCode` maps to exactly one **`combat_troop_class`** (same wire string as `TroopCode`):
+Each faction fields exactly one combat `TroopCode` per global **`combat_troop_class`** (eight codes, four classes):
 
-| `combat_troop_class` | `TroopCode` | Faction | Role in combat |
+| `combat_troop_class` | Confederation `TroopCode` | Singularity `TroopCode` | Role in combat |
 | --- | --- | --- | --- |
-| `legionnaire` | `legionnaire` | `the_confederation` | Anchor; high **life**, moderate attack |
-| `interceptor` | `interceptor` | `the_confederation` | Striker; high attack, low **life** |
-| `war_machine` | `war_machine` | `the_technological_singularity` | Slow assault platform; highest **life**, high **defense**, moderate **attack** |
-| `disruptor` | `disruptor` | `the_technological_singularity` | Harassment skirmisher; high **attack** and **speed**, lowest **life** |
+| `legionnaire` | `legionnaire` | `prime_unit` | Anchor line; high **life**, moderate attack |
+| `interceptor` | `interceptor` | `striker_drone` | Striker; high attack, low **life** |
+| `war_machine` | `assault_behemoth` | `war_machine` | Slow assault platform; high **life** and **defense** |
+| `disruptor` | `shock_trooper` | `disruptor` | Harassment skirmisher; high **attack** / **speed**, lower **life** |
 
 Strategy multipliers apply **per `combat_troop_class` per round** (four independent columns in tables below). Non-combat `TroopCode`s omit `combat_troop_class`.
 
@@ -499,6 +515,6 @@ See project `docs/combat-spec-interview.md` (max 5 open questions): exploration 
 | Area | Paths (TBD) |
 | --- | --- |
 | Core | `apps/server/src/core/combat/`, `core/troop/constant/` |
-| Web art | `apps/web/public/troops/{legionnaire,interceptor,war_machine,disruptor}.png` |
+| Web art | `apps/web/public/troops/{legionnaire,interceptor,assault_behemoth,shock_trooper,prime_unit,striker_drone,war_machine,disruptor}.png` |
 | Web UI | `apps/web/src/modules/troop/{image,translations}.ts` |
 | Reports | `core/communication/value/report-type.ts`, `report_battle` metadata, `communication/ws-listener` |

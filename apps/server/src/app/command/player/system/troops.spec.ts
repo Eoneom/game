@@ -42,10 +42,10 @@ const no_outpost_hints = {
 const army_ready_combat = {
   army_counts: {
     war_machine: SYSTEM_TARGET_WAR_MACHINE,
-    disruptor: 10,
-    legionnaire: 0,
-    interceptor: 0,
-    total_combat: SYSTEM_TARGET_WAR_MACHINE + 10,
+    disruptor: 13,
+    legionnaire: 5,
+    interceptor: 5,
+    total_combat: SYSTEM_TARGET_WAR_MACHINE + 13 + 5 + 5,
   },
   boost_combat_recruit: false,
 }

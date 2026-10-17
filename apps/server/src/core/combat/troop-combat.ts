@@ -11,6 +11,16 @@ export function combatTroopClassFor(code: TroopCode): CombatTroopClass | null {
   return troop_characteristics[code].combat_troop_class ?? null
 }
 
+export function maxAttackCapacityForCombatClass(cls: CombatTroopClass): number {
+  let max = 0
+  for (const code of Object.values(TroopCode)) {
+    if (combatTroopClassFor(code) === cls) {
+      max = Math.max(max, troop_characteristics[code].attack_capacity)
+    }
+  }
+  return max
+}
+
 export function lifeCapacityFor(code: TroopCode): number {
   const c = troop_characteristics[code]
   if (c.combat_role === CombatRole.COMBAT) {

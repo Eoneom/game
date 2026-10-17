@@ -13,6 +13,10 @@ export const troop_order: Record<TroopCode, number> = {
   [TroopCode.ASSEMBLER]: 5,
   [TroopCode.LEGIONNAIRE]: 6,
   [TroopCode.INTERCEPTOR]: 7,
+  [TroopCode.ASSAULT_BEHEMOTH]: 8,
+  [TroopCode.SHOCK_TROOPER]: 9,
   [TroopCode.WAR_MACHINE]: 6,
   [TroopCode.DISRUPTOR]: 7,
+  [TroopCode.PRIME_UNIT]: 8,
+  [TroopCode.STRIKER_DRONE]: 9,
 }

@@ -96,7 +96,7 @@ Before calling `upgradeBuilding`, `researchTechnology`, or `recruitTroop`, syste
 
 Candidates that fail a check are skipped; the tick does not invoke the command (avoiding requirement errors and wasted queue slots). Sorting (`sortBuildingsForSystemUpgrade`, `sortTechnologiesForSystemResearch`) is unchanged — filtering happens immediately before enqueue/start.
 
-Alpha’s **`war_machine`** / **`disruptor`** recruits (024 on `main`) go through the same `recruitTroop` path and **`meetsTroopRecruitRequirement`** gate as economy troops (`TroopRequirement` per 024: **`cloning_factory`** + **`replication_catalyst`** only — not `architecture` or `photovoltaic_optimization`); combat policy in `system/troops.ts` does not bypass requirement checks.
+Alpha’s four singularity combat recruits (`prime_unit`, `striker_drone`, `war_machine`, `disruptor` — 024 on `main`) go through the same `recruitTroop` path and **`meetsTroopRecruitRequirement`** gate as economy troops (`TroopRequirement` per 024: **`cloning_factory`** + **`replication_catalyst`** only — not `architecture` or `photovoltaic_optimization`); combat policy in `system/troops.ts` does not bypass requirement checks.
 
 ## Combat expansion policy (PvP)
 
@@ -104,9 +104,11 @@ System AI does **not** launch `attack` movements until the empire meets **army r
 
 | Signal | Rule |
 | --- | --- |
-| `SYSTEM_TARGET_WAR_MACHINE` | Empire-wide garrison count of `war_machine` (combat role) ≥ **20** |
-| `SYSTEM_DISRUPTOR_RATIO` | `disruptor` count ≥ **30%** of total combat-role troops (legionnaire / interceptor / war_machine / disruptor), counted across all cities and outposts |
-| Economy gate for combat recruiting | At least one city and the main city has **any** resource stock; while below readiness, `sortTroopsForSystemRecruit` **boosts** `war_machine` then `disruptor` before other non-economy troops |
+| `SYSTEM_TARGET_WAR_MACHINE` | Empire-wide count of **`war_machine` class** troops (`war_machine` wire code) ≥ **20** |
+| `SYSTEM_MIN_LEGIONNAIRE_CLASS` | **`legionnaire` class** count (`prime_unit`) ≥ **5** |
+| `SYSTEM_MIN_INTERCEPTOR_CLASS` | **`interceptor` class** count (`striker_drone`) ≥ **5** |
+| `SYSTEM_DISRUPTOR_RATIO` | **`disruptor` class** count (`disruptor`) ≥ **30%** of total combat-role troops (all four classes), empire-wide |
+| Economy gate for combat recruiting | At least one city and the main city has **any** resource stock; while below readiness, `sortTroopsForSystemRecruit` boosts missing **combat classes** (war_machine → legionnaire → interceptor → disruptor) before other non-economy troops |
 
 **Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit` (unchanged category order). Returns idle when the army is not ready, when no cross-faction target exists in range, or when no origin has a combat garrison. Otherwise `pickSystemAttack` scores valid enemy **cities**, **outposts**, and **field stacks** (via `resolveAttackTarget`) in each origin viewport — preferring high-value locations and weaker garrisons — and sends **full** combat stacks (no per-code cap). Strategy: `opening_strike` (`SYSTEM_ATTACK_COMBAT_STRATEGY`).
 

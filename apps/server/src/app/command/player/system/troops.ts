@@ -5,7 +5,8 @@ import { TroopCode } from '#core/troop/constant/code'
 import { troop_role, TroopRole } from '#core/troop/constant/role'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopService } from '#core/troop/service'
-import { combatRoleFor } from '#core/combat/troop-combat'
+import { combatRoleFor, combatTroopClassFor } from '#core/combat/troop-combat'
+import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
 import { CombatRole } from '#core/troop/constant/combat-role'
 import { Resource } from '#shared/resource'
 
@@ -16,6 +17,8 @@ export const SYSTEM_MAX_FOUNDER_TROOPS = 1
 
 const ECONOMY_ROLES = new Set([ TroopRole.CARRIER ])
 export const SYSTEM_TARGET_WAR_MACHINE = 20
+export const SYSTEM_MIN_LEGIONNAIRE_CLASS = 5
+export const SYSTEM_MIN_INTERCEPTOR_CLASS = 5
 export const SYSTEM_DISRUPTOR_RATIO = 0.3
 
 export type SystemCombatArmyCounts = {
@@ -45,17 +48,18 @@ export function accumulateCombatArmyCounts(
       continue
     }
     counts.total_combat += troop.count
-    switch (troop.code) {
-    case TroopCode.WAR_MACHINE:
+    const combat_class = combatTroopClassFor(troop.code)
+    switch (combat_class) {
+    case CombatTroopClass.WAR_MACHINE:
       counts.war_machine += troop.count
       break
-    case TroopCode.DISRUPTOR:
+    case CombatTroopClass.DISRUPTOR:
       counts.disruptor += troop.count
       break
-    case TroopCode.LEGIONNAIRE:
+    case CombatTroopClass.LEGIONNAIRE:
       counts.legionnaire += troop.count
       break
-    case TroopCode.INTERCEPTOR:
+    case CombatTroopClass.INTERCEPTOR:
       counts.interceptor += troop.count
       break
     default:
@@ -126,7 +130,52 @@ export function isSystemCombatArmyReady(counts: SystemCombatArmyCounts): boolean
   if (counts.war_machine < SYSTEM_TARGET_WAR_MACHINE) {
     return false
   }
+  if (counts.legionnaire < SYSTEM_MIN_LEGIONNAIRE_CLASS) {
+    return false
+  }
+  if (counts.interceptor < SYSTEM_MIN_INTERCEPTOR_CLASS) {
+    return false
+  }
   return counts.disruptor >= minimumDisruptorForArmy(counts.total_combat)
+}
+
+function combatClassRecruitBoostPriority({
+  code,
+  army_counts,
+}: {
+  code: TroopCode
+  army_counts: SystemCombatArmyCounts
+}): number | null {
+  if (combatRoleFor(code) !== CombatRole.COMBAT) {
+    return null
+  }
+  const combat_class = combatTroopClassFor(code)
+  if (!combat_class) {
+    return null
+  }
+  if (
+    combat_class === CombatTroopClass.WAR_MACHINE
+    && army_counts.war_machine < SYSTEM_TARGET_WAR_MACHINE
+  ) {
+    return 0
+  }
+  if (
+    combat_class === CombatTroopClass.LEGIONNAIRE
+    && army_counts.legionnaire < SYSTEM_MIN_LEGIONNAIRE_CLASS
+  ) {
+    return 1
+  }
+  if (
+    combat_class === CombatTroopClass.INTERCEPTOR
+    && army_counts.interceptor < SYSTEM_MIN_INTERCEPTOR_CLASS
+  ) {
+    return 2
+  }
+  const min_disruptor = minimumDisruptorForArmy(army_counts.total_combat)
+  if (combat_class === CombatTroopClass.DISRUPTOR && army_counts.disruptor < min_disruptor) {
+    return 3
+  }
+  return null
 }
 
 export function shouldBoostCombatRecruit({
@@ -199,13 +248,12 @@ function recruitPriority({
   }
 
   if (hints.combat.boost_combat_recruit) {
-    const { army_counts } = hints.combat
-    if (code === TroopCode.WAR_MACHINE && army_counts.war_machine < SYSTEM_TARGET_WAR_MACHINE) {
-      return 0 + TroopService.getOrder(code)
-    }
-    const min_disruptor = minimumDisruptorForArmy(army_counts.total_combat)
-    if (code === TroopCode.DISRUPTOR && army_counts.disruptor < min_disruptor) {
-      return 1 + TroopService.getOrder(code)
+    const boost = combatClassRecruitBoostPriority({
+      code,
+      army_counts: hints.combat.army_counts,
+    })
+    if (boost !== null) {
+      return boost + TroopService.getOrder(code)
     }
     if (combatRoleFor(code) === CombatRole.COMBAT) {
       return 4 + TroopService.getOrder(code)

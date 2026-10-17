@@ -52,7 +52,7 @@ Tests: `apps/server/src/app/command/auth/signup.spec.ts` (unknown faction, singu
 
 ## Troop initialization
 
-`TroopService.init` / `TroopService.codesForFaction(faction_code)` use faction to determine which troop codes get zero-count stacks at city bootstrap (`signup.spec.ts` asserts count = `TroopService.codesForFaction(faction_code).length`). Planned PvP adds two **faction-exclusive combat** `TroopCode`s per playable faction (`legionnaire` / `interceptor` vs `war_machine` / `disruptor`) — roster and gating in [`024`](../024-player-combat-pvp/spec.md); not implemented on `main` yet.
+`TroopService.init` / `TroopService.codesForFaction(faction_code)` use faction to determine which troop codes get zero-count stacks at city bootstrap (`signup.spec.ts` asserts count = `TroopService.codesForFaction(faction_code).length`). PvP adds **four** faction-exclusive combat `TroopCode`s per faction (eight total — roster in [`024`](../024-player-combat-pvp/spec.md)).
 
 ## Web UI
 

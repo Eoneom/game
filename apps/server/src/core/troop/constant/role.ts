@@ -22,6 +22,10 @@ export const troop_role: Record<TroopCode, TroopRole> = {
   [TroopCode.RECLAIMER]: TroopRole.SALVAGER,
   [TroopCode.LEGIONNAIRE]: TroopRole.COMBAT,
   [TroopCode.INTERCEPTOR]: TroopRole.COMBAT,
+  [TroopCode.SHOCK_TROOPER]: TroopRole.COMBAT,
+  [TroopCode.ASSAULT_BEHEMOTH]: TroopRole.COMBAT,
   [TroopCode.WAR_MACHINE]: TroopRole.COMBAT,
   [TroopCode.DISRUPTOR]: TroopRole.COMBAT,
+  [TroopCode.PRIME_UNIT]: TroopRole.COMBAT,
+  [TroopCode.STRIKER_DRONE]: TroopRole.COMBAT,
 }
