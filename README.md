@@ -22,6 +22,21 @@ From the **repository root**:
 yarn install
 ```
 
+## Run API + web (one command)
+
+From the repository root, after Postgres is running and migrated (see below):
+
+```bash
+yarn dev
+```
+
+This builds `@eoneom/api-client` and `@eoneom/server`, then starts the API and the Vite dev server in parallel (Ctrl+C stops both). It does **not** run `web:build` — local UI uses hot-reload via `web:start`. For a full production build of all workspaces, use `yarn build`.
+
+| Service | Port |
+| ------- | ---- |
+| API (`@eoneom/server`) | **3000** |
+| Web (`@eoneom/web`, Vite dev) | **3001** |
+
 ## Run Postgres locally
 
 The server connects to Postgres via `DATABASE_URL` (default `postgres://eoneom:eoneom@localhost:5432/eoneom`).
@@ -132,9 +147,11 @@ Additional scripts (coverage, eject) are defined only on `apps/web/package.json`
 
 | Script              | Purpose                                        |
 | ------------------- | ---------------------------------------------- |
+| `yarn dev`          | Build api-client + server, start API and web   |
+| `yarn build`        | Production build: api-client, server, and web  |
 | `yarn client:build` | Build `@eoneom/api-client` (shared package)    |
 
-Typical full-stack local setup: Postgres running and migrated, `yarn server:start` in one terminal, `yarn web:start` in another (API on 3000, UI on 3001).
+Typical full-stack local setup: Postgres running and migrated, then `yarn dev` (or `yarn server:start` and `yarn web:start` in separate terminals).
 
 ## Interact with the server
 

@@ -7,6 +7,8 @@
     "packages/*"
   ],
   "scripts": {
+    "build": "yarn client:build && yarn server:build && yarn web:build",
+    "dev": "yarn client:build && yarn server:build && concurrently -k -n server,web -c blue,green \"yarn server:start\" \"yarn web:start\"",
     "server:build": "yarn workspace @eoneom/server build",
     "server:start": "yarn workspace @eoneom/server start",
     "server:test": "yarn workspace @eoneom/server test",
@@ -14,5 +16,8 @@
     "web:start": "yarn workspace @eoneom/web start",
     "web:build": "yarn workspace @eoneom/web build",
     "web:test": "yarn workspace @eoneom/web test:ci"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
