@@ -160,4 +160,16 @@ export function setupWebSocketServer(
       }
     }
   })
+
+  eventBus.on(AppEvent.SystemPlayerStatsUpdated, (snapshot) => {
+    for (const admin_player_id of admin_connections) {
+      const ws = connections.get(admin_player_id)
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: AppEvent.SystemPlayerStatsUpdated,
+          ...snapshot,
+        }))
+      }
+    }
+  })
 }

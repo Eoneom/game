@@ -36,6 +36,8 @@ import { citySettleHandler } from '#web/handler/city/settle'
 import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
 import { healthGetHandler } from '#web/handler/health/get'
 import { adminSystemPlayerObservabilityGetHandler } from '#web/handler/admin/system-player-observability/get'
+import { adminSystemPlayerStatsGetHandler } from '#web/handler/admin/system-player-stats/get'
+import { adminMiddleware } from '#web/middleware/admin'
 
 const CANONICAL_HEALTH_PATH = '/api/v1/health'
 
@@ -97,6 +99,7 @@ export const router = (): Router => {
   r.get('/communication/report/:report_id', authMiddleware, communicationGetReportHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
+  r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)
 
   return r
 }

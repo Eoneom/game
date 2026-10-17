@@ -55,6 +55,8 @@ export type SystemPlayerActionCommittedPayload = {
   payload: Record<string, unknown>
 }
 
+export type SystemPlayerStatsUpdatedPayload = import('@eoneom/api-client/src/endpoints/admin/system-player-stats').AdminSystemPlayerStatsSnapshot
+
 export type AppEventMap = {
   [AppEvent.CityResourcesGathered]: CityResourcesGatheredPayload
   [AppEvent.BuildingUpgradeFinished]: BuildingUpgradeFinishedPayload
@@ -65,6 +67,7 @@ export type AppEventMap = {
   [AppEvent.OutpostDeleted]: OutpostDeletedPayload
   [AppEvent.OutpostResourcesGathered]: OutpostResourcesGatheredPayload
   [AppEvent.SystemPlayerActionCommitted]: SystemPlayerActionCommittedPayload
+  [AppEvent.SystemPlayerStatsUpdated]: SystemPlayerStatsUpdatedPayload
 }
 
 export class AppEventBus extends EventEmitter {

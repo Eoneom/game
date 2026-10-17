@@ -7,8 +7,10 @@ import {
   useObservabilitySession,
   useRegisterObservabilityWsWhenAdmin,
   useSystemPlayerNameFilter,
+  useSystemPlayerStats,
 } from './hooks'
 import type { SystemPlayerTickObservabilityOutcome } from './types'
+import { SystemPlayerStatsPanel } from './stats-panel'
 
 const OUTCOME_LABEL: Record<SystemPlayerTickObservabilityOutcome, string> = {
   success: 'Succès',
@@ -27,6 +29,11 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
   useRegisterObservabilityWsWhenAdmin(session?.is_admin)
   const events = useLiveSystemPlayerEvents()
   const { filter, setFilter } = useSystemPlayerNameFilter()
+  const {
+    snapshots,
+    isPending: stats_pending,
+    refetch: refetch_stats,
+  } = useSystemPlayerStats(session?.is_admin)
 
   const filtered_events = useMemo(() => {
     if (!filter) {
@@ -74,7 +81,23 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          className="rounded-sm border border-rust/60 bg-chrome px-2 py-1 text-sm text-amber hover:border-amber/50"
+          onClick={() => refetch_stats()}
+        >
+          Actualiser les stats
+        </button>
       </div>
+
+      <section className="max-h-[45vh] shrink-0 overflow-y-auto rounded-sm border border-rust/40 p-2">
+        <h2 className="m-0 mb-2 text-sm uppercase tracking-wider text-amber-dim">État des joueurs système</h2>
+        <SystemPlayerStatsPanel
+          snapshots={snapshots}
+          name_filter={filter}
+          is_loading={stats_pending}
+        />
+      </section>
 
       <ul className="m-0 min-h-0 flex-1 list-none space-y-2 overflow-y-auto p-0">
         {filtered_events.length === 0 ? (

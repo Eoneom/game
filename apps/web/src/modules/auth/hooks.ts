@@ -15,6 +15,7 @@ import { registerTroopWsListeners } from '#troop/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
 import { registerSystemPlayerObservabilityWsListener } from '#admin/system-player-observability/ws-listener'
 import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
+import { clearSystemPlayerStatsSnapshots } from '#admin/system-player-observability/stats-store'
 
 const doLogin = async (playerName: string): Promise<string> => {
   const res = await client.player.login({ player_name: playerName })
@@ -55,6 +56,7 @@ const startSession = async ({
 }): Promise<void> => {
   setToken(token)
   clearSystemPlayerObservabilityEvents()
+  clearSystemPlayerStatsSnapshots()
   registerCityWsListeners()
   registerBuildingWsListeners()
   registerTechnologyWsListeners()
@@ -134,6 +136,7 @@ export const useLogout = () => {
     onSuccess: () => {
       clearToken()
       clearSystemPlayerObservabilityEvents()
+      clearSystemPlayerStatsSnapshots()
       wsClient.disconnect()
       queryClient.clear()
     },

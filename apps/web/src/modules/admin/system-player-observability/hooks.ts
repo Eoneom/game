@@ -8,6 +8,11 @@ import {
   getSystemPlayerObservabilityEvents,
   subscribeSystemPlayerObservabilityEvents,
 } from './event-store'
+import {
+  getSystemPlayerStatsSnapshots,
+  replaceSystemPlayerStatsSnapshots,
+  subscribeSystemPlayerStatsSnapshots,
+} from './stats-store'
 import { registerSystemPlayerObservabilityWsListener } from './ws-listener'
 
 export const useObservabilitySession = () => {
@@ -53,4 +58,35 @@ export const useRegisterObservabilityWsWhenAdmin = (is_admin: boolean | undefine
     }
     registerSystemPlayerObservabilityWsListener()
   }, [ is_admin ])
+}
+
+export const useSystemPlayerStats = (is_admin: boolean | undefined) => {
+  const { token } = useAuth()
+  const live_snapshots = useSyncExternalStore(
+    subscribeSystemPlayerStatsSnapshots,
+    getSystemPlayerStatsSnapshots,
+    getSystemPlayerStatsSnapshots
+  )
+
+  const query = useQuery({
+    queryKey: [ 'admin', 'system-player-stats' ],
+    enabled: Boolean(token) && Boolean(is_admin),
+    queryFn: async () => {
+      if (!token) {
+        throw new Error('token:not-found')
+      }
+      const res = await client.admin.getSystemPlayerStats(token)
+      if (isError(res)) {
+        throw new Error(res.error_code)
+      }
+      replaceSystemPlayerStatsSnapshots(res.data.players)
+      return res.data.players
+    },
+  })
+
+  return {
+    snapshots: live_snapshots,
+    isPending: query.isPending,
+    refetch: query.refetch,
+  }
 }

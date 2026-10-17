@@ -2,7 +2,9 @@ import { AppEvent } from '@eoneom/api-client'
 
 import { wsClient } from '#helpers/websocket'
 import { pushSystemPlayerObservabilityEvent } from './event-store'
+import { patchSystemPlayerStatsSnapshot } from './stats-store'
 import type { SystemPlayerObservabilityEvent } from './types'
+import type { AdminSystemPlayerStatsSnapshot } from '@eoneom/api-client'
 
 let registered = false
 
@@ -24,6 +26,19 @@ export function registerSystemPlayerObservabilityWsListener(): void {
       category: message.category,
       summary: message.summary,
       payload: message.payload,
+    })
+  })
+
+  wsClient.on(AppEvent.SystemPlayerStatsUpdated, (raw) => {
+    const message = raw as AdminSystemPlayerStatsSnapshot & { type: string }
+    patchSystemPlayerStatsSnapshot({
+      player_id: message.player_id,
+      player_name: message.player_name,
+      cities: message.cities,
+      outposts: message.outposts,
+      technologies: message.technologies,
+      buildings_by_city: message.buildings_by_city,
+      updated_at: message.updated_at,
     })
   })
 }

@@ -8,4 +8,5 @@ export enum AppEvent {
   OutpostDeleted = 'outpost:deleted',
   OutpostResourcesGathered = 'outpost:resources-gathered',
   SystemPlayerActionCommitted = 'system-player:action-committed',
+  SystemPlayerStatsUpdated = 'system-player:stats-updated',
 }

@@ -3,6 +3,8 @@ import { SYSTEM_PLAYER_TICK_INTERVAL_MS } from '#app/scheduling/intervals'
 import { actForSystemPlayer } from '#command/player/system/policy'
 import { systemTickActions } from '#command/player/system/actions'
 import { emitSystemPlayerTickObservability } from '#command/player/system/emit-observability'
+import { emitSystemPlayerStatsUpdated } from '#command/player/system/emit-stats'
+import { collectSystemPlayerStatsSnapshot } from '#app/query/admin/system-player-stats'
 import { now } from '#shared/time'
 
 export async function tickSystemPlayers({ tick_index }: { tick_index: number }): Promise<void> {
@@ -36,6 +38,11 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
           category: result.category,
           payload: result.payload,
         })
+        const stats = await collectSystemPlayerStatsSnapshot({
+          player_id: player.id,
+          player_name: player.name,
+        })
+        emitSystemPlayerStatsUpdated(stats)
       } else {
         emitSystemPlayerTickObservability({
           player_id: player.id,

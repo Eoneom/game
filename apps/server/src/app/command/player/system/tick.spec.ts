@@ -2,6 +2,8 @@ import type { MockInstance } from 'vitest'
 import { tickSystemPlayers } from './tick'
 import { actForSystemPlayer } from '#command/player/system/policy'
 import * as observabilityEmit from '#command/player/system/emit-observability'
+import * as statsEmit from '#command/player/system/emit-stats'
+import * as statsQuery from '#app/query/admin/system-player-stats'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
@@ -66,6 +68,16 @@ describe('tickSystemPlayers', () => {
 
   it('emits observability event after a successful action', async () => {
     const emit = vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
+      player_id: player.id,
+      player_name: player.name,
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: tick_at,
+    })
+    const stats_emit = vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
 
     await tickSystemPlayers({ tick_index: 4 })
 
@@ -73,6 +85,7 @@ describe('tickSystemPlayers', () => {
     assert.strictEqual(emit.mock.calls[0][0].player_id, player.id)
     assert.strictEqual(emit.mock.calls[0][0].outcome, 'success')
     assert.strictEqual(emit.mock.calls[0][0].category, 'upgrade')
+    assert.strictEqual(stats_emit.mock.calls.length, 1)
   })
 
   it('emits observability with idle outcome and skipped attempts', async () => {
@@ -85,16 +98,28 @@ describe('tickSystemPlayers', () => {
       attempts: skipped_attempts,
     })
     const emit = vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    const stats_emit = vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
 
     await tickSystemPlayers({ tick_index: 0 })
 
     assert.strictEqual(emit.mock.calls.length, 1)
     assert.strictEqual(emit.mock.calls[0][0].outcome, 'idle')
     assert.deepStrictEqual(emit.mock.calls[0][0].attempts, skipped_attempts)
+    assert.strictEqual(stats_emit.mock.calls.length, 0)
   })
 
   it('acts for each system-controlled player and reschedules the next tick', async () => {
     vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
+    vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
+    vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
+      player_id: player.id,
+      player_name: player.name,
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: tick_at,
+    })
     await tickSystemPlayers({ tick_index: 4 })
 
     assert.strictEqual(vi.mocked(actForSystemPlayer).mock.calls.length, 1)

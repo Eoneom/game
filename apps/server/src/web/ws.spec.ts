@@ -315,6 +315,32 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
+  it('forwards SystemPlayerStatsUpdated to connected admin WebSockets only', async () => {
+    const admin_player_id = 'admin-1'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id: admin_player_id })
+    ;(isObservabilityAdmin as MockInstance).mockResolvedValue(true)
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await connectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    const eventHandler = capturedEventListeners.get(AppEvent.SystemPlayerStatsUpdated)
+    const snapshot = {
+      player_id: 'system-1',
+      player_name: 'Alpha',
+      cities: [],
+      outposts: [],
+      technologies: [],
+      buildings_by_city: [],
+      updated_at: 2,
+    }
+    eventHandler?.(snapshot)
+
+    expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.SystemPlayerStatsUpdated,
+      ...snapshot,
+    }))
+  })
+
   it('does not forward an event to a different player WebSocket', async () => {
     const player_id = 'player-9'
     const other_player_id = 'player-10'
