@@ -6,6 +6,7 @@ import {
   ConsumingBuildingCode,
   SOLAR_EFFICIENCY_MULTIPLIER_PER_LEVEL
 } from '#core/building/constant/energy'
+import { getBuildingInitialLevel } from '#core/building/constant/initial-level'
 import { building_order } from '#core/building/constant/order'
 import { warehouses_capacity } from '#core/building/constant/warehouse-capacity'
 import { BuildingEntity } from '#core/building/entity'
@@ -20,7 +21,7 @@ export class BuildingService {
         id: id(),
         code,
         city_id,
-        level: 0
+        level: getBuildingInitialLevel(code)
       })
     })
   }

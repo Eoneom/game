@@ -165,8 +165,8 @@ describe('BuildingGetQuery', () => {
     })
 
     expect(result.metadata).toEqual({
-      current_energy: 15,
-      next_energy: 23
+      current_energy: 120,
+      next_energy: 180
     })
   })
 
@@ -192,8 +192,8 @@ describe('BuildingGetQuery', () => {
     })
 
     expect(result.metadata).toEqual({
-      current_energy: 20,
-      next_energy: 30
+      current_energy: 159,
+      next_energy: 238
     })
   })
 })

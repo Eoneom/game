@@ -4,7 +4,7 @@
 
 ## Summary
 
-Each city owns one row per `BuildingCode` (level `0` initially). Players **upgrade** buildings (resource cost + duration), with at most one active pg-boss finish job per city and a **queued** list of pending upgrades. Upgrades affect earnings, energy, and warehouse capacity via `BuildingService`. Pricing uses `PricingService.getBuildingLevelCost` (architecture technology reduces duration). Completion runs `finishBuildingUpgrade` and emits `building:upgrade-finished`.
+Each city owns one row per `BuildingCode`. On bootstrap (`BuildingService.init`), `mushroom_farm`, `recycling_plant`, and `solar_panel` start at **level 1**; all other codes start at **level 0**. Players **upgrade** buildings (resource cost + duration), with at most one active pg-boss finish job per city and a **queued** list of pending upgrades. Upgrades affect earnings, energy, and warehouse capacity via `BuildingService`. Pricing uses `PricingService.getBuildingLevelCost` (architecture technology reduces duration). Completion runs `finishBuildingUpgrade` and emits `building:upgrade-finished`.
 
 **Depends on**: city ownership ([`006`](../006-city-lifecycle-gathering/spec.md)), requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), resources ([`015`](../015-resources-model/spec.md)).
 
@@ -40,7 +40,8 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 
 ## Domain highlights
 
-- `BuildingService.init({ city_id })` creates all codes at level 0.
+- `BuildingService.init({ city_id })` creates all codes; `getBuildingInitialLevel` sets mushroom farm, recycling plant, and solar panel to level 1 (`core/building/constant/initial-level.ts`).
+- Solar panel level 1 `base` energy is **80** so supply covers mushroom + recycling consumption (20+20 each) at the minimum cell `solar_coefficient` (**0.5**).
 - Production buildings (`MUSHROOM_FARM`, `RECYCLING_PLANT`, `CENTRAL_INDUCTOR`) earnings scale with cell coefficients and `gameTimeScale`.
 - Energy consumption/supply helpers for UI warnings (`getEnergyConsumption`, `getProductionEnergyRatio`, etc.).
 - Display order: `building_order` constant.

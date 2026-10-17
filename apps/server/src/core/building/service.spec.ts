@@ -1,6 +1,8 @@
 import assert from 'assert'
 import { BuildingCode } from '#core/building/constant/code'
+import { BOOTSTRAP_LEVEL_ONE_BUILDING_CODES } from '#core/building/constant/initial-level'
 import { BuildingService } from '#core/building/service'
+import { WorldService } from '#core/world/service'
 
 describe('BuildingService.getEnergy', () => {
   it('returns 0 at level 0', () => {
@@ -8,18 +10,18 @@ describe('BuildingService.getEnergy', () => {
   })
 
   it('returns base value at level 1', () => {
-    assert.strictEqual(BuildingService.getEnergy({ level: 1 }), 10)
+    assert.strictEqual(BuildingService.getEnergy({ level: 1 }), 80)
   })
 
   it('returns exponential value at level 2', () => {
-    assert.strictEqual(BuildingService.getEnergy({ level: 2 }), 15)
+    assert.strictEqual(BuildingService.getEnergy({ level: 2 }), 120)
   })
 
   it('returns coefficient-scaled energy at level 1', () => {
     assert.strictEqual(BuildingService.getEnergy({
       level: 1,
       coefficient: 1.5
-    }), 15)
+    }), 120)
   })
 
   it('returns 0 at level 0 regardless of coefficient', () => {
@@ -34,7 +36,7 @@ describe('BuildingService.getEnergy', () => {
       level: 1,
       coefficient: 1,
       efficiency_level: 1
-    }), 12)
+    }), 92)
   })
 
   it('applies efficiency level bonus at level 2', () => {
@@ -42,7 +44,60 @@ describe('BuildingService.getEnergy', () => {
       level: 2,
       coefficient: 1,
       efficiency_level: 2
-    }), 20)
+    }), 159)
+  })
+})
+
+describe('BuildingService.init', () => {
+  it('starts core production and solar at level 1', () => {
+    const buildings = BuildingService.init({ city_id: 'city-1' })
+    for (const code of BOOTSTRAP_LEVEL_ONE_BUILDING_CODES) {
+      const building = buildings.find(candidate => candidate.code === code)
+      assert.ok(building)
+      assert.strictEqual(building.level, 1)
+    }
+  })
+
+  it('starts other buildings at level 0', () => {
+    const buildings = BuildingService.init({ city_id: 'city-1' })
+    const other = buildings.filter(
+      building => !BOOTSTRAP_LEVEL_ONE_BUILDING_CODES.has(building.code)
+    )
+    assert.ok(other.length > 0)
+    other.forEach(building => assert.strictEqual(building.level, 0))
+  })
+})
+
+describe('starter city energy balance', () => {
+  const MIN_SOLAR_COEFFICIENT = 0.5
+
+  it('covers both production buildings at level 1 on the dimmest cells', () => {
+    const supply = BuildingService.getEnergy({
+      level: 1,
+      coefficient: MIN_SOLAR_COEFFICIENT
+    })
+    const recycling = BuildingService.getEnergyConsumption({
+      code: BuildingCode.RECYCLING_PLANT,
+      level: 1
+    })
+    const mushroom = BuildingService.getEnergyConsumption({
+      code: BuildingCode.MUSHROOM_FARM,
+      level: 1
+    })
+    const production_consumption = recycling + mushroom
+
+    assert.ok(supply >= production_consumption)
+    assert.strictEqual(BuildingService.getProductionEnergyRatio({
+      supply,
+      non_production_consumption: 0,
+      production_consumption
+    }), 1)
+  })
+
+  it('matches world solar coefficient floor', () => {
+    const world = WorldService.generate()
+    const min_solar = Math.min(...world.map(cell => cell.solar_coefficient))
+    assert.ok(min_solar >= MIN_SOLAR_COEFFICIENT)
   })
 })
 

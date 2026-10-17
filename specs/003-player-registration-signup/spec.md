@@ -74,7 +74,7 @@ Orchestration in `apps/server/src/app/command/player/bootstrap.ts`:
 | World placement | `AppService.selectCityFirstCell()`; `AppService.getCellsAround({ coordinates })` |
 | Player | `PlayerService.init` with `system_controlled: false` |
 | City | `CityService.settle` on first cell |
-| Buildings | `BuildingService.init` — one row per `BuildingCode` |
+| Buildings | `BuildingService.init` — one row per `BuildingCode`; mushroom farm, recycling plant, and solar panel at **level 1**, others at **0** |
 | Technologies | `TechnologyService.init` — one row per `TechnologyCode` for `player_id` |
 | Resources | Load stock for city cell; `ResourcesService.firstCityCanonicalResourceStockState` then `updateOne` (`STARTING_PLASTIC` 3000, `STARTING_MUSHROOM` 2000 in `apps/server/src/core/city/constant/index.ts`) |
 | Troops | `TroopService.init` — zero-count stacks per faction troop codes on city cell |

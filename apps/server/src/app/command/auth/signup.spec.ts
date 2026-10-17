@@ -258,6 +258,27 @@ describe('signupAuth', () => {
     })
   })
 
+  it('should start core production and solar panel at level 1', async () => {
+    await signupAuth({
+      player_name,
+      city_name,
+      faction_code
+    })
+
+    const level_one_codes = new Set([
+      BuildingCode.MUSHROOM_FARM,
+      BuildingCode.RECYCLING_PLANT,
+      BuildingCode.SOLAR_PANEL
+    ])
+    buildingCreate.mock.calls.forEach(([ building ]) => {
+      if (level_one_codes.has(building.code)) {
+        assert.strictEqual(building.level, 1)
+      } else {
+        assert.strictEqual(building.level, 0)
+      }
+    })
+  })
+
   it('should init all technologies', async () => {
     await signupAuth({
       player_name,

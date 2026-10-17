@@ -87,7 +87,7 @@ describe('CityGetQuery', () => {
       non_production_consumption: 0,
       production_consumption: 4,
       production_energy_ratio: 1,
-      energy_supply: 15
+      energy_supply: 120
     })
     vi.spyOn(AppService, 'getCityMaximumBuildingLevels').mockResolvedValue(42)
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
@@ -131,9 +131,9 @@ describe('CityGetQuery', () => {
       player_id
     })
 
-    expect(result.energy).toBe(15)
-    expect(result.pre_cell_energy).toBe(15)
-    expect(result.neutral_photovoltaic_energy).toBe(15)
+    expect(result.energy).toBe(120)
+    expect(result.pre_cell_energy).toBe(120)
+    expect(result.neutral_photovoltaic_energy).toBe(120)
     expect(result.photovoltaic_optimization_level).toBe(0)
     expect(result.cell_solar_coefficient).toBe(1)
     expect(result.energy_consumption).toBe(4)
@@ -153,9 +153,9 @@ describe('CityGetQuery', () => {
       player_id
     })
 
-    expect(result.energy).toBe(17)
-    expect(result.pre_cell_energy).toBe(17)
-    expect(result.neutral_photovoltaic_energy).toBe(15)
+    expect(result.energy).toBe(138)
+    expect(result.pre_cell_energy).toBe(138)
+    expect(result.neutral_photovoltaic_energy).toBe(120)
     expect(result.photovoltaic_optimization_level).toBe(1)
   })
 })

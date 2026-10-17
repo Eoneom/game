@@ -7,7 +7,8 @@ export interface Energy {
 
 export const building_energy: Record<BuildingCode.SOLAR_PANEL, Energy> = {
   [BuildingCode.SOLAR_PANEL]: {
-    base: 10,
+    // Level-1 supply must cover mushroom + recycling consumption (20+20) at min cell solar coefficient (0.5).
+    base: 80,
     multiplier: 1.5
   }
 }

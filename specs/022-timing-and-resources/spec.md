@@ -21,12 +21,12 @@ Global **timing harmonization** for cities and outposts: one ruleset per locatio
 
 ## Milestones (`GAME_TIME_SCALE=1`, starter city)
 
-Assumptions: coefficient **1.0** on main resources, buildings at **0** until upgraded, signup stock (`STARTING_PLASTIC` / `STARTING_MUSHROOM`), no architecture/research reductions.
+Assumptions: coefficient **1.0** on main resources, mushroom farm / recycling plant / solar panel already at **level 1** after signup (other buildings at **0**), signup stock (`STARTING_PLASTIC` / `STARTING_MUSHROOM`), no architecture/research reductions. First **player-driven** upgrade is typically **1→2** on production, warehouses, or solar.
 
 | Milestone | Target (real time) | How verified |
 | --- | --- | --- |
 | Gather tick | **5s** | `apps/server/src/app/scheduling/intervals.ts` |
-| First building **0→1** (production or warehouse) | **~45s** build duration | `PricingService.getBuildingLevelCost` level 1 for `RECYCLING_PLANT`, `MUSHROOM_FARM`, `SOLAR_PANEL`, `PLASTIC_WAREHOUSE`, `MUSHROOM_WAREHOUSE` → `duration` ≈ 45 |
+| First building **0→1** (warehouse path) or **1→2** (pre-built production/solar) | **~45s** build duration | `PricingService.getBuildingLevelCost` level 1 (warehouses) or level 2 (starter production/solar) → `duration` ≈ 45 for the first meaningful upgrade after signup |
 | Early cadence | **~1 meaningful build/minute** after hook | Level-2+ costs/durations rise via multipliers; second upgrade often **~60–95s** after the first finishes when paying from production (path-dependent) |
 | Mid / late | Slower than early | Higher levels use sharpened `multiplier` on `duration` and resources in `building_costs` (and parallel tables for tech/troops where listed below) |
 
