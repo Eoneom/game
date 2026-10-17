@@ -12,6 +12,30 @@ import { Resource, WarehouseCapacity } from '#shared/resource'
 /** Same ratio as web `HeaderResourcesItem` warehouse progress warn (`warnCapacity`). */
 export const SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO = 0.7
 
+/**
+ * Skip system solar-panel upgrades when city supply exceeds total consumption by more than this ratio
+ * (`energy_supply / energy_consumption`). Still upgrades when `production_energy_ratio < 1`.
+ */
+export const SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO = 1.25
+
+export function shouldSystemUpgradeSolarPanel({
+  energy_supply,
+  energy_consumption,
+  production_energy_ratio,
+}: {
+  energy_supply: number
+  energy_consumption: number
+  production_energy_ratio: number
+}): boolean {
+  if (production_energy_ratio < 1) {
+    return true
+  }
+  if (energy_consumption <= 0) {
+    return false
+  }
+  return energy_supply / energy_consumption <= SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO
+}
+
 export function isStorageResourcePressured({
   stock,
   capacity,
@@ -171,6 +195,8 @@ function systemUpgradeRank({
   resource_stock,
   warehouses_capacity,
   production_energy_ratio,
+  energy_supply,
+  energy_consumption,
   production_bootstrap,
   core_production_satisfied,
   mushroom_farm_level,
@@ -180,6 +206,8 @@ function systemUpgradeRank({
   resource_stock: Resource
   warehouses_capacity: WarehouseCapacity
   production_energy_ratio: number
+  energy_supply?: number
+  energy_consumption?: number
   production_bootstrap: boolean
   core_production_satisfied: boolean
   mushroom_farm_level: number
@@ -188,6 +216,16 @@ function systemUpgradeRank({
   const energy_starved = production_energy_ratio < 1
   if (energy_starved && isEnergyBuildingCode(building_code)) {
     return -1
+  }
+  if (building_code === BuildingCode.SOLAR_PANEL
+    && energy_supply !== undefined
+    && energy_consumption !== undefined
+    && !shouldSystemUpgradeSolarPanel({
+      energy_supply,
+      energy_consumption,
+      production_energy_ratio,
+    })) {
+    return 99
   }
   if (energy_starved && isProductionBuildingCode(building_code)) {
     return 4
@@ -312,11 +350,15 @@ export function sortBuildingsForSystemUpgrade<
   resource_stock,
   warehouses_capacity,
   production_energy_ratio = 1,
+  energy_supply,
+  energy_consumption,
 }: {
   buildings: T[]
   resource_stock: Resource
   warehouses_capacity: WarehouseCapacity
   production_energy_ratio?: number
+  energy_supply?: number
+  energy_consumption?: number
 }): T[] {
   const production_bootstrap = needsCoreProductionBootstrap(buildings)
   const core_production_satisfied = isCoreProductionSatisfied(buildings)
@@ -331,6 +373,8 @@ export function sortBuildingsForSystemUpgrade<
       resource_stock,
       warehouses_capacity,
       production_energy_ratio,
+      energy_supply,
+      energy_consumption,
       production_bootstrap,
       core_production_satisfied,
       mushroom_farm_level,
@@ -340,6 +384,8 @@ export function sortBuildingsForSystemUpgrade<
       resource_stock,
       warehouses_capacity,
       production_energy_ratio,
+      energy_supply,
+      energy_consumption,
       production_bootstrap,
       core_production_satisfied,
       mushroom_farm_level,

@@ -3,8 +3,10 @@ import {
   isCityWarehouseUnderPressure,
   resourcesForTransportToDestination,
   shouldPrioritizeEconomyForSystemPlayer,
+  shouldSystemUpgradeSolarPanel,
   sortBuildingsForSystemUpgrade,
-  SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO
+  SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO,
+  SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO,
 } from './storage'
 import { BuildingCode } from '#core/building/constant/code'
 
@@ -215,6 +217,56 @@ describe('system player storage policy', () => {
     })
 
     assert.strictEqual(sorted[0].code, BuildingCode.PLASTIC_WAREHOUSE)
+  })
+
+  it('skips solar panel upgrades when energy surplus exceeds the max ratio', () => {
+    assert.strictEqual(SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO, 1.25)
+    assert.strictEqual(shouldSystemUpgradeSolarPanel({
+      energy_supply: 200,
+      energy_consumption: 100,
+      production_energy_ratio: 1,
+    }), false)
+    assert.strictEqual(shouldSystemUpgradeSolarPanel({
+      energy_supply: 120,
+      energy_consumption: 100,
+      production_energy_ratio: 1,
+    }), true)
+    assert.strictEqual(shouldSystemUpgradeSolarPanel({
+      energy_supply: 500,
+      energy_consumption: 100,
+      production_energy_ratio: 0.5,
+    }), true)
+  })
+
+  it('deprioritizes solar panel when energy surplus exceeds the max ratio', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'solar',
+          code: BuildingCode.SOLAR_PANEL,
+          level: 1,
+        },
+        {
+          id: 'lab',
+          code: BuildingCode.RESEARCH_LAB,
+          level: 0,
+        },
+      ],
+      resource_stock: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 4000,
+        mushroom: 3000,
+      },
+      production_energy_ratio: 1,
+      energy_supply: 250,
+      energy_consumption: 100,
+    })
+
+    assert.strictEqual(sorted[0].code, BuildingCode.RESEARCH_LAB)
   })
 
   it('prefers solar panel over production when production energy ratio is below 1', () => {

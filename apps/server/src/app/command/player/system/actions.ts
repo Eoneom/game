@@ -50,7 +50,8 @@ import {
 } from '#command/player/system/pending-upgrades'
 import {
   resourcesForTransportToDestination,
-  sortBuildingsForSystemUpgrade
+  shouldSystemUpgradeSolarPanel,
+  sortBuildingsForSystemUpgrade,
 } from '#command/player/system/storage'
 import {
   loadEmpireCombatArmyCounts,
@@ -157,6 +158,8 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       resource_stock: city_details.resource_stock,
       warehouses_capacity: projected_warehouses_capacity,
       production_energy_ratio: city_details.production_energy_ratio,
+      energy_supply: city_details.energy,
+      energy_consumption: city_details.energy_consumption,
     })
 
     for (const projected_building of buildings_to_try) {
@@ -186,6 +189,15 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       }
 
       if (can_start && !canAfford(city_details.resource_stock, details.cost.resource)) {
+        continue
+      }
+
+      if (building.code === BuildingCode.SOLAR_PANEL
+        && !shouldSystemUpgradeSolarPanel({
+          energy_supply: city_details.energy,
+          energy_consumption: city_details.energy_consumption,
+          production_energy_ratio: city_details.production_energy_ratio,
+        })) {
         continue
       }
 

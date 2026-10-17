@@ -46,7 +46,7 @@ System tick actions use `CityGetQuery` warehouse fields (`warehouses_capacity`, 
 
 **Upgrade** (`tryUpgrade`): when the city is under warehouse pressure **or** `production_energy_ratio < 1`, eligible buildings are sorted before the first affordable upgrade is chosen:
 
-1. **Energy** (`solar_panel`) when energy-starved (`production_energy_ratio < 1`).
+1. **Energy** (`solar_panel`) when energy-starved (`production_energy_ratio < 1`). Skips solar upgrades when supply already exceeds total consumption by more than **`SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO` (1.25)** — i.e. `energy_supply / energy_consumption > 1.25` while production is fully powered; other building upgrades are unaffected.
 2. Warehouse for each pressured resource (`plastic_warehouse` / `mushroom_warehouse`).
 3. Other warehouses.
 4. Non-production buildings (labs, etc.).

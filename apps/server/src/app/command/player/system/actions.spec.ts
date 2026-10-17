@@ -150,6 +150,90 @@ describe('systemTickActions', () => {
     })
   })
 
+  it('skips solar panel upgrade when city energy surplus exceeds the max ratio', async () => {
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(TechnologyListQuery.prototype, 'run').mockResolvedValue({
+      technologies: [],
+      research_queue: [],
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 10000,
+        mushroom: 10000,
+      }),
+      warehouses_capacity: {
+        plastic: 50000,
+        mushroom: 50000,
+      },
+      warehouse_space_remaining: {
+        plastic: 40000,
+        mushroom: 40000,
+      },
+      maximum_building_levels: 100,
+      building_levels_used: 5,
+      production_energy_ratio: 1,
+      energy: 250,
+      energy_consumption: 100,
+    } as never)
+    vi.spyOn(BuildingListQuery.prototype, 'run').mockResolvedValue({
+      buildings: [
+        {
+          id: id(),
+          code: BuildingCode.SOLAR_PANEL,
+          level: 1,
+        },
+        {
+          id: id(),
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1,
+        },
+        {
+          id: id(),
+          code: BuildingCode.RECYCLING_PLANT,
+          level: 1,
+        },
+      ],
+      upgrade_queue: [],
+    })
+    const building_cost = {
+      resource: {
+        plastic: 10,
+        mushroom: 10,
+        plasma: 0,
+      },
+      duration: 1,
+    }
+    vi.spyOn(BuildingGetQuery.prototype, 'run').mockImplementation(async ({ building_code }) => ({
+      building: BuildingEntity.create({
+        id: id(),
+        city_id,
+        code: building_code,
+        level: 1,
+      }),
+      cost: {
+        code: building_code,
+        level: 2,
+        ...building_cost,
+      },
+      requirement: {
+        buildings: [],
+        technologies: [],
+      },
+      metadata: {},
+    }))
+
+    const acted = await systemTickActions.upgrade(player_id)
+
+    assert.ok(acted)
+    assert.notStrictEqual(vi.mocked(upgradeBuilding).mock.calls[0][0].building_code, BuildingCode.SOLAR_PANEL)
+  })
+
   it('prefers a plastic warehouse upgrade when city plastic storage is pressured', async () => {
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
