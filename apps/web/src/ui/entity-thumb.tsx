@@ -3,12 +3,16 @@ import React from 'react'
 interface Props {
   src: string
   alt: string
-  size?: 'md' | 'lg'
+  size?: 'md' | 'xl' | 'lg'
   className?: string
 }
 
 export const EntityThumb: React.FC<Props> = ({ src, alt, size = 'lg', className }) => {
-  const sizeClass = size === 'lg' ? 'h-32 w-32' : 'h-14 w-14'
+  const sizeClass = size === 'lg'
+    ? 'h-32 w-32'
+    : size === 'xl'
+      ? 'h-20 w-20'
+      : 'h-14 w-14'
 
   return (
     <div

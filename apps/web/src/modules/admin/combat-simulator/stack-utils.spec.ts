@@ -3,6 +3,7 @@ import { FactionCode, TroopCode } from '@eoneom/api-client'
 import {
   availableTroopCodesForRow,
   canAddCombatSimulatorStack,
+  combatSimulatorCountOptions,
   computeSideCombatTotals,
   firstUnusedTroopCode,
   troopCombatStats,
@@ -59,6 +60,13 @@ describe('firstUnusedTroopCode', () => {
 
     expect(firstUnusedTroopCode(faction, stacks)).toBeNull()
     expect(canAddCombatSimulatorStack(faction, stacks)).toBe(false)
+  })
+})
+
+describe('combatSimulatorCountOptions', () => {
+  it('includes presets and the current value when non-standard', () => {
+    expect(combatSimulatorCountOptions(20)).toContain(20)
+    expect(combatSimulatorCountOptions(33)).toContain(33)
   })
 })
 

@@ -76,3 +76,14 @@ export const computeSideCombatTotals = (stacks: CombatSimulatorStackRow[]): Side
     { attack: 0, defense: 0, life: 0 },
   )
 }
+
+export const COMBAT_SIMULATOR_COUNT_PRESETS = [
+  1, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100,
+] as const
+
+export function combatSimulatorCountOptions(current: number): number[] {
+  const values = new Set<number>(COMBAT_SIMULATOR_COUNT_PRESETS)
+  const normalized = Math.max(0, Math.floor(Number.isFinite(current) ? current : 0))
+  values.add(normalized)
+  return [ ...values ].sort((a, b) => a - b)
+}
