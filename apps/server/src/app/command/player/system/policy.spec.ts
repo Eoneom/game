@@ -99,6 +99,51 @@ describe('system player tick policy', () => {
     assert.deepStrictEqual(calls, [ 'research', 'recruit' ])
   })
 
+  it('commits up to max_actions successes in plan order', async () => {
+    const calls: SystemTickCategory[] = []
+    const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
+      category,
+      async () => {
+        calls.push(category)
+        if (category === 'upgrade' || category === 'research') {
+          return { ok: category }
+        }
+        return null
+      },
+    ])) as Record<SystemTickCategory, SystemTickAction>
+
+    const acted = await actForSystemPlayer({
+      player_id: 'player-id',
+      tick_index: 0,
+      actions,
+      categories: [
+        'upgrade',
+        'research',
+        'recruit',
+        'transport',
+      ],
+      max_actions: 3,
+    })
+
+    assert.strictEqual(acted.outcome, 'partial')
+    if (acted.outcome !== 'idle') {
+      assert.strictEqual(acted.committed_actions.length, 2)
+      assert.deepStrictEqual(
+        acted.committed_actions.map(action => action.category),
+        [
+          'upgrade',
+          'research',
+        ],
+      )
+    }
+    assert.deepStrictEqual(calls, [
+      'upgrade',
+      'research',
+      'recruit',
+      'transport',
+    ])
+  })
+
   it('returns idle with skipped attempts when no category can act', async () => {
     const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
       category,

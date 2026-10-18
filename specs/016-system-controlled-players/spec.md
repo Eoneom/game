@@ -4,7 +4,7 @@
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job rotates scripted actions (explore, base, settle, make-permanent, upgrade, research, recruit, transport) until one succeeds per tick. By default the ring is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the ring flips to **economy-first** for that tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan**, then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (3)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`003`](../003-player-registration-signup/spec.md)), all game commands invoked by tick actions.
 
@@ -28,13 +28,18 @@ Constants (`core/player/constant/system.ts`):
 | Piece | Role |
 | --- | --- |
 | `SYSTEM_PLAYER_TICK_QUEUE` | pg-boss stately queue |
-| `tickSystemPlayers` | Lists `repository.player.listSystemControlled()`, runs `actForSystemPlayer` per player, schedules next tick |
-| `categoriesForTick` | Rotates expansion vs economy blocks by `tick_index`; optional `economy_first` swaps block order |
-| `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first rotation (`storage.ts`) |
+| `tickSystemPlayers` | Lists system players, `collectSystemEmpireSnapshot`, `planSystemPlayerActions`, `executeSystemPlayerTick`, schedules next tick |
+| `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, explore deferral, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
+| `planSystemPlayerActions` | Ordered intents from snapshot + `tick_index` (`core/player/system/planner.ts`; `categoriesForTick`, research/upgrade swap, explore defer) |
+| `executeSystemPlayerTick` | Walks plan until `SYSTEM_MAX_ACTIONS_PER_TICK` successes or intents exhausted (`policy.ts`) |
+| `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first plan (`storage.ts`) |
 | `expansion-cell` | Scout / outpost / city-site cell scores for explore, base, settle, make-permanent |
 | `systemTickActions` | Per-category handlers in `app/command/player/system/actions.ts` |
-| `actForSystemPlayer` | First action returning a payload wins the tick |
 | `storage.ts` | Warehouse pressure threshold and upgrade / transport helpers |
+
+| Constant | Value |
+| --- | --- |
+| `SYSTEM_MAX_ACTIONS_PER_TICK` | `3` |
 
 Interval: `SYSTEM_PLAYER_TICK_INTERVAL_MS` (`app/scheduling/intervals`).
 
@@ -60,7 +65,7 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Recruit** (`tryRecruit`): troop choice uses `sortTroopsForSystemRecruit` (`system/troops.ts`) instead of roster `troop_order`. Per-**city** caps (garrison in that city’s cell only; outpost troops do not count): `SYSTEM_MAX_SCOUT_TROOPS = 2`, `SYSTEM_MAX_FOUNDER_TROOPS = 1`. **Carrier** troops are preferred for general economy; scout and founder are deprioritized when that city is at cap. **Cultivators** (harvester) and **salvagers** (reclaimer) are recruited only when the empire has at least one **permanent** outpost on a cell with the matching gather coefficient (mushroom / plastic) **and** a stocked permanent outpost still lacks that role; otherwise those codes are skipped and deprioritized (expansion-first). When the need flag is set, recruiting that role is boosted empire-wide for the next city recruit attempt. Each successful recruit tick may start **one recruitment job per city** (skipped when that city already has pending recruitment) with `count` set by `systemRecruitBatchCount` — as many units as resources afford, capped by scout/founder headroom for limited roles; unlimited roles batch until stock runs out. Cities are processed in list order until every city has been considered; observability payload includes `recruits[]` and `total_count`.
 
-**Production-ready research priority** (`tickSystemPlayers`): when `isEmpireProductionReadyForResearch(player_id)` is true for the first city — projected building levels satisfy `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure (`isCityWarehouseUnderPressure`) — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s category list so research is attempted before building upgrades when research would otherwise run later on the same tick.
+**Production-ready research priority** (snapshot flag `production_ready_for_research`): when the first city satisfies `isCoreProductionSatisfied`, `production_energy_ratio >= 1`, and warehouses are not under pressure — `prioritizeResearchBeforeUpgrade` swaps `upgrade` and `research` in that tick’s plan.
 
 ## Expansion focus
 

@@ -18,6 +18,7 @@ export const TICK_CATEGORY_LABEL = {
   settle: 'Fondation de colonie',
   'make-permanent': 'Avant-poste rendu permanent',
   transport: 'Transport de ressources',
+  attack: 'Attaque',
 } as const
 
 export type ObservabilityTickCategory = keyof typeof TICK_CATEGORY_LABEL

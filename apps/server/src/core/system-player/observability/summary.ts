@@ -10,6 +10,7 @@ const CATEGORY_LABEL: Record<SystemTickCategory, string> = {
   settle: 'Fondation de colonie',
   'make-permanent': 'Avant-poste rendu permanent',
   transport: 'Transport de ressources',
+  attack: 'Attaque',
 }
 
 function formatCoordinates(payload: Record<string, unknown>): string | null {
@@ -21,16 +22,10 @@ function formatCoordinates(payload: Record<string, unknown>): string | null {
   return null
 }
 
-export function formatSystemPlayerActionSummary({
-  player_name,
-  category,
-  payload,
-}: {
-  player_name: string
-  category: SystemTickCategory
-  payload: Record<string, unknown>
-}): string {
-  const head = `Joueur système ${player_name} — ${CATEGORY_LABEL[category]}`
+function formatSingleActionDetails(
+  category: SystemTickCategory,
+  payload: Record<string, unknown>,
+): string {
   const details: string[] = []
 
   if (typeof payload.building_code === 'string') {
@@ -59,11 +54,45 @@ export function formatSystemPlayerActionSummary({
     details.push(coordinates)
   }
 
+  const head = CATEGORY_LABEL[category]
   if (details.length === 0) {
     return head
   }
-
   return `${head} (${details.join(', ')})`
+}
+
+export function formatSystemPlayerActionSummary({
+  player_name,
+  category,
+  payload,
+}: {
+  player_name: string
+  category: SystemTickCategory
+  payload: Record<string, unknown>
+}): string {
+  const head = `Joueur système ${player_name} — ${formatSingleActionDetails(category, payload)}`
+  return head
+}
+
+export function formatSystemPlayerMultiActionSummary({
+  player_name,
+  committed_actions,
+}: {
+  player_name: string
+  committed_actions: { category: SystemTickCategory, payload: Record<string, unknown> }[]
+}): string {
+  if (committed_actions.length === 1) {
+    return formatSystemPlayerActionSummary({
+      player_name,
+      category: committed_actions[0].category,
+      payload: committed_actions[0].payload,
+    })
+  }
+
+  const lines = committed_actions.map(
+    action => `• ${formatSingleActionDetails(action.category, action.payload)}`,
+  )
+  return `Joueur système ${player_name} — ${committed_actions.length} actions :\n${lines.join('\n')}`
 }
 
 export function formatSystemPlayerIdleSummary({

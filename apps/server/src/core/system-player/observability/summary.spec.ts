@@ -2,6 +2,7 @@ import assert from 'assert'
 import {
   formatSystemPlayerActionSummary,
   formatSystemPlayerIdleSummary,
+  formatSystemPlayerMultiActionSummary,
 } from './summary'
 
 describe('formatSystemPlayerActionSummary', () => {
@@ -19,6 +20,28 @@ describe('formatSystemPlayerActionSummary', () => {
     assert.match(summary, /Amélioration de bâtiment/)
     assert.match(summary, /mushroom_farm/)
     assert.match(summary, /colonie Core I/)
+  })
+})
+
+describe('formatSystemPlayerMultiActionSummary', () => {
+  it('lists each committed action on separate lines', () => {
+    const summary = formatSystemPlayerMultiActionSummary({
+      player_name: 'Alpha',
+      committed_actions: [
+        {
+          category: 'upgrade',
+          payload: { building_code: 'mushroom_farm' },
+        },
+        {
+          category: 'research',
+          payload: { technology_code: 'architecture' },
+        },
+      ],
+    })
+
+    assert.match(summary, /2 actions/)
+    assert.match(summary, /mushroom_farm/)
+    assert.match(summary, /architecture/)
   })
 })
 

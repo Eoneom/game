@@ -11,6 +11,46 @@ describe('emitSystemPlayerTickObservability', () => {
     vi.restoreAllMocks()
   })
 
+  it('emits committed_actions on multi-action partial ticks', () => {
+    const emit = vi.fn()
+    vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)
+
+    emitSystemPlayerTickObservability({
+      player_id: 'p1',
+      player_name: 'Alpha',
+      tick_index: 2,
+      committed_at: 1_700_000_000_000,
+      outcome: 'partial',
+      attempts: [
+        {
+          category: 'upgrade',
+          result: 'success',
+        },
+        {
+          category: 'research',
+          result: 'success',
+        },
+      ],
+      committed_actions: [
+        {
+          category: 'upgrade',
+          payload: { building_code: 'mushroom_farm' },
+        },
+        {
+          category: 'research',
+          payload: { technology_code: 'architecture' },
+        },
+      ],
+      category: 'upgrade',
+      payload: { building_code: 'mushroom_farm' },
+    })
+
+    assert.strictEqual(emit.mock.calls[0][1].outcome, 'partial')
+    assert.strictEqual(emit.mock.calls[0][1].committed_actions?.length, 2)
+    assert.match(emit.mock.calls[0][1].summary, /2 actions/)
+    assert.ok(Array.isArray(emit.mock.calls[0][1].payload.committed_actions))
+  })
+
   it('emits a typed bus event with summary, attempts, and payload on success', () => {
     const emit = vi.fn()
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)

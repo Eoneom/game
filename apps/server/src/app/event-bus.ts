@@ -57,7 +57,12 @@ export type OutpostResourcesGatheredPayload = {
   player_id: string
 }
 
-export type SystemPlayerTickObservabilityOutcome = 'success' | 'idle' | 'error'
+export type SystemPlayerTickObservabilityOutcome = 'success' | 'partial' | 'idle' | 'error'
+
+export type SystemPlayerTickCommittedActionPayload = {
+  category: SystemTickCategory
+  payload: Record<string, unknown>
+}
 
 export type SystemPlayerActionCommittedPayload = {
   committed_at: number
@@ -69,6 +74,7 @@ export type SystemPlayerActionCommittedPayload = {
   summary: string
   category?: SystemTickCategory
   payload: Record<string, unknown>
+  committed_actions?: SystemPlayerTickCommittedActionPayload[]
 }
 
 export type SystemPlayerStatsUpdatedPayload = import('@eoneom/api-client/src/endpoints/admin/system-player-stats').AdminSystemPlayerStatsSnapshot

@@ -21,12 +21,14 @@ import type { ObservabilityTickCategory } from './labels'
 
 const OUTCOME_LABEL: Record<SystemPlayerTickObservabilityOutcome, string> = {
   success: 'Succès',
+  partial: 'Partiel',
   idle: 'Inactif',
   error: 'Erreur',
 }
 
 const OUTCOME_CLASS: Record<SystemPlayerTickObservabilityOutcome, string> = {
   success: 'border-emerald-600/50 text-emerald-400',
+  partial: 'border-emerald-600/40 text-emerald-300',
   idle: 'border-amber/40 text-amber-dim',
   error: 'border-red-600/50 text-red-400',
 }
@@ -151,7 +153,9 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                         >
                           {OUTCOME_LABEL[event.outcome]}
                         </span>
-                        <p className="m-0 text-sm text-amber">{formatObservabilityEventSummary(event)}</p>
+                        <p className="m-0 whitespace-pre-line text-sm text-amber">
+                          {formatObservabilityEventSummary(event)}
+                        </p>
                       </div>
                       <time className="shrink-0 text-xs text-amber-dim" dateTime={String(event.committed_at)}>
                         tick {event.tick_index} · {formatDate(event.committed_at)}
@@ -180,6 +184,7 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                           outcome: event.outcome,
                           attempts: event.attempts,
                           category: event.category,
+                          committed_actions: event.committed_actions,
                           payload: event.payload,
                         }, null, 2)}
                       </pre>

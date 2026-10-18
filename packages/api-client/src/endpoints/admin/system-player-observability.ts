@@ -18,7 +18,12 @@ export type SystemPlayerTickAttempt = {
   result: 'skipped' | 'success'
 }
 
-export type SystemPlayerTickObservabilityOutcome = 'success' | 'idle' | 'error'
+export type SystemPlayerTickObservabilityOutcome = 'success' | 'partial' | 'idle' | 'error'
+
+export type SystemPlayerTickCommittedAction = {
+  category: string
+  payload: Record<string, unknown>
+}
 
 /** WebSocket payload for `system-player:action-committed` (admin fan-out). */
 export type SystemPlayerTickObservabilityMessage = {
@@ -32,4 +37,5 @@ export type SystemPlayerTickObservabilityMessage = {
   category?: string
   summary: string
   payload: Record<string, unknown>
+  committed_actions?: SystemPlayerTickCommittedAction[]
 }

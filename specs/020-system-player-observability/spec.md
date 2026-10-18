@@ -22,15 +22,16 @@ Allowlisted **human** commanders (`ADMIN_PLAYER_NAMES` env) open a **dedicated a
 
 ## Event emission
 
-After each `actForSystemPlayer` run (or on tick error), `tickSystemPlayers` emits `AppEvent.SystemPlayerActionCommitted` on `AppEventBus`. After each **success** outcome, also emits `AppEvent.SystemPlayerStatsUpdated` with a fresh snapshot for that player. No persistence.
+After each `executeSystemPlayerTick` run (or on tick error), `tickSystemPlayers` emits `AppEvent.SystemPlayerActionCommitted` on `AppEventBus`. After each **success** or **partial** outcome, also emits `AppEvent.SystemPlayerStatsUpdated` with a fresh snapshot for that player. No persistence.
 
 | `outcome` | When | `attempts` | `payload` / `summary` |
 | --- | --- | --- | --- |
-| `success` | First category returns a payload (post-commit) | Skipped categories then one `success`; rotation from `categoriesForTick` | Full action `payload`; French summary via existing formatter |
-| `idle` | All categories skipped | Every category `skipped` | Empty object; summary lists tried categories in order |
+| `success` | Exactly one action committed | Skipped intents then one `success` | First action payload; `committed_actions` length 1 |
+| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`) | Mixed `skipped` / `success` in plan order | `payload` includes `committed_actions[]`; multi-line French summary |
+| `idle` | No actions committed | Every tried intent `skipped` | Empty object; summary lists tried categories in order |
 | `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Safe `error_message` / `error_code` (no stack) |
 
-`actForSystemPlayer` returns the attempt trace without changing game logic.
+Bus payload includes top-level `committed_actions: { category, payload }[]` when any action committed.
 
 ## WebSocket message (tick feed)
 
@@ -41,18 +42,26 @@ After each `actForSystemPlayer` run (or on tick error), `tickSystemPlayers` emit
   "player_id": "…",
   "player_name": "Alpha",
   "tick_index": 4,
-  "outcome": "success",
+  "outcome": "partial",
   "attempts": [
-    { "category": "research", "result": "skipped" },
-    { "category": "recruit", "result": "success" }
+    { "category": "upgrade", "result": "success" },
+    { "category": "research", "result": "success" },
+    { "category": "recruit", "result": "skipped" }
   ],
-  "category": "recruit",
-  "summary": "Joueur système Alpha — Recrutement de troupes (scout)",
-  "payload": { }
+  "category": "upgrade",
+  "summary": "Joueur système Alpha — 2 actions :\n• …",
+  "committed_actions": [
+    { "category": "upgrade", "payload": { } },
+    { "category": "research", "payload": { } }
+  ],
+  "payload": {
+    "committed_actions": [ … ],
+    …
+  }
 }
 ```
 
-Idle ticks omit `category` and use an empty `payload`. Error ticks set `outcome` to `error` and put error fields in `payload`.
+Idle ticks omit `category` / `committed_actions` and use an empty `payload`. Error ticks set `outcome` to `error` and put error fields in `payload`.
 
 ## Stats snapshot
 

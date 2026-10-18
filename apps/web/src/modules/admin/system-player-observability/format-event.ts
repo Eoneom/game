@@ -91,9 +91,32 @@ function formatErrorSummary(event: SystemPlayerObservabilityEvent): string {
   return `Joueur système ${event.player_name} — Erreur : ${message}`
 }
 
+function formatPartialSummary(event: SystemPlayerObservabilityEvent): string {
+  if (event.summary.includes('\n')) {
+    return event.summary
+  }
+  const actions = event.committed_actions ?? []
+  if (actions.length === 0) {
+    return formatSuccessSummary(event)
+  }
+  const lines = actions.map(action => {
+    const fake_event: SystemPlayerObservabilityEvent = {
+      ...event,
+      outcome: 'success',
+      category: action.category,
+      payload: action.payload,
+    }
+    return `• ${formatSuccessSummary(fake_event).replace(/^Joueur système [^—]+ — /, '')}`
+  })
+  return `Joueur système ${event.player_name} — ${actions.length} actions :\n${lines.join('\n')}`
+}
+
 export function formatObservabilityEventSummary(event: SystemPlayerObservabilityEvent): string {
   if (event.outcome === 'success') {
     return formatSuccessSummary(event)
+  }
+  if (event.outcome === 'partial') {
+    return formatPartialSummary(event)
   }
   if (event.outcome === 'idle') {
     return formatIdleSummary(event)
