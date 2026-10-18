@@ -33,6 +33,7 @@ import {
   shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
   systemExpansionBaseCellScore,
+  systemExpansionOutpostResourceScore,
   systemExpansionScoutScore,
 } from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
