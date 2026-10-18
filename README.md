@@ -152,6 +152,11 @@ Additional scripts (coverage, eject) are defined only on `apps/web/package.json`
 | `yarn dev`          | Build api-client + server, start API and web   |
 | `yarn build`        | Production build: api-client, server, and web  |
 | `yarn client:build` | Build `@eoneom/api-client` (shared package)    |
+| `yarn knip`         | Optional unused-export scan (`knip.json`)      |
+
+### Continuous integration
+
+GitHub Actions workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on pull requests and pushes to `main`: `yarn install`, `yarn client:build`, `yarn server:test`, `yarn web:test` (`test:ci`), and `yarn build`.
 
 Typical full-stack local setup: Postgres running and migrated, then `yarn dev` (or `yarn server:start` and `yarn web:start` in separate terminals).
 

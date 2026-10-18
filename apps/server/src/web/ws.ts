@@ -240,8 +240,8 @@ export function setupWebSocketServer(
           tick_index: payload.tick_index,
           outcome: payload.outcome,
           attempts: payload.attempts,
-          category: payload.category,
           summary: payload.summary,
+          committed_actions: payload.committed_actions,
           payload: payload.payload,
         }))
       } else {

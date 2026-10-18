@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
-import { Navigate } from '@tanstack/react-router'
 
+import { AdminRouteGate } from '#admin/session'
 import { formatDate } from '#helpers/transform'
 import {
   useLiveSystemPlayerEvents,
@@ -34,19 +34,28 @@ const OUTCOME_CLASS: Record<SystemPlayerTickObservabilityOutcome, string> = {
 }
 
 export const SystemPlayerObservabilityPage: React.FC = () => {
-  const { data: session, isPending } = useObservabilitySession()
-  useRegisterObservabilityWsWhenAdmin(session?.is_admin)
+  return (
+    <AdminRouteGate loading={<p className="text-amber-dim">Chargement de l&apos;observabilité…</p>}>
+      {session => <SystemPlayerObservabilityContent session={session} />}
+    </AdminRouteGate>
+  )
+}
+
+const SystemPlayerObservabilityContent: React.FC<{
+  session: NonNullable<ReturnType<typeof useObservabilitySession>['data']>
+}> = ({ session }) => {
+  useRegisterObservabilityWsWhenAdmin(session.is_admin)
   const events = useLiveSystemPlayerEvents()
   const { filter, setFilter } = useSystemPlayerNameFilter()
   const {
     snapshots,
     isPending: stats_pending,
     refetch: refetch_stats,
-  } = useSystemPlayerStats(session?.is_admin)
+  } = useSystemPlayerStats(session.is_admin)
   const {
     mutate: force_tick,
     isPending: force_tick_pending,
-  } = useForceSystemPlayerTick(session?.is_admin)
+  } = useForceSystemPlayerTick(session.is_admin)
 
   const filtered_events = useMemo(() => {
     if (!filter) {
@@ -54,16 +63,6 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
     }
     return events.filter(event => event.player_name === filter)
   }, [ events, filter ])
-
-  if (isPending) {
-    return (
-      <p className="text-amber-dim">Chargement de l&apos;observabilité…</p>
-    )
-  }
-
-  if (!session?.is_admin) {
-    return <Navigate to="/inbox/report" />
-  }
 
   const system_players = session.system_players ?? []
 
@@ -183,7 +182,6 @@ export const SystemPlayerObservabilityPage: React.FC = () => {
                         {JSON.stringify({
                           outcome: event.outcome,
                           attempts: event.attempts,
-                          category: event.category,
                           committed_actions: event.committed_actions,
                           payload: event.payload,
                         }, null, 2)}

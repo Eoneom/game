@@ -59,7 +59,15 @@ describe('WorldGetCellsQuery', () => {
             ? FactionCode.THE_CONFEDERATION
             : FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
           system_controlled: false
-        }))
+        })),
+        listByIds: vi.fn().mockImplementation(async (ids: string[]) => ids.map(requested_id => PlayerEntity.create({
+          id: requested_id,
+          name: 'player',
+          faction_code: requested_id === player_id
+            ? FactionCode.THE_CONFEDERATION
+            : FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+          system_controlled: false
+        }))),
       } as unknown as Repository['player'],
       city: {
         listInBounds: vi.fn().mockResolvedValue([

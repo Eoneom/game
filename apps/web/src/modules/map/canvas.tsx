@@ -1,3 +1,4 @@
+/** Konva pan model: world-anchored cells; the stage group offset resets each drag move (see `geometry.panCenterByPixels`). Pixi is not used on this map. */
 import { MapCells } from '#map/cells'
 import {
   centerAfterZoom,

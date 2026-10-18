@@ -23,8 +23,8 @@ export function registerSystemPlayerObservabilityWsListener(): void {
       tick_index: message.tick_index,
       outcome: message.outcome ?? 'success',
       attempts: message.attempts ?? [],
-      category: message.category,
       summary: message.summary,
+      committed_actions: message.committed_actions,
       payload: message.payload,
     })
   })

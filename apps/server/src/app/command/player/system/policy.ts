@@ -46,10 +46,6 @@ export type SystemPlayerTickResult =
       outcome: 'success' | 'partial'
       committed_actions: SystemPlayerTickCommittedAction[]
       attempts: SystemPlayerTickAttempt[]
-      /** @deprecated First committed action — use committed_actions */
-      category: SystemTickCategory
-      /** @deprecated First committed payload — use committed_actions */
-      payload: SystemTickActionPayload
     }
   | {
       outcome: 'idle'
@@ -116,13 +112,10 @@ export async function executeSystemPlayerTick({
   }
 
   const outcome = committed_actions.length === 1 ? 'success' : 'partial'
-  const first = committed_actions[0]
   return {
     outcome,
     committed_actions,
     attempts,
-    category: first.category,
-    payload: first.payload,
   }
 }
 

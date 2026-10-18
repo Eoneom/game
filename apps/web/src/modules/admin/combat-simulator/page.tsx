@@ -1,18 +1,20 @@
 import React, { useMemo, useState } from 'react'
-import { Navigate } from '@tanstack/react-router'
 
 import {
   AdminCombatSimulatorDataResponse,
   CombatStrategy,
+  FactionCode,
   TroopCode,
 } from '@eoneom/api-client'
-import { useObservabilitySession } from '#admin/system-player-observability/hooks'
+import { AdminRouteGate } from '#admin/session'
 import { CombatStrategyLabels } from '#movement/translations'
 import { TroopTranslations } from '#troop/translations'
 import {
   COMBAT_STRATEGY_OPTIONS,
+  CombatSimulatorFaction,
   CombatSimulatorStackRow,
-  PVP_COMBAT_TROOP_CODES,
+  PVP_COMBAT_TROOP_CODES_BY_FACTION,
+  COMBAT_SIMULATOR_FACTION_OPTIONS,
   defaultCombatSimulatorStack,
   useCombatSimulator,
 } from './hooks'
@@ -25,11 +27,21 @@ const WINNER_LABEL: Record<NonNullable<AdminCombatSimulatorDataResponse['winner'
 
 type StackEditorProps = {
   title: string
+  faction: CombatSimulatorFaction
+  onFactionChange: (faction: CombatSimulatorFaction) => void
   stacks: CombatSimulatorStackRow[]
   onChange: (stacks: CombatSimulatorStackRow[]) => void
 }
 
-const StackEditor: React.FC<StackEditorProps> = ({ title, stacks, onChange }) => {
+const StackEditor: React.FC<StackEditorProps> = ({
+  title,
+  faction,
+  onFactionChange,
+  stacks,
+  onChange,
+}) => {
+  const troop_codes = PVP_COMBAT_TROOP_CODES_BY_FACTION[faction]
+
   const updateRow = (index: number, patch: Partial<CombatSimulatorStackRow>) => {
     onChange(stacks.map((row, i) => (i === index ? { ...row, ...patch } : row)))
   }
@@ -39,12 +51,26 @@ const StackEditor: React.FC<StackEditorProps> = ({ title, stacks, onChange }) =>
   }
 
   const addRow = () => {
-    onChange([ ...stacks, defaultCombatSimulatorStack() ])
+    onChange([ ...stacks, defaultCombatSimulatorStack(faction) ])
   }
 
   return (
     <section className="admin-surface-panel flex flex-col gap-2 rounded-sm p-3">
       <h2 className="m-0 text-sm font-normal text-amber">{title}</h2>
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="field-label text-label">Faction</span>
+        <select
+          className="field-input max-w-xs py-1 text-sm"
+          value={faction}
+          onChange={e => onFactionChange(e.target.value as CombatSimulatorFaction)}
+        >
+          {COMBAT_SIMULATOR_FACTION_OPTIONS.map(option => (
+            <option key={option.code} value={option.code}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <div className="space-y-2">
         {stacks.map((row, index) => (
           <div key={index} className="flex flex-wrap items-center gap-2">
@@ -53,7 +79,7 @@ const StackEditor: React.FC<StackEditorProps> = ({ title, stacks, onChange }) =>
               value={row.troop_code}
               onChange={e => updateRow(index, { troop_code: e.target.value as TroopCode })}
             >
-              {PVP_COMBAT_TROOP_CODES.map(code => (
+              {troop_codes.map(code => (
                 <option key={code} value={code}>
                   {TroopTranslations[code].name}
                 </option>
@@ -100,12 +126,15 @@ const formatLosses = (
     .join(', ')
 }
 
-export const CombatSimulatorPage: React.FC = () => {
-  const { data: session, isPending } = useObservabilitySession()
-  const { mutate: runSimulation, isPending: sim_pending, data: result } = useCombatSimulator(
-    session?.is_admin,
-  )
+const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) => {
+  const { mutate: runSimulation, isPending: sim_pending, data: result } = useCombatSimulator(is_admin)
 
+  const [ attacker_faction, setAttackerFaction ] = useState<CombatSimulatorFaction>(
+    FactionCode.THE_CONFEDERATION,
+  )
+  const [ defender_faction, setDefenderFaction ] = useState<CombatSimulatorFaction>(
+    FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+  )
   const [ attacker_stacks, setAttackerStacks ] = useState<CombatSimulatorStackRow[]>([
     { troop_code: TroopCode.LEGIONNAIRE, count: 20 },
   ])
@@ -125,14 +154,6 @@ export const CombatSimulatorPage: React.FC = () => {
     [ attacker_stacks.length, defender_stacks.length ],
   )
 
-  if (isPending) {
-    return <p className="text-amber-dim">Chargement…</p>
-  }
-
-  if (!session?.is_admin) {
-    return <Navigate to="/inbox/report" />
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-auto">
       <header className="admin-surface-toolbar shrink-0 space-y-1">
@@ -145,11 +166,21 @@ export const CombatSimulatorPage: React.FC = () => {
       <div className="grid shrink-0 gap-3 lg:grid-cols-2">
         <StackEditor
           title="Attaquant"
+          faction={attacker_faction}
+          onFactionChange={next => {
+            setAttackerFaction(next)
+            setAttackerStacks([ defaultCombatSimulatorStack(next) ])
+          }}
           stacks={attacker_stacks}
           onChange={setAttackerStacks}
         />
         <StackEditor
           title="Défenseur"
+          faction={defender_faction}
+          onFactionChange={next => {
+            setDefenderFaction(next)
+            setDefenderStacks([ defaultCombatSimulatorStack(next) ])
+          }}
           stacks={defender_stacks}
           onChange={setDefenderStacks}
         />
@@ -253,5 +284,13 @@ export const CombatSimulatorPage: React.FC = () => {
         </div>
       ) : null}
     </div>
+  )
+}
+
+export const CombatSimulatorPage: React.FC = () => {
+  return (
+    <AdminRouteGate>
+      {session => <CombatSimulatorContent is_admin={session.is_admin} />}
+    </AdminRouteGate>
   )
 }

@@ -19,12 +19,13 @@ function formatCoordinatesPair(payload: Record<string, unknown>): string | null 
 }
 
 function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
-  const category = event.category as ObservabilityTickCategory | undefined
+  const first_action = event.committed_actions?.[0]
+  const category = first_action?.category as ObservabilityTickCategory | undefined
   if (!category) {
     return event.summary
   }
 
-  const payload = event.payload ?? {}
+  const payload = first_action.payload ?? {}
   const head = `Joueur système ${event.player_name} — ${TICK_CATEGORY_LABEL[category]}`
   const details: string[] = []
 
@@ -110,8 +111,7 @@ function formatPartialSummary(event: SystemPlayerObservabilityEvent): string {
     const fake_event: SystemPlayerObservabilityEvent = {
       ...event,
       outcome: 'success',
-      category: action.category,
-      payload: action.payload,
+      committed_actions: [ action ],
     }
     return `• ${formatSuccessSummary(fake_event).replace(/^Joueur système [^—]+ — /, '')}`
   })

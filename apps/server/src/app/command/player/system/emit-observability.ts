@@ -1,10 +1,8 @@
 import { Factory } from '#adapter/factory'
 import { AppEvent } from '#core/events'
-import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import type { SystemPlayerTickCommittedAction } from '#command/player/system/policy'
 import {
-  formatSystemPlayerActionSummary,
   formatSystemPlayerErrorSummary,
   formatSystemPlayerIdleSummary,
   formatSystemPlayerMultiActionSummary,
@@ -40,8 +38,6 @@ export function emitSystemPlayerTickObservability({
   outcome,
   attempts,
   committed_actions,
-  category,
-  payload,
   error,
 }: {
   player_id: string
@@ -51,13 +47,11 @@ export function emitSystemPlayerTickObservability({
   outcome: SystemPlayerTickObservabilityOutcome
   attempts: SystemPlayerTickAttempt[]
   committed_actions?: SystemPlayerTickCommittedAction[]
-  category?: SystemTickCategory
-  payload?: Record<string, unknown>
   error?: unknown
 }): void {
   let summary: string
-  let event_payload: Record<string, unknown>
   let committed_actions_payload: SystemPlayerTickCommittedAction[] | undefined
+  let error_payload: Record<string, unknown> | undefined
 
   if ((outcome === 'success' || outcome === 'partial') && committed_actions && committed_actions.length > 0) {
     summary = formatSystemPlayerMultiActionSummary({
@@ -65,40 +59,18 @@ export function emitSystemPlayerTickObservability({
       committed_actions,
     })
     committed_actions_payload = committed_actions
-    const first = committed_actions[0]
-    event_payload = {
-      ...first.payload,
-      committed_actions: committed_actions.map(action => ({
-        category: action.category,
-        payload: action.payload,
-      })),
-    }
-  } else if (outcome === 'success' && category && payload) {
-    summary = formatSystemPlayerActionSummary({
-      player_name,
-      category,
-      payload,
-    })
-    event_payload = payload
-    committed_actions_payload = [
-      {
-        category,
-        payload,
-      },
-    ]
   } else if (outcome === 'idle') {
     summary = formatSystemPlayerIdleSummary({
       player_name,
       attempts,
     })
-    event_payload = {}
   } else {
     const safe = error != null ? safeErrorPayload(error) : { message: 'system-player:tick-failed' }
     summary = formatSystemPlayerErrorSummary({
       player_name,
       message: safe.message,
     })
-    event_payload = safe.code
+    error_payload = safe.code
       ? {
           error_code: safe.code,
           error_message: safe.message,
@@ -116,38 +88,7 @@ export function emitSystemPlayerTickObservability({
     outcome,
     attempts,
     summary,
-    category: outcome === 'success' || outcome === 'partial'
-      ? (committed_actions?.[0]?.category ?? category)
-      : undefined,
-    payload: event_payload,
     committed_actions: committed_actions_payload,
-  })
-}
-
-/** @deprecated Use emitSystemPlayerTickObservability */
-export function emitSystemPlayerActionCommitted(args: {
-  player_id: string
-  player_name: string
-  tick_index: number
-  category: SystemTickCategory
-  payload: Record<string, unknown>
-  committed_at: number
-  attempts?: SystemPlayerTickAttempt[]
-}): void {
-  emitSystemPlayerTickObservability({
-    ...args,
-    outcome: 'success',
-    attempts: args.attempts ?? [
-      {
-        category: args.category,
-        result: 'success',
-      },
-    ],
-    committed_actions: [
-      {
-        category: args.category,
-        payload: args.payload,
-      },
-    ],
+    payload: error_payload,
   })
 }

@@ -1,6 +1,10 @@
 export const WORLD_SIZE = 100
+/**
+ * Must match `INITIAL_VIEWPORT_HALF_EXTENT` in `apps/server/src/core/world/constant/size.ts`
+ * (server empire snapshot / AI). Not used for the in-game city map initial zoom.
+ */
 export const INITIAL_VIEWPORT_HALF_EXTENT = 5
-/** Tighter zoom when opening or recentering the city/outpost world map (7×7 visible). */
+/** Tighter zoom when opening or recentering the city/outpost world map (7×7 visible). Server AI still uses half extent 5 per slice 005. */
 export const CITY_MAP_INITIAL_HALF_EXTENT = 3
 export const PREFETCH_MARGIN_CELLS = 3
 /** Server `MAX_VIEWPORT_SIDE` — keep fetch bounds within one request. */

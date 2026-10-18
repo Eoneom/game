@@ -34,8 +34,8 @@ export type SystemPlayerTickObservabilityMessage = {
   tick_index: number
   outcome: SystemPlayerTickObservabilityOutcome
   attempts: SystemPlayerTickAttempt[]
-  category?: string
   summary: string
-  payload: Record<string, unknown>
   committed_actions?: SystemPlayerTickCommittedAction[]
+  /** Present only when `outcome` is `error`. */
+  payload?: Record<string, unknown>
 }

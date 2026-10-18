@@ -72,9 +72,9 @@ export type SystemPlayerActionCommittedPayload = {
   outcome: SystemPlayerTickObservabilityOutcome
   attempts: SystemPlayerTickAttempt[]
   summary: string
-  category?: SystemTickCategory
-  payload: Record<string, unknown>
   committed_actions?: SystemPlayerTickCommittedActionPayload[]
+  /** Present only when `outcome` is `error`. */
+  payload?: Record<string, unknown>
 }
 
 export type SystemPlayerStatsUpdatedPayload = import('@eoneom/api-client/src/endpoints/admin/system-player-stats').AdminSystemPlayerStatsSnapshot

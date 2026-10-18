@@ -46,6 +46,19 @@ export class PostgresPlayerRepository
     return this.buildFromRow(row)
   }
 
+  async listByIds(ids: string[]): Promise<PlayerEntity[]> {
+    if (ids.length === 0) {
+      return []
+    }
+    const rows = await this.db
+      .selectFrom('player')
+      .selectAll()
+      .where('id', 'in', ids)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   async listSystemControlled(): Promise<PlayerEntity[]> {
     const rows = await this.db
       .selectFrom('player')

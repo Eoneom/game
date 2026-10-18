@@ -2,6 +2,7 @@ import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 
+import { useAdminSession } from '#admin/session'
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
 import { useAuth } from '#auth/context'
@@ -18,24 +19,7 @@ import {
 import { registerSystemPlayerObservabilityWsListener } from './ws-listener'
 import { translateError } from '#helpers/error-translations'
 
-export const useObservabilitySession = () => {
-  const { token } = useAuth()
-
-  return useQuery({
-    queryKey: [ 'admin', 'system-player-observability' ],
-    enabled: Boolean(token),
-    queryFn: async () => {
-      if (!token) {
-        throw new Error('token:not-found')
-      }
-      const res = await client.admin.getSystemPlayerObservability(token)
-      if (isError(res)) {
-        throw new Error(res.error_code)
-      }
-      return res.data
-    },
-  })
-}
+export const useObservabilitySession = useAdminSession
 
 export const useLiveSystemPlayerEvents = () => {
   return useSyncExternalStore(

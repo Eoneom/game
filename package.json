@@ -15,9 +15,11 @@
     "client:build": "yarn workspace @eoneom/api-client build",
     "web:start": "yarn workspace @eoneom/web start",
     "web:build": "yarn workspace @eoneom/web build",
-    "web:test": "yarn workspace @eoneom/web test:ci"
+    "web:test": "yarn workspace @eoneom/web test:ci",
+    "knip": "knip"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "knip": "^5.64.0"
   }
 }

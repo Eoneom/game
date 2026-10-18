@@ -498,7 +498,7 @@ Operators with `is_admin` can run **non-persistent** battle simulations from the
 | Body | `attacker_stacks`, `defender_stacks`: arrays of `{ troop_code, count }` (`TroopCode` wire values, `count` non-negative integer). `attacker_strategy`, `defender_strategy`: `CombatStrategy` wire values. |
 | Engine | `CombatService.simulateBattle` loops `advanceRound` from round 1 until `winner !== null` or round 5. |
 | Response | `winner` (`attacker` \| `defender` \| `draw` \| null), `round_summaries` (pools + per-code losses), `final_attacker_stacks`, `final_defender_stacks`. |
-| Web | `/admin/combat-simulator` — French UI « Simulateur de combat », linked from admin nav; gated on `is_admin`. |
+| Web | `/admin/combat-simulator` — French UI « Simulateur de combat », linked from admin nav (separate route from [`020`](../020-system-player-observability/spec.md) observability at `/admin`); gated on `is_admin`. Per side: **faction** picker (Confédération vs Singularité); troop dropdown lists only that faction’s four PvP combat codes; changing faction resets that side’s stacks to one default row. |
 
 ## Brownfield inventory (as of `main`)
 

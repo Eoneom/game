@@ -110,7 +110,7 @@ describe('tickSystemPlayers', () => {
     assert.strictEqual(emit.mock.calls.length, 1)
     assert.strictEqual(emit.mock.calls[0][0].player_id, player.id)
     assert.strictEqual(emit.mock.calls[0][0].outcome, 'success')
-    assert.strictEqual(emit.mock.calls[0][0].category, 'upgrade')
+    assert.strictEqual(emit.mock.calls[0][0].committed_actions?.[0]?.category, 'upgrade')
     assert.strictEqual(stats_emit.mock.calls.length, 1)
   })
 

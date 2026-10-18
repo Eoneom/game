@@ -84,9 +84,9 @@ describe('system player tick policy', () => {
     })
 
     assert.strictEqual(acted.outcome, 'success')
-    if (acted.outcome === 'success') {
-      assert.strictEqual(acted.category, 'recruit')
-      assert.deepStrictEqual(acted.payload, { troop_code: 'scout' })
+    if (acted.outcome !== 'idle') {
+      assert.strictEqual(acted.committed_actions[0].category, 'recruit')
+      assert.deepStrictEqual(acted.committed_actions[0].payload, { troop_code: 'scout' })
     }
     assert.deepStrictEqual(acted.attempts, [
       {

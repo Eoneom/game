@@ -144,11 +144,10 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
       ])
     ]
 
-    const faction_by_player_id = new Map<string, FactionCode>()
-    await Promise.all(player_ids.map(async (owner_id) => {
-      const player = await this.repository.player.get(owner_id)
-      faction_by_player_id.set(owner_id, player.faction_code)
-    }))
+    const owners = await this.repository.player.listByIds(player_ids)
+    const faction_by_player_id = new Map(
+      owners.map(player => [ player.id, player.faction_code ]),
+    )
 
     const cities: WorldMapCityMarker[] = cities_in_bounds.map(({ city, coordinates }) => ({
       id: city.id,

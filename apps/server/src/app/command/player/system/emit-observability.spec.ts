@@ -1,8 +1,5 @@
 import assert from 'assert'
-import {
-  emitSystemPlayerActionCommitted,
-  emitSystemPlayerTickObservability,
-} from './emit-observability'
+import { emitSystemPlayerTickObservability } from './emit-observability'
 import { Factory } from '#adapter/factory'
 import { AppEvent } from '#core/events'
 
@@ -41,17 +38,15 @@ describe('emitSystemPlayerTickObservability', () => {
           payload: { technology_code: 'architecture' },
         },
       ],
-      category: 'upgrade',
-      payload: { building_code: 'mushroom_farm' },
     })
 
     assert.strictEqual(emit.mock.calls[0][1].outcome, 'partial')
     assert.strictEqual(emit.mock.calls[0][1].committed_actions?.length, 2)
     assert.match(emit.mock.calls[0][1].summary, /2 actions/)
-    assert.ok(Array.isArray(emit.mock.calls[0][1].payload.committed_actions))
+    assert.strictEqual(emit.mock.calls[0][1].payload, undefined)
   })
 
-  it('emits a typed bus event with summary, attempts, and payload on success', () => {
+  it('emits a typed bus event with summary, attempts, and committed_actions on success', () => {
     const emit = vi.fn()
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)
 
@@ -61,7 +56,6 @@ describe('emitSystemPlayerTickObservability', () => {
       tick_index: 2,
       committed_at: 1_700_000_000_000,
       outcome: 'success',
-      category: 'recruit',
       attempts: [
         {
           category: 'research',
@@ -72,10 +66,15 @@ describe('emitSystemPlayerTickObservability', () => {
           result: 'success',
         },
       ],
-      payload: {
-        troop_code: 'scout',
-        city_name: 'Core I',
-      },
+      committed_actions: [
+        {
+          category: 'recruit',
+          payload: {
+            troop_code: 'scout',
+            city_name: 'Core I',
+          },
+        },
+      ],
     })
 
     assert.strictEqual(emit.mock.calls.length, 1)
@@ -93,10 +92,16 @@ describe('emitSystemPlayerTickObservability', () => {
         result: 'success',
       },
     ])
-    assert.deepStrictEqual(emit.mock.calls[0][1].payload, {
-      troop_code: 'scout',
-      city_name: 'Core I',
-    })
+    assert.deepStrictEqual(emit.mock.calls[0][1].committed_actions, [
+      {
+        category: 'recruit',
+        payload: {
+          troop_code: 'scout',
+          city_name: 'Core I',
+        },
+      },
+    ])
+    assert.strictEqual(emit.mock.calls[0][1].payload, undefined)
   })
 
   it('emits idle outcome with attempt trace and concise summary', () => {
@@ -119,7 +124,8 @@ describe('emitSystemPlayerTickObservability', () => {
 
     assert.strictEqual(emit.mock.calls[0][1].outcome, 'idle')
     assert.match(emit.mock.calls[0][1].summary, /Aucune action réussie/)
-    assert.deepStrictEqual(emit.mock.calls[0][1].payload, {})
+    assert.strictEqual(emit.mock.calls[0][1].payload, undefined)
+    assert.strictEqual(emit.mock.calls[0][1].committed_actions, undefined)
   })
 
   it('emits safe error payload without stack', () => {
@@ -142,24 +148,5 @@ describe('emitSystemPlayerTickObservability', () => {
       error_code: 'city:not-enough-resources',
       error_message: 'city:not-enough-resources',
     })
-  })
-})
-
-describe('emitSystemPlayerActionCommitted', () => {
-  it('delegates to tick observability with success outcome', () => {
-    const emit = vi.fn()
-    vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)
-
-    emitSystemPlayerActionCommitted({
-      player_id: 'p1',
-      player_name: 'Alpha',
-      tick_index: 2,
-      category: 'recruit',
-      payload: { troop_code: 'scout' },
-      committed_at: 1_700_000_000_000,
-    })
-
-    assert.strictEqual(emit.mock.calls[0][1].outcome, 'success')
-    vi.restoreAllMocks()
   })
 })

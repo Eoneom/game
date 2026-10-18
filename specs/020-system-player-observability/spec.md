@@ -26,12 +26,12 @@ After each `executeSystemPlayerTick` run (or on tick error), `tickSystemPlayers`
 
 | `outcome` | When | `attempts` | `payload` / `summary` |
 | --- | --- | --- | --- |
-| `success` | Exactly one action committed | Skipped intents then one `success` | First action payload; `committed_actions` length 1 |
-| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`, **10**) | Mixed `skipped` / `success` in plan order | `payload` includes `committed_actions[]`; multi-line French summary |
-| `idle` | No actions committed | Every tried intent `skipped` | Empty object; summary lists tried categories in order |
-| `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Safe `error_message` / `error_code` (no stack) |
+| `success` | Exactly one action committed | Skipped intents then one `success` | `committed_actions` length 1 |
+| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`, **10**) | Mixed `skipped` / `success` in plan order | `committed_actions[]`; multi-line French summary |
+| `idle` | No actions committed | Every tried intent `skipped` | No `committed_actions`; summary lists tried categories in order |
+| `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Top-level `payload` with safe `error_message` / `error_code` (no stack) |
 
-Bus payload includes top-level `committed_actions: { category, payload }[]` when any action committed.
+Bus payload includes top-level `committed_actions: { category, payload }[]` when any action committed. Legacy duplicate top-level `category` and mirrored action `payload` are **not** emitted (clients use `committed_actions` only).
 
 **Tick category labels** (French summaries / attempt chains): `apps/web/src/modules/admin/system-player-observability/labels.ts` — `upgrade`, `research`, `recruit`, `explore`, `base`, `settle`, `make-permanent`, `transport`, `deploy-outpost` (« Déploiement vers avant-poste »), `attack`. A single tick may list the same category multiple times when the planner prepends repeated intents (e.g. several `transport` or `make-permanent` actions).
 
@@ -50,20 +50,17 @@ Bus payload includes top-level `committed_actions: { category, payload }[]` when
     { "category": "research", "result": "success" },
     { "category": "recruit", "result": "skipped" }
   ],
-  "category": "upgrade",
   "summary": "Joueur système Alpha — 2 actions :\n• …",
   "committed_actions": [
     { "category": "upgrade", "payload": { } },
     { "category": "research", "payload": { } }
-  ],
-  "payload": {
-    "committed_actions": [ … ],
-    …
-  }
+  ]
 }
 ```
 
-Idle ticks omit `category` / `committed_actions` and use an empty `payload`. Error ticks set `outcome` to `error` and put error fields in `payload`.
+Idle ticks omit `committed_actions` and `payload`. Error ticks set `outcome` to `error` and put error fields in `payload`.
+
+**Related admin route**: combat fight simulator (slice [`024`](../024-player-combat-pvp/spec.md#admin-fight-simulator)) at `/admin/combat-simulator` — separate route, same `is_admin` gate.
 
 ## Stats snapshot
 

@@ -296,9 +296,13 @@ describe('setupWebSocketServer', () => {
           result: 'success',
         },
       ],
-      category: 'upgrade',
       summary: 'Joueur système Alpha — test',
-      payload: { building_code: 'mushroom_farm' },
+      committed_actions: [
+        {
+          category: 'upgrade',
+          payload: { building_code: 'mushroom_farm' },
+        },
+      ],
     })
 
     expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
@@ -314,9 +318,13 @@ describe('setupWebSocketServer', () => {
           result: 'success',
         },
       ],
-      category: 'upgrade',
       summary: 'Joueur système Alpha — test',
-      payload: { building_code: 'mushroom_farm' },
+      committed_actions: [
+        {
+          category: 'upgrade',
+          payload: { building_code: 'mushroom_farm' },
+        },
+      ],
     }))
   })
 

@@ -21,8 +21,14 @@ import {
   PanDirection,
   viewportBoundsAround,
 } from '#map/viewport'
+import {
+  NAVIGATION_DEBOUNCE_MS,
+  fetchBoundsForNavigation,
+  planNavigationFetch,
+  planPanEndFetch,
+} from '#map/world-fetch-scheduler'
 
-export const NAVIGATION_DEBOUNCE_MS = 90
+export { NAVIGATION_DEBOUNCE_MS }
 
 export type WorldNavigation = {
   center: Coordinates
@@ -161,20 +167,23 @@ export const useWorld = () => {
       if (!token) return
 
       const half = clampHalfExtent(nextHalf)
-      const bounds = fetchBoundsAround(
+      const bounds = fetchBoundsForNavigation(
         nextCenter,
         half,
         panDirectionRef.current,
       )
-      const detail = pendingDetailRef.current
-      const needsFetch = boundsNeedsFetch(cellCacheRef.current, bounds)
+      const plan = planNavigationFetch({
+        cache: cellCacheRef.current,
+        bounds,
+        pendingDetail: pendingDetailRef.current,
+      })
 
-      if (needsFetch) {
+      if (plan.kind === 'immediate') {
         skipDebounceRef.current = true
         void loadCells({
           center: nextCenter,
           half_extent: half,
-          detail: 'terrain',
+          detail: plan.detail,
         })
         return
       }
@@ -183,7 +192,7 @@ export const useWorld = () => {
         void loadCells({
           center: nextCenter,
           half_extent: half,
-          detail,
+          detail: plan.detail,
         })
       }, NAVIGATION_DEBOUNCE_MS)
 
@@ -265,12 +274,16 @@ export const useWorld = () => {
       setCenter(nextCenter)
 
       if (!token) return
-      const bounds = fetchBoundsAround(nextCenter, half_extent, null)
-      if (boundsNeedsFetch(cellCacheRef.current, bounds)) {
+      const bounds = fetchBoundsForNavigation(nextCenter, half_extent, null)
+      const pan_end = planPanEndFetch({
+        cache: cellCacheRef.current,
+        bounds,
+      })
+      if (pan_end.shouldFetch) {
         void loadCells({
           center: nextCenter,
           half_extent,
-          detail: 'terrain',
+          detail: pan_end.detail,
         })
       }
     },

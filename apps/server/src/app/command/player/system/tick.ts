@@ -54,8 +54,6 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
           outcome: result.outcome,
           attempts: result.attempts,
           committed_actions: result.committed_actions,
-          category: result.category,
-          payload: result.payload,
         })
         const stats = await collectSystemPlayerStatsSnapshot({
           player_id: player.id,
