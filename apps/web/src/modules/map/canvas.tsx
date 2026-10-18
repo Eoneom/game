@@ -23,6 +23,7 @@ export interface MapNavigationProps {
   center: Coordinates
   half_extent: number
   homeCenter?: Coordinates | null
+  onPan: (center: Coordinates) => void
   onPanEnd: (center: Coordinates) => void
   onNavigate: (params: { center: Coordinates; half_extent: number }) => void
   onRecenter?: () => void
@@ -56,6 +57,7 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
     center,
     half_extent,
     homeCenter,
+    onPan,
     onPanEnd,
     onNavigate,
     onRecenter,
@@ -213,6 +215,26 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   const canZoomIn = half_extent > MAP_MIN_HALF_EXTENT
   const canZoomOut = half_extent < MAP_MAX_HALF_EXTENT
 
+  const applyDragDelta = (node: Konva.Group): Coordinates | null => {
+    const dx = node.x() - position.x
+    const dy = node.y() - position.y
+    node.position({
+      x: position.x,
+      y: position.y,
+    })
+    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
+      return null
+    }
+    return panCenterByPixels(
+      center,
+      {
+        dx,
+        dy,
+      },
+      scale,
+    )
+  }
+
   return (
     <div className="map-root">
       <div className="map-toolbar">
@@ -281,31 +303,18 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 scaleY={scale}
                 draggable
                 onDragStart={() => setIsDragging(true)}
+                onDragMove={e => {
+                  const nextCenter = applyDragDelta(e.target as Konva.Group)
+                  if (nextCenter) {
+                    onPan(nextCenter)
+                  }
+                }}
                 onDragEnd={e => {
                   setIsDragging(false)
-                  const node = e.target
-                  const dx = node.x() - position.x
-                  const dy = node.y() - position.y
-                  if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
-                    node.position({
-                      x: position.x,
-                      y: position.y,
-                    })
-                    return
+                  const nextCenter = applyDragDelta(e.target as Konva.Group)
+                  if (nextCenter) {
+                    onPanEnd(nextCenter)
                   }
-                  const nextCenter = panCenterByPixels(
-                    center,
-                    {
-                      dx,
-                      dy,
-                    },
-                    scale,
-                  )
-                  node.position({
-                    x: position.x,
-                    y: position.y,
-                  })
-                  onPanEnd(nextCenter)
                 }}
               >
                 <MapCells

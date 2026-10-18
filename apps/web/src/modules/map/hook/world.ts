@@ -74,9 +74,22 @@ export const useWorld = () => {
     setHalfExtent(clampHalfExtent(next.half_extent))
   }, [])
 
-  const panTo = useCallback((nextCenter: Coordinates) => {
-    setCenter(nextCenter)
-  }, [])
+  const panTo = useCallback(
+    (nextCenter: Coordinates, options?: { immediate?: boolean }) => {
+      setCenter(nextCenter)
+      if (options?.immediate) {
+        skipDebounceRef.current = true
+        void loadViewport({
+          center: nextCenter,
+          half_extent,
+        })
+      }
+    },
+    [
+      half_extent,
+      loadViewport,
+    ],
+  )
 
   const setZoom = useCallback((nextHalf: number) => {
     setHalfExtent(clampHalfExtent(nextHalf))

@@ -47,7 +47,7 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 
 ## Web UI (`apps/web/src/modules/map/`)
 
-- Fetches cells via `modules/map/api/cells.ts` and `hook/world.ts` using `{ center, half_extent }` → `viewportBoundsAround` (clamped to server `MAX_VIEWPORT_SIDE`). Pan and wheel zoom update center / half extent with a debounced refetch; `MapCanvas` supports drag pan, wheel zoom toward the cursor, optional zoom buttons, and recenter to city/outpost.
+- Fetches cells via `modules/map/api/cells.ts` and `hook/world.ts` using `{ center, half_extent }` → `viewportBoundsAround` (clamped to server `MAX_VIEWPORT_SIDE`). Pan and wheel zoom update center / half extent with a debounced refetch (200ms; stale fetches cancelled via generation counter). Drag pan updates center from the drag delta during the gesture (group offset reset each move so cells stay world-anchored), debounced load while dragging, and an immediate refetch on release; wheel zoom toward the cursor, optional zoom buttons, and recenter to city/outpost.
 - Renders terrain type on all viewport cells; coefficient details in the side panel only when `explored` (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Draws settlement markers for all players with self / ally (same faction) / enemy styling (`markers.tsx`, `legend-overlay.tsx`). Geometry helpers in `geometry.ts` / `helper.ts` / `viewport.ts`.
 - Routes under `/city/$cityId/world/...` and outpost world map routes ([`019`](../019-web-shell-routing/spec.md)).
 

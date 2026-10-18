@@ -67,7 +67,8 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
         center,
         half_extent,
         homeCenter,
-        onPanEnd: panTo,
+        onPan: panTo,
+        onPanEnd: nextCenter => panTo(nextCenter, { immediate: true }),
         onNavigate: navigate,
         onRecenter: homeCenter
           ? () => {
