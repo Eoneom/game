@@ -1,5 +1,9 @@
 import { CELL_WORLD_SIZE } from '#map/helper'
-import { ViewportBounds } from '#map/viewport'
+import { ViewportBounds, WORLD_SIZE } from '#map/viewport'
+
+function clampGameCoord(value: number): number {
+  return Math.max(1, Math.min(WORLD_SIZE, Math.round(value)))
+}
 
 export const MAP_FIT_PADDING = 0.98
 
@@ -25,6 +29,56 @@ export function cellCenter(
   return {
     x: top.x + cell / 2,
     y: top.y + cell / 2,
+  }
+}
+
+export function panCenterByPixels(
+  center: { x: number; y: number },
+  pixelDelta: { dx: number; dy: number },
+  scale: number,
+): { x: number; y: number } {
+  if (scale <= 0) {
+    return center
+  }
+  const cellDeltaX = -pixelDelta.dx / (scale * CELL_WORLD_SIZE)
+  const cellDeltaY = pixelDelta.dy / (scale * CELL_WORLD_SIZE)
+  return {
+    x: clampGameCoord(center.x + cellDeltaX),
+    y: clampGameCoord(center.y + cellDeltaY),
+  }
+}
+
+export function gameCellAtStagePoint(
+  px: number,
+  py: number,
+  bounds: ViewportBounds,
+  scale: number,
+  position: { x: number; y: number },
+): { x: number; y: number } {
+  const localX = (px - position.x) / scale
+  const localY = (py - position.y) / scale
+  const gx = bounds.min_x + localX / CELL_WORLD_SIZE
+  const gy = bounds.max_y - localY / CELL_WORLD_SIZE
+  return {
+    x: clampGameCoord(gx),
+    y: clampGameCoord(gy),
+  }
+}
+
+export function centerAfterZoom(
+  anchor: { x: number; y: number },
+  center: { x: number; y: number },
+  oldHalf: number,
+  newHalf: number,
+): { x: number; y: number } {
+  if (oldHalf <= 0 || oldHalf === newHalf) {
+    return center
+  }
+  const nx = anchor.x - ((anchor.x - center.x) * newHalf) / oldHalf
+  const ny = anchor.y - ((anchor.y - center.y) * newHalf) / oldHalf
+  return {
+    x: clampGameCoord(nx),
+    y: clampGameCoord(ny),
   }
 }
 

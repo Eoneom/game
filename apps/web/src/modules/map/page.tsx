@@ -3,6 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { MapCanvas } from '#map/canvas'
 import { MapDetails } from '#map/details'
 import { useWorld } from '#map/hook/world'
+import { INITIAL_VIEWPORT_HALF_EXTENT } from '#map/viewport'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
 import { useListTroops } from '#troop/hooks'
@@ -19,15 +20,29 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
 
   const cityCoordinates = city?.coordinates ?? null
   const outpostCoordinates = outpost?.coordinates ?? null
+  const homeCenter = cityCoordinates ?? outpostCoordinates
 
-  const { fetch, viewport } = useWorld()
+  const {
+    fetch,
+    viewport,
+    center,
+    half_extent,
+    navigate,
+    panTo,
+  } = useWorld()
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(null)
 
   React.useEffect(() => {
-    const center = cityCoordinates ?? outpostCoordinates
-    if (!center) return
-    fetch({ center })
-  }, [cityCoordinates, outpostCoordinates])
+    const initialCenter = cityCoordinates ?? outpostCoordinates
+    if (!initialCenter) return
+    void fetch({
+      center: initialCenter,
+      half_extent: INITIAL_VIEWPORT_HALF_EXTENT,
+    })
+  }, [
+    cityCoordinates,
+    outpostCoordinates,
+  ])
 
   const details = useMemo(() => {
     if (!selectedCoordinates || !viewport) return null
@@ -42,14 +57,34 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
     cityId,
     outpostId,
     selectedCoordinates,
-    viewport
+    viewport,
   ])
 
+  const navigation =
+    center == null
+      ? null
+      : {
+        center,
+        half_extent,
+        homeCenter,
+        onPanEnd: panTo,
+        onNavigate: navigate,
+        onRecenter: homeCenter
+          ? () => {
+            void fetch({
+              center: homeCenter,
+              half_extent: INITIAL_VIEWPORT_HALF_EXTENT,
+            })
+          }
+          : undefined,
+      }
+
   return <LayoutPage details={details}>
-    {viewport && (
+    {viewport && navigation && (
       <div className="map-page">
         <MapCanvas
           viewport={viewport}
+          navigation={navigation}
           onCellClicked={setSelectedCoordinates}
           selectedCoordinates={selectedCoordinates}
           cityMarker={city?.coordinates ?? null}

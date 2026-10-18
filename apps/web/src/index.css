@@ -203,4 +203,27 @@
     opacity: 1;
     filter: invert(0.85) sepia(0.35) saturate(2) hue-rotate(5deg);
   }
+
+  .map-stage-container {
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .map-stage-container--grabbing {
+    cursor: grabbing;
+  }
+
+  .map-toolbar-actions {
+    @apply mt-2 flex flex-wrap items-center gap-2;
+  }
+
+  .map-zoom-btn,
+  .map-recenter-btn {
+    @apply rounded-sm border border-rust/60 bg-chrome-2 px-2.5 py-1 text-sm text-amber transition;
+    @apply hover:border-amber/50 hover:text-copper disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .map-zoom-btn {
+    @apply min-w-9 font-semibold tabular-nums;
+  }
 }

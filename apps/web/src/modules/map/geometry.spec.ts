@@ -1,7 +1,9 @@
 import {
   MAP_FIT_PADDING,
+  centerAfterZoom,
   cellCenter,
   cellTopLeft,
+  panCenterByPixels,
   mapViewScaleAndPosition,
 } from '#map/geometry'
 import { CELL_WORLD_SIZE } from '#map/helper'
@@ -59,6 +61,42 @@ describe('map geometry', () => {
       expect(cellCenter(2, 3, bounds, cell)).toEqual({
         x: top.x + half,
         y: top.y + half,
+      })
+    })
+  })
+
+  describe('panCenterByPixels', () => {
+    it('shifts center opposite to drag direction in cell units', () => {
+      const scale = 0.5
+      const center = {
+        x: 50,
+        y: 50,
+      }
+      expect(
+        panCenterByPixels(center, {
+          dx: 100,
+          dy: 0,
+        }, scale),
+      ).toEqual({
+        x: 48,
+        y: 50,
+      })
+    })
+  })
+
+  describe('centerAfterZoom', () => {
+    it('keeps anchor cell fixed when zooming in', () => {
+      const anchor = {
+        x: 55,
+        y: 48,
+      }
+      const center = {
+        x: 50,
+        y: 50,
+      }
+      expect(centerAfterZoom(anchor, center, 5, 3)).toEqual({
+        x: 52,
+        y: 49,
       })
     })
   })

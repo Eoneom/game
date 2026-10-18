@@ -43,8 +43,8 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 
 ## Web UI (`apps/web/src/modules/map/`)
 
-- Fetches cells via `modules/map/api/cells.ts` and `hook/world.ts` with viewport bounds from map pan/zoom.
-- Renders explored vs unexplored cells (`cells.tsx`, `canvas.tsx`); geometry helpers in `geometry.ts` / `helper.ts`.
+- Fetches cells via `modules/map/api/cells.ts` and `hook/world.ts` using `{ center, half_extent }` → `viewportBoundsAround` (clamped to server `MAX_VIEWPORT_SIDE`). Pan and wheel zoom update center / half extent with a debounced refetch; `MapCanvas` supports drag pan, wheel zoom toward the cursor, optional zoom buttons, and recenter to city/outpost.
+- Renders explored vs unexplored cells (`cells.tsx`, `canvas.tsx`); geometry helpers in `geometry.ts` / `helper.ts` / `viewport.ts`.
 - Routes under `/city/$cityId/world/...` and outpost world map routes ([`019`](../019-web-shell-routing/spec.md)).
 
 ## API client
