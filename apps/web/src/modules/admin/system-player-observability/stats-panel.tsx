@@ -290,7 +290,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     Aucun mouvement de troupes en cours pour ce joueur.
                   </p>
                 ) : (
-                  <ul className="m-0 list-none space-y-2 p-0">
+                  <ul className="m-0 grid list-none grid-cols-1 gap-2 p-0 sm:grid-cols-2 lg:grid-cols-4">
                     {ongoing_movements.map(movement => (
                       <OngoingMovementItem key={movement.id} movement={movement} />
                     ))}

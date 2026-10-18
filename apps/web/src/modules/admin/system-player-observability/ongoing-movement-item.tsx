@@ -3,7 +3,6 @@ import React from 'react'
 import { formatCoordinates } from '#helpers/transform'
 import type { AdminSystemPlayerOngoingMovement } from '@eoneom/api-client'
 import { MovementAction, TroopCode } from '@eoneom/api-client'
-import { CountdownProgress } from '#ui/countdown-progress'
 import { useCountdownProgress } from '#hook/countdown-progress'
 import { MovementActionLabels } from '#movement/translations'
 
@@ -16,7 +15,7 @@ export function hasMovementCargo(resources: AdminSystemPlayerOngoingMovement['re
 export const OngoingMovementItem: React.FC<{
   movement: AdminSystemPlayerOngoingMovement
 }> = ({ movement }) => {
-  const { remainingSeconds, elapsedProgress } = useCountdownProgress({
+  const { remainingSeconds } = useCountdownProgress({
     endAt: movement.arrive_at,
     onDone: () => undefined,
   })
@@ -25,7 +24,7 @@ export const OngoingMovementItem: React.FC<{
   const show_cargo = movement.action === MovementAction.TRANSPORT && hasMovementCargo(movement.resources)
 
   return (
-    <li className="admin-surface-nested rounded-sm p-2 text-sm text-amber">
+    <li className="admin-surface-nested min-w-0 rounded-sm p-2 text-sm text-amber">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-medium">{action_label}</span>
         <span className="text-xs text-amber-dim">
@@ -57,13 +56,6 @@ export const OngoingMovementItem: React.FC<{
           {movement.resources.plasma > 0 && `${movement.resources.plasma} ${RESOURCE_LABEL.plasma.toLowerCase()}`}
         </p>
       )}
-      <div className="mt-1.5">
-        <CountdownProgress
-          summary={null}
-          elapsedProgress={elapsedProgress}
-          remainingSeconds={remainingSeconds}
-        />
-      </div>
     </li>
   )
 }
