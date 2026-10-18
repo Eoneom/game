@@ -797,13 +797,14 @@ async function tryBase(
   tick_context?: SystemTickContext,
 ): Promise<Record<string, unknown> | null> {
   const {
-    cities, count_limit 
+    cities,
+    count_limit: city_count_limit,
   } = await new CityListQuery().run({ player_id })
-  const can_found_city = cities.length < count_limit
+  const can_found_city = cities.length < city_count_limit
   const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
-  const { outposts, count_limit } = await new OutpostListQuery().run({ player_id })
-  if (outposts.length >= count_limit) {
+  const { outposts, count_limit: outpost_count_limit } = await new OutpostListQuery().run({ player_id })
+  if (outposts.length >= outpost_count_limit) {
     return null
   }
 
