@@ -61,7 +61,13 @@ function TroopsList({
     <div>
       <h5 className="field-label m-0 mb-1 text-label">Troupes</h5>
       {present.length > 0 && (
-        <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
+        <ul
+          className={
+            one_per_line
+              ? 'm-0 flex list-none flex-col gap-0.5 p-0 text-xs text-amber'
+              : 'm-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2'
+          }
+        >
           {present.map(troop => (
             <li key={troop.code}>
               {translateTroopCode(troop.code as TroopCode)}
