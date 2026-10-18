@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 export interface UseCountdownProgressParams {
   endAt?: number
   startAt?: number
-  onDone: () => void
+  onDone?: () => void
   onTick?: () => void
   tickDuration?: number
 }
@@ -80,7 +80,7 @@ export const useCountdownProgress = ({
       if (remainingMs <= 0) {
         if (!completedRef.current) {
           completedRef.current = true
-          onDoneRef.current()
+          onDoneRef.current?.()
         }
         return
       }
@@ -108,7 +108,7 @@ export const useCountdownProgress = ({
     if (initialRemainingMs <= 0) {
       if (!completedRef.current) {
         completedRef.current = true
-        onDoneRef.current()
+        onDoneRef.current?.()
       }
       return
     }
