@@ -3,6 +3,7 @@ import { applyBattleOutcomes } from '#app/command/combat/apply-battle-outcomes'
 import { runCommand } from '#command/run'
 import { CombatService } from '#core/combat/combat-service'
 import { COMBAT_ROUND_INTERVAL_MS } from '#app/scheduling/intervals'
+import { AppEvent } from '#core/events'
 
 export async function advanceCombatRound({
   battle_id,
@@ -13,7 +14,12 @@ export async function advanceCombatRound({
   round: number
   advanced_at: number
 }): Promise<void> {
-  return runCommand('combat:advance-round', async () => {
+  let battle_finished_participants: {
+    attacker_player_id: string
+    defender_player_id: string
+  } | null = null
+
+  await runCommand('combat:advance-round', async () => {
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
@@ -57,7 +63,7 @@ export async function advanceCombatRound({
 
     if (winner) {
       await repository.battle.update(updated)
-      await applyBattleOutcomes({
+      battle_finished_participants = await applyBattleOutcomes({
         battle_id,
         winner,
         finished_at: advanced_at,
@@ -73,4 +79,14 @@ export async function advanceCombatRound({
       execute_at: advanced_at + COMBAT_ROUND_INTERVAL_MS,
     })
   })
+
+  if (battle_finished_participants) {
+    const event_bus = Factory.getEventBus()
+    event_bus.emit(AppEvent.BattleFinished, {
+      player_id: battle_finished_participants.attacker_player_id,
+    })
+    event_bus.emit(AppEvent.BattleFinished, {
+      player_id: battle_finished_participants.defender_player_id,
+    })
+  }
 }

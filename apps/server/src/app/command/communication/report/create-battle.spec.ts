@@ -9,17 +9,13 @@ import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { FactionCode } from '#core/faction/constant/code'
-import { AppEvent } from '#core/events'
 import { Repository } from '#app/port/repository/generic'
-import { AppEventBus } from '#app/event-bus'
 
 describe('createBattleReports', () => {
   let createBattleReportsRepo: ReturnType<typeof vi.fn>
-  let emit: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     createBattleReportsRepo = vi.fn().mockResolvedValue(undefined)
-    emit = vi.fn()
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       player: {
@@ -34,11 +30,9 @@ describe('createBattleReports', () => {
         createBattleReports: createBattleReportsRepo,
       },
     } as unknown as Repository)
-
-    vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as unknown as AppEventBus)
   })
 
-  it('persists battle reports and emits BattleFinished for both participants', async () => {
+  it('persists battle reports for attacker and defender', async () => {
     const battle = BattleEntity.create({
       id: 'battle-id',
       movement_id: 'movement-id',
@@ -87,10 +81,5 @@ describe('createBattleReports', () => {
     })
 
     assert.strictEqual(createBattleReportsRepo.mock.calls.length, 1)
-    assert.strictEqual(emit.mock.calls.length, 2)
-    assert.strictEqual(emit.mock.calls[0][0], AppEvent.BattleFinished)
-    assert.deepStrictEqual(emit.mock.calls[0][1], { player_id: 'attacker-id' })
-    assert.strictEqual(emit.mock.calls[1][0], AppEvent.BattleFinished)
-    assert.deepStrictEqual(emit.mock.calls[1][1], { player_id: 'defender-id' })
   })
 })

@@ -10,17 +10,25 @@ import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { TroopCode } from '#core/troop/constant/code'
 import { Repository } from '#app/port/repository/generic'
 import { JobQueue } from '#app/port/job-queue'
+import { AppEvent } from '#core/events'
+import { AppEventBus } from '#app/event-bus'
 
 vi.mock('#app/command/combat/apply-battle-outcomes', () => ({
-  applyBattleOutcomes: vi.fn().mockResolvedValue(undefined),
+  applyBattleOutcomes: vi.fn().mockResolvedValue({
+    attacker_player_id: 'attacker-id',
+    defender_player_id: 'defender-id',
+  }),
 }))
 
 describe('advanceCombatRound', () => {
   let battleUpdate: ReturnType<typeof vi.fn>
   let scheduleCombatRoundAdvance: ReturnType<typeof vi.fn>
+  let emit: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     vi.mocked(applyBattleOutcomes).mockClear()
+    emit = vi.fn()
+    vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as unknown as AppEventBus)
     battleUpdate = vi.fn().mockResolvedValue(undefined)
     scheduleCombatRoundAdvance = vi.fn().mockResolvedValue('job-id')
 
@@ -75,6 +83,37 @@ describe('advanceCombatRound', () => {
       finished_at: 5_000,
     })
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 0)
+    assert.strictEqual(emit.mock.calls.length, 2)
+    assert.strictEqual(emit.mock.calls[0][0], AppEvent.BattleFinished)
+    assert.deepStrictEqual(emit.mock.calls[0][1], { player_id: 'attacker-id' })
+    assert.strictEqual(emit.mock.calls[1][0], AppEvent.BattleFinished)
+    assert.deepStrictEqual(emit.mock.calls[1][1], { player_id: 'defender-id' })
+  })
+
+  it('emits BattleFinished only after the advance-round transaction completes', async () => {
+    let inside_transaction = false
+    let emit_while_in_transaction = false
+    emit.mockImplementation(() => {
+      if (inside_transaction) {
+        emit_while_in_transaction = true
+      }
+    })
+    const runInTransaction = vi.spyOn(Factory, 'runInTransaction').mockImplementation(async (fn) => {
+      inside_transaction = true
+      const result = await fn()
+      inside_transaction = false
+      return result
+    })
+
+    await advanceCombatRound({
+      battle_id: 'battle-id',
+      round: 1,
+      advanced_at: 5_000,
+    })
+
+    assert.strictEqual(emit.mock.calls.length, 2)
+    assert.strictEqual(emit_while_in_transaction, false)
+    runInTransaction.mockRestore()
   })
 
   it('schedules the next round immediately when combat continues', async () => {
@@ -117,6 +156,7 @@ describe('advanceCombatRound', () => {
 
     assert.equal(COMBAT_ROUND_INTERVAL_MS, 0)
     assert.strictEqual(applyBattleOutcomes.mock.calls.length, 0)
+    assert.strictEqual(emit.mock.calls.length, 0)
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 1)
     assert.deepStrictEqual(scheduleCombatRoundAdvance.mock.calls[0][0], {
       battle_id: 'battle-id',

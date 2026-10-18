@@ -4,7 +4,6 @@ import { BattleEntity } from '#core/combat/entity/battle'
 import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
-import { AppEvent } from '#core/events'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
@@ -23,7 +22,6 @@ export async function createBattleReports({
   finished_at: number
 }): Promise<void> {
   const repository = Factory.getRepository()
-  const event_bus = Factory.getEventBus()
 
   const attacker = await repository.player.get(battle.attacker_player_id)
   const defender = await repository.player.get(battle.defender_player_id)
@@ -87,7 +85,4 @@ export async function createBattleReports({
       perspective: ReportPerspective.DEFENDER,
     },
   })
-
-  event_bus.emit(AppEvent.BattleFinished, { player_id: battle.attacker_player_id })
-  event_bus.emit(AppEvent.BattleFinished, { player_id: battle.defender_player_id })
 }

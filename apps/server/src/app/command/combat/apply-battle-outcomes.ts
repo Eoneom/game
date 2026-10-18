@@ -79,6 +79,11 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number): {
   }
 }
 
+export type ApplyBattleOutcomesResult = {
+  attacker_player_id: string
+  defender_player_id: string
+}
+
 export async function applyBattleOutcomes({
   battle_id,
   winner,
@@ -87,7 +92,7 @@ export async function applyBattleOutcomes({
   battle_id: string
   winner: BattleWinner
   finished_at: number
-}): Promise<void> {
+}): Promise<ApplyBattleOutcomesResult> {
   return runCommand('combat:apply-outcomes', async () => {
     const repository = Factory.getRepository()
     const battle = await repository.battle.getById(battle_id)
@@ -213,5 +218,10 @@ export async function applyBattleOutcomes({
       loot,
       finished_at,
     })
+
+    return {
+      attacker_player_id: battle.attacker_player_id,
+      defender_player_id: battle.defender_player_id,
+    }
   })
 }
