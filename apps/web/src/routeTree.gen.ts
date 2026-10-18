@@ -15,6 +15,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SharedIndexRouteImport } from './routes/_shared/index'
 import { Route as InboxReportRouteImport } from './routes/inbox/report'
 import { Route as AdminSystemPlayersRouteImport } from './routes/admin/system-players'
+import { Route as AdminCombatSimulatorRouteImport } from './routes/admin/combat-simulator'
 import { Route as SharedReportRouteImport } from './routes/_shared/report'
 import { Route as OutpostOutpostIdRouteRouteImport } from './routes/outpost/$outpostId/route'
 import { Route as CityCityIdRouteRouteImport } from './routes/city/$cityId/route'
@@ -68,6 +69,11 @@ const InboxReportRoute = InboxReportRouteImport.update({
 const AdminSystemPlayersRoute = AdminSystemPlayersRouteImport.update({
   id: '/system-players',
   path: '/system-players',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminCombatSimulatorRoute = AdminCombatSimulatorRouteImport.update({
+  id: '/combat-simulator',
+  path: '/combat-simulator',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const SharedReportRoute = SharedReportRouteImport.update({
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/report': typeof SharedReportRoute
+  '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
   '/admin/': typeof AdminIndexRoute
@@ -239,6 +246,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/report': typeof SharedReportRoute
+  '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
   '/': typeof SharedIndexRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/_shared/report': typeof SharedReportRoute
+  '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
   '/inbox/report': typeof InboxReportRoute
   '/_shared/': typeof SharedIndexRoute
@@ -308,6 +317,7 @@ export interface FileRouteTypes {
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/report'
+    | '/admin/combat-simulator'
     | '/admin/system-players'
     | '/inbox/report'
     | '/admin/'
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/report'
+    | '/admin/combat-simulator'
     | '/admin/system-players'
     | '/inbox/report'
     | '/'
@@ -369,6 +380,7 @@ export interface FileRouteTypes {
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/_shared/report'
+    | '/admin/combat-simulator'
     | '/admin/system-players'
     | '/inbox/report'
     | '/_shared/'
@@ -447,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/system-players'
       fullPath: '/admin/system-players'
       preLoaderRoute: typeof AdminSystemPlayersRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/combat-simulator': {
+      id: '/admin/combat-simulator'
+      path: '/combat-simulator'
+      fullPath: '/admin/combat-simulator'
+      preLoaderRoute: typeof AdminCombatSimulatorRouteImport
       parentRoute: typeof AdminRouteRoute
     }
     '/_shared/report': {
@@ -642,11 +661,13 @@ const SharedRouteRouteWithChildren = SharedRouteRoute._addFileChildren(
 )
 
 interface AdminRouteRouteChildren {
+  AdminCombatSimulatorRoute: typeof AdminCombatSimulatorRoute
   AdminSystemPlayersRoute: typeof AdminSystemPlayersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminCombatSimulatorRoute: AdminCombatSimulatorRoute,
   AdminSystemPlayersRoute: AdminSystemPlayersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

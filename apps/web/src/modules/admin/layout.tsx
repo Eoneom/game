@@ -25,6 +25,18 @@ export const AdminShell: React.FC<{ children: React.ReactNode }> = ({ children }
         </div>
         <nav className="flex shrink-0 items-center gap-2">
           <RouterLink
+            to="/admin"
+            className="rounded-sm border border-rust/50 px-2 py-1 text-sm text-amber-dim transition hover:border-amber/40 hover:text-amber"
+          >
+            Observabilité IA
+          </RouterLink>
+          <RouterLink
+            to="/admin/combat-simulator"
+            className="rounded-sm border border-rust/50 px-2 py-1 text-sm text-amber-dim transition hover:border-amber/40 hover:text-amber"
+          >
+            Simulateur de combat
+          </RouterLink>
+          <RouterLink
             to="/inbox/report"
             className="rounded-sm border border-rust/50 px-2 py-1 text-sm text-amber-dim transition hover:border-amber/40 hover:text-amber"
           >

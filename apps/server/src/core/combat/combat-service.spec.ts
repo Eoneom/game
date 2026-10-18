@@ -32,6 +32,19 @@ describe('CombatService', () => {
     assert.equal(result.winner, BattleWinner.ATTACKER)
   })
 
+  it('simulateBattle runs rounds until winner or max round', () => {
+    const result = CombatService.simulateBattle({
+      attacker_stacks: [{ code: TroopCode.INTERCEPTOR, count: 50 }],
+      defender_stacks: [{ code: TroopCode.DISRUPTOR, count: 1 }],
+      attacker_strategy: CombatStrategy.OPENING_STRIKE,
+      defender_strategy: CombatStrategy.BALANCED,
+    })
+    assert.equal(result.winner, BattleWinner.ATTACKER)
+    assert.ok(result.round_summaries.length >= 1)
+    assert.equal(result.round_summaries[0].round, 1)
+    assert.ok(result.final_defender_stacks.every(s => s.count === 0) || result.final_defender_stacks.length === 0)
+  })
+
   it('continues to round 5 stalemate when both retain combat', () => {
     const winner = resolveBattleWinner({
       attacker_stacks: [{ code: TroopCode.LEGIONNAIRE, count: 1 }],

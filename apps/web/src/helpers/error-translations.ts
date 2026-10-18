@@ -108,6 +108,7 @@ const ErrorTranslations: Record<string, string> = {
   [RequestError.TROOPS_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.TROOP_CODES_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.ACTION_NOT_FOUND]: 'Paramètre manquant',
+  [RequestError.COMBAT_STRATEGY_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.WAS_READ_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.TOKEN_NOT_FOUND]: 'Authentification requise',
   [RequestError.PLAYER_ID_NOT_IN_CONTEXT]: 'Authentification requise',

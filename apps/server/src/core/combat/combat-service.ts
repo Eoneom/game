@@ -283,4 +283,52 @@ export class CombatService {
   }
 
   static mergeCumulativeLosses = mergeCasualties
+
+  static simulateBattle({
+    attacker_stacks,
+    defender_stacks,
+    attacker_strategy,
+    defender_strategy,
+    max_round = 5,
+  }: {
+    attacker_stacks: BattleStack[]
+    defender_stacks: BattleStack[]
+    attacker_strategy: CombatStrategy
+    defender_strategy: CombatStrategy
+    max_round?: number
+  }): {
+    winner: BattleWinner | null
+    round_summaries: BattleRoundSummary[]
+    final_attacker_stacks: BattleStack[]
+    final_defender_stacks: BattleStack[]
+  } {
+    let current_attacker = attacker_stacks.map(s => ({ ...s }))
+    let current_defender = defender_stacks.map(s => ({ ...s }))
+    const round_summaries: BattleRoundSummary[] = []
+    let winner: BattleWinner | null = null
+
+    for (let round = 1; round <= max_round; round++) {
+      const result = CombatService.advanceRound({
+        round,
+        attacker_stacks: current_attacker,
+        defender_stacks: current_defender,
+        attacker_strategy,
+        defender_strategy,
+      })
+      round_summaries.push(result.round_summary)
+      current_attacker = result.attacker_stacks
+      current_defender = result.defender_stacks
+      winner = result.winner
+      if (winner !== null) {
+        break
+      }
+    }
+
+    return {
+      winner,
+      round_summaries,
+      final_attacker_stacks: current_attacker,
+      final_defender_stacks: current_defender,
+    }
+  }
 }

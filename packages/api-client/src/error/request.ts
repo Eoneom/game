@@ -17,6 +17,7 @@ export enum RequestError {
   TROOPS_NOT_FOUND = 'troops:not-found',
   TROOP_CODES_NOT_FOUND = 'troop_codes:not-found',
   ACTION_NOT_FOUND = 'action:not-found',
+  COMBAT_STRATEGY_NOT_FOUND = 'combat_strategy:not-found',
   WAS_READ_NOT_FOUND = 'was_read:not-found',
   TOKEN_NOT_FOUND = 'token:not-found',
   PLAYER_ID_NOT_IN_CONTEXT = 'player_id:not-in-context',

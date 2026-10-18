@@ -488,6 +488,18 @@ Do **not** rely on `troop:movement-finished` alone for defender inbox refresh or
 
 Extend `ReportFactory` (or `ReportFactory.generateBattleReport`) parallel to `generateUnread` for movement reports (`apps/server/src/core/communication/report/factory.ts`). Persist via `repository.report.create` + `report_battle` insert; covered by [`012`](../012-communication-reports/spec.md) test paths.
 
+## Admin fight simulator
+
+Operators with `is_admin` can run **non-persistent** battle simulations from the admin console (no database writes, no jobs).
+
+| Concern | Spec |
+| --- | --- |
+| HTTP | `POST /admin/combat-simulator` — `authMiddleware` + `adminMiddleware` (same gate as `POST /admin/system-player-tick`). |
+| Body | `attacker_stacks`, `defender_stacks`: arrays of `{ troop_code, count }` (`TroopCode` wire values, `count` non-negative integer). `attacker_strategy`, `defender_strategy`: `CombatStrategy` wire values. |
+| Engine | `CombatService.simulateBattle` loops `advanceRound` from round 1 until `winner !== null` or round 5. |
+| Response | `winner` (`attacker` \| `defender` \| `draw` \| null), `round_summaries` (pools + per-code losses), `final_attacker_stacks`, `final_defender_stacks`. |
+| Web | `/admin/combat-simulator` — French UI « Simulateur de combat », linked from admin nav; gated on `is_admin`. |
+
 ## Brownfield inventory (as of `main`)
 
 | Area | Today |

@@ -2,6 +2,10 @@ import { Fetcher } from '../../fetcher'
 import { AdminSystemPlayerObservabilityResponse } from './system-player-observability'
 import { AdminSystemPlayerStatsResponse } from './system-player-stats'
 import { AdminForceSystemPlayerTickResponse } from './system-player-tick'
+import {
+  AdminCombatSimulatorRequest,
+  AdminCombatSimulatorResponse,
+} from './combat-simulator'
 
 export class AdminEndpoint {
   private fetcher: Fetcher
@@ -20,5 +24,12 @@ export class AdminEndpoint {
 
   forceSystemPlayerTick(token: string): Promise<AdminForceSystemPlayerTickResponse> {
     return this.fetcher.post('/admin/system-player-tick', { token })
+  }
+
+  simulateCombat(
+    token: string,
+    body: AdminCombatSimulatorRequest,
+  ): Promise<AdminCombatSimulatorResponse> {
+    return this.fetcher.post('/admin/combat-simulator', { token, body })
   }
 }

@@ -38,6 +38,7 @@ import { cityActivityHandler, outpostActivityHandler } from '#web/handler/locati
 import { healthGetHandler } from '#web/handler/health/get'
 import { adminSystemPlayerObservabilityGetHandler } from '#web/handler/admin/system-player-observability/get'
 import { adminForceSystemPlayerTickPostHandler } from '#web/handler/admin/system-player-tick/post'
+import { adminCombatSimulatorPostHandler } from '#web/handler/admin/combat-simulator/post'
 import { adminSystemPlayerStatsGetHandler } from '#web/handler/admin/system-player-stats/get'
 import { adminMiddleware } from '#web/middleware/admin'
 
@@ -104,6 +105,7 @@ export const router = (): Router => {
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)
   r.post('/admin/system-player-tick', authMiddleware, adminMiddleware, adminForceSystemPlayerTickPostHandler)
+  r.post('/admin/combat-simulator', authMiddleware, adminMiddleware, adminCombatSimulatorPostHandler)
 
   return r
 }
