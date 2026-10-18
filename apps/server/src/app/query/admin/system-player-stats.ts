@@ -272,11 +272,18 @@ export async function collectSystemPlayerStatsSnapshot({
     })),
   ])
 
+  const outposts_sorted_by_coordinates = [ ...outpost_summaries ].sort((left, right) => {
+    if (left.coordinates.x !== right.coordinates.x) {
+      return left.coordinates.x - right.coordinates.x
+    }
+    return left.coordinates.y - right.coordinates.y
+  })
+
   return {
     player_id,
     player_name,
     cities: city_summaries,
-    outposts: outpost_summaries,
+    outposts: outposts_sorted_by_coordinates,
     technologies: sorted_technologies.map(technology => ({
       code: technology.code,
       level: technology.level,

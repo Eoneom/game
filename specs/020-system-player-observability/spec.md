@@ -99,7 +99,7 @@ As implemented on `main` (read-only **État** column; no new requirements beyond
 | Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (always shown with count; empty empires show a short French placeholder). |
 | Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** (counts only; optional in-progress recruit with countdown). |
 | Per-city **Troupes** | `TroopsList` default: one column on narrow viewports, **two columns from `sm` breakpoint** (`sm:grid-cols-2`). |
-| **Avant-postes** layout | Section always visible (count + French empty copy). When outposts exist, cards render in a **three-column** grid (`grid-cols-3`, `gap-2`); each card is `admin-surface-nested`. |
+| **Avant-postes** layout | Section always visible (count + French empty copy). When outposts exist, cards render in a **three-column** grid (`grid-cols-3`, `gap-2`); each card is `admin-surface-nested`. Outposts are ordered by **increasing `coordinates.x`**, then **`coordinates.y`** (stats snapshot from `collectSystemPlayerStatsSnapshot`). |
 | Per-outpost card | Type label, coordinates, optional production line, warehouse bars when capacity &gt; 0, **Troupes** via `TroopsList` with `one_per_line` — **one troop per line** (vertical `flex-col` list; outpost cards are narrow). |
 
 ### Tick feed copy (French)
