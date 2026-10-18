@@ -21,7 +21,7 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopCode } from '#core/troop/constant/code'
-import { TroopRole } from '#core/troop/constant/role'
+import { troop_role, TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
 import {
   INITIAL_VIEWPORT_HALF_EXTENT,
@@ -56,16 +56,29 @@ import {
 import {
   loadEmpireCombatArmyCounts,
   pickSystemAttack,
-  SYSTEM_ATTACK_COMBAT_STRATEGY,
 } from '#command/player/system/combat-policy'
+import {
+  loadSystemPlayerMemory,
+  recordFailedSystemAttackTarget,
+  recordFailedSystemBaseCell,
+} from '#command/player/system/memory'
+import { collectSystemEmpireSnapshot } from '#app/query/player/system/empire-snapshot'
+import { summarizeSystemFrontierQueue } from '#app/query/player/system/frontier-queue'
+import {
+  scoreCityForRecruitPriority,
+  scoreCityForUpgradePriority,
+  sortCitiesByScore,
+} from '#command/player/system/city-allocation'
 import {
   combatRecruitHints,
   isSystemCombatArmyReady,
   loadOutpostRecruitHints,
   recruitSortHintsForCity,
   sortTroopsForSystemRecruit,
+  scoreCityForEmpireRecruit,
   systemRecruitBatchCount,
 } from '#command/player/system/troops'
+import { isCoordinatesBlocked } from '#core/player/system/memory'
 import { selectTroopsForSystemBase } from '#core/player/system/base-troops'
 import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
 import {
@@ -119,7 +132,45 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
 
-  for (const city of cities) {
+  const upgrade_city_scores = await Promise.all(cities.map(async (city) => {
+    const [
+      city_details,
+      building_list,
+    ] = await Promise.all([
+      new CityGetQuery().run({
+        city_id: city.id,
+        player_id,
+      }),
+      new BuildingListQuery().run({
+        city_id: city.id,
+        player_id,
+      }),
+    ])
+    const projected_warehouses_capacity = projectWarehousesCapacity({
+      buildings: building_list.buildings,
+      upgrade_queue: building_list.upgrade_queue,
+    })
+    return scoreCityForUpgradePriority({
+      production_energy_ratio: city_details.production_energy_ratio,
+      resource_stock: city_details.resource_stock,
+      warehouses_capacity: projected_warehouses_capacity,
+      has_pending_recruitment: false,
+      garrison_troop_count: 0,
+      recruit_priority_score: 0,
+    })
+  }))
+  const upgrade_score_by_city_id = new Map(
+    cities.map((city, index) => [
+      city.id,
+      upgrade_city_scores[index],
+    ]),
+  )
+  const cities_by_upgrade_priority = sortCitiesByScore(
+    cities,
+    city => upgrade_score_by_city_id.get(city.id) ?? 0,
+  )
+
+  for (const city of cities_by_upgrade_priority) {
     const [
       city_details,
       building_list
@@ -354,7 +405,57 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     count: number
   }[] = []
 
-  for (const city of cities) {
+  const recruit_city_scores = await Promise.all(cities.map(async (city, city_index) => {
+    const troop_list = await new TroopListQuery().run({
+      player_id,
+      location: {
+        type: 'city',
+        city_id: city.id,
+      },
+    })
+    const recruit_hints = recruitSortHintsForCity({
+      city_troops: troop_list.troops,
+      outpost_hints,
+      combat: combat_hints,
+    })
+    const needs_logistics_troop_in_city = troop_list.troops.some(troop => {
+      const role = troop_role[troop.code]
+      return troop.count > 0 && (
+        role === TroopRole.CULTIVATOR
+        || role === TroopRole.SALVAGER
+        || role === TroopRole.CARRIER
+      )
+    })
+    const recruit_score = scoreCityForEmpireRecruit({
+      city_index,
+      hints: recruit_hints,
+      needs_logistics_troop_in_city,
+    })
+    return scoreCityForRecruitPriority({
+      production_energy_ratio: 1,
+      resource_stock: main_city_stock,
+      warehouses_capacity: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+      has_pending_recruitment: Boolean(troop_list.pending_recruitment),
+      garrison_troop_count: troop_list.troops.reduce((sum, troop) => sum + troop.count, 0),
+      recruit_priority_score: recruit_score,
+    })
+  }))
+  const recruit_score_by_city_id = new Map(
+    cities.map((city, index) => [
+      city.id,
+      recruit_city_scores[index],
+    ]),
+  )
+  const cities_by_recruit_priority = sortCitiesByScore(
+    cities,
+    city => recruit_score_by_city_id.get(city.id) ?? 0,
+  )
+
+  for (const city of cities_by_recruit_priority) {
     const [
       city_details,
       building_list,
@@ -507,6 +608,11 @@ async function ownedLocationCells(player_id: string): Promise<{
 }
 
 async function tryExplore(player_id: string): Promise<Record<string, unknown> | null> {
+  const { frontier_queue_length } = await summarizeSystemFrontierQueue(player_id)
+  if (frontier_queue_length > 0) {
+    return null
+  }
+
   const [
     { origins, occupied_cell_ids },
     { cities, count_limit },
@@ -643,11 +749,13 @@ async function findBestBaseDestination({
   origins,
   occupied_cell_ids,
   base_cell_score,
+  blocked_base_cells = [],
 }: {
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
   base_cell_score: (cell: CellEntity) => number
+  blocked_base_cells?: readonly { x: number, y: number }[]
 }): Promise<CellEntity | null> {
   let best_destination: CellEntity | null = null
   let best_score = -Infinity
@@ -660,7 +768,8 @@ async function findBestBaseDestination({
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
       && !occupied_cell_ids.has(cell.id)
-      && !sameCoordinates(cell.coordinates, origin.coordinates))
+      && !sameCoordinates(cell.coordinates, origin.coordinates)
+      && !isCoordinatesBlocked(cell.coordinates, blocked_base_cells))
     const destination = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,
@@ -685,15 +794,20 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
   const can_found_city = cities.length < count_limit
   const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
-  const {
-    origins, occupied_cell_ids 
-  } = await ownedLocationCells(player_id)
+  const [
+    { origins, occupied_cell_ids },
+    memory,
+  ] = await Promise.all([
+    ownedLocationCells(player_id),
+    loadSystemPlayerMemory(player_id),
+  ])
 
   const destination = await findBestBaseDestination({
     player_id,
     origins,
     occupied_cell_ids,
     base_cell_score,
+    blocked_base_cells: memory.failed_base_cells,
   })
   if (!destination) {
     return null
@@ -729,6 +843,10 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
     }
   }
 
+  await recordFailedSystemBaseCell({
+    player_id,
+    coordinates: destination.coordinates,
+  })
   return null
 }
 
@@ -869,6 +987,7 @@ async function tryDeployOutpostTroops(player_id: string): Promise<Record<string,
         })
       }))
     ).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null),
+    outpost_warehouses_capacity,
   )
 
   const role_priority: SystemOutpostDeployRole[] = [
@@ -1043,8 +1162,19 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
 }
 
 async function tryAttack(player_id: string): Promise<Record<string, unknown> | null> {
-  const army_counts = await loadEmpireCombatArmyCounts(player_id)
+  const [
+    army_counts,
+    snapshot,
+    memory,
+  ] = await Promise.all([
+    loadEmpireCombatArmyCounts(player_id),
+    collectSystemEmpireSnapshot(player_id),
+    loadSystemPlayerMemory(player_id),
+  ])
   if (!isSystemCombatArmyReady(army_counts)) {
+    return null
+  }
+  if (snapshot.empire_under_threat) {
     return null
   }
   const attacker = await Factory.getRepository().player.get(player_id)
@@ -1052,25 +1182,34 @@ async function tryAttack(player_id: string): Promise<Record<string, unknown> | n
     player_id,
     attacker_faction_code: attacker.faction_code,
     army_counts,
+    blocked_targets: memory.failed_attack_targets,
   })
   if (!attack) {
     return null
   }
 
-  await createTroopMovement({
-    player_id,
-    action: MovementAction.ATTACK,
-    origin: attack.origin,
-    destination: attack.destination,
-    move_troops: attack.move_troops,
-    combat_strategy: SYSTEM_ATTACK_COMBAT_STRATEGY,
-  })
+  try {
+    await createTroopMovement({
+      player_id,
+      action: MovementAction.ATTACK,
+      origin: attack.origin,
+      destination: attack.destination,
+      move_troops: attack.move_troops,
+      combat_strategy: attack.combat_strategy,
+    })
+  } catch (err) {
+    await recordFailedSystemAttackTarget({
+      player_id,
+      coordinates: attack.destination,
+    })
+    throw err
+  }
   return {
     action: MovementAction.ATTACK,
     origin: attack.origin,
     destination: attack.destination,
     move_troops: attack.move_troops,
-    combat_strategy: SYSTEM_ATTACK_COMBAT_STRATEGY,
+    combat_strategy: attack.combat_strategy,
   }
 }
 

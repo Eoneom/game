@@ -29,9 +29,9 @@ Constants (`core/player/constant/system.ts`):
 | --- | --- |
 | `SYSTEM_PLAYER_TICK_QUEUE` | pg-boss stately queue |
 | `tickSystemPlayers` | Lists system players, `collectSystemEmpireSnapshot`, `planSystemPlayerActions`, `executeSystemPlayerTick`, schedules next tick |
-| `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, explore deferral, `expansion_starved`, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
-| `planSystemPlayerActions` | Ordered intents from snapshot + `tick_index` (`core/player/system/planner.ts`; `categoriesForTick`, research/upgrade swap, explore defer) |
-| `executeSystemPlayerTick` | Walks plan until `SYSTEM_MAX_ACTIONS_PER_TICK` successes or intents exhausted (`policy.ts`); expected domain errors (e.g. `city:not-enough-resources` after an earlier action spent stock) count as **skipped** attempts, not tick **error** |
+| `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, **frontier queue**, **opponent intel**, **cross-tick memory**, explore deferral, `expansion_starved`, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
+| `planSystemPlayerActions` | Ordered intents from snapshot + `tick_index`; **lookahead utility rerank** on flexible intents (`core/player/system/planner.ts`, `intent-utility.ts`) |
+| `executeSystemPlayerTick` / `actForSystemPlayer` | Walks plan until budget exhausted; with `collect_snapshot`, **replans after each committed action** (`policy.ts`); expected domain errors count as **skipped** attempts, not tick **error** |
 | `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first plan (`storage.ts`) |
 | `expansion-cell` | Scout / outpost / city-site cell scores for explore, base, settle, make-permanent |
 | `systemTickActions` | Per-category handlers in `app/command/player/system/actions.ts` |
@@ -125,7 +125,15 @@ System AI does **not** launch `attack` movements until the empire meets **army r
 | `SYSTEM_DISRUPTOR_RATIO` | **`disruptor` class** count (`disruptor`) ≥ **30%** of total combat-role troops (all four classes), empire-wide |
 | Economy gate for combat recruiting | At least one city and the main city has **any** resource stock; while below readiness, `sortTroopsForSystemRecruit` boosts missing **combat classes** (war_machine → legionnaire → interceptor → disruptor) before other non-economy troops |
 
-**Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit` (unchanged category order). Returns idle when the army is not ready, when no cross-faction target exists in range, or when no origin has a combat garrison. Otherwise `pickSystemAttack` scores valid enemy **cities**, **outposts**, and **field stacks** (via `resolveAttackTarget`) in each origin viewport — preferring high-value locations and weaker garrisons — and sends **full** combat stacks (no per-code cap). Strategy: `opening_strike` (`SYSTEM_ATTACK_COMBAT_STRATEGY`).
+**Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit`. Returns idle when the army is not ready, when **`empire_under_threat`** (enemy stacks or settlements within **6** Manhattan cells of owned territory), when no simulated-winning target exists, or when no origin has a combat garrison. `pickSystemAttack` scores targets in viewport, runs **`simulateCombat`** (`CombatService.simulateBattle`) with **attacker strategy from defender composition** (`opening_strike` vs war machines, `balanced` vs disruptors, else `hold_the_line`), and commits only when the simulator predicts an **attacker** win. Skips coordinates in **`system_player_memory.failed_attack_targets`**; failed movement attempts append to that list.
+
+**Cross-tick memory** (`system_player_memory` table, migration `00007`): JSON per system player with `failed_base_cells` and `failed_attack_targets`. `tryBase` skips blocked coordinates and records a failed destination when no origin can move.
+
+**Frontier pipeline** (`core/player/system/frontier.ts`, `app/query/player/system/frontier-queue.ts`): ranks committable **settle / make-permanent / base** cells. Explore (`tryExplore`) is idle while the frontier queue is non-empty; snapshot `defer_explore` also accounts for frontier length.
+
+**Empire allocation**: `tryUpgrade` / `tryRecruit` iterate cities by `city-allocation.ts` / `troops.ts` priority scores (warehouse pressure, logistics, combat boost) instead of repository list order only.
+
+**Outpost logistics FSM** (`outpost-logistics.ts`): per permanent outpost phase `needs_gatherer` → `producing` → `needs_haul`; deploy candidates and planner reasons (`outpost_logistics_needs_gatherer` / `needs_haul`) follow phase priority.
 
 See also [`024`](../024-player-combat-pvp/spec.md) (system AI note).
 
@@ -144,8 +152,8 @@ Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-
 
 | Area | Paths |
 | --- | --- |
-| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,combat-policy,requirements,transport,outpost-logistics,troops,technologies,production}.ts`, `app/query/player/system/empire-snapshot.ts`, `core/player/system/planner.ts` |
+| Commands | `apps/server/src/app/command/player/ensure-system.ts`, `system/{tick,policy,actions,combat-policy,memory,requirements,transport,outpost-logistics,troops,technologies,production,city-allocation}.ts`, `app/query/player/system/{empire-snapshot,empire-intel,frontier-queue}.ts`, `core/player/system/{planner,intent-utility,frontier,intel,memory}.ts` |
 | Jobs | `apps/server/src/adapter/job-queue/player/system-tick.ts` |
 | Core | `apps/server/src/core/player/constant/system.ts`, `core/player/system/expansion-cell.ts` |
 
-Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/combat-policy.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/transport.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/expansion-cell.spec.ts`, `core/player/constant/system.spec.ts`.
+Tests: `apps/server/src/app/command/player/ensure-system.spec.ts`, `system/tick.spec.ts`, `system/actions.spec.ts`, `system/combat-policy.spec.ts`, `system/requirements.spec.ts`, `system/troops.spec.ts`, `system/technologies.spec.ts`, `system/production.spec.ts`, `system/transport.spec.ts`, `system/policy.spec.ts`, `system/storage.spec.ts`, `core/player/system/{expansion-cell,planner,intent-utility,frontier,intel,memory}.spec.ts`, `core/player/constant/system.spec.ts`.

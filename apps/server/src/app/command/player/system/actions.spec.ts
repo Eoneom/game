@@ -35,7 +35,41 @@ import { id } from '#shared/identification'
 import {
   testCityCell, testResourceStock 
 } from '../../../test-support/resource-stock'
+import * as empireSnapshot from '#app/query/player/system/empire-snapshot'
+import * as frontierQueue from '#app/query/player/system/frontier-queue'
+import { defaultSystemEmpireSnapshotFields } from '#core/player/system/empire-snapshot'
 import assert from 'assert'
+
+const empty_system_memory = {
+  failed_base_cells: [],
+  failed_attack_targets: [],
+}
+
+function defaultAttackEmpireSnapshot(for_player_id: string) {
+  return {
+    player_id: for_player_id,
+    temporary_outpost_count: 0,
+    permanent_outpost_count: 0,
+    expansion_categories: [
+      'base',
+      'settle',
+      'make-permanent',
+      'explore',
+    ],
+    economy_first: false,
+    production_ready_for_research: false,
+    defer_explore: false,
+    expansion_starved: false,
+    combat_army_ready: true,
+    needs_outpost_logistics: false,
+    outpost_transport_pressure_count: 0,
+    can_found_city: true,
+    settle_ready_temp_count: 0,
+    ...defaultSystemEmpireSnapshotFields(),
+    empire_under_threat: false,
+    memory: empty_system_memory,
+  }
+}
 
 vi.mock('#app/command/building/upgrade', () => ({ upgradeBuilding: vi.fn().mockResolvedValue(undefined) }))
 vi.mock('#app/command/technology/research', () => ({ researchTechnology: vi.fn().mockResolvedValue(undefined) }))
@@ -73,11 +107,23 @@ describe('systemTickActions', () => {
     vi.mocked(citySettle).mockClear()
     vi.mocked(createTroopMovement).mockClear()
     vi.mocked(recruitTroop).mockClear()
+    vi.spyOn(empireSnapshot, 'collectSystemEmpireSnapshot').mockImplementation(
+      async (for_player_id: string) => defaultAttackEmpireSnapshot(for_player_id),
+    )
+    vi.spyOn(frontierQueue, 'summarizeSystemFrontierQueue').mockResolvedValue({
+      frontier_queue: [],
+      frontier_queue_length: 0,
+      frontier_top_score: null,
+    })
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       player: {
         get: vi.fn().mockResolvedValue({
           faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
         }),
+      },
+      system_player_memory: {
+        get: vi.fn().mockResolvedValue(empty_system_memory),
+        upsert: vi.fn().mockResolvedValue(undefined),
       },
     } as Repository)
     vi.spyOn(Factory, 'getLogger').mockReturnValue(fakeLogger as never)
@@ -1646,12 +1692,25 @@ describe('systemTickActions', () => {
           count: SYSTEM_TARGET_WAR_MACHINE,
         },
       ],
+      combat_strategy: CombatStrategy.OPENING_STRIKE,
+    })
+    vi.spyOn(empireSnapshot, 'collectSystemEmpireSnapshot').mockImplementation(
+      async (for_player_id: string) => defaultAttackEmpireSnapshot(for_player_id),
+    )
+    vi.spyOn(frontierQueue, 'summarizeSystemFrontierQueue').mockResolvedValue({
+      frontier_queue: [],
+      frontier_queue_length: 0,
+      frontier_top_score: null,
     })
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       player: {
         get: vi.fn().mockResolvedValue({
           faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
         }),
+      },
+      system_player_memory: {
+        get: vi.fn().mockResolvedValue(empty_system_memory),
+        upsert: vi.fn().mockResolvedValue(undefined),
       },
     } as Repository)
 

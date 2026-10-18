@@ -1,6 +1,10 @@
 import assert from 'assert'
 import { CityError } from '#core/city/error'
 import {
+  defaultSystemEmpireSnapshotFields,
+  type SystemEmpireSnapshot,
+} from '#core/player/system/empire-snapshot'
+import {
   actForSystemPlayer,
   categoriesForTick,
   executeSystemPlayerTick,
@@ -10,6 +14,31 @@ import {
   type SystemTickAction,
   type SystemTickCategory
 } from './policy'
+
+function testSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpireSnapshot {
+  return {
+    player_id: 'player-id',
+    temporary_outpost_count: 0,
+    permanent_outpost_count: 2,
+    expansion_categories: SYSTEM_TICK_CATEGORIES.filter(
+      category => category === 'base'
+        || category === 'settle'
+        || category === 'make-permanent'
+        || category === 'explore',
+    ),
+    economy_first: false,
+    production_ready_for_research: false,
+    defer_explore: false,
+    expansion_starved: false,
+    combat_army_ready: false,
+    needs_outpost_logistics: false,
+    outpost_transport_pressure_count: 0,
+    can_found_city: true,
+    settle_ready_temp_count: 0,
+    ...defaultSystemEmpireSnapshotFields(),
+    ...overrides,
+  }
+}
 
 describe('system player tick policy', () => {
   it('swaps upgrade and research when research comes after upgrade', () => {
@@ -178,6 +207,42 @@ describe('system player tick policy', () => {
     ])
   })
 
+  it('replans after each committed action when collect_snapshot is provided', async () => {
+    let recruit_calls = 0
+    const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
+      category,
+      async () => {
+        if (category === 'recruit') {
+          recruit_calls += 1
+          return recruit_calls === 1 ? { ok: true } : null
+        }
+        return null
+      },
+    ])) as Record<SystemTickCategory, SystemTickAction>
+
+    let snapshot_reads = 0
+    const acted = await actForSystemPlayer({
+      player_id: 'player-id',
+      tick_index: 0,
+      actions,
+      snapshot: testSnapshot(),
+      collect_snapshot: async () => {
+        snapshot_reads += 1
+        return testSnapshot({
+          combat_army_ready: snapshot_reads > 1,
+        })
+      },
+      max_actions: 3,
+    })
+
+    assert.strictEqual(acted.outcome, 'success')
+    if (acted.outcome !== 'idle') {
+      assert.strictEqual(acted.committed_actions.length, 1)
+    }
+    assert.ok(snapshot_reads >= 1)
+    assert.ok(recruit_calls >= 1)
+  })
+
   it('returns idle with skipped attempts when no category can act', async () => {
     const actions = Object.fromEntries(SYSTEM_TICK_CATEGORIES.map(category => [
       category,
@@ -187,7 +252,8 @@ describe('system player tick policy', () => {
     const acted = await actForSystemPlayer({
       player_id: 'player-id',
       tick_index: 0,
-      actions
+      actions,
+      categories: [ ...SYSTEM_TICK_CATEGORIES ],
     })
 
     assert.strictEqual(acted.outcome, 'idle')

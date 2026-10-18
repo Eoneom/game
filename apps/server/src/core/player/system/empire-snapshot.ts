@@ -1,4 +1,8 @@
 import { SYSTEM_EXPANSION_STARVED_PERMANENT_OUTPOST_TARGET } from '#core/player/system/constants'
+import type { SystemEmpireIntel } from '#core/player/system/intel'
+import { EMPTY_SYSTEM_EMPIRE_INTEL } from '#core/player/system/intel'
+import type { SystemPlayerMemory } from '#core/player/system/memory'
+import { EMPTY_SYSTEM_PLAYER_MEMORY } from '#core/player/system/memory'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 
 /** Read-only empire view for one system-player tick (no writes). */
@@ -21,6 +25,42 @@ export type SystemEmpireSnapshot = {
   can_found_city: boolean
   /** Temporary outposts with a founder on site (eligible for `settle`). */
   settle_ready_temp_count: number
+  /** Ranked expansion commit candidates (base / settle / make-permanent). */
+  frontier_queue_length: number
+  frontier_top_score: number | null
+  /** Opponent visibility and threat summary for combat / defend heuristics. */
+  intel: SystemEmpireIntel
+  empire_under_threat: boolean
+  visible_enemy_combat_stacks: number
+  /** Outposts missing gatherers (FSM `needs_gatherer` phase). */
+  outpost_logistics_needs_gatherer_count: number
+  /** Outposts with gatherers but needing haulers (`needs_haul` phase). */
+  outpost_logistics_needs_haul_count: number
+  /** Cross-tick memory loaded for action handlers (failed bases / attacks). */
+  memory: SystemPlayerMemory
+}
+
+export function defaultSystemEmpireSnapshotFields(): Pick<
+  SystemEmpireSnapshot,
+  | 'frontier_queue_length'
+  | 'frontier_top_score'
+  | 'intel'
+  | 'empire_under_threat'
+  | 'visible_enemy_combat_stacks'
+  | 'outpost_logistics_needs_gatherer_count'
+  | 'outpost_logistics_needs_haul_count'
+  | 'memory'
+> {
+  return {
+    frontier_queue_length: 0,
+    frontier_top_score: null,
+    intel: EMPTY_SYSTEM_EMPIRE_INTEL,
+    empire_under_threat: false,
+    visible_enemy_combat_stacks: 0,
+    outpost_logistics_needs_gatherer_count: 0,
+    outpost_logistics_needs_haul_count: 0,
+    memory: EMPTY_SYSTEM_PLAYER_MEMORY,
+  }
 }
 
 export function isExpansionStarved({

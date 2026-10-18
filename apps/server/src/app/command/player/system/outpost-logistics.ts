@@ -11,6 +11,13 @@ import {
   SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
 } from '#command/player/system/transport'
 
+export enum SystemOutpostLogisticsPhase {
+  NEEDS_GATHERER = 'needs_gatherer',
+  PRODUCING = 'producing',
+  NEEDS_HAUL = 'needs_haul',
+  READY = 'ready',
+}
+
 export type SystemOutpostDeployRole = TroopRole.CULTIVATOR | TroopRole.SALVAGER | TroopRole.CARRIER
 
 export type SystemOutpostDeployCandidate = {
@@ -73,6 +80,43 @@ export function outpostNeedsCarrier({
   })
 }
 
+export function outpostLogisticsPhase({
+  cell,
+  troops,
+  stock,
+  warehouses_capacity,
+}: {
+  cell: CellEntity
+  troops: TroopEntity[]
+  stock: Resource
+  warehouses_capacity: WarehouseCapacity
+}): SystemOutpostLogisticsPhase {
+  const missing_gatherers = missingGathererRolesOnOutpost({
+    cell,
+    troops,
+  })
+  if (missing_gatherers.length > 0) {
+    return SystemOutpostLogisticsPhase.NEEDS_GATHERER
+  }
+  if (outpostNeedsCarrier({
+    cell,
+    troops,
+    stock,
+    warehouses_capacity,
+  })) {
+    const has_gatherer = (cell.resource_coefficient.mushroom > 0 && roleCount(troops, TroopRole.CULTIVATOR) >= 1)
+      || (cell.resource_coefficient.plastic > 0 && roleCount(troops, TroopRole.SALVAGER) >= 1)
+    if (has_gatherer) {
+      return SystemOutpostLogisticsPhase.NEEDS_HAUL
+    }
+    return SystemOutpostLogisticsPhase.NEEDS_HAUL
+  }
+  if (stock.plastic + stock.mushroom + stock.plasma > 0) {
+    return SystemOutpostLogisticsPhase.PRODUCING
+  }
+  return SystemOutpostLogisticsPhase.READY
+}
+
 export function buildOutpostDeployCandidate({
   outpost,
   cell,
@@ -116,10 +160,40 @@ export function buildOutpostDeployCandidate({
   }
 }
 
+function phaseSortPriority(phase: SystemOutpostLogisticsPhase): number {
+  switch (phase) {
+  case SystemOutpostLogisticsPhase.NEEDS_GATHERER:
+    return 0
+  case SystemOutpostLogisticsPhase.NEEDS_HAUL:
+    return 1
+  case SystemOutpostLogisticsPhase.PRODUCING:
+    return 2
+  default:
+    return 3
+  }
+}
+
 export function sortOutpostDeployCandidates(
   candidates: SystemOutpostDeployCandidate[],
+  warehouses_capacity: WarehouseCapacity,
 ): SystemOutpostDeployCandidate[] {
   return [ ...candidates ].sort((left, right) => {
+    const left_phase = outpostLogisticsPhase({
+      cell: left.cell,
+      troops: left.troops,
+      stock: left.stock,
+      warehouses_capacity,
+    })
+    const right_phase = outpostLogisticsPhase({
+      cell: right.cell,
+      troops: right.troops,
+      stock: right.stock,
+      warehouses_capacity,
+    })
+    const phase_diff = phaseSortPriority(left_phase) - phaseSortPriority(right_phase)
+    if (phase_diff !== 0) {
+      return phase_diff
+    }
     if (right.resource_score !== left.resource_score) {
       return right.resource_score - left.resource_score
     }
