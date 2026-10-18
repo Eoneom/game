@@ -134,7 +134,10 @@ export function planSystemPlayerActions(
     seen_categories.add('settle')
   }
 
-  if (snapshot.temporary_outpost_count > 0) {
+  if (
+    snapshot.temporary_outpost_count > 0
+    && snapshot.settle_ready_temp_count === 0
+  ) {
     const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
     const commit_attempts = Math.min(
       snapshot.temporary_outpost_count,
@@ -243,6 +246,9 @@ export function planSystemPlayerActions(
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {
     if (category === 'base' && snapshot.outpost_limit_reached) {
+      continue
+    }
+    if (category === 'make-permanent' && snapshot.settle_ready_temp_count > 0) {
       continue
     }
     if (seen_categories.has(category)) {

@@ -4,6 +4,7 @@ import { outpostSetPermanent } from '#app/command/outpost/set-permanent'
 import { researchTechnology } from '#app/command/technology/research'
 import { recruitTroop } from '#app/command/troop/recruit'
 import { createTroopMovement } from '#app/command/troop/movement/create'
+import { TroopMovementListQuery } from '#app/query/troop/movement/list'
 import { BuildingListQuery } from '#query/building/list'
 import { BuildingGetQuery } from '#query/building/get'
 import { CityListQuery } from '#query/city/list'
@@ -547,6 +548,15 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
   }
 }
 
+async function pendingBaseMovementDestinations(
+  player_id: string,
+): Promise<Coordinates[]> {
+  const { movements } = await new TroopMovementListQuery().run({ player_id })
+  return movements
+    .filter(({ movement }) => movement.action === MovementAction.BASE)
+    .map(({ movement }) => movement.destination)
+}
+
 async function ownedLocationCells(player_id: string): Promise<{
   occupied_cell_ids: Set<string>
   origins: {
@@ -752,6 +762,7 @@ async function findBestBaseDestination({
   occupied_cell_ids,
   base_cell_score,
   blocked_base_cells = [],
+  pending_base_destinations = [],
   tick_context,
 }: {
   player_id: string
@@ -759,8 +770,13 @@ async function findBestBaseDestination({
   occupied_cell_ids: Set<string>
   base_cell_score: (cell: CellEntity) => number
   blocked_base_cells?: readonly { x: number, y: number }[]
+  pending_base_destinations?: readonly Coordinates[]
   tick_context?: SystemTickContext
 }): Promise<CellEntity | null> {
+  const blocked_destinations = [
+    ...blocked_base_cells,
+    ...pending_base_destinations,
+  ]
   let best_destination: CellEntity | null = null
   let best_score = -Infinity
 
@@ -774,7 +790,7 @@ async function findBestBaseDestination({
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
       && !occupied_cell_ids.has(cell.id)
       && !sameCoordinates(cell.coordinates, origin.coordinates)
-      && !isCoordinatesBlocked(cell.coordinates, blocked_base_cells))
+      && !isCoordinatesBlocked(cell.coordinates, blocked_destinations))
     const destination = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,
@@ -811,9 +827,11 @@ async function tryBase(
   const [
     { origins, occupied_cell_ids },
     memory,
+    pending_base_destinations,
   ] = await Promise.all([
     ownedLocationCells(player_id),
     loadSystemPlayerMemory(player_id),
+    pendingBaseMovementDestinations(player_id),
   ])
 
   const destination = await findBestBaseDestination({
@@ -822,6 +840,7 @@ async function tryBase(
     occupied_cell_ids,
     base_cell_score,
     blocked_base_cells: memory.failed_base_cells,
+    pending_base_destinations,
     tick_context,
   })
   if (!destination) {

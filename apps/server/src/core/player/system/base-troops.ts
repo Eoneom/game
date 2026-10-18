@@ -30,7 +30,7 @@ function sortByFactionRoster({
   })
 }
 
-/** Picks a single stack for a system `base` movement (count 1). */
+/** Picks troops for a system `base` movement (founder alone, or grouped combat stacks). */
 export function selectTroopsForSystemBase({
   troops,
   faction,
@@ -62,13 +62,11 @@ export function selectTroopsForSystemBase({
     ),
     faction,
   })
-  if (combat[0]) {
-    return [
-      {
-        code: combat[0].code,
-        count: 1,
-      },
-    ]
+  if (combat.length > 0) {
+    return combat.map(troop => ({
+      code: troop.code,
+      count: troop.count,
+    }))
   }
 
   const fallback = sortByFactionRoster({

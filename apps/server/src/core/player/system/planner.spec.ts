@@ -79,7 +79,7 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[explore_index].reason, 'defer_explore_for_basing')
   })
 
-  it('prepends settle before make-permanent when founder temps exist', () => {
+  it('prepends settle only (no make-permanent) while founder temps await city', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       temporary_outpost_count: 2,
       settle_ready_temp_count: 2,
@@ -94,8 +94,7 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[0].category, 'settle')
     assert.strictEqual(plan[0].reason, 'found_city_candidate')
     assert.strictEqual(plan[1].category, 'settle')
-    assert.ok(plan.slice(2, 4).every(intent => intent.category === 'make-permanent'))
-    assert.ok(plan.slice(2, 4).every(intent => intent.reason === 'commit_temp_outpost'))
+    assert.ok(!plan.some(intent => intent.category === 'make-permanent'))
   })
 
   it('omits base intents when the outpost count limit is reached', () => {

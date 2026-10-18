@@ -71,7 +71,7 @@ describe('selectTroopsForSystemBase', () => {
       [
         {
           code: TroopCode.WAR_MACHINE,
-          count: 1,
+          count: 20,
         },
       ],
     )
