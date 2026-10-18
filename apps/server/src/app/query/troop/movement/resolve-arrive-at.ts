@@ -16,8 +16,17 @@ export async function resolveMovementArriveAt({
   }
 
   const battle = await battle_repository.getByMovementId(movement_id)
-  if (battle?.status === 'in_progress') {
+  if (!battle) {
+    return null
+  }
+
+  if (battle.status === 'in_progress') {
     return battle.started_at
+  }
+
+  // Outcomes still applying: movement row exists until applyBattleOutcomes deletes it.
+  if (battle.status === 'finished') {
+    return battle.finished_at ?? battle.started_at
   }
 
   return null

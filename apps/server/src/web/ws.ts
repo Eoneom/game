@@ -186,6 +186,16 @@ export function setupWebSocketServer(
     }
   })
 
+  eventBus.on(AppEvent.BattleFinished, ({ player_id }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.BattleFinished,
+        player_id,
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({
     city_id, player_id
   }) => {

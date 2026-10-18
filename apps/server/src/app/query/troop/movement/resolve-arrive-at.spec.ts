@@ -63,6 +63,45 @@ describe('resolveMovementArriveAt', () => {
     expect(arrive_at).toBe(50_000)
   })
 
+  it('returns battle finished_at while outcomes are still being applied', async () => {
+    const battle = BattleEntity.create({
+      id: id(),
+      movement_id,
+      attacker_player_id: id(),
+      defender_player_id: id(),
+      cell_id: id(),
+      target_kind: BattleTargetKind.FIELD,
+      target_id: null,
+      attacker_strategy: CombatStrategy.BALANCED,
+      defender_strategy: CombatStrategy.BALANCED,
+      current_round: 3,
+      status: 'finished',
+      winner: 'attacker',
+      state_json: {
+        attacker_stacks: [],
+        defender_stacks: [],
+        attacker_origin: { x: 0, y: 0 },
+        round_summaries: [],
+        cumulative_attacker_losses: [],
+        cumulative_defender_losses: [],
+        },
+      started_at: 50_000,
+      finished_at: 90_000,
+    })
+
+    const arrive_at = await resolveMovementArriveAt({
+      movement_id,
+      job_queue: {
+        getPendingTroopMovementFinish: vi.fn().mockResolvedValue(null),
+      },
+      battle_repository: {
+        getByMovementId: vi.fn().mockResolvedValue(battle),
+      },
+    })
+
+    expect(arrive_at).toBe(90_000)
+  })
+
   it('returns null when there is no pending job and no in-progress battle', async () => {
     const arrive_at = await resolveMovementArriveAt({
       movement_id,
