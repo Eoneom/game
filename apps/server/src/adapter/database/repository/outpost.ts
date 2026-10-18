@@ -1,6 +1,6 @@
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { OutpostEntity } from '#core/outpost/entity'
-import { OutpostRepository } from '#app/port/repository/outpost'
+import { OutpostInBounds, OutpostRepository } from '#app/port/repository/outpost'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { OutpostError } from '#core/outpost/error'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -61,6 +61,40 @@ export class PostgresOutpostRepository
       .execute()
 
     return rows.map(row => this.buildFromRow(row))
+  }
+
+  async listInBounds({
+    min_x,
+    max_x,
+    min_y,
+    max_y
+  }: {
+    min_x: number
+    max_x: number
+    min_y: number
+    max_y: number
+  }): Promise<OutpostInBounds[]> {
+    const rows = await this.db
+      .selectFrom('outpost')
+      .innerJoin('cell', 'cell.id', 'outpost.cell_id')
+      .selectAll('outpost')
+      .select([
+        'cell.x',
+        'cell.y'
+      ])
+      .where('cell.x', '>=', min_x)
+      .where('cell.x', '<=', max_x)
+      .where('cell.y', '>=', min_y)
+      .where('cell.y', '<=', max_y)
+      .execute()
+
+    return rows.map(row => ({
+      outpost: this.buildFromRow(row),
+      coordinates: {
+        x: row.x,
+        y: row.y
+      }
+    }))
   }
 
   async listPermanent(): Promise<OutpostEntity[]> {

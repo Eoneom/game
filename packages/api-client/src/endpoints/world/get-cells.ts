@@ -1,6 +1,10 @@
 import { GenericResponse } from '../../response'
 
+import { FactionCode } from '@server-core/faction/constant/code'
+import { OutpostType } from '@server-core/outpost/constant/type'
 import { CellType } from '@server-core/world/value/cell-type'
+
+import { Coordinates } from '../shared/coordinates'
 
 export interface WorldGetCellsRequest {
   min_x: number
@@ -9,14 +13,32 @@ export interface WorldGetCellsRequest {
   max_y: number
 }
 
+export interface WorldMapCityMarker {
+  id: string
+  name: string
+  player_id: string
+  faction_code: FactionCode
+  coordinates: Coordinates
+}
+
+export interface WorldMapOutpostMarker {
+  id: string
+  player_id: string
+  faction_code: FactionCode
+  type: OutpostType
+  coordinates: Coordinates
+}
+
 export interface WorldGetCellsDataResponse {
+  viewer: {
+    player_id: string
+    faction_code: FactionCode
+  }
   cells: {
-    coordinates: {
-      x: number
-      y: number
-    }
+    coordinates: Coordinates
+    type: CellType
+    explored: boolean
     characteristic?: {
-      type: CellType
       resource_coefficient: {
         plastic: number
         mushroom: number
@@ -24,6 +46,10 @@ export interface WorldGetCellsDataResponse {
       solar_coefficient: number
     }
   }[]
+  settlements: {
+    cities: WorldMapCityMarker[]
+    outposts: WorldMapOutpostMarker[]
+  }
 }
 
 export type WorldGetCellsResponse = GenericResponse<WorldGetCellsDataResponse>

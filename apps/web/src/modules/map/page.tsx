@@ -52,8 +52,8 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
           viewport={viewport}
           onCellClicked={setSelectedCoordinates}
           selectedCoordinates={selectedCoordinates}
-          cityMarker={city?.coordinates ?? null}
-          outpostMarker={outpostCoordinates ?? null}
+          highlightCity={cityCoordinates}
+          highlightOutpost={outpostCoordinates}
         />
       </div>
     )}

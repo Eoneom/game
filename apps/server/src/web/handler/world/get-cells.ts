@@ -38,10 +38,7 @@ export const worldGetCellsHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    const {
-      cells,
-      explored_cell_ids
-    } = await new WorldGetCellsQuery().run({
+    const query_result = await new WorldGetCellsQuery().run({
       player_id,
       min_x,
       max_x,
@@ -50,8 +47,8 @@ export const worldGetCellsHandler = async (
     })
 
     const response = response_mapper({
-      cells,
-      explored_cell_ids
+      player_id,
+      ...query_result
     })
 
     return res.json({
@@ -64,14 +61,24 @@ export const worldGetCellsHandler = async (
 }
 
 const response_mapper = ({
+  player_id,
   cells,
-  explored_cell_ids
-}: WorldGetCellsQueryResponse): WorldGetCellsDataResponse => {
+  explored_cell_ids,
+  viewer_faction_code,
+  settlements
+}: {
+  player_id: string
+} & WorldGetCellsQueryResponse): WorldGetCellsDataResponse => {
   return {
+    viewer: {
+      player_id,
+      faction_code: viewer_faction_code
+    },
     cells: cells.map(cell => cell_mapper({
       cell,
       explored_cell_ids
-    }))
+    })),
+    settlements
   }
 }
 
@@ -84,7 +91,6 @@ const cell_mapper = ({
 }): WorldGetCellsDataResponse['cells'][number] => {
   const is_explored = explored_cell_ids.some((explored_cell_id) => explored_cell_id === cell.id)
   const characteristic: WorldGetCellsDataResponse['cells'][number]['characteristic'] = is_explored ? {
-    type: cell.type,
     resource_coefficient: {
       plastic: cell.resource_coefficient.plastic,
       mushroom: cell.resource_coefficient.mushroom
@@ -97,6 +103,8 @@ const cell_mapper = ({
       x: cell.coordinates.x,
       y: cell.coordinates.y
     },
+    type: cell.type,
+    explored: is_explored,
     characteristic
   }
 }

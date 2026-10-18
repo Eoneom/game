@@ -22,7 +22,9 @@ export const useWorld = () => {
 
     setViewport({
       bounds,
-      cells: fetched.cells
+      cells: fetched.cells,
+      viewer: fetched.viewer,
+      settlements: fetched.settlements,
     })
   }
 
