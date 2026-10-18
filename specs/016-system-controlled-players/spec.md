@@ -31,7 +31,7 @@ Constants (`core/player/constant/system.ts`):
 | `tickSystemPlayers` | Lists system players, `collectSystemEmpireSnapshot`, `planSystemPlayerActions`, `executeSystemPlayerTick`, schedules next tick |
 | `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, explore deferral, `expansion_starved`, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
 | `planSystemPlayerActions` | Ordered intents from snapshot + `tick_index` (`core/player/system/planner.ts`; `categoriesForTick`, research/upgrade swap, explore defer) |
-| `executeSystemPlayerTick` | Walks plan until `SYSTEM_MAX_ACTIONS_PER_TICK` successes or intents exhausted (`policy.ts`) |
+| `executeSystemPlayerTick` | Walks plan until `SYSTEM_MAX_ACTIONS_PER_TICK` successes or intents exhausted (`policy.ts`); expected domain errors (e.g. `city:not-enough-resources` after an earlier action spent stock) count as **skipped** attempts, not tick **error** |
 | `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first plan (`storage.ts`) |
 | `expansion-cell` | Scout / outpost / city-site cell scores for explore, base, settle, make-permanent |
 | `systemTickActions` | Per-category handlers in `app/command/player/system/actions.ts` |
