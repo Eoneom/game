@@ -47,8 +47,15 @@ function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
   } else if (typeof payload.city_id === 'string') {
     details.push(`colonie ${payload.city_id}`)
   }
-  if (typeof payload.outpost_id === 'string' && category === 'make-permanent') {
+  if (typeof payload.outpost_id === 'string' && (category === 'make-permanent' || category === 'deploy-outpost')) {
     details.push(`avant-poste ${payload.outpost_id}`)
+  }
+  if (category === 'deploy-outpost') {
+    const move_troops = payload.move_troops as { code?: string }[] | undefined
+    const troop_code = move_troops?.[0]?.code ?? (typeof payload.troop_code === 'string' ? payload.troop_code : undefined)
+    if (troop_code) {
+      details.push(translateTroopCode(troop_code as TroopCode))
+    }
   }
 
   const coordinates = formatCoordinatesPair(payload)

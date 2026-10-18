@@ -18,6 +18,7 @@ export const TICK_CATEGORY_LABEL = {
   settle: 'Fondation de colonie',
   'make-permanent': 'Avant-poste rendu permanent',
   transport: 'Transport de ressources',
+  'deploy-outpost': 'Déploiement vers avant-poste',
   attack: 'Attaque',
 } as const
 

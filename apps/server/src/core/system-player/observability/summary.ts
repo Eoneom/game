@@ -10,6 +10,7 @@ const CATEGORY_LABEL: Record<SystemTickCategory, string> = {
   settle: 'Fondation de colonie',
   'make-permanent': 'Avant-poste rendu permanent',
   transport: 'Transport de ressources',
+  'deploy-outpost': 'Déploiement vers avant-poste',
   attack: 'Attaque',
 }
 
@@ -45,8 +46,15 @@ function formatSingleActionDetails(
   } else if (typeof payload.city_id === 'string') {
     details.push(`colonie ${payload.city_id}`)
   }
-  if (typeof payload.outpost_id === 'string' && category === 'make-permanent') {
+  if (typeof payload.outpost_id === 'string' && (category === 'make-permanent' || category === 'deploy-outpost')) {
     details.push(`avant-poste ${payload.outpost_id}`)
+  }
+  if (category === 'deploy-outpost') {
+    const move_troops = payload.move_troops as { code?: string }[] | undefined
+    const troop_code = move_troops?.[0]?.code
+    if (troop_code) {
+      details.push(troop_code)
+    }
   }
 
   const coordinates = formatCoordinates(payload)
