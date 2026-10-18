@@ -20,6 +20,7 @@ import { AppService } from '#app/service'
 import {
   countPermanentOutpostsWorthTransport,
 } from '#command/player/system/transport'
+import { countSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import { OutpostType } from '#core/outpost/constant/type'
 import {
   shouldDeferExploreForBasing,
@@ -233,6 +234,9 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
   }
 
   const can_found_city = cities.length < city_count_limit
+  const settle_ready_temp_count = can_found_city
+    ? await countSettleReadyTemporaryOutposts(player_id)
+    : 0
   const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
   const [
@@ -277,5 +281,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
     needs_outpost_logistics,
     outpost_transport_pressure_count,
+    can_found_city,
+    settle_ready_temp_count,
   }
 }

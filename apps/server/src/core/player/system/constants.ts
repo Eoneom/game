@@ -12,3 +12,9 @@ export const SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS = 2
 
 /** Max `deploy-outpost` intents prepended when outpost logistics are needed. */
 export const SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS = 2
+
+/** Max `settle` intents prepended when temp outposts have a founder and city cap allows. */
+export const SYSTEM_MAX_SETTLE_PREPENDS = 3
+
+/** Max `base` intents prepended to seed a city-site temp when under city cap and no settle-ready temps. */
+export const SYSTEM_MAX_CITY_FOUNDING_BASE_PREPENDS = 2

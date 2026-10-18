@@ -5,10 +5,10 @@ export const SYSTEM_TICK_EXPANSION_CATEGORIES = [
   'explore',
 ] as const
 
-/** Commit temp outposts (permanent, then settle) before further scouting. */
+/** Commit temp outposts: found cities before locking gather sites as permanent. */
 export const SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST = [
-  'make-permanent',
   'settle',
+  'make-permanent',
   'base',
   'explore',
 ] as const

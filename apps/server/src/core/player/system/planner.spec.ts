@@ -26,6 +26,8 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     combat_army_ready: false,
     needs_outpost_logistics: false,
     outpost_transport_pressure_count: 0,
+    can_found_city: true,
+    settle_ready_temp_count: 0,
     ...overrides,
   }
 }
@@ -35,6 +37,7 @@ describe('planSystemPlayerActions', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       expansion_starved: false,
       permanent_outpost_count: 2,
+      can_found_city: false,
     }), 1)
     assert.strictEqual(plan[0].category, 'settle')
   })
@@ -43,6 +46,7 @@ describe('planSystemPlayerActions', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       economy_first: true,
       expansion_starved: false,
+      can_found_city: false,
     }), 0)
     assert.strictEqual(plan[0].category, 'upgrade')
   })
@@ -64,29 +68,46 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[explore_index].reason, 'defer_explore_for_basing')
   })
 
-  it('prepends make-permanent when temporary outposts exist', () => {
+  it('prepends settle before make-permanent when founder temps exist', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       temporary_outpost_count: 2,
+      settle_ready_temp_count: 2,
       expansion_starved: false,
       expansion_categories: [
-        'make-permanent',
         'settle',
+        'make-permanent',
         'base',
         'explore',
       ],
     }), 0)
-    assert.strictEqual(plan[0].category, 'make-permanent')
-    assert.strictEqual(plan[0].reason, 'commit_temp_outpost')
-    assert.strictEqual(plan[1].category, 'make-permanent')
-    assert.strictEqual(plan[1].reason, 'commit_temp_outpost')
-    assert.strictEqual(plan[2].category, 'settle')
+    assert.strictEqual(plan[0].category, 'settle')
+    assert.strictEqual(plan[0].reason, 'found_city_candidate')
+    assert.strictEqual(plan[1].category, 'settle')
+    assert.strictEqual(plan[2].category, 'make-permanent')
+    assert.strictEqual(plan[2].reason, 'commit_temp_outpost')
     assert.ok(plan.every((intent, index) => intent.priority === index))
+  })
+
+  it('prepends city-founding base when under cap and no temps', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      can_found_city: true,
+      temporary_outpost_count: 0,
+      settle_ready_temp_count: 0,
+      permanent_outpost_count: 5,
+      expansion_starved: false,
+      economy_first: true,
+    }), 0)
+    assert.strictEqual(plan[0].category, 'base')
+    assert.strictEqual(plan[0].reason, 'city_founding')
+    assert.strictEqual(plan[1].category, 'base')
+    assert.strictEqual(plan[2].category, 'upgrade')
   })
 
   it('prepends base intents when expansion-starved and overrides economy-first', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       economy_first: true,
       expansion_starved: true,
+      can_found_city: false,
     }), 0)
     assert.deepStrictEqual(
       plan.slice(0, 2).map(intent => ({
@@ -112,6 +133,7 @@ describe('planSystemPlayerActions', () => {
       permanent_outpost_count: 2,
       expansion_starved: false,
       economy_first: true,
+      can_found_city: false,
     }), 0)
     assert.strictEqual(plan[0].category, 'upgrade')
     assert.ok(!plan.some(intent => intent.reason === 'expansion_starved'))
@@ -141,6 +163,7 @@ describe('planSystemPlayerActions', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       needs_outpost_logistics: true,
       expansion_starved: false,
+      can_found_city: false,
     }), 0)
     assert.strictEqual(plan[0].category, 'deploy-outpost')
     assert.strictEqual(plan[0].reason, 'outpost_logistics')
@@ -153,6 +176,7 @@ describe('planSystemPlayerActions', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       outpost_transport_pressure_count: 4,
       expansion_starved: false,
+      can_found_city: false,
     }), 0)
     assert.deepStrictEqual(
       plan.slice(0, 4).map(intent => ({

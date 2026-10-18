@@ -1,8 +1,10 @@
 import {
   SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS,
   SYSTEM_MAX_ACTIONS_PER_TICK,
+  SYSTEM_MAX_CITY_FOUNDING_BASE_PREPENDS,
   SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS,
   SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS,
+  SYSTEM_MAX_SETTLE_PREPENDS,
 } from '#core/player/system/constants'
 import {
   SYSTEM_TICK_ECONOMY_CATEGORIES,
@@ -114,10 +116,27 @@ export function planSystemPlayerActions(
   const intents: SystemPlayerActionIntent[] = []
   const seen_categories = new Set<SystemTickCategory>()
 
+  if (snapshot.settle_ready_temp_count > 0) {
+    const settle_attempts = Math.min(
+      snapshot.settle_ready_temp_count,
+      SYSTEM_MAX_SETTLE_PREPENDS,
+      SYSTEM_MAX_ACTIONS_PER_TICK - intents.length,
+    )
+    for (let index = 0; index < settle_attempts; index += 1) {
+      intents.push({
+        category: 'settle',
+        priority: intents.length,
+        reason: 'found_city_candidate',
+      })
+    }
+    seen_categories.add('settle')
+  }
+
   if (snapshot.temporary_outpost_count > 0) {
+    const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
     const commit_attempts = Math.min(
       snapshot.temporary_outpost_count,
-      SYSTEM_MAX_ACTIONS_PER_TICK,
+      remaining_budget,
     )
     for (let index = 0; index < commit_attempts; index += 1) {
       intents.push({
@@ -127,6 +146,26 @@ export function planSystemPlayerActions(
       })
     }
     seen_categories.add('make-permanent')
+  }
+
+  if (
+    snapshot.can_found_city
+    && snapshot.settle_ready_temp_count === 0
+    && snapshot.temporary_outpost_count === 0
+  ) {
+    const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
+    const founding_base_attempts = Math.min(
+      SYSTEM_MAX_CITY_FOUNDING_BASE_PREPENDS,
+      remaining_budget,
+    )
+    for (let index = 0; index < founding_base_attempts; index += 1) {
+      intents.push({
+        category: 'base',
+        priority: intents.length,
+        reason: 'city_founding',
+      })
+    }
+    seen_categories.add('base')
   }
 
   if (expansion_starved) {

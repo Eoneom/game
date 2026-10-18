@@ -128,8 +128,8 @@ describe('system expansion cell scoring', () => {
 
   it('uses commit-first expansion categories while temp outposts exist', () => {
     assert.deepStrictEqual(systemTickExpansionCategories({ temporary_outpost_count: 2 }), [
-      'make-permanent',
       'settle',
+      'make-permanent',
       'base',
       'explore',
     ])

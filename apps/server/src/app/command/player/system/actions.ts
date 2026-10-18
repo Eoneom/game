@@ -33,7 +33,6 @@ import {
   shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
   systemExpansionBaseCellScore,
-  systemExpansionCitySiteScore,
   systemExpansionScoutScore,
 } from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
@@ -81,6 +80,7 @@ import {
   sortOutpostDeployCandidates,
   type SystemOutpostDeployRole,
 } from '#command/player/system/outpost-logistics'
+import { listSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import {
   carrierTroopsForTransportLoad,
   clampResourcesToTransportCapacity,
@@ -733,66 +733,31 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
 }
 
 async function trySettle(player_id: string): Promise<Record<string, unknown> | null> {
-  const {
-    cities, count_limit 
-  } = await new CityListQuery().run({ player_id })
-  if (cities.length >= count_limit) {
+  const { cities } = await new CityListQuery().run({ player_id })
+  const settle_candidates = await listSettleReadyTemporaryOutposts(player_id)
+  const candidate = settle_candidates[0]
+  if (!candidate) {
     return null
   }
 
-  const {
-    outposts, cells 
-  } = await new OutpostListQuery().run({ player_id })
-  const settle_candidates = outposts
-    .map((outpost, index) => ({
-      outpost,
-      cell: cells[index],
-    }))
-    .filter(({ outpost }) => outpost.type !== OutpostType.PERMANENT)
-    .filter(({ cell }) => cell !== undefined)
-    .sort((left, right) => {
-      const score_delta = systemExpansionCitySiteScore(right.cell!) - systemExpansionCitySiteScore(left.cell!)
-      if (score_delta !== 0) {
-        return score_delta
-      }
-      if (left.cell!.coordinates.x !== right.cell!.coordinates.x) {
-        return left.cell!.coordinates.x - right.cell!.coordinates.x
-      }
-      return left.cell!.coordinates.y - right.cell!.coordinates.y
-    })
-
-  for (const { outpost } of settle_candidates) {
-    const { troops } = await new TroopListQuery().run({
-      player_id,
-      location: {
-        type: 'outpost',
-        outpost_id: outpost.id
-      }
-    })
-    const founder = TroopService.findByRole({
-      troops,
-      role: TroopRole.FOUNDER
-    })
-    if (!founder || founder.count < 1) {
-      continue
-    }
-
-    const city_name = nextSystemCityName(cities.map(city => city.name))
-    await citySettle({
-      player_id,
-      outpost_id: outpost.id,
-      city_name,
-    })
-    return {
-      outpost_id: outpost.id,
-      city_name,
-    }
+  const city_name = nextSystemCityName(cities.map(city => city.name))
+  await citySettle({
+    player_id,
+    outpost_id: candidate.outpost.id,
+    city_name,
+  })
+  return {
+    outpost_id: candidate.outpost.id,
+    city_name,
   }
-
-  return null
 }
 
 async function tryMakePermanent(player_id: string): Promise<Record<string, unknown> | null> {
+  const settle_ready_ids = new Set(
+    (await listSettleReadyTemporaryOutposts(player_id)).map(
+      ({ outpost }) => outpost.id,
+    ),
+  )
   const {
     outposts, cells 
   } = await new OutpostListQuery().run({ player_id })
@@ -802,6 +767,7 @@ async function tryMakePermanent(player_id: string): Promise<Record<string, unkno
       cell: cells[index],
     }))
     .filter(({ outpost }) => outpost.type !== OutpostType.PERMANENT)
+    .filter(({ outpost }) => !settle_ready_ids.has(outpost.id))
     .filter(({ cell }) => cell !== undefined)
     .sort((left, right) => {
       const score_delta = systemExpansionOutpostResourceScore(right.cell!) - systemExpansionOutpostResourceScore(left.cell!)
