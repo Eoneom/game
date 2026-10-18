@@ -37,8 +37,9 @@ const WINNER_LABEL: Record<NonNullable<AdminCombatSimulatorDataResponse['winner'
   draw: 'Match nul',
 }
 
-const stackControlClass =
-  'field-input m-0 h-full min-h-0 w-full min-w-0 py-0 text-sm leading-tight'
+/** Avoid `field-input` `w-full` — it breaks flex row proportions for unit vs count. */
+const stackSelectClass =
+  'm-0 min-h-9 rounded-sm border border-rust/60 bg-chrome px-2 py-1 font-mono text-sm leading-tight text-amber shadow-[inset_0_1px_0_rgba(232,197,71,0.08)] outline-none focus:border-amber focus:ring-1 focus:ring-amber/35'
 
 type StackEditorProps = {
   title: string
@@ -154,11 +155,14 @@ const StackEditor: React.FC<StackEditorProps> = ({
                 size="xl"
                 src={troopImageSrc(row.troop_code)}
                 alt={troop_name}
+                className="shrink-0"
               />
               <div className="flex min-h-20 min-w-0 flex-1 flex-col justify-between gap-1">
-                <div className="flex min-h-0 flex-1 flex-nowrap items-stretch gap-2">
+                <div
+                  className="grid h-9 flex-none grid-cols-[minmax(0,1fr)_3.25rem_auto] items-stretch gap-2"
+                >
                   <select
-                    className={`${stackControlClass} flex-1`}
+                    className={`${stackSelectClass} min-w-0`}
                     value={row.troop_code}
                     onChange={e => updateRow(index, { troop_code: e.target.value as TroopCode })}
                   >
@@ -169,7 +173,7 @@ const StackEditor: React.FC<StackEditorProps> = ({
                     ))}
                   </select>
                   <select
-                    className={`${stackControlClass} w-[4.5rem] shrink-0`}
+                    className={`${stackSelectClass} w-[3.25rem] shrink-0 px-1 text-center tabular-nums`}
                     value={count}
                     onChange={e => updateRow(index, { count: Number.parseInt(e.target.value, 10) })}
                   >
@@ -181,7 +185,7 @@ const StackEditor: React.FC<StackEditorProps> = ({
                   </select>
                   <button
                     type="button"
-                    className="shrink-0 rounded-sm border border-rust/50 px-2 text-xs text-amber-dim hover:border-danger hover:text-amber disabled:opacity-50"
+                    className="h-9 shrink-0 rounded-sm border border-rust/50 px-2 text-xs text-amber-dim hover:border-danger hover:text-amber disabled:opacity-50"
                     onClick={() => removeRow(index)}
                     disabled={stacks.length <= 1}
                   >
