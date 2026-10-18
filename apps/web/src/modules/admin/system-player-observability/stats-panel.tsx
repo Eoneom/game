@@ -292,11 +292,11 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     Aucun avant-poste (temporaire ou permanent) pour ce joueur.
                   </p>
                 ) : (
-                  <ul className="m-0 list-none space-y-2 p-0">
+                  <ul className="m-0 grid list-none grid-cols-3 gap-2 p-0">
                     {snapshot.outposts.map(outpost => (
                       <li
                         key={outpost.id}
-                        className="admin-surface-nested space-y-2 rounded-sm p-2 text-sm text-amber"
+                        className="admin-surface-nested min-w-0 space-y-2 rounded-sm p-2 text-sm text-amber"
                       >
                         <div>
                           {translateOutpostType(outpost.type)}
