@@ -33,6 +33,8 @@ import { PostgresResourceStockRepository } from '#adapter/database/repository/re
 import { PostgresTechnologyRepository } from '#adapter/database/repository/technology'
 import { PostgresTroopRepository } from '#adapter/database/repository/troop'
 import { PostgresBattleRepository } from '#adapter/database/repository/battle'
+import { PostgresSystemPlayerMemoryRepository } from '#adapter/database/repository/system-player-memory'
+import { SystemPlayerMemoryRepository } from '#app/port/repository/system-player-memory'
 import {
   Kysely,
   sql
@@ -54,6 +56,7 @@ export class PostgresRepository implements Repository {
   technology: TechnologyRepository
   troop: TroopRepository
   battle: BattleRepository
+  system_player_memory: SystemPlayerMemoryRepository
 
   private db: Kysely<DB>
 
@@ -77,6 +80,7 @@ export class PostgresRepository implements Repository {
     this.technology = new PostgresTechnologyRepository(this.db)
     this.troop = new PostgresTroopRepository(this.db)
     this.battle = new PostgresBattleRepository(this.db)
+    this.system_player_memory = new PostgresSystemPlayerMemoryRepository(this.db)
   }
 
   async connect(): Promise<void> {

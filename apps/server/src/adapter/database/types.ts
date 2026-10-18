@@ -246,6 +246,11 @@ export interface PgbossWarning {
   type: string;
 }
 
+export interface SystemPlayerMemory {
+  memory_json: Json;
+  player_id: string;
+}
+
 export interface Player {
   faction_code: string;
   id: Generated<string>;
@@ -355,6 +360,7 @@ export interface DB {
   "pgboss.version": PgbossVersion;
   "pgboss.warning": PgbossWarning;
   player: Player;
+  system_player_memory: SystemPlayerMemory;
   report: Report;
   report_battle: ReportBattle;
   report_troop: ReportTroop;

@@ -12,6 +12,7 @@ import {
   type SystemTickCategory,
 } from '#core/player/system/tick-category'
 import type { SystemEmpireSnapshot } from '#core/player/system/empire-snapshot'
+import { rerankIntentsByUtility } from '#core/player/system/intent-utility'
 
 export type SystemPlayerActionIntent = {
   category: SystemTickCategory
@@ -190,11 +191,16 @@ export function planSystemPlayerActions(
       SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS,
       remaining_budget,
     )
+    const logistics_reason = snapshot.outpost_logistics_needs_gatherer_count > 0
+      ? 'outpost_logistics_needs_gatherer'
+      : snapshot.outpost_logistics_needs_haul_count > 0
+        ? 'outpost_logistics_needs_haul'
+        : 'outpost_logistics'
     for (let index = 0; index < deploy_attempts; index += 1) {
       intents.push({
         category: 'deploy-outpost',
         priority: intents.length,
-        reason: 'outpost_logistics',
+        reason: logistics_reason,
       })
     }
     seen_categories.add('deploy-outpost')
@@ -226,10 +232,22 @@ export function planSystemPlayerActions(
       category,
       priority: intents.length,
       ...(snapshot.defer_explore && category === 'explore'
-        ? { reason: 'defer_explore_for_basing' }
+        ? {
+          reason: snapshot.frontier_queue_length > 0
+            ? 'defer_explore_for_frontier'
+            : 'defer_explore_for_basing',
+        }
         : {}),
     })
   }
 
-  return intents
+  if (snapshot.empire_under_threat && !seen_categories.has('recruit')) {
+    intents.push({
+      category: 'recruit',
+      priority: intents.length,
+      reason: 'defend_recruit',
+    })
+  }
+
+  return rerankIntentsByUtility(intents, snapshot)
 }
