@@ -88,13 +88,7 @@ describe('cell-cache', () => {
     ).toHaveLength(1)
   })
 
-  it('mergeSettlements replaces markers in bounds', () => {
-    const bounds = {
-      min_x: 1,
-      max_x: 5,
-      min_y: 1,
-      max_y: 5,
-    }
+  it('mergeSettlements accumulates markers and ignores empty batches', () => {
     const merged = mergeSettlements(
       {
         cities: [
@@ -126,11 +120,16 @@ describe('cell-cache', () => {
         ],
         outposts: [],
       },
-      bounds,
     )
     expect(merged.cities.map(c => c.id).sort()).toEqual([
       'new',
       'old',
     ])
+    expect(
+      mergeSettlements(merged, {
+        cities: [],
+        outposts: [],
+      }).cities,
+    ).toHaveLength(2)
   })
 })

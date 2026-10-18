@@ -122,7 +122,7 @@ describe('WorldGetCellsQuery', () => {
     expect(repository.outpost.listInBounds).toHaveBeenCalledWith(bounds)
   })
 
-  it('skips settlement queries when detail is terrain', async () => {
+  it('loads settlements but skips exploration when detail is terrain', async () => {
     const result = await new WorldGetCellsQuery().run({
       ...bounds,
       player_id,
@@ -130,12 +130,11 @@ describe('WorldGetCellsQuery', () => {
     })
 
     expect(result.cells).toBe(cells)
-    expect(result.settlements).toEqual({
-      cities: [],
-      outposts: [],
-    })
-    expect(repository.city.listInBounds).not.toHaveBeenCalled()
-    expect(repository.outpost.listInBounds).not.toHaveBeenCalled()
+    expect(result.settlements.cities).toHaveLength(1)
+    expect(result.explored_cell_ids).toEqual([])
+    expect(repository.exploration.get).not.toHaveBeenCalled()
+    expect(repository.city.listInBounds).toHaveBeenCalledWith(bounds)
+    expect(repository.outpost.listInBounds).toHaveBeenCalledWith(bounds)
   })
 
   it('rejects invalid bounds', async () => {

@@ -73,13 +73,13 @@ export const cellsInBounds = (
 export const mergeSettlements = (
   previous: WorldGetCellsDataResponse['settlements'] | null,
   next: WorldGetCellsDataResponse['settlements'],
-  bounds: ViewportBounds,
 ): WorldGetCellsDataResponse['settlements'] => {
-  const inBounds = (coordinates: { x: number; y: number }) =>
-    coordinates.x >= bounds.min_x &&
-    coordinates.x <= bounds.max_x &&
-    coordinates.y >= bounds.min_y &&
-    coordinates.y <= bounds.max_y
+  if (next.cities.length === 0 && next.outposts.length === 0) {
+    return previous ?? {
+      cities: [],
+      outposts: [],
+    }
+  }
 
   const citiesById = new Map(
     (previous?.cities ?? []).map(city => [city.id, city]),
@@ -95,7 +95,23 @@ export const mergeSettlements = (
   }
 
   return {
-    cities: [...citiesById.values()].filter(city => inBounds(city.coordinates)),
-    outposts: [...outpostsById.values()].filter(outpost => inBounds(outpost.coordinates)),
+    cities: [...citiesById.values()],
+    outposts: [...outpostsById.values()],
+  }
+}
+
+export const settlementsInBounds = (
+  settlements: WorldGetCellsDataResponse['settlements'],
+  bounds: ViewportBounds,
+): WorldGetCellsDataResponse['settlements'] => {
+  const inBounds = (coordinates: { x: number; y: number }) =>
+    coordinates.x >= bounds.min_x &&
+    coordinates.x <= bounds.max_x &&
+    coordinates.y >= bounds.min_y &&
+    coordinates.y <= bounds.max_y
+
+  return {
+    cities: settlements.cities.filter(city => inBounds(city.coordinates)),
+    outposts: settlements.outposts.filter(outpost => inBounds(outpost.coordinates)),
   }
 }

@@ -10,6 +10,7 @@ import {
   createCellCache,
   mergeCells,
   mergeSettlements,
+  settlementsInBounds,
 } from '#map/cell-cache'
 import {
   CITY_MAP_INITIAL_HALF_EXTENT,
@@ -65,7 +66,7 @@ export const useWorld = () => {
       bounds: visibleBounds,
       cells: cellsInBounds(cellCacheRef.current, visibleBounds),
       viewer,
-      settlements,
+      settlements: settlementsInBounds(settlements, visibleBounds),
     }
   }, [
     center,
@@ -84,7 +85,7 @@ export const useWorld = () => {
       setCacheVersion(v => v + 1)
       setViewer(fetched.viewer)
       setSettlements(previous =>
-        mergeSettlements(previous, fetched.settlements, bounds),
+        mergeSettlements(previous, fetched.settlements),
       )
     },
     [],
@@ -286,13 +287,19 @@ export const useWorld = () => {
       skipDebounceRef.current = true
       pendingDetailRef.current = 'full'
       panDirectionRef.current = null
-      await loadCells({
-        center: coordinates,
-        half_extent: 0,
+      const bounds = viewportBoundsAround(coordinates, 0)
+      const generation = ++fetchGeneration.current
+      const fetched = await getCells({
+        token,
+        bounds,
         detail: 'full',
       })
+      if (!fetched || generation !== fetchGeneration.current) return
+      mergeCells(cellCacheRef.current, fetched.cells)
+      setCacheVersion(v => v + 1)
+      setViewer(fetched.viewer)
     },
-    [loadCells, token],
+    [token],
   )
 
   const setZoom = useCallback((nextHalf: number) => {
