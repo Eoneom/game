@@ -16,6 +16,10 @@ import {
   isExpansionStarved,
   type SystemEmpireSnapshot,
 } from '#core/player/system/empire-snapshot'
+import { AppService } from '#app/service'
+import {
+  countPermanentOutpostsWorthTransport,
+} from '#command/player/system/transport'
 import { OutpostType } from '#core/outpost/constant/type'
 import {
   shouldDeferExploreForBasing,
@@ -181,15 +185,18 @@ async function isProductionReadyForResearch(player_id: string): Promise<boolean>
 export async function collectSystemEmpireSnapshot(player_id: string): Promise<SystemEmpireSnapshot> {
   const [
     { cities, count_limit: city_count_limit },
-    { outposts },
+    outpost_list,
     combat_counts,
     outpost_recruit_hints,
+    outpost_warehouses_capacity,
   ] = await Promise.all([
     new CityListQuery().run({ player_id }),
     new OutpostListQuery().run({ player_id }),
     loadEmpireCombatArmyCounts(player_id),
     loadOutpostRecruitHints(player_id),
+    AppService.getOutpostWarehousesCapacity({ player_id }),
   ])
+  const { outposts, resource_stocks } = outpost_list
 
   const temporary_outpost_count = outposts.filter(
     outpost => outpost.type !== OutpostType.PERMANENT,
@@ -252,6 +259,12 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     needs_carrier_on_outpost: outpost_recruit_hints.needs_carrier_on_outpost,
   })
 
+  const outpost_transport_pressure_count = countPermanentOutpostsWorthTransport({
+    outposts,
+    resource_stocks,
+    warehouses_capacity: outpost_warehouses_capacity,
+  })
+
   return {
     player_id,
     temporary_outpost_count,
@@ -263,5 +276,6 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     expansion_starved,
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
     needs_outpost_logistics,
+    outpost_transport_pressure_count,
   }
 }

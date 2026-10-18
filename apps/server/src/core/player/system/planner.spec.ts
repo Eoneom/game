@@ -25,6 +25,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     expansion_starved: false,
     combat_army_ready: false,
     needs_outpost_logistics: false,
+    outpost_transport_pressure_count: 0,
     ...overrides,
   }
 }
@@ -123,15 +124,17 @@ describe('planSystemPlayerActions', () => {
       economy_first: true,
     }), 0)
     assert.deepStrictEqual(
-      plan.slice(0, 3).map(intent => intent.category),
+      plan.slice(0, 5).map(intent => intent.category),
       [
+        'make-permanent',
+        'make-permanent',
         'make-permanent',
         'make-permanent',
         'make-permanent',
       ],
     )
-    assert.ok(plan.slice(0, 3).every(intent => intent.reason === 'commit_temp_outpost'))
-    assert.strictEqual(plan[3].category, 'upgrade')
+    assert.ok(plan.slice(0, 5).every(intent => intent.reason === 'commit_temp_outpost'))
+    assert.strictEqual(plan[5].category, 'upgrade')
   })
 
   it('prepends deploy-outpost intents when outpost logistics are needed', () => {
@@ -144,6 +147,39 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[1].category, 'deploy-outpost')
     assert.strictEqual(plan[1].reason, 'outpost_logistics')
     assert.strictEqual(plan[2].category, 'base')
+  })
+
+  it('prepends transport intents when permanent outpost stock is pressured', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      outpost_transport_pressure_count: 4,
+      expansion_starved: false,
+    }), 0)
+    assert.deepStrictEqual(
+      plan.slice(0, 4).map(intent => ({
+        category: intent.category,
+        reason: intent.reason,
+      })),
+      [
+        {
+          category: 'transport',
+          reason: 'outpost_transport_pressure',
+        },
+        {
+          category: 'transport',
+          reason: 'outpost_transport_pressure',
+        },
+        {
+          category: 'transport',
+          reason: 'outpost_transport_pressure',
+        },
+        {
+          category: 'transport',
+          reason: 'outpost_transport_pressure',
+        },
+      ],
+    )
+    assert.ok(!plan.some((intent, index) => index >= 4 && intent.category === 'transport'))
+    assert.strictEqual(plan[4].category, 'base')
   })
 })
 

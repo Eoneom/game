@@ -48,6 +48,7 @@ describe('tickSystemPlayers', () => {
     expansion_starved: true,
     combat_army_ready: false,
     needs_outpost_logistics: false,
+    outpost_transport_pressure_count: 0,
   }
 
   let listSystemControlled: MockInstance

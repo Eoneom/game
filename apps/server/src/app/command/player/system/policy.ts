@@ -146,6 +146,7 @@ export async function actForSystemPlayer({
         expansion_starved: false,
         combat_army_ready: false,
         needs_outpost_logistics: false,
+        outpost_transport_pressure_count: 0,
       }, tick_index)
 
   return executeSystemPlayerTick({

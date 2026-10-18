@@ -7,6 +7,7 @@ import { TroopCount } from '#core/troop/type'
 import { Coordinates } from '#core/world/value/coordinates'
 import type { CellEntity } from '#core/world/cell/entity'
 import { OutpostEntity } from '#core/outpost/entity'
+import { OutpostType } from '#core/outpost/constant/type'
 import { Resource, WarehouseCapacity } from '#shared/resource'
 import {
   isStorageResourcePressured,
@@ -174,4 +175,33 @@ export function sortOutpostsForSystemTransport(
 
 export function hasTransportableStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
+}
+
+export function countPermanentOutpostsWorthTransport({
+  outposts,
+  resource_stocks,
+  warehouses_capacity,
+  pressure_fill_ratio = SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
+}: {
+  outposts: OutpostEntity[]
+  resource_stocks: (Resource | null | undefined)[]
+  warehouses_capacity: WarehouseCapacity
+  pressure_fill_ratio?: number
+}): number {
+  let count = 0
+  for (let index = 0; index < outposts.length; index += 1) {
+    const outpost = outposts[index]
+    const stock = resource_stocks[index]
+    if (outpost.type !== OutpostType.PERMANENT || !stock) {
+      continue
+    }
+    if (isPermanentOutpostStockWorthTransport({
+      stock,
+      warehouses_capacity,
+      pressure_fill_ratio,
+    })) {
+      count += 1
+    }
+  }
+  return count
 }

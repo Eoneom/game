@@ -15,6 +15,8 @@ export type SystemEmpireSnapshot = {
   combat_army_ready: boolean
   /** Permanent outposts lack on-site gatherers and/or haulers for logistics. */
   needs_outpost_logistics: boolean
+  /** Permanent outposts at system transport pressure (eligible for haul if a carrier is on site). */
+  outpost_transport_pressure_count: number
 }
 
 export function isExpansionStarved({

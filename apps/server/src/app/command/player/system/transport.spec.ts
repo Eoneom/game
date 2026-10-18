@@ -11,6 +11,7 @@ import {
   carrierTroopsForTransportLoad,
   clampResourcesToTransportCapacity,
   deliverableResourceTotal,
+  countPermanentOutpostsWorthTransport,
   isPermanentOutpostStockWorthTransport,
   pickCityForSystemTransport,
   sortOutpostsForSystemTransport,
@@ -83,6 +84,44 @@ describe('system transport helpers', () => {
         mushroom: 1000,
       },
     }), true)
+  })
+
+  it('counts permanent outposts at transport pressure', () => {
+    const permanent_cell = testCityCell({ cell_id: id() })
+    const temporary_cell = testCityCell({ cell_id: id() })
+    const outposts = [
+      OutpostEntity.create({
+        id: id(),
+        player_id,
+        cell_id: permanent_cell.id,
+        type: OutpostType.PERMANENT,
+      }),
+      OutpostEntity.create({
+        id: id(),
+        player_id,
+        cell_id: temporary_cell.id,
+        type: OutpostType.TEMPORARY,
+      }),
+    ]
+    assert.strictEqual(countPermanentOutpostsWorthTransport({
+      outposts,
+      resource_stocks: [
+        {
+          plastic: 600,
+          mushroom: 0,
+          plasma: 0,
+        },
+        {
+          plastic: 900,
+          mushroom: 0,
+          plasma: 0,
+        },
+      ],
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+    }), 1)
   })
 
   it('clamps cargo to transporter capacity with partial loads', () => {

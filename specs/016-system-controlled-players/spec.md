@@ -4,7 +4,7 @@
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (3)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (10)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`003`](../003-player-registration-signup/spec.md)), all game commands invoked by tick actions.
 
@@ -39,7 +39,9 @@ Constants (`core/player/constant/system.ts`):
 
 | Constant | Value |
 | --- | --- |
-| `SYSTEM_MAX_ACTIONS_PER_TICK` | `3` |
+| `SYSTEM_MAX_ACTIONS_PER_TICK` | `10` |
+| `SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS` | `2` |
+| `SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS` | `5` |
 
 Interval: `SYSTEM_PLAYER_TICK_INTERVAL_MS` (`app/scheduling/intervals`).
 
@@ -61,7 +63,7 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Outpost gathering & logistics** (`deploy-outpost`, `loadOutpostRecruitHints`, `outpost-logistics.ts`): permanent outposts need **cultivator** / **salvager** troops **on the outpost cell** for production (`AppService.getOutpostProductionBreakdown`). `loadOutpostRecruitHints` flags missing gatherers from cell coefficients alone (no stock required). **`deploy-outpost`** (`tryDeployOutpostTroops`) sends **one** matching troop from any city garrison via `MovementAction.BASE` to the highest-scoring outpost missing cultivator, salvager, or **carrier** (hauler). Carriers deploy when a gatherer is already on site or when outpost stock meets the **system transport** pressure threshold (`SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO` = **0.5**). The tick planner (`planSystemPlayerActions`, `collectSystemEmpireSnapshot.needs_outpost_logistics`) prepends up to **two** `deploy-outpost` intents when permanent outposts need logistics. Recruit sorting boosts cultivator, salvager, and hauler while those needs are set.
 
-**Transport** (`tryTransport`, helpers in `system/transport.ts`): only **permanent** outposts whose plastic or mushroom stock is at **system outpost pressure** (`stock >= capacity × 0.5`, `SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO`) or that hold **any plasma** are candidates (city upgrades still use **0.7**); outposts are tried **highest total stock first** (cell resource score tie-break). **Destination city** is the one that can accept the most deliverable cargo (`min(origin, destination warehouse_space_remaining)` per resource; plasma uncapped at destination). Requires at least one **carrier** troop (`TroopRole.CARRIER`, e.g. Hauler) on the outpost; sends the **minimum** hauler count needed for the load (up to garrison). Cargo is capped to destination warehouse space, then **clamped to transporter capacity** (partial loads allowed, same as human transport UI). One transport movement per successful tick; no batching across outposts.
+**Transport** (`tryTransport`, helpers in `system/transport.ts`): only **permanent** outposts whose plastic or mushroom stock is at **system outpost pressure** (`stock >= capacity × 0.5`, `SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO`) or that hold **any plasma** are candidates (city upgrades still use **0.7**); outposts are tried **highest total stock first** (cell resource score tie-break). **Destination city** is the one that can accept the most deliverable cargo (`min(origin, destination warehouse_space_remaining)` per resource; plasma uncapped at destination). Requires at least one **carrier** troop (`TroopRole.CARRIER`, e.g. Hauler) on the outpost; sends the **minimum** hauler count needed for the load (up to garrison). Cargo is capped to destination warehouse space, then **clamped to transporter capacity** (partial loads allowed, same as human transport UI). Each successful `transport` intent creates **one** movement; `tryTransport` always picks the next best pressured outpost (skipping outposts without an idle carrier or deliverable cargo). The planner prepends up to `min(outpost_transport_pressure_count, SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS, SYSTEM_MAX_ACTIONS_PER_TICK − prior prepends)` **`transport`** intents (reason `outpost_transport_pressure`) when `collectSystemEmpireSnapshot.outpost_transport_pressure_count > 0`, after `deploy-outpost` prepends and before the rotated category ring (so haul runs are not starved by explore or the per-tick budget). Deploy-outpost and recruit still place carriers on site when missing.
 
 **Research** (`tryResearch`): technologies are ordered by `sortTechnologiesForSystemResearch` (`system/technologies.ts`) — highest priority first: `architecture`, `photovoltaic_optimization`, `replication_catalyst`, `outpost_logistics`; tiebreaker lower `level` first. Skips codes with in-flight research (`research_at` on list entries or pending job via `hasPendingTechnologyResearchByCode`). If any technology is already researching, the action returns idle (unchanged).
 
@@ -71,7 +73,7 @@ When not pressured, building iteration order is unchanged (repository list order
 
 ## Expansion focus
 
-**Tick priority (default)**: expansion block **`base` → `settle` → `make-permanent` → `explore`**, then economy (`upgrade` → `research` → `recruit` → `transport`), rotated by `tick_index` so each category leads periodically. The goal is ongoing territorial and resource expansion at every empire size — committing high-value scouted cells before frontier scouting.
+**Tick priority (default)**: expansion block **`base` → `settle` → `make-permanent` → `explore`**, then economy (`upgrade` → `research` → `deploy-outpost` → `recruit` → `transport` → `attack`), rotated by `tick_index` so each category leads periodically. The goal is ongoing territorial and resource expansion at every empire size — committing high-value scouted cells before frontier scouting.
 
 **Temporary outposts**: while any **temporary** outposts exist, the expansion ring is **`make-permanent` → `settle` → `base` → `explore`** (`SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST`). `planSystemPlayerActions` also **prepends** up to `min(temporary_outpost_count, SYSTEM_MAX_ACTIONS_PER_TICK)` **`make-permanent`** intents (reason `commit_temp_outpost`) before the rotated plan so permanence is attempted even when economy-first rotation would otherwise consume the per-tick action budget; the tail is **deduped by category** (first occurrence kept).
 
@@ -81,7 +83,7 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Explore deferral**: `tryExplore` returns idle when an explored, unoccupied cell meets the minimum score for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target across owned viewports — the same tick can then succeed on `base` / `settle` without mapping the whole viewport first. Explore runs only when there is no such committable site and more intel is needed.
 
-**Economy override**: when `shouldPrioritizeEconomyForSystemPlayer` is true for the first city, the economy block (`upgrade`, `research`, `recruit`, `transport`) is tried before expansion for that tick.
+**Economy override**: when `shouldPrioritizeEconomyForSystemPlayer` is true for the first city, the economy block (`upgrade`, `research`, `deploy-outpost`, `recruit`, `transport`, `attack`) is tried before expansion for that tick.
 
 **Cell heuristics** (`core/player/system/expansion-cell.ts`):
 

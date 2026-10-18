@@ -27,11 +27,13 @@ After each `executeSystemPlayerTick` run (or on tick error), `tickSystemPlayers`
 | `outcome` | When | `attempts` | `payload` / `summary` |
 | --- | --- | --- | --- |
 | `success` | Exactly one action committed | Skipped intents then one `success` | First action payload; `committed_actions` length 1 |
-| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`) | Mixed `skipped` / `success` in plan order | `payload` includes `committed_actions[]`; multi-line French summary |
+| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`, **10**) | Mixed `skipped` / `success` in plan order | `payload` includes `committed_actions[]`; multi-line French summary |
 | `idle` | No actions committed | Every tried intent `skipped` | Empty object; summary lists tried categories in order |
 | `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Safe `error_message` / `error_code` (no stack) |
 
 Bus payload includes top-level `committed_actions: { category, payload }[]` when any action committed.
+
+**Tick category labels** (French summaries / attempt chains): `apps/web/src/modules/admin/system-player-observability/labels.ts` — `upgrade`, `research`, `recruit`, `explore`, `base`, `settle`, `make-permanent`, `transport`, `deploy-outpost` (« Déploiement vers avant-poste »), `attack`. A single tick may list the same category multiple times when the planner prepends repeated intents (e.g. several `transport` or `make-permanent` actions).
 
 ## WebSocket message (tick feed)
 
