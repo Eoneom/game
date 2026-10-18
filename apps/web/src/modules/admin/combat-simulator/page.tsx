@@ -8,7 +8,9 @@ import {
 } from '@eoneom/api-client'
 import { AdminRouteGate } from '#admin/session'
 import { CombatStrategyLabels } from '#movement/translations'
+import { troopImageSrc } from '#troop/image'
 import { TroopTranslations } from '#troop/translations'
+import { EntityThumb } from '#ui/entity-thumb'
 import {
   COMBAT_STRATEGY_OPTIONS,
   CombatSimulatorFaction,
@@ -39,6 +41,34 @@ type StackEditorProps = {
   onFactionChange: (faction: CombatSimulatorFaction) => void
   stacks: CombatSimulatorStackRow[]
   onChange: (stacks: CombatSimulatorStackRow[]) => void
+}
+
+const TroopLossList: React.FC<{
+  losses: { troop_code: TroopCode; count: number }[]
+}> = ({ losses }) => {
+  if (losses.length === 0) {
+    return <span>—</span>
+  }
+
+  return (
+    <ul className="m-0 flex list-none flex-col gap-1 p-0">
+      {losses.map(loss => (
+        <li key={loss.troop_code} className="flex items-center gap-1.5">
+          <img
+            src={troopImageSrc(loss.troop_code)}
+            alt={TroopTranslations[loss.troop_code].name}
+            className="h-7 w-7 shrink-0 rounded-sm border border-rust/50 object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <span>
+            {TroopTranslations[loss.troop_code].name}
+            <span className="text-amber-dim"> ×{loss.count}</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 const SideTotalsSummary: React.FC<{ stacks: CombatSimulatorStackRow[] }> = ({ stacks }) => {
@@ -98,8 +128,16 @@ const StackEditor: React.FC<StackEditorProps> = ({
           const row_codes = availableTroopCodesForRow(faction, stacks, index)
           const per_unit = troopCombatStats(row.troop_code)
           const count = row.count
+          const troop_name = TroopTranslations[row.troop_code].name
           return (
-            <div key={index} className="flex flex-col gap-1">
+            <div key={index} className="flex gap-2">
+              <EntityThumb
+                size="md"
+                src={troopImageSrc(row.troop_code)}
+                alt={troop_name}
+                className="mt-0.5"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
                 <select
                   className="field-input min-w-[10rem] py-1 text-sm"
@@ -134,6 +172,7 @@ const StackEditor: React.FC<StackEditorProps> = ({
                 {' · '}
                 Ligne — ATK {per_unit.attack * count} / DEF {per_unit.defense * count} / VIE {per_unit.life * count}
               </p>
+              </div>
             </div>
           )
         })}
@@ -149,17 +188,6 @@ const StackEditor: React.FC<StackEditorProps> = ({
       <SideTotalsSummary stacks={stacks} />
     </section>
   )
-}
-
-const formatLosses = (
-  losses: { troop_code: TroopCode; count: number }[],
-): string => {
-  if (losses.length === 0) {
-    return '—'
-  }
-  return losses
-    .map(l => `${TroopTranslations[l.troop_code].name} ×${l.count}`)
-    .join(', ')
 }
 
 const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) => {
@@ -318,8 +346,12 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
                         <td className="px-2 py-1 whitespace-nowrap">
                           ATK {row.defender_attack_pool} / VIE {row.defender_life_pool}
                         </td>
-                        <td className="px-2 py-1">{formatLosses(row.attacker_losses)}</td>
-                        <td className="px-2 py-1">{formatLosses(row.defender_losses)}</td>
+                        <td className="px-2 py-1 align-top">
+                          <TroopLossList losses={row.attacker_losses} />
+                        </td>
+                        <td className="px-2 py-1 align-top">
+                          <TroopLossList losses={row.defender_losses} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
