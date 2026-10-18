@@ -26,6 +26,7 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
         tick_index,
         actions: systemTickActions,
         snapshot,
+        collect_snapshot: collectSystemEmpireSnapshot,
         max_actions: SYSTEM_MAX_ACTIONS_PER_TICK,
       })
       logger.info('system player tick', {

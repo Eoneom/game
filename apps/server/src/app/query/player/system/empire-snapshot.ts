@@ -2,7 +2,15 @@ import { projectBuildingLevelsForPolicy } from '#command/player/system/pending-u
 import {
   loadEmpireCombatArmyCounts,
 } from '#command/player/system/combat-policy'
-import { needsOutpostLogistics } from '#command/player/system/outpost-logistics'
+import {
+  needsOutpostLogistics,
+  outpostLogisticsPhase,
+  SystemOutpostLogisticsPhase,
+} from '#command/player/system/outpost-logistics'
+import { loadSystemPlayerMemory } from '#command/player/system/memory'
+import { collectSystemEmpireIntel } from '#app/query/player/system/empire-intel'
+import { summarizeSystemFrontierQueue } from '#app/query/player/system/frontier-queue'
+import { isEmpireUnderThreat } from '#core/player/system/intel'
 import {
   isCityWarehouseUnderPressure,
   isCoreProductionSatisfied,
@@ -35,6 +43,7 @@ import {
   INITIAL_VIEWPORT_HALF_EXTENT,
   WORLD_SIZE,
 } from '#core/world/constant/size'
+import { TroopListQuery } from '#query/troop/list'
 import { BuildingListQuery } from '#query/building/list'
 import { CityGetQuery } from '#query/city/get'
 import { CityListQuery } from '#query/city/list'
@@ -251,12 +260,6 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     }),
   ])
 
-  const expansion_starved = isExpansionStarved({
-    temporary_outpost_count,
-    permanent_outpost_count,
-    defer_explore,
-  })
-
   const needs_outpost_logistics = permanent_outpost_count > 0 && needsOutpostLogistics({
     needs_harvester_on_outpost: outpost_recruit_hints.needs_harvester_on_outpost,
     needs_reclaimer_on_outpost: outpost_recruit_hints.needs_reclaimer_on_outpost,
@@ -269,6 +272,76 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     warehouses_capacity: outpost_warehouses_capacity,
   })
 
+  const owned_coordinates: Coordinates[] = []
+  for (const city of cities) {
+    const details = await new CityGetQuery().run({
+      city_id: city.id,
+      player_id,
+    })
+    owned_coordinates.push(details.cell.coordinates)
+  }
+  outpost_list.cells.forEach((cell) => {
+    if (cell) {
+      owned_coordinates.push(cell.coordinates)
+    }
+  })
+
+  let outpost_logistics_needs_gatherer_count = 0
+  let outpost_logistics_needs_haul_count = 0
+  for (const [
+    index,
+    outpost,
+  ] of outposts.entries()) {
+    if (outpost.type !== OutpostType.PERMANENT) {
+      continue
+    }
+    const cell = outpost_list.cells[index]
+    const stock = resource_stocks[index]
+    if (!cell || !stock) {
+      continue
+    }
+    const { troops } = await new TroopListQuery().run({
+      player_id,
+      location: {
+        type: 'outpost',
+        outpost_id: outpost.id,
+      },
+    })
+    const phase = outpostLogisticsPhase({
+      cell,
+      troops,
+      stock,
+      warehouses_capacity: outpost_warehouses_capacity,
+    })
+    if (phase === SystemOutpostLogisticsPhase.NEEDS_GATHERER) {
+      outpost_logistics_needs_gatherer_count += 1
+    }
+    if (phase === SystemOutpostLogisticsPhase.NEEDS_HAUL) {
+      outpost_logistics_needs_haul_count += 1
+    }
+  }
+
+  const [
+    { frontier_queue_length, frontier_top_score },
+    intel,
+    memory,
+  ] = await Promise.all([
+    summarizeSystemFrontierQueue(player_id),
+    collectSystemEmpireIntel({
+      player_id,
+      owned_coordinates,
+    }),
+    loadSystemPlayerMemory(player_id),
+  ])
+
+  const effective_defer_explore = defer_explore || frontier_queue_length > 0
+  const expansion_starved = isExpansionStarved({
+    temporary_outpost_count,
+    permanent_outpost_count,
+    defer_explore: effective_defer_explore,
+  })
+  const empire_under_threat = isEmpireUnderThreat(intel)
+
   return {
     player_id,
     temporary_outpost_count,
@@ -276,12 +349,20 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     expansion_categories,
     economy_first,
     production_ready_for_research,
-    defer_explore,
+    defer_explore: effective_defer_explore,
     expansion_starved,
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
     needs_outpost_logistics,
     outpost_transport_pressure_count,
     can_found_city,
     settle_ready_temp_count,
+    frontier_queue_length,
+    frontier_top_score,
+    intel,
+    empire_under_threat,
+    visible_enemy_combat_stacks: intel.visible_enemy_combat_stacks,
+    outpost_logistics_needs_gatherer_count,
+    outpost_logistics_needs_haul_count,
+    memory,
   }
 }

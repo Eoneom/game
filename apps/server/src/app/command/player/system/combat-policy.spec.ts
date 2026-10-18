@@ -17,8 +17,12 @@ import {
 } from './troops'
 import {
   combatStacksForAttack,
+  pickAttackerStrategyForDefender,
   scoreAttackTarget,
+  simulateAttackCommit,
 } from './combat-policy'
+import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { BattleWinner } from '#core/combat/value/battle-winner'
 
 describe('system combat army readiness', () => {
   it('requires all four combat classes, war_machine target, and disruptor ratio', () => {
@@ -87,6 +91,36 @@ describe('scoreAttackTarget', () => {
       defender_combat_count: 5,
     })
     assert.ok(city_score > field_score)
+  })
+})
+
+describe('pickAttackerStrategyForDefender', () => {
+  it('prefers opening strike against war-machine-heavy defenders', () => {
+    assert.strictEqual(
+      pickAttackerStrategyForDefender([
+        {
+          code: TroopCode.WAR_MACHINE,
+          count: 20,
+        },
+      ]),
+      CombatStrategy.OPENING_STRIKE,
+    )
+  })
+})
+
+describe('simulateAttackCommit', () => {
+  it('returns a winner for matched stacks', () => {
+    const winner = simulateAttackCommit({
+      move_troops: [
+        {
+          code: TroopCode.WAR_MACHINE,
+          count: 25,
+        },
+      ],
+      defender_stacks: [],
+      attacker_strategy: CombatStrategy.OPENING_STRIKE,
+    })
+    assert.strictEqual(winner, BattleWinner.ATTACKER)
   })
 })
 

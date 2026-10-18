@@ -51,6 +51,23 @@ describe('tickSystemPlayers', () => {
     outpost_transport_pressure_count: 0,
     can_found_city: true,
     settle_ready_temp_count: 0,
+    frontier_queue_length: 0,
+    frontier_top_score: null,
+    intel: {
+      nearest_threat_distance: null,
+      visible_enemy_combat_stacks: 0,
+      opponent_settlement_count: 0,
+      settlements: [],
+      threats: [],
+    },
+    empire_under_threat: false,
+    visible_enemy_combat_stacks: 0,
+    outpost_logistics_needs_gatherer_count: 0,
+    outpost_logistics_needs_haul_count: 0,
+    memory: {
+      failed_base_cells: [],
+      failed_attack_targets: [],
+    },
   }
 
   let listSystemControlled: MockInstance
@@ -117,7 +134,7 @@ describe('tickSystemPlayers', () => {
     assert.strictEqual(stats_emit.mock.calls.length, 1)
   })
 
-  it('passes snapshot and multi-action limit to actForSystemPlayer', async () => {
+  it('passes snapshot, replan collector, and multi-action limit to actForSystemPlayer', async () => {
     vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockImplementation(() => {})
     vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
     vi.spyOn(statsQuery, 'collectSystemPlayerStatsSnapshot').mockResolvedValue({
@@ -141,6 +158,10 @@ describe('tickSystemPlayers', () => {
     assert.deepStrictEqual(
       vi.mocked(actForSystemPlayer).mock.calls[0][0].snapshot,
       default_snapshot,
+    )
+    assert.strictEqual(
+      vi.mocked(actForSystemPlayer).mock.calls[0][0].collect_snapshot,
+      empireSnapshot.collectSystemEmpireSnapshot,
     )
   })
 

@@ -105,6 +105,28 @@ export type SystemRecruitSortHints = SystemOutpostRecruitHints & {
   combat: SystemCombatRecruitHints
 }
 
+export function scoreCityForEmpireRecruit({
+  city_index,
+  hints,
+  needs_logistics_troop_in_city,
+}: {
+  city_index: number
+  hints: SystemRecruitSortHints
+  needs_logistics_troop_in_city: boolean
+}): number {
+  let score = city_index * 3
+  if (hints.combat.boost_combat_recruit) {
+    score -= 20
+  }
+  if (hints.needs_harvester_on_outpost || hints.needs_reclaimer_on_outpost || hints.needs_carrier_on_outpost) {
+    score -= needs_logistics_troop_in_city ? 25 : 5
+  }
+  if (hints.scout_count < SYSTEM_MAX_SCOUT_TROOPS) {
+    score -= 2
+  }
+  return score
+}
+
 export function recruitSortHintsForCity({
   city_troops,
   outpost_hints,

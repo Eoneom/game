@@ -1,6 +1,9 @@
 import { systemTickExpansionCategories } from '#core/player/system/expansion-cell'
 import { SYSTEM_MAX_ACTIONS_PER_TICK } from '#core/player/system/constants'
-import type { SystemEmpireSnapshot } from '#core/player/system/empire-snapshot'
+import {
+  defaultSystemEmpireSnapshotFields,
+  type SystemEmpireSnapshot,
+} from '#core/player/system/empire-snapshot'
 import {
   categoriesForTick,
   planSystemPlayerActions,
@@ -125,6 +128,7 @@ export async function actForSystemPlayer({
   actions,
   categories,
   snapshot,
+  collect_snapshot,
   max_actions = 1,
 }: {
   player_id: string
@@ -132,30 +136,50 @@ export async function actForSystemPlayer({
   actions: Record<SystemTickCategory, SystemTickAction>
   categories?: SystemTickCategory[]
   snapshot?: SystemEmpireSnapshot
+  collect_snapshot?: (player_id: string) => Promise<SystemEmpireSnapshot>
   max_actions?: number
 }): Promise<SystemPlayerTickResult> {
-  const plan: SystemPlayerActionIntent[] = categories
-    ? categories.map((category, priority) => ({
+  if (categories) {
+    const plan: SystemPlayerActionIntent[] = categories.map((category, priority) => ({
       category,
       priority,
     }))
-    : snapshot
-      ? planSystemPlayerActions(snapshot, tick_index)
-      : planSystemPlayerActions({
-        player_id,
-        temporary_outpost_count: 0,
-        permanent_outpost_count: 2,
-        expansion_categories: SYSTEM_TICK_EXPANSION_CATEGORIES,
-        economy_first: false,
-        production_ready_for_research: false,
-        defer_explore: false,
-        expansion_starved: false,
-        combat_army_ready: false,
-        needs_outpost_logistics: false,
-        outpost_transport_pressure_count: 0,
-        can_found_city: true,
-        settle_ready_temp_count: 0,
-      }, tick_index)
+    return executeSystemPlayerTick({
+      player_id,
+      plan,
+      actions,
+      max_actions,
+    })
+  }
+
+  if (collect_snapshot) {
+    return executeSystemPlayerTickWithReplan({
+      player_id,
+      tick_index,
+      actions,
+      collect_snapshot,
+      max_actions,
+      initial_snapshot: snapshot,
+    })
+  }
+
+  const base_snapshot = snapshot ?? {
+    player_id,
+    temporary_outpost_count: 0,
+    permanent_outpost_count: 2,
+    expansion_categories: SYSTEM_TICK_EXPANSION_CATEGORIES,
+    economy_first: false,
+    production_ready_for_research: false,
+    defer_explore: false,
+    expansion_starved: false,
+    combat_army_ready: false,
+    needs_outpost_logistics: false,
+    outpost_transport_pressure_count: 0,
+    can_found_city: true,
+    settle_ready_temp_count: 0,
+    ...defaultSystemEmpireSnapshotFields(),
+  }
+  const plan = planSystemPlayerActions(base_snapshot, tick_index)
 
   return executeSystemPlayerTick({
     player_id,
@@ -163,4 +187,87 @@ export async function actForSystemPlayer({
     actions,
     max_actions,
   })
+}
+
+async function executeSystemPlayerTickWithReplan({
+  player_id,
+  tick_index,
+  actions,
+  collect_snapshot,
+  max_actions,
+  initial_snapshot,
+}: {
+  player_id: string
+  tick_index: number
+  actions: Record<SystemTickCategory, SystemTickAction>
+  collect_snapshot: (player_id: string) => Promise<SystemEmpireSnapshot>
+  max_actions: number
+  initial_snapshot?: SystemEmpireSnapshot
+}): Promise<SystemPlayerTickResult> {
+  const attempts: SystemPlayerTickAttempt[] = []
+  const committed_actions: SystemPlayerTickCommittedAction[] = []
+
+  while (committed_actions.length < max_actions) {
+    const snapshot = committed_actions.length === 0 && initial_snapshot
+      ? initial_snapshot
+      : await collect_snapshot(player_id)
+    const plan = planSystemPlayerActions(snapshot, tick_index)
+    let progressed = false
+
+    for (const intent of plan) {
+      if (committed_actions.length >= max_actions) {
+        break
+      }
+
+      let payload: SystemTickActionPayload | null
+      try {
+        payload = await actions[intent.category](player_id)
+      } catch (err) {
+        if (isSystemTickSkippableError(err)) {
+          attempts.push({
+            category: intent.category,
+            result: 'skipped',
+          })
+          continue
+        }
+        throw err
+      }
+
+      if (payload) {
+        attempts.push({
+          category: intent.category,
+          result: 'success',
+        })
+        committed_actions.push({
+          category: intent.category,
+          payload,
+        })
+        progressed = true
+        break
+      }
+
+      attempts.push({
+        category: intent.category,
+        result: 'skipped',
+      })
+    }
+
+    if (!progressed) {
+      break
+    }
+  }
+
+  if (committed_actions.length === 0) {
+    return {
+      outcome: 'idle',
+      attempts,
+    }
+  }
+
+  const outcome = committed_actions.length === 1 ? 'success' : 'partial'
+  return {
+    outcome,
+    committed_actions,
+    attempts,
+  }
 }

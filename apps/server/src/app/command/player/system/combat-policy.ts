@@ -1,3 +1,4 @@
+import { simulateCombat } from '#app/command/combat/simulate'
 import { resolveAttackTarget } from '#app/command/troop/movement/attack-target'
 import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
@@ -6,15 +7,21 @@ import { TroopListQuery } from '#query/troop/list'
 import { WorldGetCellsQuery } from '#query/world/get-cells'
 import { Factory } from '#adapter/factory'
 import { countCombatStacks } from '#core/combat/troop-combat'
-import { combatRoleFor } from '#core/combat/troop-combat'
+import { combatRoleFor, combatTroopClassFor } from '#core/combat/troop-combat'
 import { CombatRole } from '#core/troop/constant/combat-role'
 import { TroopCode } from '#core/troop/constant/code'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
+import { BattleWinner } from '#core/combat/value/battle-winner'
 import { FactionCode } from '#core/faction/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
+import {
+  isCoordinatesBlocked,
+  type SystemPlayerMemoryCoordinates,
+} from '#core/player/system/memory'
 import {
   INITIAL_VIEWPORT_HALF_EXTENT,
   WORLD_SIZE,
@@ -100,39 +107,87 @@ export function combatStacksForAttack(troops: TroopEntity[]): { code: TroopCode;
     }))
 }
 
+export function pickAttackerStrategyForDefender(
+  defender_stacks: { code: TroopCode, count: number }[],
+): CombatStrategy {
+  const class_counts = new Map<CombatTroopClass, number>()
+  for (const stack of defender_stacks) {
+    if (stack.count <= 0 || combatRoleFor(stack.code) !== CombatRole.COMBAT) {
+      continue
+    }
+    const combat_class = combatTroopClassFor(stack.code)
+    if (!combat_class) {
+      continue
+    }
+    class_counts.set(combat_class, (class_counts.get(combat_class) ?? 0) + stack.count)
+  }
+  const war_machine = class_counts.get(CombatTroopClass.WAR_MACHINE) ?? 0
+  const disruptor = class_counts.get(CombatTroopClass.DISRUPTOR) ?? 0
+  const legionnaire = class_counts.get(CombatTroopClass.LEGIONNAIRE) ?? 0
+  const interceptor = class_counts.get(CombatTroopClass.INTERCEPTOR) ?? 0
+  if (war_machine >= disruptor && war_machine >= legionnaire && war_machine >= interceptor) {
+    return CombatStrategy.OPENING_STRIKE
+  }
+  if (disruptor >= legionnaire && disruptor >= interceptor) {
+    return CombatStrategy.BALANCED
+  }
+  return CombatStrategy.HOLD_THE_LINE
+}
+
+export function simulateAttackCommit({
+  move_troops,
+  defender_stacks,
+  attacker_strategy,
+}: {
+  move_troops: { code: TroopCode, count: number }[]
+  defender_stacks: { code: TroopCode, count: number }[]
+  attacker_strategy: CombatStrategy
+}): BattleWinner | null {
+  const defender_strategy = pickAttackerStrategyForDefender(defender_stacks)
+  const result = simulateCombat({
+    attacker_stacks: move_troops,
+    defender_stacks,
+    attacker_strategy,
+    defender_strategy,
+  })
+  return result.winner
+}
+
 type AttackCandidate = {
   origin: Coordinates
   destination: Coordinates
   score: number
   move_troops: { code: TroopCode; count: number }[]
+  combat_strategy: CombatStrategy
 }
 
-async function defenderCombatCountOnCell({
+async function defenderCombatStacksOnCell({
   cell_id,
   attacker_player_id,
 }: {
   cell_id: string
   attacker_player_id: string
-}): Promise<number> {
+}): Promise<{ code: TroopCode, count: number }[]> {
   const repository = Factory.getRepository()
   const stacks = await repository.troop.listAllInCell({ cell_id })
-  const enemy = stacks.filter(
-    troop => troop.player_id !== attacker_player_id && troop.count > 0 && troop.movement_id === null,
-  )
-  return countCombatStacks(enemy.map(troop => ({
-    code: troop.code,
-    count: troop.count,
-  })))
+  return stacks
+    .filter(troop => troop.player_id !== attacker_player_id && troop.count > 0 && troop.movement_id === null)
+    .map(troop => ({
+      code: troop.code,
+      count: troop.count,
+    }))
 }
 
 export async function pickSystemAttack({
   player_id,
   attacker_faction_code,
   army_counts,
+  blocked_targets = [],
 }: {
   player_id: string
   attacker_faction_code: FactionCode
   army_counts: SystemCombatArmyCounts
+  blocked_targets?: readonly SystemPlayerMemoryCoordinates[]
 }): Promise<AttackCandidate | null> {
   if (!isSystemCombatArmyReady(army_counts)) {
     return null
@@ -195,6 +250,9 @@ export async function pickSystemAttack({
       if (cell.coordinates.x === origin.coordinates.x && cell.coordinates.y === origin.coordinates.y) {
         continue
       }
+      if (isCoordinatesBlocked(cell.coordinates, blocked_targets)) {
+        continue
+      }
 
       try {
         const target = await resolveAttackTarget({
@@ -202,10 +260,20 @@ export async function pickSystemAttack({
           attacker_faction_code,
           destination: cell.coordinates,
         })
-        const defender_combat_count = await defenderCombatCountOnCell({
+        const defender_stacks = await defenderCombatStacksOnCell({
           cell_id: target.destination_cell_id,
           attacker_player_id: player_id,
         })
+        const defender_combat_count = countCombatStacks(defender_stacks)
+        const combat_strategy = pickAttackerStrategyForDefender(defender_stacks)
+        const winner = simulateAttackCommit({
+          move_troops,
+          defender_stacks,
+          attacker_strategy: combat_strategy,
+        })
+        if (winner !== BattleWinner.ATTACKER) {
+          continue
+        }
         const score = scoreAttackTarget({
           target_kind: target.target_kind,
           cell,
@@ -217,6 +285,7 @@ export async function pickSystemAttack({
             destination: cell.coordinates,
             score,
             move_troops,
+            combat_strategy,
           }
         }
       } catch {
