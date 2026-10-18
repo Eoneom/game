@@ -1,6 +1,5 @@
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import { citySettle } from '#app/command/city/settle'
-import { outpostGather } from '#app/command/outpost/gather'
 import { outpostSetPermanent } from '#app/command/outpost/set-permanent'
 import { researchTechnology } from '#app/command/technology/research'
 import { recruitTroop } from '#app/command/troop/recruit'
@@ -38,7 +37,6 @@ import {
   systemExpansionScoutScore,
 } from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
-import { now } from '#shared/time'
 import type {
   SystemTickAction,
   SystemTickCategory,
@@ -99,6 +97,7 @@ import {
 import { listSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import {
   carrierTroopsForTransportLoad,
+  clampResourcesToPersistedStock,
   clampResourcesToTransportCapacity,
   hasTransportableStock,
   isPermanentOutpostStockWorthTransport,
@@ -1091,11 +1090,26 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
 
   const outpost_candidates = sortOutpostsForSystemTransport(
     outposts
-      .map((outpost, index) => ({
-        outpost,
-        cell: cells[index],
-        stock: projected_stocks[index],
-      }))
+      .map((outpost, index) => {
+        const stock_row = resource_stocks[index]
+        const persisted_stock: Resource = stock_row
+          ? {
+            plastic: stock_row.plastic,
+            mushroom: stock_row.mushroom,
+            plasma: stock_row.plasma,
+          }
+          : {
+            plastic: 0,
+            mushroom: 0,
+            plasma: 0,
+          }
+        return {
+          outpost,
+          cell: cells[index],
+          stock: projected_stocks[index],
+          persisted_stock,
+        }
+      })
       .filter(({ outpost, cell, stock }) => {
         if (outpost.type !== OutpostType.PERMANENT || !cell) {
           return false
@@ -1109,7 +1123,7 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
   )
 
   for (const {
-    outpost, cell, stock 
+    outpost, cell, stock, persisted_stock 
   } of outpost_candidates) {
     const destination = pickCityForSystemTransport({
       origin_stock: stock,
@@ -1151,19 +1165,16 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
     }
 
     const capacity = TroopService.getTotalTransportCapacity({ troops: move_troops })
-    const resources = clampResourcesToTransportCapacity({
-      resources: destination_capped,
-      capacity,
+    const resources = clampResourcesToPersistedStock({
+      resources: clampResourcesToTransportCapacity({
+        resources: destination_capped,
+        capacity,
+      }),
+      persisted: persisted_stock,
     })
     if (!hasTransportableStock(resources)) {
       continue
     }
-
-    await outpostGather({
-      outpost_id: outpost.id,
-      player_id,
-      gather_at_time: now(),
-    })
 
     await createTroopMovement({
       player_id,

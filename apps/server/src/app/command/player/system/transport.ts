@@ -180,6 +180,21 @@ export function hasTransportableStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
 }
 
+/** Cargo must not exceed DB stock; gather jobs persist passive production separately. */
+export function clampResourcesToPersistedStock({
+  resources,
+  persisted,
+}: {
+  resources: Resource
+  persisted: Resource
+}): Resource {
+  return {
+    plastic: Math.min(resources.plastic, persisted.plastic),
+    mushroom: Math.min(resources.mushroom, persisted.mushroom),
+    plasma: Math.min(resources.plasma, persisted.plasma),
+  }
+}
+
 /** Match outpost reads: project passive gather since last persist so AI matches UI/admin fill levels. */
 export async function projectPermanentOutpostResourceStocks({
   outposts,

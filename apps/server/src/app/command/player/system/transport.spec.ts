@@ -11,6 +11,7 @@ import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
 import {
   carrierTroopsForTransportLoad,
+  clampResourcesToPersistedStock,
   clampResourcesToTransportCapacity,
   deliverableResourceTotal,
   countPermanentOutpostsWorthTransport,
@@ -222,6 +223,26 @@ describe('system transport helpers', () => {
         mushroom: 1000,
       },
     }), 1)
+  })
+
+  it('clamps cargo to persisted stock after capacity planning', () => {
+    const clamped = clampResourcesToPersistedStock({
+      resources: {
+        plastic: 500,
+        mushroom: 200,
+        plasma: 1,
+      },
+      persisted: {
+        plastic: 120,
+        mushroom: 200,
+        plasma: 0,
+      },
+    })
+    assert.deepStrictEqual(clamped, {
+      plastic: 120,
+      mushroom: 200,
+      plasma: 0,
+    })
   })
 
   it('clamps cargo to transporter capacity with partial loads', () => {

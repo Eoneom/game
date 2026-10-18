@@ -1624,7 +1624,7 @@ describe('systemTickActions', () => {
     })
   })
 
-  it('transports using projected outpost stock when persisted stock lags gather', async () => {
+  it('does not call outpostGather when hauling persisted stock under projected pressure', async () => {
     const gather_at_time = now()
     const outpost_cell = testCityCell({ cell_id: id() })
     const outpost_id = id()
@@ -1702,13 +1702,104 @@ describe('systemTickActions', () => {
     const acted = await systemTickActions.transport(player_id)
 
     assert.ok(acted)
-    assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 1)
-    assert.strictEqual(vi.mocked(outpostGather).mock.calls[0][0].outpost_id, outpost_id)
+    assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 0)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
+      plastic: 100,
+      mushroom: 0,
+      plasma: 0,
+    })
+  })
+
+  it('hauls persisted stock when projected pressure triggers transport eligibility', async () => {
+    const gather_at_time = now()
+    const outpost_cell = testCityCell({ cell_id: id() })
+    const outpost_id = id()
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 0,
+        mushroom: 0,
+      }),
+      warehouse_space_remaining: {
+        plastic: 500,
+        mushroom: 500,
+      },
+    } as never)
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 700,
+          mushroom: 0,
+          plasma: 0,
+          last_plastic_gather: gather_at_time - 5_000,
+          last_mushroom_gather: gather_at_time - 5_000,
+        }),
+      ],
+      count_limit: 10,
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: outpost_cell.id,
+          code: TroopCode.HAULER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+
+    const acted = await systemTickActions.transport(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 0)
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
     assert.strictEqual(
       vi.mocked(createTroopMovement).mock.calls[0][0].action,
       MovementAction.TRANSPORT,
     )
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
+      plastic: 500,
+      mushroom: 0,
+      plasma: 0,
+    })
   })
 
   it('limits transport cargo to destination warehouse free space', async () => {
@@ -1773,6 +1864,7 @@ describe('systemTickActions', () => {
     const acted = await systemTickActions.transport(player_id)
 
     assert.ok(acted)
+    assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 0)
     assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
       plastic: 100,
       mushroom: 200,
