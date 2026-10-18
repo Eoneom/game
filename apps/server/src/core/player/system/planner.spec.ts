@@ -29,6 +29,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     combat_army_ready: false,
     needs_outpost_logistics: false,
     outpost_transport_pressure_count: 0,
+    city_warehouse_under_pressure: false,
     can_found_city: true,
     settle_ready_temp_count: 0,
     ...defaultSystemEmpireSnapshotFields(),
@@ -195,6 +196,18 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[1].category, 'deploy-outpost')
     assert.match(plan[1].reason ?? '', /^outpost_logistics/)
     assert.ok(plan.some(intent => intent.category === 'base'))
+  })
+
+  it('prepends upgrade intents when the main city warehouse is under pressure', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      city_warehouse_under_pressure: true,
+      expansion_starved: false,
+      can_found_city: false,
+    }), 0)
+    assert.strictEqual(plan[0].category, 'upgrade')
+    assert.strictEqual(plan[0].reason, 'city_warehouse_pressure')
+    assert.strictEqual(plan[1].category, 'upgrade')
+    assert.strictEqual(plan[1].reason, 'city_warehouse_pressure')
   })
 
   it('prepends transport intents when permanent outpost stock is pressured', () => {

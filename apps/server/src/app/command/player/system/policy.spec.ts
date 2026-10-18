@@ -33,6 +33,7 @@ function testSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     combat_army_ready: false,
     needs_outpost_logistics: false,
     outpost_transport_pressure_count: 0,
+    city_warehouse_under_pressure: false,
     can_found_city: true,
     settle_ready_temp_count: 0,
     ...defaultSystemEmpireSnapshotFields(),

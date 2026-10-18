@@ -4,6 +4,9 @@ export const SYSTEM_MAX_ACTIONS_PER_TICK = 10
 /** Max `transport` intents prepended when permanent outpost stock is pressured. */
 export const SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS = 5
 
+/** Max `upgrade` intents prepended when the main city warehouse is under pressure. */
+export const SYSTEM_MAX_CITY_WAREHOUSE_UPGRADE_PREPENDS = 2
+
 /** Permanent outposts below this count (with no temps) marks expansion as starved. */
 export const SYSTEM_EXPANSION_STARVED_PERMANENT_OUTPOST_TARGET = 2
 

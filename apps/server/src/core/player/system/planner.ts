@@ -3,6 +3,7 @@ import {
   SYSTEM_MAX_ACTIONS_PER_TICK,
   SYSTEM_MAX_CITY_FOUNDING_BASE_PREPENDS,
   SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS,
+  SYSTEM_MAX_CITY_WAREHOUSE_UPGRADE_PREPENDS,
   SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS,
   SYSTEM_MAX_SETTLE_PREPENDS,
 } from '#core/player/system/constants'
@@ -222,6 +223,22 @@ export function planSystemPlayerActions(
       })
     }
     seen_categories.add('transport')
+  }
+
+  if (snapshot.city_warehouse_under_pressure) {
+    const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
+    const upgrade_attempts = Math.min(
+      SYSTEM_MAX_CITY_WAREHOUSE_UPGRADE_PREPENDS,
+      remaining_budget,
+    )
+    for (let index = 0; index < upgrade_attempts; index += 1) {
+      intents.push({
+        category: 'upgrade',
+        priority: intents.length,
+        reason: 'city_warehouse_pressure',
+      })
+    }
+    seen_categories.add('upgrade')
   }
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {

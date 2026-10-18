@@ -18,11 +18,25 @@ import {
   SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO,
 } from '#command/player/system/storage'
 
-/**
- * System AI starts hauling from permanent outposts earlier than the city upgrade pressure bar (70%).
- * Human transport UI still uses {@link SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO}.
- */
-export const SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO = 0.5
+/** Same fill bar as city warehouse upgrades ({@link SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO}). */
+export const SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO = SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO
+
+export function resourceFromStockRow(
+  stock_row: ResourceStockEntity | null | undefined,
+): Resource {
+  if (!stock_row) {
+    return {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    }
+  }
+  return {
+    plastic: stock_row.plastic,
+    mushroom: stock_row.mushroom,
+    plasma: stock_row.plasma,
+  }
+}
 
 export function isPermanentOutpostStockWorthTransport({
   stock,

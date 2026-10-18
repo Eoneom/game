@@ -66,6 +66,7 @@ function defaultAttackEmpireSnapshot(for_player_id: string) {
     combat_army_ready: true,
     needs_outpost_logistics: false,
     outpost_transport_pressure_count: 0,
+    city_warehouse_under_pressure: false,
     can_found_city: true,
     settle_ready_temp_count: 0,
     ...defaultSystemEmpireSnapshotFields(),
@@ -1624,7 +1625,7 @@ describe('systemTickActions', () => {
     })
   })
 
-  it('does not call outpostGather when hauling persisted stock under projected pressure', async () => {
+  it('skips transport when only projected outpost stock meets pressure', async () => {
     const gather_at_time = now()
     const outpost_cell = testCityCell({ cell_id: id() })
     const outpost_id = id()
@@ -1701,17 +1702,12 @@ describe('systemTickActions', () => {
 
     const acted = await systemTickActions.transport(player_id)
 
-    assert.ok(acted)
+    assert.strictEqual(acted, null)
     assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 0)
-    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
-    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
-      plastic: 100,
-      mushroom: 0,
-      plasma: 0,
-    })
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
   })
 
-  it('hauls persisted stock when projected pressure triggers transport eligibility', async () => {
+  it('hauls when persisted outpost stock meets transport pressure', async () => {
     const gather_at_time = now()
     const outpost_cell = testCityCell({ cell_id: id() })
     const outpost_id = id()

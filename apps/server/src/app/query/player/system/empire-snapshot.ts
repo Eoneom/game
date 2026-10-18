@@ -27,7 +27,7 @@ import {
 import { AppService } from '#app/service'
 import {
   countPermanentOutpostsWorthTransport,
-  projectPermanentOutpostResourceStocks,
+  resourceFromStockRow,
 } from '#command/player/system/transport'
 import { countSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -225,6 +225,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
 
   const main_city = cities[0]
   let economy_first = true
+  let city_warehouse_under_pressure = false
   if (main_city) {
     const [
       city_details,
@@ -239,6 +240,10 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
         player_id,
       }),
     ])
+    city_warehouse_under_pressure = isCityWarehouseUnderPressure({
+      resource_stock: city_details.resource_stock,
+      warehouses_capacity: city_details.warehouses_capacity,
+    })
     economy_first = shouldPrioritizeEconomyForSystemPlayer({
       production_energy_ratio: city_details.production_energy_ratio,
       resource_stock: city_details.resource_stock,
@@ -273,14 +278,10 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     needs_carrier_on_outpost: outpost_recruit_hints.needs_carrier_on_outpost,
   })
 
-  const projected_outpost_stocks = await projectPermanentOutpostResourceStocks({
-    outposts,
-    resource_stocks,
-    warehouses_capacity: outpost_warehouses_capacity,
-  })
+  const persisted_outpost_stocks = resource_stocks.map(stock_row => resourceFromStockRow(stock_row))
   const outpost_transport_pressure_count = countPermanentOutpostsWorthTransport({
     outposts,
-    resource_stocks: projected_outpost_stocks,
+    resource_stocks: persisted_outpost_stocks,
     warehouses_capacity: outpost_warehouses_capacity,
   })
 
@@ -367,6 +368,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
     needs_outpost_logistics,
     outpost_transport_pressure_count,
+    city_warehouse_under_pressure,
     can_found_city,
     settle_ready_temp_count,
     outpost_limit_reached,

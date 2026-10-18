@@ -21,6 +21,8 @@ export type SystemEmpireSnapshot = {
   needs_outpost_logistics: boolean
   /** Permanent outposts at system transport pressure (eligible for haul if a carrier is on site). */
   outpost_transport_pressure_count: number
+  /** Main city plastic or mushroom at/above warehouse pressure (70% fill). */
+  city_warehouse_under_pressure: boolean
   /** Player may found another city (`cities.length < count_limit`). */
   can_found_city: boolean
   /** Temporary outposts with a founder on site (eligible for `settle`). */

@@ -3,7 +3,7 @@ import {
   buildOutpostDeployCandidate,
   outpostNeedsCarrier,
 } from '#command/player/system/outpost-logistics'
-import { projectPermanentOutpostResourceStocks } from '#command/player/system/transport'
+import { resourceFromStockRow } from '#command/player/system/transport'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TroopListQuery } from '#query/troop/list'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -405,12 +405,6 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
     AppService.getOutpostWarehousesCapacity({ player_id }),
   ])
 
-  const projected_stocks = await projectPermanentOutpostResourceStocks({
-    outposts,
-    resource_stocks,
-    warehouses_capacity: outpost_warehouses_capacity,
-  })
-
   let needs_harvester_on_outpost = false
   let needs_reclaimer_on_outpost = false
   let needs_carrier_on_outpost = false
@@ -428,11 +422,7 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
     if (!cell) {
       continue
     }
-    const stock = projected_stocks[index] ?? {
-      plastic: 0,
-      mushroom: 0,
-      plasma: 0,
-    }
+    const stock = resourceFromStockRow(resource_stocks[index])
 
     if (cell.resource_coefficient.mushroom > 0) {
       has_harvester_outpost = true

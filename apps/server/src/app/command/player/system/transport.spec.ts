@@ -19,15 +19,17 @@ import {
   pickCityForSystemTransport,
   projectPermanentOutpostResourceStocks,
   sortOutpostsForSystemTransport,
+  SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
 } from '#command/player/system/transport'
 
 describe('system transport helpers', () => {
   const player_id = id()
 
-  it('uses a lower pressure threshold for system outpost transport', () => {
+  it('uses the same 70% pressure threshold as city warehouse upgrades', () => {
+    assert.strictEqual(SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO, 0.7)
     assert.strictEqual(isPermanentOutpostStockWorthTransport({
       stock: {
-        plastic: 500,
+        plastic: 700,
         mushroom: 0,
         plasma: 0,
       },
@@ -35,11 +37,10 @@ describe('system transport helpers', () => {
         plastic: 1000,
         mushroom: 1000,
       },
-      pressure_fill_ratio: 0.5,
     }), true)
     assert.strictEqual(isPermanentOutpostStockWorthTransport({
       stock: {
-        plastic: 400,
+        plastic: 600,
         mushroom: 0,
         plasma: 0,
       },
@@ -47,7 +48,6 @@ describe('system transport helpers', () => {
         plastic: 1000,
         mushroom: 1000,
       },
-      pressure_fill_ratio: 0.5,
     }), false)
   })
 
@@ -208,7 +208,7 @@ describe('system transport helpers', () => {
       outposts,
       resource_stocks: [
         {
-          plastic: 600,
+          plastic: 700,
           mushroom: 0,
           plasma: 0,
         },

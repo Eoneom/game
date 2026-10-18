@@ -17,8 +17,13 @@ function categoryUtilityWeight(category: SystemTickCategory, snapshot: SystemEmp
     return snapshot.expansion_starved ? 100 : 70
   case 'explore':
     return snapshot.defer_explore || snapshot.frontier_queue_length > 0 ? 5 : 35
-  case 'upgrade':
-    return snapshot.economy_first ? 85 : 45
+  case 'upgrade': {
+    let score = snapshot.economy_first ? 85 : 45
+    if (snapshot.city_warehouse_under_pressure) {
+      score += 35
+    }
+    return score
+  }
   case 'research':
     return snapshot.production_ready_for_research ? 80 : 40
   case 'deploy-outpost':
@@ -129,6 +134,7 @@ const STRUCTURAL_REASON_PREFIXES = [
   'city_founding',
   'outpost_logistics',
   'outpost_transport_pressure',
+  'city_warehouse_pressure',
 ]
 
 function isStructuralPrepend(intent: SystemIntentScoringInput): boolean {
