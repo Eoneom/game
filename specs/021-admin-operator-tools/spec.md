@@ -29,7 +29,7 @@ After each `executeSystemPlayerTick` run (or on tick error), `tickSystemPlayers`
 | `outcome` | When | `attempts` | `payload` / `summary` |
 | --- | --- | --- | --- |
 | `success` | Exactly one action committed | Skipped intents then one `success` | `committed_actions` length 1 |
-| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`, **10**) | Mixed `skipped` / `success` in plan order | `committed_actions[]`; multi-line French summary |
+| `partial` | Two or more actions committed (up to `SYSTEM_MAX_ACTIONS_PER_TICK`, **25**) | Mixed `skipped` / `success` in plan order | `committed_actions[]`; multi-line French summary |
 | `idle` | No actions committed | Every tried intent `skipped` | No `committed_actions`; summary lists tried categories in order |
 | `error` | Uncaught exception in tick for that player | `[]` (no partial trace) | Top-level `payload` with safe `error_message` / `error_code` (no stack) |
 

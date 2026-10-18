@@ -4,7 +4,7 @@
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (10)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (25)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)), all game commands invoked by tick actions.
 
@@ -39,7 +39,7 @@ Constants (`core/player/constant/system.ts`):
 
 | Constant | Value |
 | --- | --- |
-| `SYSTEM_MAX_ACTIONS_PER_TICK` | `10` |
+| `SYSTEM_MAX_ACTIONS_PER_TICK` | `25` |
 | `SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS` | `2` |
 | `SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS` | `5` |
 

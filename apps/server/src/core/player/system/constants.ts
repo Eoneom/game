@@ -1,5 +1,5 @@
 /** Maximum successful system-player commands committed in one tick (v1). */
-export const SYSTEM_MAX_ACTIONS_PER_TICK = 10
+export const SYSTEM_MAX_ACTIONS_PER_TICK = 25
 
 /** Max `transport` intents prepended when permanent outpost stock is pressured. */
 export const SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS = 5
