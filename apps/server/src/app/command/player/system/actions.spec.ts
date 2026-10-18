@@ -15,6 +15,8 @@ import { OutpostListQuery } from '#query/outpost/list'
 import { TechnologyListQuery } from '#query/technology/list'
 import { TechnologyGetQuery } from '#query/technology/get'
 import { TroopListQuery } from '#query/troop/list'
+import { TroopMovementListQuery } from '#query/troop/movement/list'
+import { MovementEntity } from '#core/troop/movement/entity'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
@@ -150,6 +152,7 @@ describe('systemTickActions', () => {
       },
     } as Repository)
     vi.spyOn(Factory, 'getLogger').mockReturnValue(fakeLogger as never)
+    vi.spyOn(TroopMovementListQuery.prototype, 'run').mockResolvedValue({ movements: [] })
   })
 
   afterEach(() => {
@@ -1427,7 +1430,7 @@ describe('systemTickActions', () => {
     assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].move_troops, [
       {
         code: TroopCode.WAR_MACHINE,
-        count: 1,
+        count: SYSTEM_TARGET_WAR_MACHINE,
       },
     ])
   })
@@ -1499,6 +1502,89 @@ describe('systemTickActions', () => {
     assert.ok(acted)
     assert.deepStrictEqual(acted?.destination, strong_site.coordinates)
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].action, MovementAction.BASE)
+  })
+
+  it('skips base destinations that already have an in-flight BASE movement', async () => {
+    const weak_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 1,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 1.2,
+    })
+    const strong_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x,
+        y: city_cell.coordinates.y + 1,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 2.4,
+    })
+    const in_flight_movement = MovementEntity.create({
+      id: id(),
+      player_id,
+      action: MovementAction.BASE,
+      origin: city_cell.coordinates,
+      destination: strong_site.coordinates,
+    })
+    vi.spyOn(TroopMovementListQuery.prototype, 'run').mockResolvedValue({
+      movements: [
+        {
+          movement: in_flight_movement,
+          arrive_at: now() + 60_000,
+        },
+      ],
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.ASSEMBLER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell, weak_site, strong_site ],
+      explored_cell_ids: [ city_cell.id, weak_site.id, strong_site.id ],
+    })
+
+    const acted = await systemTickActions.base(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(acted?.destination, weak_site.coordinates)
   })
 
   it('does not create a transport movement for explore', async () => {

@@ -76,7 +76,7 @@ export function selectTroopsForSystemBase({
   return [
     {
       code: fallback[0].code,
-      count: 1,
+      count: fallback[0].count,
     },
   ]
 }

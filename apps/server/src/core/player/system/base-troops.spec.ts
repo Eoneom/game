@@ -43,7 +43,7 @@ describe('selectTroopsForSystemBase', () => {
     )
   })
 
-  it('uses one combat troop when no founder', () => {
+  it('groups all idle combat stacks when no founder', () => {
     const troops = [
       TroopEntity.create({
         id: id(),
@@ -57,7 +57,7 @@ describe('selectTroopsForSystemBase', () => {
         id: id(),
         player_id,
         cell_id,
-        code: TroopCode.SEEKER,
+        code: TroopCode.DISRUPTOR,
         count: 2,
         movement_id: null,
       }),
@@ -72,6 +72,10 @@ describe('selectTroopsForSystemBase', () => {
         {
           code: TroopCode.WAR_MACHINE,
           count: 20,
+        },
+        {
+          code: TroopCode.DISRUPTOR,
+          count: 2,
         },
       ],
     )
@@ -97,7 +101,7 @@ describe('selectTroopsForSystemBase', () => {
       [
         {
           code: TroopCode.HAULER,
-          count: 1,
+          count: 3,
         },
       ],
     )

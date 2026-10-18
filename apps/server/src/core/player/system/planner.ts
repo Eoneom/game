@@ -245,10 +245,13 @@ export function planSystemPlayerActions(
   }
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {
-    if (category === 'base' && snapshot.outpost_limit_reached) {
+    if (
+      category === 'make-permanent'
+      && snapshot.settle_ready_temp_count > 0
+    ) {
       continue
     }
-    if (category === 'make-permanent' && snapshot.settle_ready_temp_count > 0) {
+    if (category === 'base' && snapshot.outpost_limit_reached) {
       continue
     }
     if (seen_categories.has(category)) {
