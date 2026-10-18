@@ -14,7 +14,12 @@ The world is a fixed `100×100` integer grid of cells generated once at server s
 | --- | --- | --- | --- |
 | `GET` | `/world/cells` | yes | `worldGetCellsHandler` |
 
-**Query parameters** (all required integers): `min_x`, `max_x`, `min_y`, `max_y`.
+**Query parameters**: `min_x`, `max_x`, `min_y`, `max_y` (required integers); optional `detail` (`terrain` | `full`, default `full`).
+
+| `detail` | Cell payload |
+| --- | --- |
+| `terrain` | `coordinates`, `type`, `explored` only (no `characteristic`) |
+| `full` | Same as before: `characteristic` when `explored` |
 
 | Outcome | HTTP | Body |
 | --- | --- | --- |
@@ -36,7 +41,8 @@ Tests: `apps/server/src/web/handler/world/get-cells.spec.ts`, `apps/server/src/a
 | --- | --- |
 | `WORLD_SIZE` | `100` (coordinates `1..100`) |
 | `MAX_VIEWPORT_SIDE` | `20` cells per axis in one request |
-| `INITIAL_VIEWPORT_HALF_EXTENT` | `5` (used in bootstrap / web, not enforced on server query) |
+| `INITIAL_VIEWPORT_HALF_EXTENT` | `5` (server bootstrap / empire snapshot; not enforced on HTTP query) |
+| `CITY_MAP_INITIAL_HALF_EXTENT` | `3` (web city/outpost world map open + recenter → 7×7 visible) |
 | `WorldService.generate()` | One `CellEntity` per coordinate; mushroom/plastic Perlin + solar Perlin; plasma coefficient fixed at `1` in generation |
 | `WorldService.getDistance` | `abs(dx) + abs(dy)`, multiplied by `10000` |
 | `WorldError` | `world:already-exists`, `world:cell-not-found`, `world:cell-city-mismatch`, `world:cell-outpost-mismatch`, `world:exploration-not-found`, `world:invalid-bounds` |
@@ -47,8 +53,11 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 
 ## Web UI (`apps/web/src/modules/map/`)
 
-- Fetches cells via `modules/map/api/cells.ts` and `hook/world.ts` using `{ center, half_extent }` → `viewportBoundsAround` (clamped to server `MAX_VIEWPORT_SIDE`). Pan and wheel zoom update center / half extent with a debounced refetch (200ms; stale fetches cancelled via generation counter). Drag pan updates center from the drag delta during the gesture (group offset reset each move so cells stay world-anchored), debounced load while dragging, and an immediate refetch on release; wheel zoom toward the cursor, optional zoom buttons, and recenter to city/outpost.
-- Renders terrain type on all viewport cells; coefficient details in the side panel only when `explored` (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Draws settlement markers for all players with self / ally (same faction) / enemy styling (`markers.tsx`, `legend-overlay.tsx`). Geometry helpers in `geometry.ts` / `helper.ts` / `viewport.ts`.
+- **Cache**: `cell-cache.ts` merges every `GET /world/cells` response; the map draws cached cells intersecting the logical viewport (`viewportBoundsAround(center, half_extent)`), so HTTP completion does not change pan/zoom framing.
+- **Fetch**: `fetchBoundsAround` adds `PREFETCH_MARGIN_CELLS` (2) around the visible window, clamped to server `MAX_VIEWPORT_SIDE`. While navigating (pan/zoom), debounced `detail=terrain` (150ms); `detail=full` on pan release and cell select. Stale responses ignored via generation counter.
+- **Pan**: `PAN_PIXEL_TO_CELL_SENSITIVITY` (0.4) damps cells-per-pixel; Konva group offset resets each drag move so terrain stays world-anchored without snapping when tiles arrive.
+- **Open / recenter**: `CITY_MAP_INITIAL_HALF_EXTENT` (3). Wheel zoom toward cursor, zoom buttons, recenter to city/outpost home cell.
+- Renders terrain on all visible cells; coefficients in the side panel when `explored` and present in cache (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Settlement markers for all players in view (`markers.tsx`, `legend-overlay.tsx`). Geometry in `geometry.ts` / `helper.ts` / `viewport.ts`.
 - Routes under `/city/$cityId/world/...` and outpost world map routes ([`019`](../019-web-shell-routing/spec.md)).
 
 ## API client

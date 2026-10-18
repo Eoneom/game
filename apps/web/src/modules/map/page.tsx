@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react'
 import { MapCanvas } from '#map/canvas'
 import { MapDetails } from '#map/details'
 import { useWorld } from '#map/hook/world'
-import { INITIAL_VIEWPORT_HALF_EXTENT } from '#map/viewport'
+import { CITY_MAP_INITIAL_HALF_EXTENT } from '#map/viewport'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
 import { useListTroops } from '#troop/hooks'
@@ -28,7 +28,9 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
     center,
     half_extent,
     navigate,
-    panTo,
+    panDuringDrag,
+    panEnd,
+    refreshFullAtCenter,
   } = useWorld()
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(null)
 
@@ -37,7 +39,7 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
     if (!initialCenter) return
     void fetch({
       center: initialCenter,
-      half_extent: INITIAL_VIEWPORT_HALF_EXTENT,
+      half_extent: CITY_MAP_INITIAL_HALF_EXTENT,
     })
   }, [
     cityCoordinates,
@@ -67,14 +69,16 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
         center,
         half_extent,
         homeCenter,
-        onPan: panTo,
-        onPanEnd: nextCenter => panTo(nextCenter, { immediate: true }),
+        onPan: panDuringDrag,
+        onPanEnd: nextCenter => {
+          void panEnd(nextCenter)
+        },
         onNavigate: navigate,
         onRecenter: homeCenter
           ? () => {
             void fetch({
               center: homeCenter,
-              half_extent: INITIAL_VIEWPORT_HALF_EXTENT,
+              half_extent: CITY_MAP_INITIAL_HALF_EXTENT,
             })
           }
           : undefined,
@@ -86,7 +90,10 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
         <MapCanvas
           viewport={viewport}
           navigation={navigation}
-          onCellClicked={setSelectedCoordinates}
+          onCellClicked={coordinates => {
+            setSelectedCoordinates(coordinates)
+            void refreshFullAtCenter()
+          }}
           selectedCoordinates={selectedCoordinates}
           highlightCity={cityCoordinates}
           highlightOutpost={outpostCoordinates}

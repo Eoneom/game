@@ -15,6 +15,9 @@ export class WorldEndpoint {
       min_y: String(bounds.min_y),
       max_y: String(bounds.max_y)
     })
+    if (bounds.detail) {
+      params.set('detail', bounds.detail)
+    }
     return this.fetcher.get(`/world/cells?${params.toString()}`, { token })
   }
 }

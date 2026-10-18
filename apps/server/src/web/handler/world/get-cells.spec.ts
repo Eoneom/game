@@ -126,6 +126,44 @@ describe('worldGetCellsHandler', () => {
     expect(next).toHaveBeenCalledWith(error)
   })
 
+  it('omits characteristic when detail=terrain even if explored', async () => {
+    req.query = {
+      ...req.query,
+      detail: 'terrain',
+    }
+    await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+    expect(res.json).toHaveBeenCalledWith({
+      status: 'ok',
+      data: {
+        viewer: {
+          player_id: 'p1',
+          faction_code: FactionCode.THE_CONFEDERATION,
+        },
+        cells: [
+          {
+            coordinates: {
+              x: 2,
+              y: 3,
+            },
+            type: CellType.FOREST,
+            explored: true,
+            characteristic: undefined,
+          },
+          {
+            coordinates: {
+              x: 2,
+              y: 4,
+            },
+            type: CellType.LAKE,
+            explored: false,
+            characteristic: undefined,
+          },
+        ],
+        settlements: queryResult.settlements,
+      },
+    })
+  })
+
   it('returns mapped cells on success', async () => {
     await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
     expect(res.json).toHaveBeenCalledWith({

@@ -6,11 +6,14 @@ import { CellType } from '@server-core/world/value/cell-type'
 
 import { Coordinates } from '../shared/coordinates'
 
+export type WorldGetCellsDetail = 'terrain' | 'full'
+
 export interface WorldGetCellsRequest {
   min_x: number
   max_x: number
   min_y: number
   max_y: number
+  detail?: WorldGetCellsDetail
 }
 
 export interface WorldMapCityMarker {

@@ -1,5 +1,10 @@
 export const WORLD_SIZE = 100
 export const INITIAL_VIEWPORT_HALF_EXTENT = 5
+/** Tighter zoom when opening or recentering the city/outpost world map (7×7 visible). */
+export const CITY_MAP_INITIAL_HALF_EXTENT = 3
+export const PREFETCH_MARGIN_CELLS = 2
+/** Server `MAX_VIEWPORT_SIDE` — keep fetch bounds within one request. */
+export const MAX_VIEWPORT_SIDE = 20
 
 /** Inclusive cells per axis: 2 * half_extent + 1 (must be ≤ server MAX_VIEWPORT_SIDE). */
 export const MAP_MIN_HALF_EXTENT = 2
@@ -35,4 +40,18 @@ export function viewportBoundsAround(
     min_y: Math.max(1, center.y - half),
     max_y: Math.min(WORLD_SIZE, center.y + half),
   }
+}
+
+/** Visible bounds expanded by prefetch margin, clamped to `MAX_VIEWPORT_SIDE` per axis. */
+export function fetchBoundsAround(
+  center: { x: number; y: number },
+  half_extent: number,
+): ViewportBounds {
+  const visibleHalf = clampHalfExtent(half_extent)
+  let fetchHalf = visibleHalf + PREFETCH_MARGIN_CELLS
+  while (viewportSideLength(fetchHalf) > MAX_VIEWPORT_SIDE) {
+    fetchHalf -= 1
+  }
+  fetchHalf = Math.max(visibleHalf, fetchHalf)
+  return viewportBoundsAround(center, fetchHalf)
 }

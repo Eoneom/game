@@ -9,7 +9,6 @@ import { MapLegendOverlay } from '#map/legend-overlay'
 import { MapMarkers } from '#map/markers'
 import {
   clampHalfExtent,
-  INITIAL_VIEWPORT_HALF_EXTENT,
   MAP_MAX_HALF_EXTENT,
   MAP_MIN_HALF_EXTENT,
 } from '#map/viewport'
@@ -314,6 +313,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                   const nextCenter = applyDragDelta(e.target as Konva.Group)
                   if (nextCenter) {
                     onPanEnd(nextCenter)
+                  } else {
+                    onPanEnd(center)
                   }
                 }}
               >

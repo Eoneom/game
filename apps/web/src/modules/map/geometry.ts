@@ -6,6 +6,8 @@ function clampGameCoord(value: number): number {
 }
 
 export const MAP_FIT_PADDING = 0.98
+/** Dampens how many game cells move per screen pixel while panning. */
+export const PAN_PIXEL_TO_CELL_SENSITIVITY = 0.4
 
 export function cellTopLeft(
   gameX: number,
@@ -40,8 +42,10 @@ export function panCenterByPixels(
   if (scale <= 0) {
     return center
   }
-  const cellDeltaX = -pixelDelta.dx / (scale * CELL_WORLD_SIZE)
-  const cellDeltaY = pixelDelta.dy / (scale * CELL_WORLD_SIZE)
+  const cellDeltaX =
+    (-pixelDelta.dx / (scale * CELL_WORLD_SIZE)) * PAN_PIXEL_TO_CELL_SENSITIVITY
+  const cellDeltaY =
+    (pixelDelta.dy / (scale * CELL_WORLD_SIZE)) * PAN_PIXEL_TO_CELL_SENSITIVITY
   return {
     x: clampGameCoord(center.x + cellDeltaX),
     y: clampGameCoord(center.y + cellDeltaY),

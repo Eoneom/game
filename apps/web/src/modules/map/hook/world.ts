@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Coordinates } from '@eoneom/api-client'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Coordinates, WorldGetCellsDetail } from '@eoneom/api-client'
 
 import { WorldViewport } from '#types'
 import { getCells } from '#map/api/cells'
 import { useAuth } from '#auth/context'
 import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
+  cellsInBounds,
+  createCellCache,
+  mergeCells,
+  mergeSettlements,
+} from '#map/cell-cache'
+import {
+  CITY_MAP_INITIAL_HALF_EXTENT,
   clampHalfExtent,
+  fetchBoundsAround,
   viewportBoundsAround,
 } from '#map/viewport'
 
-const NAVIGATION_DEBOUNCE_MS = 200
+export const NAVIGATION_DEBOUNCE_MS = 150
 
 export type WorldNavigation = {
   center: Coordinates
@@ -18,36 +25,82 @@ export type WorldNavigation = {
 }
 
 export const useWorld = () => {
-  const [viewport, setViewport] = useState<WorldViewport | null>(null)
   const [center, setCenter] = useState<Coordinates | null>(null)
-  const [half_extent, setHalfExtent] = useState(INITIAL_VIEWPORT_HALF_EXTENT)
+  const [half_extent, setHalfExtent] = useState(CITY_MAP_INITIAL_HALF_EXTENT)
+  const [viewer, setViewer] = useState<WorldViewport['viewer'] | null>(null)
+  const [settlements, setSettlements] =
+    useState<WorldViewport['settlements'] | null>(null)
+  const cellCacheRef = useRef(createCellCache())
+  const [cacheVersion, setCacheVersion] = useState(0)
   const { token } = useAuth()
   const fetchGeneration = useRef(0)
+  const pendingDetailRef = useRef<WorldGetCellsDetail>('full')
   const skipDebounceRef = useRef(false)
 
-  const loadViewport = useCallback(
-    async ({ center: nextCenter, half_extent: nextHalf }: WorldNavigation) => {
+  const visibleBounds = useMemo(() => {
+    if (!center) {
+      return null
+    }
+    return viewportBoundsAround(center, half_extent)
+  }, [center, half_extent])
+
+  const viewport = useMemo((): WorldViewport | null => {
+    if (!center || !visibleBounds || !viewer || !settlements) {
+      return null
+    }
+    return {
+      bounds: visibleBounds,
+      cells: cellsInBounds(cellCacheRef.current, visibleBounds),
+      viewer,
+      settlements,
+    }
+  }, [
+    center,
+    visibleBounds,
+    viewer,
+    settlements,
+    cacheVersion,
+  ])
+
+  const applyFetchResult = useCallback(
+    (
+      fetched: NonNullable<Awaited<ReturnType<typeof getCells>>>,
+      bounds: ReturnType<typeof fetchBoundsAround>,
+    ) => {
+      mergeCells(cellCacheRef.current, fetched.cells)
+      setCacheVersion(v => v + 1)
+      setViewer(fetched.viewer)
+      setSettlements(previous =>
+        mergeSettlements(previous, fetched.settlements, bounds),
+      )
+    },
+    [],
+  )
+
+  const loadCells = useCallback(
+    async ({
+      center: nextCenter,
+      half_extent: nextHalf,
+      detail,
+    }: WorldNavigation & { detail: WorldGetCellsDetail }) => {
       if (!token) return
 
       const half = clampHalfExtent(nextHalf)
-      const bounds = viewportBoundsAround(nextCenter, half)
+      const bounds = fetchBoundsAround(nextCenter, half)
       const generation = ++fetchGeneration.current
       const fetched = await getCells({
         token,
         bounds,
+        detail,
       })
       if (!fetched || generation !== fetchGeneration.current) return
 
-      setViewport({
-        bounds,
-        cells: fetched.cells,
-        viewer: fetched.viewer,
-        settlements: fetched.settlements,
-      })
-      setCenter(nextCenter)
-      setHalfExtent(half)
+      applyFetchResult(fetched, bounds)
     },
-    [token],
+    [
+      token,
+      applyFetchResult,
+    ],
   )
 
   const fetch = useCallback(
@@ -56,42 +109,66 @@ export const useWorld = () => {
         params.half_extent ?? half_extent,
       )
       skipDebounceRef.current = true
+      pendingDetailRef.current = 'full'
       setCenter(params.center)
       setHalfExtent(half)
-      await loadViewport({
+      await loadCells({
         center: params.center,
         half_extent: half,
+        detail: 'full',
       })
     },
     [
       half_extent,
-      loadViewport,
+      loadCells,
     ],
   )
 
   const navigate = useCallback((next: WorldNavigation) => {
+    pendingDetailRef.current = 'terrain'
     setCenter(next.center)
     setHalfExtent(clampHalfExtent(next.half_extent))
   }, [])
 
-  const panTo = useCallback(
-    (nextCenter: Coordinates, options?: { immediate?: boolean }) => {
+  const panDuringDrag = useCallback((nextCenter: Coordinates) => {
+    pendingDetailRef.current = 'terrain'
+    setCenter(nextCenter)
+  }, [])
+
+  const panEnd = useCallback(
+    async (nextCenter: Coordinates) => {
+      skipDebounceRef.current = true
+      pendingDetailRef.current = 'full'
       setCenter(nextCenter)
-      if (options?.immediate) {
-        skipDebounceRef.current = true
-        void loadViewport({
-          center: nextCenter,
-          half_extent,
-        })
-      }
+      await loadCells({
+        center: nextCenter,
+        half_extent,
+        detail: 'full',
+      })
     },
     [
       half_extent,
-      loadViewport,
+      loadCells,
     ],
   )
 
+  const refreshFullAtCenter = useCallback(async () => {
+    if (!center) return
+    skipDebounceRef.current = true
+    pendingDetailRef.current = 'full'
+    await loadCells({
+      center,
+      half_extent,
+      detail: 'full',
+    })
+  }, [
+    center,
+    half_extent,
+    loadCells,
+  ])
+
   const setZoom = useCallback((nextHalf: number) => {
+    pendingDetailRef.current = 'terrain'
     setHalfExtent(clampHalfExtent(nextHalf))
   }, [])
 
@@ -102,10 +179,12 @@ export const useWorld = () => {
       return
     }
 
+    const detail = pendingDetailRef.current
     const timer = window.setTimeout(() => {
-      void loadViewport({
+      void loadCells({
         center,
         half_extent,
+        detail,
       })
     }, NAVIGATION_DEBOUNCE_MS)
 
@@ -113,7 +192,7 @@ export const useWorld = () => {
   }, [
     center,
     half_extent,
-    loadViewport,
+    loadCells,
     token,
   ])
 
@@ -123,7 +202,9 @@ export const useWorld = () => {
     half_extent,
     fetch,
     navigate,
-    panTo,
+    panDuringDrag,
+    panEnd,
+    refreshFullAtCenter,
     setZoom,
   }
 }

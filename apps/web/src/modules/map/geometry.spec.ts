@@ -1,5 +1,6 @@
 import {
   MAP_FIT_PADDING,
+  PAN_PIXEL_TO_CELL_SENSITIVITY,
   centerAfterZoom,
   cellCenter,
   cellTopLeft,
@@ -78,9 +79,11 @@ describe('map geometry', () => {
           dy: 0,
         }, scale),
       ).toEqual({
-        x: 48,
+        x: 49,
         y: 50,
       })
+      expect(PAN_PIXEL_TO_CELL_SENSITIVITY).toBeGreaterThan(0.35)
+      expect(PAN_PIXEL_TO_CELL_SENSITIVITY).toBeLessThanOrEqual(0.5)
     })
   })
 

@@ -11,6 +11,15 @@ import {
 } from '#query/world/get-cells'
 import { getPlayerIdFromContext } from '#web/helpers'
 
+type CellsDetail = 'terrain' | 'full'
+
+const parseDetail = (value: unknown): CellsDetail => {
+  if (value === 'terrain') {
+    return 'terrain'
+  }
+  return 'full'
+}
+
 const parseBound = (value: unknown): number | null => {
   if (typeof value !== 'string' && typeof value !== 'number') {
     return null
@@ -38,6 +47,7 @@ export const worldGetCellsHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
+    const detail = parseDetail(req.query.detail)
     const query_result = await new WorldGetCellsQuery().run({
       player_id,
       min_x,
@@ -48,6 +58,7 @@ export const worldGetCellsHandler = async (
 
     const response = response_mapper({
       player_id,
+      detail,
       ...query_result
     })
 
@@ -62,12 +73,14 @@ export const worldGetCellsHandler = async (
 
 const response_mapper = ({
   player_id,
+  detail,
   cells,
   explored_cell_ids,
   viewer_faction_code,
   settlements
 }: {
   player_id: string
+  detail: CellsDetail
 } & WorldGetCellsQueryResponse): WorldGetCellsDataResponse => {
   return {
     viewer: {
@@ -76,7 +89,8 @@ const response_mapper = ({
     },
     cells: cells.map(cell => cell_mapper({
       cell,
-      explored_cell_ids
+      explored_cell_ids,
+      detail
     })),
     settlements
   }
@@ -84,13 +98,16 @@ const response_mapper = ({
 
 const cell_mapper = ({
   cell,
-  explored_cell_ids
+  explored_cell_ids,
+  detail
 }: {
   cell: WorldGetCellsQueryResponse['cells'][number],
-  explored_cell_ids: string[]
+  explored_cell_ids: string[],
+  detail: CellsDetail
 }): WorldGetCellsDataResponse['cells'][number] => {
   const is_explored = explored_cell_ids.some((explored_cell_id) => explored_cell_id === cell.id)
-  const characteristic: WorldGetCellsDataResponse['cells'][number]['characteristic'] = is_explored ? {
+  const include_coefficients = detail === 'full' && is_explored
+  const characteristic: WorldGetCellsDataResponse['cells'][number]['characteristic'] = include_coefficients ? {
     resource_coefficient: {
       plastic: cell.resource_coefficient.plastic,
       mushroom: cell.resource_coefficient.mushroom
