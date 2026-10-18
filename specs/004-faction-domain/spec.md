@@ -14,6 +14,7 @@ Defined in `apps/server/src/core/faction/constant/code.ts`:
 | --- | --- |
 | `THE_CONFEDERATION` | `the_confederation` |
 | `THE_TECHNOLOGICAL_SINGULARITY` | `the_technological_singularity` |
+| `THE_ASH_LITURGY` | `the_ash_liturgy` |
 
 Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re-export from server core).
 
@@ -21,7 +22,7 @@ Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re
 
 `apps/server/src/core/faction/constant/playable.ts`:
 
-- `non_playable_faction_codes`: `Set` containing `FactionCode.THE_TECHNOLOGICAL_SINGULARITY`.
+- `non_playable_faction_codes`: `Set` containing `FactionCode.THE_TECHNOLOGICAL_SINGULARITY` and `FactionCode.THE_ASH_LITURGY`.
 - `playableFactionCodes()`: all `FactionCode` values not in that set (today: only `the_confederation`).
 
 ## Domain service

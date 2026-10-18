@@ -19,9 +19,10 @@ Combat rounds resolve in one burst after movement arrival (`COMBAT_ROUND_INTERVA
 | Player | Faction | How |
 | --- | --- | --- |
 | Human confederation | `the_confederation` | Sign up via web `/signup` (playable faction) |
-| System singularity | `the_technological_singularity` | **Alpha** — auto-created on server boot (`ensureSystemPlayer`); cannot log in |
+| System singularity | `the_technological_singularity` | **Alpha** — auto-created on server boot (`ensureSystemPlayers`); cannot log in |
+| System ash liturgy | `the_ash_liturgy` | **Harrow** — auto-created on server boot; capital **Cinder I**; cannot log in |
 
-To fight Alpha as a human: locate **Core I** (or singularity stacks) on the map, ensure cross-faction cells are reachable, recruit combat troops on a confederation city.
+To fight system empires as a human: locate **Core I** / **Cinder I** (or their stacks) on the map, ensure cross-faction cells are reachable, recruit combat troops on a confederation city.
 
 ### Combat timing (local)
 

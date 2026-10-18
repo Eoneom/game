@@ -7,6 +7,7 @@ import { TechnologyService } from '#core/technology/service'
 import { TroopService } from '#core/troop/service'
 import { ExplorationEntity } from '#core/world/exploration/entity'
 import { ResourcesService } from '#core/resources/service'
+import { CellEntity } from '#core/world/cell/entity'
 import { now } from '#shared/time'
 
 export interface BootstrapPlayerParams {
@@ -14,6 +15,7 @@ export interface BootstrapPlayerParams {
   player_name: string
   faction_code: string
   system_controlled: boolean
+  city_first_cell?: CellEntity
 }
 
 export interface BootstrapPlayerResult {
@@ -26,6 +28,7 @@ export async function bootstrapPlayer({
   city_name,
   faction_code,
   system_controlled,
+  city_first_cell: city_first_cell_override,
 }: BootstrapPlayerParams): Promise<BootstrapPlayerResult> {
   const repository = Factory.getRepository()
 
@@ -36,7 +39,7 @@ export async function bootstrapPlayer({
   ] = await Promise.all([
     repository.player.exist(player_name),
     repository.city.exist(city_name),
-    AppService.selectCityFirstCell(),
+    city_first_cell_override ?? AppService.selectCityFirstCell(),
   ])
 
   const cells_around_city = await AppService.getCellsAround({ coordinates: city_first_cell.coordinates })

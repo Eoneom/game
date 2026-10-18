@@ -70,6 +70,8 @@ function recruit_hints(overrides: Partial<{
   return {
     scout_count: 0,
     founder_count: 0,
+    max_scout_troops: SYSTEM_MAX_SCOUT_TROOPS,
+    max_founder_troops: SYSTEM_MAX_FOUNDER_TROOPS,
     ...no_outpost_hints,
     combat: army_ready_combat,
     ...overrides,

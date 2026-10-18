@@ -20,4 +20,13 @@ export const troop_faction: Record<TroopCode, FactionCode> = {
   [TroopCode.DISRUPTOR]: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
   [TroopCode.PRIME_UNIT]: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
   [TroopCode.STRIKER_DRONE]: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+  [TroopCode.ASH_EMISSARY]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.PYRE_PILGRIM]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.BONE_CART]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.SPORE_ACOLYTE]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.SCRAP_LECTOR]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.PENITENT_HORDE]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.WRAITH_LANCER]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.HEMORRHAGE_CULTIST]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.CINDER_TITAN]: FactionCode.THE_ASH_LITURGY,
 }

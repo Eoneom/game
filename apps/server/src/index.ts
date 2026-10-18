@@ -1,7 +1,7 @@
 import './load-env'
 
 import { generateWorld } from '#app/command/world/generate'
-import { ensureSystemPlayer } from '#app/command/player/ensure-system'
+import { ensureSystemPlayers } from '#app/command/player/ensure-system'
 import { Factory } from '#adapter/factory'
 import { migrateToLatest } from '#adapter/database/migrate'
 import { WorldError } from '#core/world/error'
@@ -35,7 +35,7 @@ import { now } from '#shared/time'
   }
 
   try {
-    await ensureSystemPlayer()
+    await ensureSystemPlayers()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     logger.error(err.message)

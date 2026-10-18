@@ -52,6 +52,8 @@ import { CityListQuery } from '#query/city/list'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TechnologyListQuery } from '#query/technology/list'
 import { WorldGetCellsQuery } from '#query/world/get-cells'
+import { Factory } from '#adapter/factory'
+import { resolveSystemAiProfile } from '#core/player/system/ai-profile'
 
 function viewportAround(coordinates: Coordinates): {
   min_x: number
@@ -195,6 +197,11 @@ async function isProductionReadyForResearch(player_id: string): Promise<boolean>
 }
 
 export async function collectSystemEmpireSnapshot(player_id: string): Promise<SystemEmpireSnapshot> {
+  const player = await Factory.getRepository().player.get(player_id)
+  const ai_profile = resolveSystemAiProfile({
+    player_name: player.name,
+    faction_code: player.faction_code,
+  })
   const [
     { cities, count_limit: city_count_limit },
     outpost_list,
@@ -380,5 +387,6 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     outpost_logistics_needs_gatherer_count,
     outpost_logistics_needs_haul_count,
     memory,
+    ai_profile,
   }
 }

@@ -1,10 +1,13 @@
 import assert from 'assert'
 import {
+  HARROW_FIRST_CITY_NAME,
+  SYSTEM_ASH_LITURGY_MIN_DISTANCE_FROM_ALPHA,
   SYSTEM_CITY_NAME_PREFIX,
   SYSTEM_FIRST_CITY_NAME,
   SYSTEM_PLAYER_FACTION_CODE,
   SYSTEM_PLAYER_NAME,
   nextSystemCityName,
+  nextSystemCityNameForPrefix,
   systemCityName,
   toRoman
 } from '#core/player/constant/system'
@@ -27,8 +30,14 @@ describe('system player constants', () => {
     assert.strictEqual(systemCityName(3), 'Core III')
   })
 
+  it('documents Harrow spawn distance from Alpha', () => {
+    assert.strictEqual(HARROW_FIRST_CITY_NAME, 'Cinder I')
+    assert.strictEqual(SYSTEM_ASH_LITURGY_MIN_DISTANCE_FROM_ALPHA, 40)
+  })
+
   it('picks the next unused Core roman name', () => {
     assert.strictEqual(nextSystemCityName([ 'Core I' ]), 'Core II')
+    assert.strictEqual(nextSystemCityNameForPrefix('Cinder', [ 'Cinder I' ]), 'Cinder II')
     assert.strictEqual(nextSystemCityName([
       'Core I',
       'Core II' 

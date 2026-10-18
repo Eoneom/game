@@ -10,5 +10,8 @@ export const FactionTranslations: Record<FactionCode, FactionTranslation> = {
   },
   [FactionCode.THE_TECHNOLOGICAL_SINGULARITY]: {
     name: 'Singularité technologique'
-  }
+  },
+  [FactionCode.THE_ASH_LITURGY]: {
+    name: 'Liturgie des cendres'
+  },
 }

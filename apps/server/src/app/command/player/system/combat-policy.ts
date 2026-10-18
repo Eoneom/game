@@ -85,17 +85,24 @@ export function scoreAttackTarget({
   target_kind,
   cell,
   defender_combat_count,
+  defender_faction_code,
+  confederation_target_score_bonus = 0,
 }: {
   target_kind: BattleTargetKind
   cell: CellEntity
   defender_combat_count: number
+  defender_faction_code?: FactionCode
+  confederation_target_score_bonus?: number
 }): number {
   const kind_bonus = target_kind === BattleTargetKind.CITY
     ? 1000
     : target_kind === BattleTargetKind.OUTPOST
       ? 650
       : 200
-  return kind_bonus + cellResourceScore(cell) * 12 - defender_combat_count * 8
+  const faction_bonus = defender_faction_code === FactionCode.THE_CONFEDERATION
+    ? confederation_target_score_bonus
+    : 0
+  return kind_bonus + faction_bonus + cellResourceScore(cell) * 12 - defender_combat_count * 8
 }
 
 export function combatStacksForAttack(troops: TroopEntity[]): { code: TroopCode; count: number }[] {
@@ -183,11 +190,13 @@ export async function pickSystemAttack({
   attacker_faction_code,
   army_counts,
   blocked_targets = [],
+  confederation_target_score_bonus = 0,
 }: {
   player_id: string
   attacker_faction_code: FactionCode
   army_counts: SystemCombatArmyCounts
   blocked_targets?: readonly SystemPlayerMemoryCoordinates[]
+  confederation_target_score_bonus?: number
 }): Promise<AttackCandidate | null> {
   if (!isSystemCombatArmyReady(army_counts)) {
     return null
@@ -278,6 +287,8 @@ export async function pickSystemAttack({
           target_kind: target.target_kind,
           cell,
           defender_combat_count,
+          defender_faction_code: target.defender_faction_code,
+          confederation_target_score_bonus,
         })
         if (!best || score > best.score) {
           best = {

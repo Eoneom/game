@@ -375,6 +375,7 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
 }
 
 async function tryRecruit(player_id: string): Promise<Record<string, unknown> | null> {
+  const snapshot = await collectSystemEmpireSnapshot(player_id)
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
   const [
@@ -384,6 +385,10 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     loadOutpostRecruitHints(player_id),
     loadEmpireCombatArmyCounts(player_id),
   ])
+  const recruit_caps = {
+    max_scout_troops: snapshot.ai_profile.max_scout_troops,
+    max_founder_troops: snapshot.ai_profile.max_founder_troops,
+  }
   const main_city = cities[0]
   const main_city_stock = main_city
     ? (await new CityGetQuery().run({
@@ -419,6 +424,7 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       city_troops: troop_list.troops,
       outpost_hints,
       combat: combat_hints,
+      ...recruit_caps,
     })
     const needs_logistics_troop_in_city = troop_list.troops.some(troop => {
       const role = troop_role[troop.code]
@@ -496,6 +502,7 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       city_troops: troop_list.troops,
       outpost_hints,
       combat: combat_hints,
+      ...recruit_caps,
     })
     const sorted_troops = sortTroopsForSystemRecruit({
       troops: troop_list.troops,
@@ -1181,15 +1188,19 @@ async function tryAttack(player_id: string): Promise<Record<string, unknown> | n
   if (!isSystemCombatArmyReady(army_counts)) {
     return null
   }
-  if (snapshot.empire_under_threat) {
+  if (snapshot.empire_under_threat && !snapshot.ai_profile.ignore_empire_under_threat_for_attack) {
     return null
   }
   const attacker = await Factory.getRepository().player.get(player_id)
+  const blocked_targets = snapshot.ai_profile.use_failed_attack_memory
+    ? memory.failed_attack_targets
+    : []
   const attack = await pickSystemAttack({
     player_id,
     attacker_faction_code: attacker.faction_code,
     army_counts,
-    blocked_targets: memory.failed_attack_targets,
+    blocked_targets,
+    confederation_target_score_bonus: snapshot.ai_profile.confederation_target_score_bonus,
   })
   if (!attack) {
     return null

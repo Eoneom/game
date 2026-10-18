@@ -36,4 +36,11 @@ describe('FactionService', () => {
       new RegExp(FactionError.NOT_PLAYABLE)
     )
   })
+
+  it('rejects the ash liturgy as non-playable', () => {
+    assert.throws(
+      () => FactionService.assertPlayable(FactionCode.THE_ASH_LITURGY),
+      new RegExp(FactionError.NOT_PLAYABLE)
+    )
+  })
 })

@@ -3,6 +3,11 @@ import type { SystemEmpireIntel } from '#core/player/system/intel'
 import { EMPTY_SYSTEM_EMPIRE_INTEL } from '#core/player/system/intel'
 import type { SystemPlayerMemory } from '#core/player/system/memory'
 import { EMPTY_SYSTEM_PLAYER_MEMORY } from '#core/player/system/memory'
+import {
+  getSystemAiProfile,
+  SystemAiProfileId,
+  type SystemAiProfile,
+} from '#core/player/system/ai-profile'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 
 /** Read-only empire view for one system-player tick (no writes). */
@@ -42,6 +47,7 @@ export type SystemEmpireSnapshot = {
   outpost_logistics_needs_haul_count: number
   /** Cross-tick memory loaded for action handlers (failed bases / attacks). */
   memory: SystemPlayerMemory
+  ai_profile: SystemAiProfile
 }
 
 export function defaultSystemEmpireSnapshotFields(): Pick<
@@ -55,6 +61,7 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
   | 'outpost_logistics_needs_haul_count'
   | 'memory'
   | 'outpost_limit_reached'
+  | 'ai_profile'
 > {
   return {
     frontier_queue_length: 0,
@@ -66,6 +73,7 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
     outpost_logistics_needs_haul_count: 0,
     memory: EMPTY_SYSTEM_PLAYER_MEMORY,
     outpost_limit_reached: false,
+    ai_profile: getSystemAiProfile(SystemAiProfileId.SINGULARITY_DEFAULT),
   }
 }
 

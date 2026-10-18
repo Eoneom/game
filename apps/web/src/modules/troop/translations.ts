@@ -97,4 +97,49 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     description: 'Essaim rapide à lames énergétiques ; frappe puis décrochage.',
     effect: 'Intercepteur autonome de la Singularité.',
   },
+  [TroopCode.ASH_EMISSARY]: {
+    name: 'Émissaire des cendres',
+    description: 'Messager masqué de cire et de suie ; écoute les ruines avant la marée.',
+    effect: 'Éclaireur de la Liturgie des cendres.',
+  },
+  [TroopCode.PYRE_PILGRIM]: {
+    name: 'Pèlerin du bûcher',
+    description: 'Porte reliques calcinées pour fonder un autel-cité.',
+    effect: 'Permet de coloniser un emplacement en créant une nouvelle ville.',
+  },
+  [TroopCode.BONE_CART]: {
+    name: 'Char d\'ossements',
+    description: 'Râtelier de côtes et de ferraille bénie.',
+    effect: '',
+  },
+  [TroopCode.SPORE_ACOLYTE]: {
+    name: 'Acolyte des spores',
+    description: 'Incube les champignons comme offrandes vivantes.',
+    effect: 'Récolte des champignons.',
+  },
+  [TroopCode.SCRAP_LECTOR]: {
+    name: 'Lecteur de ferraille',
+    description: 'Déchiffre le plastique des cadavres de machines.',
+    effect: 'Récolte du plastique.',
+  },
+  [TroopCode.PENITENT_HORDE]: {
+    name: 'Horde pénitente',
+    description: 'Fouets de barbelés et chants rauques ; tient la ligne une minute de trop.',
+    effect: 'ATK 14 · DEF 8 · VIE 10',
+  },
+  [TroopCode.WRAITH_LANCER]: {
+    name: 'Lancier spectre',
+    description: 'Frappe en silence puis s\'efface dans la brume cendrée.',
+    effect: 'ATK 22 · DEF 2 · VIE 3',
+  },
+  [TroopCode.HEMORRHAGE_CULTIST]: {
+    name: 'Cultiste hémorragique',
+    description: 'Ouvre ses veines pour noyer l\'ennemi sous les lames rituelles.',
+    effect: 'ATK 19 · DEF 3 · VIE 3',
+  },
+  [TroopCode.CINDER_TITAN]: {
+    name: 'Titan de cendre',
+    description: 'Colosse de braises mortes ; avance comme une chute lente.',
+    effect: 'ATK 9 · DEF 18 · VIE 20',
+  },
 }

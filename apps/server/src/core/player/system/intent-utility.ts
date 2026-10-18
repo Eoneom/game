@@ -12,7 +12,7 @@ function categoryUtilityWeight(category: SystemTickCategory, snapshot: SystemEmp
   case 'settle':
     return snapshot.can_found_city ? 120 : 40
   case 'make-permanent':
-    return 90 + snapshot.temporary_outpost_count * 5
+    return (90 + snapshot.temporary_outpost_count * 5) * snapshot.ai_profile.make_permanent_utility_multiplier
   case 'base':
     return snapshot.expansion_starved ? 100 : 70
   case 'explore':
@@ -36,10 +36,10 @@ function categoryUtilityWeight(category: SystemTickCategory, snapshot: SystemEmp
   case 'transport':
     return snapshot.outpost_transport_pressure_count * 12
   case 'attack':
-    if (snapshot.empire_under_threat) {
-      return 0
+    if (snapshot.empire_under_threat && !snapshot.ai_profile.ignore_empire_under_threat_for_attack) {
+      return snapshot.ai_profile.attack_utility_under_threat
     }
-    return snapshot.combat_army_ready ? 55 : 0
+    return snapshot.combat_army_ready ? snapshot.ai_profile.attack_utility_ready : 0
   default:
     return 0
   }

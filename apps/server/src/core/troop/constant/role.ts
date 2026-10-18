@@ -28,4 +28,13 @@ export const troop_role: Record<TroopCode, TroopRole> = {
   [TroopCode.DISRUPTOR]: TroopRole.COMBAT,
   [TroopCode.PRIME_UNIT]: TroopRole.COMBAT,
   [TroopCode.STRIKER_DRONE]: TroopRole.COMBAT,
+  [TroopCode.ASH_EMISSARY]: TroopRole.SCOUT,
+  [TroopCode.PYRE_PILGRIM]: TroopRole.FOUNDER,
+  [TroopCode.BONE_CART]: TroopRole.CARRIER,
+  [TroopCode.SPORE_ACOLYTE]: TroopRole.CULTIVATOR,
+  [TroopCode.SCRAP_LECTOR]: TroopRole.SALVAGER,
+  [TroopCode.PENITENT_HORDE]: TroopRole.COMBAT,
+  [TroopCode.WRAITH_LANCER]: TroopRole.COMBAT,
+  [TroopCode.HEMORRHAGE_CULTIST]: TroopRole.COMBAT,
+  [TroopCode.CINDER_TITAN]: TroopRole.COMBAT,
 }

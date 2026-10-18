@@ -95,4 +95,49 @@ export const troop_costs: Record<TroopCode, CountCosts> = {
     mushroom: 1900,
     duration: 275
   },
+  [TroopCode.ASH_EMISSARY]: {
+    plastic: 10,
+    mushroom: 15,
+    duration: 60
+  },
+  [TroopCode.PYRE_PILGRIM]: {
+    plastic: 20000,
+    mushroom: 40000,
+    duration: 3600
+  },
+  [TroopCode.BONE_CART]: {
+    plastic: 3000,
+    mushroom: 2000,
+    duration: 240
+  },
+  [TroopCode.SPORE_ACOLYTE]: {
+    plastic: 1000,
+    mushroom: 2000,
+    duration: 100
+  },
+  [TroopCode.SCRAP_LECTOR]: {
+    plastic: 2000,
+    mushroom: 1000,
+    duration: 100
+  },
+  [TroopCode.PENITENT_HORDE]: {
+    plastic: 2500,
+    mushroom: 2500,
+    duration: 200
+  },
+  [TroopCode.WRAITH_LANCER]: {
+    plastic: 3500,
+    mushroom: 2000,
+    duration: 280
+  },
+  [TroopCode.HEMORRHAGE_CULTIST]: {
+    plastic: 3200,
+    mushroom: 1800,
+    duration: 265
+  },
+  [TroopCode.CINDER_TITAN]: {
+    plastic: 2800,
+    mushroom: 2200,
+    duration: 220
+  },
 }

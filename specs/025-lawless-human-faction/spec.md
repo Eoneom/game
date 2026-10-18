@@ -1,6 +1,6 @@
-# Slice 025 — Lawless human system faction (planned)
+# Slice 025 — Lawless human system faction
 
-**Status**: Spec locked from Valentin Q&A (2026-10-18); **not implemented** on `main` until build slice.
+**Status**: Implemented on `main` (Liturgie des cendres / Harrow / Cinder I).
 
 ## Summary
 
@@ -30,7 +30,7 @@ Visibility: same as Singularity — on map, settlements, battle reports, admin; 
 
 Boot: **`ensureLawlessSystemPlayer()`** (or generalized multi-system boot) on server start — create if missing, `system_controlled: true`, same bootstrap kit as Alpha (buildings/troops/recipes per faction roster).
 
-Spawn position: **random** valid city site **far from Alpha** (`Core I`). Define minimum grid separation from Alpha’s main city cell (implementation: configurable `SYSTEM_ASHEN_MIN_DISTANCE_FROM_ALPHA` or reuse generic “min distance from other system capitals”).
+Spawn position: **random** valid city site **far from Alpha** (`Core I`). Minimum Manhattan separation from Alpha’s capital cell: `SYSTEM_ASH_LITURGY_MIN_DISTANCE_FROM_ALPHA` = **40** (`apps/server/src/core/player/constant/system.ts`).
 
 Tick: same pipeline as 016 (`SYSTEM_MAX_ACTIONS_PER_TICK` = 25, shared job `player.system.tick` lists **all** system players).
 

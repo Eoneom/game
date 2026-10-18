@@ -17,4 +17,13 @@ export enum TroopCode {
   DISRUPTOR = 'disruptor',
   PRIME_UNIT = 'prime_unit',
   STRIKER_DRONE = 'striker_drone',
+  ASH_EMISSARY = 'ash_emissary',
+  PYRE_PILGRIM = 'pyre_pilgrim',
+  BONE_CART = 'bone_cart',
+  SPORE_ACOLYTE = 'spore_acolyte',
+  SCRAP_LECTOR = 'scrap_lector',
+  PENITENT_HORDE = 'penitent_horde',
+  WRAITH_LANCER = 'wraith_lancer',
+  HEMORRHAGE_CULTIST = 'hemorrhage_cultist',
+  CINDER_TITAN = 'cinder_titan',
 }

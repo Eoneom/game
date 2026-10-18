@@ -104,6 +104,8 @@ export type SystemRecruitSortHints = SystemOutpostRecruitHints & {
   scout_count: number
   founder_count: number
   combat: SystemCombatRecruitHints
+  max_scout_troops: number
+  max_founder_troops: number
 }
 
 export function scoreCityForEmpireRecruit({
@@ -122,7 +124,7 @@ export function scoreCityForEmpireRecruit({
   if (hints.needs_harvester_on_outpost || hints.needs_reclaimer_on_outpost || hints.needs_carrier_on_outpost) {
     score -= needs_logistics_troop_in_city ? 25 : 5
   }
-  if (hints.scout_count < SYSTEM_MAX_SCOUT_TROOPS) {
+  if (hints.scout_count < hints.max_scout_troops) {
     score -= 2
   }
   return score
@@ -132,10 +134,14 @@ export function recruitSortHintsForCity({
   city_troops,
   outpost_hints,
   combat,
+  max_scout_troops = SYSTEM_MAX_SCOUT_TROOPS,
+  max_founder_troops = SYSTEM_MAX_FOUNDER_TROOPS,
 }: {
   city_troops: TroopEntity[]
   outpost_hints: SystemOutpostRecruitHints
   combat: SystemCombatRecruitHints
+  max_scout_troops?: number
+  max_founder_troops?: number
 }): SystemRecruitSortHints {
   return {
     scout_count: countRole(city_troops, TroopRole.SCOUT),
@@ -146,6 +152,8 @@ export function recruitSortHintsForCity({
     has_harvester_outpost: outpost_hints.has_harvester_outpost,
     has_reclaimer_outpost: outpost_hints.has_reclaimer_outpost,
     combat,
+    max_scout_troops,
+    max_founder_troops,
   }
 }
 
@@ -250,8 +258,8 @@ function recruitPriority({
   hints: SystemRecruitSortHints
 }): number {
   const role = troop_role[code]
-  const scout_capped = hints.scout_count >= SYSTEM_MAX_SCOUT_TROOPS
-  const founder_capped = hints.founder_count >= SYSTEM_MAX_FOUNDER_TROOPS
+  const scout_capped = hints.scout_count >= hints.max_scout_troops
+  const founder_capped = hints.founder_count >= hints.max_founder_troops
 
   if (role === TroopRole.SCOUT && scout_capped) {
     return 1000 + TroopService.getOrder(code)
@@ -347,13 +355,15 @@ function maxAffordableRecruitCount(stock: Resource, unit_cost: Resource): number
 
 export function maxRoleRecruitHeadroom(
   role: TroopRole,
-  hints: Pick<SystemRecruitSortHints, 'scout_count' | 'founder_count'>
+  hints: Pick<SystemRecruitSortHints, 'scout_count' | 'founder_count' | 'max_scout_troops' | 'max_founder_troops'>
 ): number {
+  const max_scout_troops = hints.max_scout_troops ?? SYSTEM_MAX_SCOUT_TROOPS
+  const max_founder_troops = hints.max_founder_troops ?? SYSTEM_MAX_FOUNDER_TROOPS
   if (role === TroopRole.SCOUT) {
-    return Math.max(0, SYSTEM_MAX_SCOUT_TROOPS - hints.scout_count)
+    return Math.max(0, max_scout_troops - hints.scout_count)
   }
   if (role === TroopRole.FOUNDER) {
-    return Math.max(0, SYSTEM_MAX_FOUNDER_TROOPS - hints.founder_count)
+    return Math.max(0, max_founder_troops - hints.founder_count)
   }
   return Number.MAX_SAFE_INTEGER
 }

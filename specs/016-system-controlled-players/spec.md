@@ -4,7 +4,7 @@
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (25)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayers` creates registered empires if missing: **Alpha** (`the_technological_singularity`, `Core I`) and **Harrow** (`the_ash_liturgy`, `Cinder I` — see [`025`](../025-lawless-human-faction/spec.md)). A recurring **system player tick** job loads an **empire snapshot** (including per-player **AI profile**), builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (10)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)), all game commands invoked by tick actions.
 
@@ -12,7 +12,7 @@ The server maintains **system-controlled** players (non-human opponents) that ca
 
 `apps/server/src/index.ts`:
 
-1. `ensureSystemPlayer()` — returns existing `player_id` or bootstraps with `system_controlled: true`.
+1. `ensureSystemPlayers()` — ensures each entry in `SYSTEM_EMPIRE_BOOTSTRAP_ORDER` (`system_controlled: true`).
 2. `ensureSystemPlayerTickScheduled({ tick_index: 0 })`.
 
 Constants (`core/player/constant/system.ts`):
@@ -22,6 +22,10 @@ Constants (`core/player/constant/system.ts`):
 | `SYSTEM_PLAYER_NAME` | `Alpha` |
 | `SYSTEM_PLAYER_FACTION_CODE` | `the_technological_singularity` |
 | `SYSTEM_FIRST_CITY_NAME` | `Core I` (roman numerals via `systemCityName`) |
+| `HARROW_SYSTEM_PLAYER_NAME` | `Harrow` |
+| `HARROW_PLAYER_FACTION_CODE` | `the_ash_liturgy` |
+| `HARROW_FIRST_CITY_NAME` | `Cinder I` |
+| `SYSTEM_ASH_LITURGY_MIN_DISTANCE_FROM_ALPHA` | `40` (Manhattan, Harrow spawn) |
 
 ## Tick pipeline
 

@@ -20,6 +20,7 @@ export type CombatSimulatorStackRow = {
 export type CombatSimulatorFaction =
   | FactionCode.THE_CONFEDERATION
   | FactionCode.THE_TECHNOLOGICAL_SINGULARITY
+  | FactionCode.THE_ASH_LITURGY
 
 export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   code: CombatSimulatorFaction
@@ -32,6 +33,10 @@ export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   {
     code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
     label: 'Singularité',
+  },
+  {
+    code: FactionCode.THE_ASH_LITURGY,
+    label: 'Liturgie des cendres',
   },
 ]
 
@@ -50,6 +55,12 @@ export const PVP_COMBAT_TROOP_CODES_BY_FACTION: Record<
     TroopCode.STRIKER_DRONE,
     TroopCode.WAR_MACHINE,
     TroopCode.DISRUPTOR,
+  ],
+  [FactionCode.THE_ASH_LITURGY]: [
+    TroopCode.PENITENT_HORDE,
+    TroopCode.WRAITH_LANCER,
+    TroopCode.CINDER_TITAN,
+    TroopCode.HEMORRHAGE_CULTIST,
   ],
 }
 

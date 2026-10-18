@@ -459,10 +459,27 @@ export class AppService {
     })
   }
 
-  static async selectCityFirstCell(): Promise<CellEntity> {
+  static manhattanDistance(left: Coordinates, right: Coordinates): number {
+    return Math.abs(left.x - right.x) + Math.abs(left.y - right.y)
+  }
+
+  static async selectCityFirstCell({
+    min_manhattan_distance_from = [],
+  }: {
+    min_manhattan_distance_from?: {
+      coordinates: Coordinates
+      distance: number
+    }[]
+  } = {}): Promise<CellEntity> {
     const repository = Factory.getRepository()
     for (;;) {
       const random_coordinates = WorldService.getRandomCoordinates()
+      const satisfies_distance = min_manhattan_distance_from.every(({ coordinates, distance }) =>
+        AppService.manhattanDistance(random_coordinates, coordinates) >= distance
+      )
+      if (!satisfies_distance) {
+        continue
+      }
       const cell = await repository.cell.getCell({ coordinates: random_coordinates })
       const city_on_cell = await repository.city.searchByCell({ cell_id: cell.id })
       if (!city_on_cell) {
