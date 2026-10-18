@@ -66,6 +66,34 @@ describe('adminCombatSimulatorPostHandler', () => {
     })
   })
 
+  it('returns 400 for duplicate troop code on one side', async () => {
+    const status = vi.fn().mockReturnThis()
+    const json = vi.fn()
+    const res = { status, json } as unknown as Response
+
+    await adminCombatSimulatorPostHandler(
+      {
+        body: {
+          attacker_stacks: [
+            { troop_code: TroopCode.INTERCEPTOR, count: 1 },
+            { troop_code: TroopCode.INTERCEPTOR, count: 2 },
+          ],
+          defender_stacks: [{ troop_code: TroopCode.DISRUPTOR, count: 1 }],
+          attacker_strategy: CombatStrategy.BALANCED,
+          defender_strategy: CombatStrategy.BALANCED,
+        },
+      } as never,
+      res,
+      vi.fn(),
+    )
+
+    expect(status).toHaveBeenCalledWith(400)
+    expect(json).toHaveBeenCalledWith({
+      status: 'nok',
+      error_code: RequestError.TROOP_CODE_DUPLICATE,
+    })
+  })
+
   it('returns 400 for invalid troop code', async () => {
     const status = vi.fn().mockReturnThis()
     const json = vi.fn()

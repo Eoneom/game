@@ -36,6 +36,7 @@ export default defineConfig({
       '#ui': path.resolve(webSrc, 'ui'),
       '@eoneom/api-client': path.join(clientSrc, 'index.ts'),
       '@server-core': serverCore,
+      '#core': serverCore,
     },
   },
   server: {

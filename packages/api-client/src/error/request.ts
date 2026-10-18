@@ -3,6 +3,7 @@ export enum RequestError {
   BUILDING_CODE_NOT_FOUND = 'building_code:not-found',
   TECHNOLOGY_CODE_NOT_FOUND = 'technology_code:not-found',
   TROOP_CODE_NOT_FOUND = 'troop_code:not-found',
+  TROOP_CODE_DUPLICATE = 'troop_code:duplicate',
   TROOP_ID_NOT_FOUND = 'troop_id:not-found',
   OUTPOST_ID_NOT_FOUND = 'outpost_id:not-found',
   MOVEMENT_ID_NOT_FOUND = 'movement_id:not-found',

@@ -27,6 +27,7 @@ function parseStacks(
   }
 
   const stacks: BattleStack[] = []
+  const seen_troop_codes = new Set<string>()
 
   for (const entry of raw) {
     if (!entry || typeof entry !== 'object') {
@@ -38,6 +39,10 @@ function parseStacks(
     if (typeof troop_code !== 'string' || !TROOP_CODE_VALUES.has(troop_code)) {
       return { ok: false, error_code: RequestError.TROOP_CODE_NOT_FOUND }
     }
+    if (seen_troop_codes.has(troop_code)) {
+      return { ok: false, error_code: RequestError.TROOP_CODE_DUPLICATE }
+    }
+    seen_troop_codes.add(troop_code)
     if (
       typeof count !== 'number'
       || !Number.isInteger(count)

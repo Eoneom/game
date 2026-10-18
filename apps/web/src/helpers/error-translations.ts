@@ -94,6 +94,7 @@ const ErrorTranslations: Record<string, string> = {
   [RequestError.BUILDING_CODE_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.TECHNOLOGY_CODE_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.TROOP_CODE_NOT_FOUND]: 'Paramètre manquant',
+  [RequestError.TROOP_CODE_DUPLICATE]: 'Chaque unité ne peut apparaître qu\'une fois par camp',
   [RequestError.TROOP_ID_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.OUTPOST_ID_NOT_FOUND]: 'Paramètre manquant',
   [RequestError.MOVEMENT_ID_NOT_FOUND]: 'Paramètre manquant',
