@@ -18,6 +18,7 @@ import {
   REPLICATION_CATALYST_REDUCTION_PER_LEVEL,
   troop_costs
 } from '#core/pricing/constant/troop'
+import { PRICING_PACE_MULTIPLIER } from '#core/pricing/constant/pace'
 import { scaleGameDurationSeconds } from '#shared/game-time-scale'
 import { Resource } from '#shared/resource'
 
@@ -47,16 +48,25 @@ export class PricingService {
 
     const base_duration = cost.duration * count
     const total_reduction = cloning_factory_reduction * replication_catalyst_reduction
-    const reduced_duration = Math.ceil(base_duration * total_reduction)
+    const paced_duration = Math.max(
+      1,
+      Math.ceil(base_duration * total_reduction * PRICING_PACE_MULTIPLIER)
+    )
 
     return {
       code,
       resource: {
-        plastic: cost.plastic * count,
-        mushroom: cost.mushroom * count,
+        plastic: Math.max(
+          1,
+          Math.ceil(cost.plastic * count * PRICING_PACE_MULTIPLIER)
+        ),
+        mushroom: Math.max(
+          1,
+          Math.ceil(cost.mushroom * count * PRICING_PACE_MULTIPLIER)
+        ),
         plasma: 0
       },
-      duration: scaleGameDurationSeconds(reduced_duration)
+      duration: scaleGameDurationSeconds(paced_duration)
     }
   }
 
@@ -178,7 +188,7 @@ export class PricingService {
 
   private static computeLevelResourceCost(cost: LevelCost, level: number): number {
     const base_level_cost = cost.base * Math.pow(cost.multiplier, level - 1)
-    return Math.ceil(base_level_cost)
+    return Math.max(1, Math.ceil(base_level_cost * PRICING_PACE_MULTIPLIER))
   }
 
   private static computeLevelDurationCost(
@@ -187,7 +197,10 @@ export class PricingService {
     reduction: number
   ): number {
     const base_level_cost = cost.base * Math.pow(cost.multiplier, level - 1)
-    const raw_seconds = Math.ceil(base_level_cost * reduction)
+    const raw_seconds = Math.max(
+      1,
+      Math.ceil(base_level_cost * reduction * PRICING_PACE_MULTIPLIER)
+    )
     return scaleGameDurationSeconds(raw_seconds)
   }
 }

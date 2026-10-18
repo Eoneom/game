@@ -15,6 +15,7 @@ import { CityError } from '#core/city/error'
 import { now } from '#shared/time'
 import assert from 'assert'
 import { troop_costs } from '#core/pricing/constant/troop'
+import { PricingService } from '#core/pricing/service'
 import {
   testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
@@ -142,8 +143,20 @@ describe('cancelTroop', () => {
     })
 
     const updated_stock = stockUpdateOne.mock.calls[0][0]
-    assert.strictEqual(updated_stock.plastic, STARTING_PLASTIC + 999 * troop_costs[code].plastic)
-    assert.strictEqual(updated_stock.mushroom, STARTING_MUSHROOM + 999 * troop_costs[code].mushroom)
+    const refund_cost = PricingService.getTroopCost({
+      code,
+      count: 999,
+      cloning_factory_level: 0,
+      replication_catalyst_level: 0
+    })
+    assert.strictEqual(
+      updated_stock.plastic,
+      STARTING_PLASTIC + refund_cost.resource.plastic
+    )
+    assert.strictEqual(
+      updated_stock.mushroom,
+      STARTING_MUSHROOM + refund_cost.resource.mushroom
+    )
   })
 
   it('should recruit troops since the last progress', async () => {
