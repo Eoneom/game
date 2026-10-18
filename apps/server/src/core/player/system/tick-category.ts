@@ -5,10 +5,10 @@ export const SYSTEM_TICK_EXPANSION_CATEGORIES = [
   'explore',
 ] as const
 
-/** Commit temp outposts (settle / permanent) before further scouting. */
+/** Commit temp outposts (permanent, then settle) before further scouting. */
 export const SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST = [
-  'settle',
   'make-permanent',
+  'settle',
   'base',
   'explore',
 ] as const

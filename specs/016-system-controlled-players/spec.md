@@ -71,7 +71,7 @@ When not pressured, building iteration order is unchanged (repository list order
 
 **Tick priority (default)**: expansion block **`base` → `settle` → `make-permanent` → `explore`**, then economy (`upgrade` → `research` → `recruit` → `transport`), rotated by `tick_index` so each category leads periodically. The goal is ongoing territorial and resource expansion at every empire size — committing high-value scouted cells before frontier scouting.
 
-**Temporary outposts**: while any **temporary** outposts exist, rotation is **`settle` → `make-permanent` → `base` → `explore`** (`SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST`) so commits run before further scouting.
+**Temporary outposts**: while any **temporary** outposts exist, the expansion ring is **`make-permanent` → `settle` → `base` → `explore`** (`SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST`). `planSystemPlayerActions` also **prepends** up to `min(temporary_outpost_count, SYSTEM_MAX_ACTIONS_PER_TICK)` **`make-permanent`** intents (reason `commit_temp_outpost`) before the rotated plan so permanence is attempted even when economy-first rotation would otherwise consume the per-tick action budget; the tail is **deduped by category** (first occurrence kept).
 
 **Explore deferral**: `tryExplore` returns idle when an explored, unoccupied cell meets the minimum score for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target across owned viewports — the same tick can then succeed on `base` / `settle` without mapping the whole viewport first. Explore runs only when there is no such committable site and more intel is needed.
 

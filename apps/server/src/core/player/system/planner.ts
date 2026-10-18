@@ -1,3 +1,4 @@
+import { SYSTEM_MAX_ACTIONS_PER_TICK } from '#core/player/system/constants'
 import {
   SYSTEM_TICK_ECONOMY_CATEGORIES,
   SYSTEM_TICK_EXPANSION_CATEGORIES,
@@ -74,6 +75,21 @@ export function deprioritizeExploreInPlan(
   ]
 }
 
+function dedupeCategoriesKeepingFirst(
+  categories: SystemTickCategory[],
+): SystemTickCategory[] {
+  const seen = new Set<SystemTickCategory>()
+  const deduped: SystemTickCategory[] = []
+  for (const category of categories) {
+    if (seen.has(category)) {
+      continue
+    }
+    seen.add(category)
+    deduped.push(category)
+  }
+  return deduped
+}
+
 export function planSystemPlayerActions(
   snapshot: SystemEmpireSnapshot,
   tick_index: number,
@@ -89,11 +105,37 @@ export function planSystemPlayerActions(
     categories = deprioritizeExploreInPlan(categories)
   }
 
-  return categories.map((category, priority) => ({
-    category,
-    priority,
-    ...(snapshot.defer_explore && category === 'explore'
-      ? { reason: 'defer_explore_for_basing' }
-      : {}),
-  }))
+  const intents: SystemPlayerActionIntent[] = []
+  const seen_categories = new Set<SystemTickCategory>()
+
+  if (snapshot.temporary_outpost_count > 0) {
+    const commit_attempts = Math.min(
+      snapshot.temporary_outpost_count,
+      SYSTEM_MAX_ACTIONS_PER_TICK,
+    )
+    for (let index = 0; index < commit_attempts; index += 1) {
+      intents.push({
+        category: 'make-permanent',
+        priority: intents.length,
+        reason: 'commit_temp_outpost',
+      })
+    }
+    seen_categories.add('make-permanent')
+  }
+
+  for (const category of dedupeCategoriesKeepingFirst(categories)) {
+    if (seen_categories.has(category)) {
+      continue
+    }
+    seen_categories.add(category)
+    intents.push({
+      category,
+      priority: intents.length,
+      ...(snapshot.defer_explore && category === 'explore'
+        ? { reason: 'defer_explore_for_basing' }
+        : {}),
+    })
+  }
+
+  return intents
 }

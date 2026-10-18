@@ -54,17 +54,39 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[explore_index].reason, 'defer_explore_for_basing')
   })
 
-  it('uses commit-first expansion ring from snapshot', () => {
+  it('prepends make-permanent when temporary outposts exist', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       temporary_outpost_count: 2,
       expansion_categories: [
-        'settle',
         'make-permanent',
+        'settle',
         'base',
         'explore',
       ],
     }), 0)
-    assert.strictEqual(plan[0].category, 'settle')
+    assert.strictEqual(plan[0].category, 'make-permanent')
+    assert.strictEqual(plan[0].reason, 'commit_temp_outpost')
+    assert.strictEqual(plan[1].category, 'make-permanent')
+    assert.strictEqual(plan[1].reason, 'commit_temp_outpost')
+    assert.strictEqual(plan[2].category, 'settle')
+    assert.ok(plan.every((intent, index) => intent.priority === index))
+  })
+
+  it('prepends one make-permanent per temp outpost up to max actions per tick', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      temporary_outpost_count: 5,
+      economy_first: true,
+    }), 0)
+    assert.deepStrictEqual(
+      plan.slice(0, 3).map(intent => intent.category),
+      [
+        'make-permanent',
+        'make-permanent',
+        'make-permanent',
+      ],
+    )
+    assert.ok(plan.slice(0, 3).every(intent => intent.reason === 'commit_temp_outpost'))
+    assert.strictEqual(plan[3].category, 'upgrade')
   })
 })
 
