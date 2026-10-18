@@ -29,7 +29,7 @@ Constants (`core/player/constant/system.ts`):
 | --- | --- |
 | `SYSTEM_PLAYER_TICK_QUEUE` | pg-boss stately queue |
 | `tickSystemPlayers` | Lists system players, `collectSystemEmpireSnapshot`, `planSystemPlayerActions`, `executeSystemPlayerTick`, schedules next tick |
-| `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, explore deferral, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
+| `collectSystemEmpireSnapshot` | One read pass: cities, economy pressure, expansion ring, explore deferral, `expansion_starved`, combat readiness (`app/query/player/system/empire-snapshot.ts`) |
 | `planSystemPlayerActions` | Ordered intents from snapshot + `tick_index` (`core/player/system/planner.ts`; `categoriesForTick`, research/upgrade swap, explore defer) |
 | `executeSystemPlayerTick` | Walks plan until `SYSTEM_MAX_ACTIONS_PER_TICK` successes or intents exhausted (`policy.ts`) |
 | `shouldPrioritizeEconomyForSystemPlayer` | Main-city signal for economy-first plan (`storage.ts`) |
@@ -72,6 +72,10 @@ When not pressured, building iteration order is unchanged (repository list order
 **Tick priority (default)**: expansion block **`base` → `settle` → `make-permanent` → `explore`**, then economy (`upgrade` → `research` → `recruit` → `transport`), rotated by `tick_index` so each category leads periodically. The goal is ongoing territorial and resource expansion at every empire size — committing high-value scouted cells before frontier scouting.
 
 **Temporary outposts**: while any **temporary** outposts exist, the expansion ring is **`make-permanent` → `settle` → `base` → `explore`** (`SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST`). `planSystemPlayerActions` also **prepends** up to `min(temporary_outpost_count, SYSTEM_MAX_ACTIONS_PER_TICK)` **`make-permanent`** intents (reason `commit_temp_outpost`) before the rotated plan so permanence is attempted even when economy-first rotation would otherwise consume the per-tick action budget; the tail is **deduped by category** (first occurrence kept).
+
+**Expansion-starved** (`expansion_starved` on the empire snapshot): `true` when **`defer_explore`** is set (committable base sites beat marginal fog) **or** when there are **no temporary outposts** and **`permanent_outpost_count` < `SYSTEM_EXPANSION_STARVED_PERMANENT_OUTPOST_TARGET` (2)**. Starved ticks **force expansion-first planning** even if the main city would normally flip economy-first (`economy_first` is ignored for rotation). The planner **prepends** up to `min(2, SYSTEM_MAX_ACTIONS_PER_TICK − make-permanent prepends)` **`base`** intents (reason `expansion_starved`) so temp outposts are created before economy actions consume the budget. Tradeoff: a starved empire may delay warehouse/energy fixes for up to a few ticks while it seeds outposts — acceptable because without temps the commit pipeline (`make-permanent`) never runs.
+
+**Base** (`tryBase`): scores destinations across **all** owned city/outpost viewports, then issues movement from **any** origin with idle troops (`movement_id` null). `selectTroopsForSystemBase` chooses **`move_troops`**: prefer **1× founder**; else **1× combat** (`combat_role === combat`); else **1×** any other non-zero stack (never the full garrison). Temp outposts are created from whatever troops arrive (`finishTroopBaseMovement`, same as human base with explorer/settler). Founder need not sit on the viewport center used to discover the cell.
 
 **Explore deferral**: `tryExplore` returns idle when an explored, unoccupied cell meets the minimum score for the current goal (city site vs resource outpost) and is at least **75%** of the best unexplored scout target across owned viewports — the same tick can then succeed on `base` / `settle` without mapping the whole viewport first. Explore runs only when there is no such committable site and more intel is needed.
 

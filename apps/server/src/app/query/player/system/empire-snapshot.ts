@@ -8,7 +8,10 @@ import {
   shouldPrioritizeEconomyForSystemPlayer,
 } from '#command/player/system/storage'
 import { isSystemCombatArmyReady } from '#command/player/system/troops'
-import type { SystemEmpireSnapshot } from '#core/player/system/empire-snapshot'
+import {
+  isExpansionStarved,
+  type SystemEmpireSnapshot,
+} from '#core/player/system/empire-snapshot'
 import { OutpostType } from '#core/outpost/constant/type'
 import {
   shouldDeferExploreForBasing,
@@ -185,6 +188,9 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
   const temporary_outpost_count = outposts.filter(
     outpost => outpost.type !== OutpostType.PERMANENT,
   ).length
+  const permanent_outpost_count = outposts.filter(
+    outpost => outpost.type === OutpostType.PERMANENT,
+  ).length
   const expansion_categories = systemTickExpansionCategories({
     temporary_outpost_count,
   })
@@ -228,13 +234,21 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     }),
   ])
 
+  const expansion_starved = isExpansionStarved({
+    temporary_outpost_count,
+    permanent_outpost_count,
+    defer_explore,
+  })
+
   return {
     player_id,
     temporary_outpost_count,
+    permanent_outpost_count,
     expansion_categories,
     economy_first,
     production_ready_for_research,
     defer_explore,
+    expansion_starved,
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
   }
 }

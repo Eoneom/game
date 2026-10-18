@@ -35,6 +35,7 @@ describe('tickSystemPlayers', () => {
   const default_snapshot = {
     player_id: player.id,
     temporary_outpost_count: 0,
+    permanent_outpost_count: 0,
     expansion_categories: [
       'base',
       'settle',
@@ -44,6 +45,7 @@ describe('tickSystemPlayers', () => {
     economy_first: false,
     production_ready_for_research: false,
     defer_explore: false,
+    expansion_starved: true,
     combat_army_ready: false,
   }
 

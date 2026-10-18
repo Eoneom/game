@@ -12,6 +12,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
   return {
     player_id: 'player-1',
     temporary_outpost_count: 0,
+    permanent_outpost_count: 2,
     expansion_categories: [
       'base',
       'settle',
@@ -21,6 +22,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     economy_first: false,
     production_ready_for_research: false,
     defer_explore: false,
+    expansion_starved: false,
     combat_army_ready: false,
     ...overrides,
   }
@@ -28,12 +30,18 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
 
 describe('planSystemPlayerActions', () => {
   it('rotates expansion-first from tick index', () => {
-    const plan = planSystemPlayerActions(baseSnapshot(), 1)
+    const plan = planSystemPlayerActions(baseSnapshot({
+      expansion_starved: false,
+      permanent_outpost_count: 2,
+    }), 1)
     assert.strictEqual(plan[0].category, 'settle')
   })
 
   it('uses economy-first when snapshot requests it', () => {
-    const plan = planSystemPlayerActions(baseSnapshot({ economy_first: true }), 0)
+    const plan = planSystemPlayerActions(baseSnapshot({
+      economy_first: true,
+      expansion_starved: false,
+    }), 0)
     assert.strictEqual(plan[0].category, 'upgrade')
   })
 
@@ -57,6 +65,7 @@ describe('planSystemPlayerActions', () => {
   it('prepends make-permanent when temporary outposts exist', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       temporary_outpost_count: 2,
+      expansion_starved: false,
       expansion_categories: [
         'make-permanent',
         'settle',
@@ -72,9 +81,44 @@ describe('planSystemPlayerActions', () => {
     assert.ok(plan.every((intent, index) => intent.priority === index))
   })
 
+  it('prepends base intents when expansion-starved and overrides economy-first', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      economy_first: true,
+      expansion_starved: true,
+    }), 0)
+    assert.deepStrictEqual(
+      plan.slice(0, 2).map(intent => ({
+        category: intent.category,
+        reason: intent.reason,
+      })),
+      [
+        {
+          category: 'base',
+          reason: 'expansion_starved',
+        },
+        {
+          category: 'base',
+          reason: 'expansion_starved',
+        },
+      ],
+    )
+    assert.strictEqual(plan[2].category, 'settle')
+  })
+
+  it('does not prepend base when empire has enough permanent outposts and explore is not deferred', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      permanent_outpost_count: 2,
+      expansion_starved: false,
+      economy_first: true,
+    }), 0)
+    assert.strictEqual(plan[0].category, 'upgrade')
+    assert.ok(!plan.some(intent => intent.reason === 'expansion_starved'))
+  })
+
   it('prepends one make-permanent per temp outpost up to max actions per tick', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       temporary_outpost_count: 5,
+      expansion_starved: false,
       economy_first: true,
     }), 0)
     assert.deepStrictEqual(

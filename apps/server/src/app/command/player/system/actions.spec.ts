@@ -69,7 +69,13 @@ describe('systemTickActions', () => {
     vi.mocked(citySettle).mockClear()
     vi.mocked(createTroopMovement).mockClear()
     vi.mocked(recruitTroop).mockClear()
-    vi.spyOn(Factory, 'getRepository').mockReturnValue({} as Repository)
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      player: {
+        get: vi.fn().mockResolvedValue({
+          faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+        }),
+      },
+    } as Repository)
     vi.spyOn(Factory, 'getLogger').mockReturnValue(fakeLogger as never)
   })
 
@@ -1113,6 +1119,220 @@ describe('systemTickActions', () => {
 
     assert.strictEqual(acted, null)
     assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
+  })
+
+  it('bases using a city founder on a site only visible from a distant outpost viewport', async () => {
+    const outpost_id = id()
+    const outpost_cell = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 12,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 1,
+    })
+    const base_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: outpost_cell.coordinates.x + 1,
+        y: outpost_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 2.5,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 0,
+          mushroom: 0,
+        }),
+      ],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockImplementation(async request => {
+      if (request.location?.type === 'outpost') {
+        return {
+          troops: [],
+          costs: {} as never,
+          pending_recruitment: null,
+        }
+      }
+      return {
+        troops: [
+          TroopEntity.create({
+            id: id(),
+            player_id,
+            cell_id: city_cell.id,
+            code: TroopCode.ASSEMBLER,
+            count: 1,
+            movement_id: null,
+          }),
+        ],
+        costs: {} as never,
+        pending_recruitment: null,
+      }
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockImplementation(async request => {
+      if (request.min_x === outpost_cell.coordinates.x - 5) {
+        return {
+          cells: [ outpost_cell, base_site ],
+          explored_cell_ids: [ outpost_cell.id, base_site.id ],
+        }
+      }
+      return {
+        cells: [ city_cell ],
+        explored_cell_ids: [ city_cell.id ],
+      }
+    })
+
+    const acted = await systemTickActions.base(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(acted?.destination, base_site.coordinates)
+    assert.deepStrictEqual(acted?.origin, city_cell.coordinates)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
+  })
+
+  it('propagates createTroopMovement errors from base', async () => {
+    const base_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 1,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 2,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.ASSEMBLER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell, base_site ],
+      explored_cell_ids: [ city_cell.id, base_site.id ],
+    })
+    vi.mocked(createTroopMovement).mockRejectedValueOnce(new Error('troop:move failed'))
+
+    await assert.rejects(
+      () => systemTickActions.base(player_id),
+      /troop:move failed/,
+    )
+  })
+
+  it('bases with a combat troop when no founder is idle at the origin', async () => {
+    const base_site = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: city_cell.coordinates.x + 1,
+        y: city_cell.coordinates.y,
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
+      solar_coefficient: 2.4,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [],
+      cells: [],
+      resource_stocks: [],
+      count_limit: 10,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: city_cell.id,
+          code: TroopCode.WAR_MACHINE,
+          count: SYSTEM_TARGET_WAR_MACHINE,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      cells: [ city_cell, base_site ],
+      explored_cell_ids: [ city_cell.id, base_site.id ],
+    })
+    const acted = await systemTickActions.base(player_id)
+
+    assert.ok(acted)
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].move_troops, [
+      {
+        code: TroopCode.WAR_MACHINE,
+        count: 1,
+      },
+    ])
   })
 
   it('bases on the highest-scoring explored cell in the viewport', async () => {

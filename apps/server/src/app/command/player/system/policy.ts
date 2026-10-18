@@ -138,10 +138,12 @@ export async function actForSystemPlayer({
       : planSystemPlayerActions({
         player_id,
         temporary_outpost_count: 0,
+        permanent_outpost_count: 2,
         expansion_categories: SYSTEM_TICK_EXPANSION_CATEGORIES,
         economy_first: false,
         production_ready_for_research: false,
         defer_explore: false,
+        expansion_starved: false,
         combat_army_ready: false,
       }, tick_index)
 

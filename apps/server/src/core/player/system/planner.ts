@@ -1,4 +1,7 @@
-import { SYSTEM_MAX_ACTIONS_PER_TICK } from '#core/player/system/constants'
+import {
+  SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS,
+  SYSTEM_MAX_ACTIONS_PER_TICK,
+} from '#core/player/system/constants'
 import {
   SYSTEM_TICK_ECONOMY_CATEGORIES,
   SYSTEM_TICK_EXPANSION_CATEGORIES,
@@ -94,8 +97,9 @@ export function planSystemPlayerActions(
   snapshot: SystemEmpireSnapshot,
   tick_index: number,
 ): SystemPlayerActionIntent[] {
+  const expansion_starved = snapshot.expansion_starved
   let categories = categoriesForTick(tick_index, {
-    economy_first: snapshot.economy_first,
+    economy_first: snapshot.economy_first && !expansion_starved,
     expansion_categories: snapshot.expansion_categories,
   })
   if (snapshot.production_ready_for_research) {
@@ -121,6 +125,22 @@ export function planSystemPlayerActions(
       })
     }
     seen_categories.add('make-permanent')
+  }
+
+  if (expansion_starved) {
+    const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
+    const base_attempts = Math.min(
+      SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS,
+      remaining_budget,
+    )
+    for (let index = 0; index < base_attempts; index += 1) {
+      intents.push({
+        category: 'base',
+        priority: intents.length,
+        reason: 'expansion_starved',
+      })
+    }
+    seen_categories.add('base')
   }
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {

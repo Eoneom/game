@@ -66,6 +66,7 @@ import {
   sortTroopsForSystemRecruit,
   systemRecruitBatchCount,
 } from '#command/player/system/troops'
+import { selectTroopsForSystemBase } from '#core/player/system/base-troops'
 import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
 import {
   levelsForSystemRequirementGate,
@@ -630,33 +631,24 @@ async function shouldSkipExploreForBasing({
   })
 }
 
-async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
-  const {
-    cities, count_limit 
-  } = await new CityListQuery().run({ player_id })
-  const can_found_city = cities.length < count_limit
-  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
-
-  const {
-    origins, occupied_cell_ids 
-  } = await ownedLocationCells(player_id)
+async function findBestBaseDestination({
+  player_id,
+  origins,
+  occupied_cell_ids,
+  base_cell_score,
+}: {
+  player_id: string
+  origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
+  occupied_cell_ids: Set<string>
+  base_cell_score: (cell: CellEntity) => number
+}): Promise<CellEntity | null> {
+  let best_destination: CellEntity | null = null
+  let best_score = -Infinity
 
   for (const origin of origins) {
-    const { troops } = await new TroopListQuery().run({
-      player_id,
-      location: origin.location
-    })
-    const founder = TroopService.findByRole({
-      troops,
-      role: TroopRole.FOUNDER
-    })
-    if (!founder || founder.count < 1) {
-      continue
-    }
-
     const viewport = await new WorldGetCellsQuery().run({
       player_id,
-      ...viewportAround(origin.coordinates)
+      ...viewportAround(origin.coordinates),
     })
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
@@ -669,29 +661,64 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
     if (!destination) {
       continue
     }
+    const score = base_cell_score(destination)
+    if (score > best_score) {
+      best_score = score
+      best_destination = destination
+    }
+  }
+
+  return best_destination
+}
+
+async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
+  const {
+    cities, count_limit 
+  } = await new CityListQuery().run({ player_id })
+  const can_found_city = cities.length < count_limit
+  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
+
+  const {
+    origins, occupied_cell_ids 
+  } = await ownedLocationCells(player_id)
+
+  const destination = await findBestBaseDestination({
+    player_id,
+    origins,
+    occupied_cell_ids,
+    base_cell_score,
+  })
+  if (!destination) {
+    return null
+  }
+
+  const player = await Factory.getRepository().player.get(player_id)
+
+  for (const origin of origins) {
+    const { troops } = await new TroopListQuery().run({
+      player_id,
+      location: origin.location,
+    })
+    const move_troops = selectTroopsForSystemBase({
+      troops,
+      faction: player.faction_code,
+    })
+    if (!move_troops) {
+      continue
+    }
 
     await createTroopMovement({
       player_id,
       action: MovementAction.BASE,
       origin: origin.coordinates,
       destination: destination.coordinates,
-      move_troops: [
-        {
-          code: founder.code,
-          count: 1
-        }
-      ]
+      move_troops,
     })
     return {
       action: MovementAction.BASE,
       origin: origin.coordinates,
       destination: destination.coordinates,
-      move_troops: [
-        {
-          code: founder.code,
-          count: 1,
-        },
-      ],
+      move_troops,
     }
   }
 
