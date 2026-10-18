@@ -28,6 +28,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     outpost_transport_pressure_count: 0,
     can_found_city: true,
     settle_ready_temp_count: 0,
+    outpost_limit_reached: false,
     ...overrides,
   }
 }
@@ -170,6 +171,20 @@ describe('planSystemPlayerActions', () => {
     assert.strictEqual(plan[1].category, 'deploy-outpost')
     assert.strictEqual(plan[1].reason, 'outpost_logistics')
     assert.strictEqual(plan[2].category, 'base')
+  })
+
+  it('omits base intents when the outpost count limit is reached', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      outpost_limit_reached: true,
+      expansion_starved: true,
+      defer_explore: true,
+      can_found_city: true,
+      temporary_outpost_count: 0,
+      settle_ready_temp_count: 0,
+      economy_first: false,
+    }), 0)
+    assert.ok(!plan.some(intent => intent.category === 'base'))
+    assert.strictEqual(plan[0].category, 'settle')
   })
 
   it('prepends transport intents when permanent outpost stock is pressured', () => {

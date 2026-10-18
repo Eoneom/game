@@ -21,6 +21,7 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { CityEntity } from '#core/city/entity'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
+import { OUTPOST_COUNT_LIMIT } from '#core/outpost/constant/limit'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { MovementAction } from '#core/troop/constant/movement-action'
@@ -1279,6 +1280,30 @@ describe('systemTickActions', () => {
       () => systemTickActions.base(player_id),
       /troop:move failed/,
     )
+  })
+
+  it('skips base when the outpost count limit is reached', async () => {
+    const outposts = Array.from({ length: OUTPOST_COUNT_LIMIT }, () => OutpostEntity.create({
+      id: id(),
+      player_id,
+      cell_id: id(),
+      type: OutpostType.PERMANENT,
+    }))
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts,
+      cells: [],
+      resource_stocks: [],
+      count_limit: OUTPOST_COUNT_LIMIT,
+    })
+
+    const acted = await systemTickActions.base(player_id)
+
+    assert.strictEqual(acted, null)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
   })
 
   it('bases with a combat troop when no founder is idle at the origin', async () => {

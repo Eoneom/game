@@ -155,6 +155,7 @@ export async function actForSystemPlayer({
         outpost_transport_pressure_count: 0,
         can_found_city: true,
         settle_ready_temp_count: 0,
+        outpost_limit_reached: false,
       }, tick_index)
 
   return executeSystemPlayerTick({
