@@ -1,7 +1,7 @@
 import { Factory } from '#adapter/factory'
+import { resolveMovementArriveAt } from '#app/query/troop/movement/resolve-arrive-at'
 import { GenericQuery } from '#query/generic'
 import { MovementEntity } from '#core/troop/movement/entity'
-import { TroopError } from '#core/troop/error'
 
 export interface TroopMovementListEntry {
   movement: MovementEntity
@@ -26,17 +26,23 @@ export class TroopMovementListQuery extends GenericQuery<TroopMovementListQueryR
     const job_queue = Factory.getJobQueue()
 
     const entries = await Promise.all(movements.map(async (movement) => {
-      const pending = await job_queue.getPendingTroopMovementFinish({ movement_id: movement.id })
-      if (!pending) {
-        throw new Error(TroopError.MOVEMENT_NOT_FOUND)
+      const arrive_at = await resolveMovementArriveAt({
+        movement_id: movement.id,
+        job_queue,
+        battle_repository: this.repository.battle,
+      })
+      if (arrive_at === null) {
+        return null
       }
 
       return {
         movement,
-        arrive_at: pending.execute_at,
+        arrive_at,
       }
     }))
 
-    return { movements: entries }
+    return {
+      movements: entries.filter((entry): entry is TroopMovementListEntry => entry !== null),
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { resolveMovementArriveAt } from '#app/query/troop/movement/resolve-arrive-at'
 import { GenericQuery } from '#query/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
@@ -150,8 +151,11 @@ export class LocationActivityQuery extends GenericQuery<
     }
 
     const movement_entries = await Promise.all(movements.map(async (movement) => {
-      const pending = await job_queue.getPendingTroopMovementFinish({ movement_id: movement.id })
-      return pending ? pending.execute_at : null
+      return resolveMovementArriveAt({
+        movement_id: movement.id,
+        job_queue,
+        battle_repository: this.repository.battle,
+      })
     }))
     const arrive_ats = movement_entries.filter((v): v is number => v !== null)
     const next_arrive_at = arrive_ats.length ? Math.min(...arrive_ats) : null

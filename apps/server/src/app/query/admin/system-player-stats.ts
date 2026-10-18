@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { resolveMovementArriveAt } from '#app/query/troop/movement/resolve-arrive-at'
 import { AppService } from '#app/service'
 import { BuildingService } from '#core/building/service'
 import { CityEntity } from '#core/city/entity'
@@ -172,8 +173,12 @@ export async function listOngoingMovementsForPlayer({
   const movements = await repository.movement.list({ player_id })
 
   const entries = await Promise.all(movements.map(async (movement) => {
-    const pending = await job_queue.getPendingTroopMovementFinish({ movement_id: movement.id })
-    if (!pending) {
+    const arrive_at = await resolveMovementArriveAt({
+      movement_id: movement.id,
+      job_queue,
+      battle_repository: repository.battle,
+    })
+    if (arrive_at === null) {
       return null
     }
 
@@ -190,7 +195,7 @@ export async function listOngoingMovementsForPlayer({
         x: movement.destination.x,
         y: movement.destination.y,
       },
-      arrive_at: pending.execute_at,
+      arrive_at,
       resources: {
         plastic: movement.resources.plastic,
         mushroom: movement.resources.mushroom,
