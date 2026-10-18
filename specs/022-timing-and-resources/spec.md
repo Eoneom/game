@@ -17,7 +17,7 @@ Global **timing harmonization** for cities and outposts: one ruleset per locatio
 | Balance levers | `core/pricing/constant/*` (cost + duration `base` / `multiplier`), plus minimal `core/requirement/*` tweaks. |
 | Early hook | First **meaningful** building upgrade (starter city, typical first production or warehouse path) completes in **~22–23s real time** at `GAME_TIME_SCALE=1`, affordable from signup stock. |
 | Mid / late | Steeper **level multipliers** on duration and resource costs; no new mechanics. |
-| Earnings | Production rates stay in `core/building/constant/earnings.ts`; scaled by cell coefficients and `gameTimeScale` as today. |
+| Earnings | Production rates in `core/building/constant/earnings.ts` and `core/troop/constant/earnings.ts` use **2×** `base` / per-troop values (literal table edit, no global multiplier); still scaled by cell coefficients and `gameTimeScale`. |
 
 ## Milestones (`GAME_TIME_SCALE=1`, starter city)
 
@@ -41,7 +41,7 @@ Assumptions: coefficient **1.0** on main resources, mushroom farm / recycling pl
 
 Values above come from halved `base` fields in `building_costs` (multipliers unchanged), before `scaleGameDurationSeconds`.
 
-At production **level 1**, plastic earnings ≈ **1.8/s** per unit coefficient (`building_earnings` base), so each **5s** gather adds ≈ **9** plastic before warehouse cap — used to pace upgrades after the first build.
+At production **level 1**, plastic earnings ≈ **3.6/s** per unit coefficient (`building_earnings` base), so each **5s** gather adds ≈ **18** plastic before warehouse cap — used to pace upgrades after the first build.
 
 ### Script check
 
@@ -54,6 +54,8 @@ At production **level 1**, plastic earnings ≈ **1.8/s** per unit coefficient (
 | `apps/server/src/core/pricing/constant/building.ts` | Early building `duration.base` → **23** (halved from 45) for production + warehouses; resource `base` values halved; sharpened level **multipliers** unchanged; mid/late buildings steeper curves with halved bases. |
 | `apps/server/src/core/pricing/constant/technology.ts` | Resource and duration `base` values halved (multipliers unchanged). |
 | `apps/server/src/core/pricing/constant/troop.ts` | Per-unit plastic, mushroom, and duration values halved. |
+| `apps/server/src/core/building/constant/earnings.ts` | `building_earnings` `base` values doubled (multipliers unchanged). |
+| `apps/server/src/core/troop/constant/earnings.ts` | `troop_earnings` per-troop rates doubled. |
 | `apps/server/src/app/command/building/cancel.spec.ts` | Refund golden values after mushroom farm cost curve change. |
 
 Technology and troop pricing tables use the same halved-`base` approach as buildings (first actions remain building upgrades).

@@ -151,7 +151,7 @@ describe('BuildingService.getEarningsBySecond', () => {
       code: BuildingCode.CENTRAL_INDUCTOR,
       level: 1,
       coefficients: { plastic: 1, mushroom: 1, plasma: 1 }
-    }), 0.05)
+    }), 0.1)
   })
 
   it('ignores cell coefficients for central inductor', () => {
@@ -159,7 +159,7 @@ describe('BuildingService.getEarningsBySecond', () => {
       code: BuildingCode.CENTRAL_INDUCTOR,
       level: 1,
       coefficients: { plastic: 9, mushroom: 9, plasma: 9 }
-    }), 0.05)
+    }), 0.1)
   })
 })
 

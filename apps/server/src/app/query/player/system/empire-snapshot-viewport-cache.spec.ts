@@ -109,6 +109,9 @@ describe('collectSystemEmpireSnapshot viewport cache', () => {
       troop: {
         listAllInCell: vi.fn().mockResolvedValue([]),
       },
+      technology: {
+        getLevel: vi.fn().mockResolvedValue(0),
+      },
     } as never)
     worldGetCellsRun = vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue(mock_viewport)
   })

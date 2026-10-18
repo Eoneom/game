@@ -9,10 +9,10 @@ export type EarningTroopCode =
   | TroopCode.SCRAP_LECTOR
 
 export const troop_earnings: Record<EarningTroopCode, number> = {
-  [TroopCode.FARMER]: 0.1,
-  [TroopCode.RECYCLER]: 0.12,
-  [TroopCode.HARVESTER]: 0.1,
-  [TroopCode.RECLAIMER]: 0.12,
-  [TroopCode.SPORE_ACOLYTE]: 0.1,
-  [TroopCode.SCRAP_LECTOR]: 0.12,
+  [TroopCode.FARMER]: 0.2,
+  [TroopCode.RECYCLER]: 0.24,
+  [TroopCode.HARVESTER]: 0.2,
+  [TroopCode.RECLAIMER]: 0.24,
+  [TroopCode.SPORE_ACOLYTE]: 0.2,
+  [TroopCode.SCRAP_LECTOR]: 0.24,
 }

@@ -244,7 +244,7 @@ describe('TroopService', () => {
         code: TroopCode.FARMER,
         count: 10,
         coefficients: { plastic: 2, mushroom: 1.5 , plasma: 0}
-      }), 1.5)
+      }), 3)
     })
 
     it('scales recycler earnings by count and plastic coefficient', () => {
@@ -252,7 +252,7 @@ describe('TroopService', () => {
         code: TroopCode.RECYCLER,
         count: 10,
         coefficients: { plastic: 1.5, mushroom: 2 , plasma: 0}
-      }), 1.8)
+      }), 3.6)
     })
 
     it('scales harvester earnings like farmer', () => {

@@ -10,15 +10,15 @@ export const building_earnings: Record<
   Earnings
 > = {
   [BuildingCode.RECYCLING_PLANT]: {
-    base: 1.8,
+    base: 3.6,
     multiplier: 1.15
   },
   [BuildingCode.MUSHROOM_FARM]: {
-    base: 1.5,
+    base: 3.0,
     multiplier: 1.20
   },
   [BuildingCode.CENTRAL_INDUCTOR]: {
-    base: 0.05,
+    base: 0.1,
     multiplier: 1.15
   }
 }

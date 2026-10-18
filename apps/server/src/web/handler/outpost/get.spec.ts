@@ -29,13 +29,13 @@ const queryResult = {
     plasma: 0
   },
   earnings_per_second: {
-    plastic: 0.12,
-    mushroom: 0.1,
+    plastic: 0.24,
+    mushroom: 0.2,
     plasma: 0
   },
   pre_cell_earnings_per_second: {
-    plastic: 0.12,
-    mushroom: 0.1,
+    plastic: 0.24,
+    mushroom: 0.2,
     plasma: 0
   },
   cell_resource_coefficient: {
@@ -105,13 +105,13 @@ describe('outpostGetHandler', () => {
         mushroom: 75,
         plasma: 0,
         earnings_per_second: {
-          plastic: 0.12,
-          mushroom: 0.1,
+          plastic: 0.24,
+          mushroom: 0.2,
           plasma: 0
         },
         pre_cell_earnings_per_second: {
-          plastic: 0.12,
-          mushroom: 0.1,
+          plastic: 0.24,
+          mushroom: 0.2,
           plasma: 0
         },
         cell_resource_coefficient: {
