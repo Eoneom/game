@@ -24,7 +24,7 @@ Technical approach: brownfield **hexagonal** slice — schema migrations and dom
 
 **Project Type**: Monorepo game backend + SPA.
 
-**Performance Goals**: Combat round jobs paced by `COMBAT_ROUND_INTERVAL_MS` (proposed 30_000 per [`022`](../022-timing-and-resources/spec.md)); no hot-path full-table scans; battle finish in one transaction per round advance where possible.
+**Performance Goals**: Combat round jobs chained with `COMBAT_ROUND_INTERVAL_MS` = 0 (instant burst); no hot-path full-table scans; battle finish in one transaction per round advance where possible.
 
 **Constraints**: Constitution — domain language (Player, Faction, Troop, Movement, Battle), hexagonal layers, French UI errors only on web, typed `error_code` via api-client; no external game names in specs.
 
@@ -136,7 +136,7 @@ Recommended order (each phase should keep CI green):
 
 - Queue `combat.round.advance` (name TBD, document in README + [`018`](../018-app-composition-jobs/spec.md) on merge).
 - `CombatService`: pools, exposure, target priority, whole-unit casualties, early end after rounds 1–4.
-- Persist per-round summaries on battle state; chain jobs with `COMBAT_ROUND_INTERVAL_MS`.
+- Persist per-round summaries on battle state; chain round jobs immediately (`COMBAT_ROUND_INTERVAL_MS` = 0).
 - Unit tests on pure `CombatService` with fixture armies.
 
 ### Phase 4 — Outcomes & troop/world mutations

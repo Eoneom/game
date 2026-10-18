@@ -3,6 +3,7 @@ import { beforeEach, describe, it, vi } from 'vitest'
 import { Factory } from '#adapter/factory'
 import { advanceCombatRound } from '#app/command/combat/advance-round'
 import { applyBattleOutcomes } from '#app/command/combat/apply-battle-outcomes'
+import { COMBAT_ROUND_INTERVAL_MS } from '#app/scheduling/intervals'
 import { BattleEntity } from '#core/combat/entity/battle'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -76,7 +77,7 @@ describe('advanceCombatRound', () => {
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 0)
   })
 
-  it('schedules the next round when combat continues', async () => {
+  it('schedules the next round immediately when combat continues', async () => {
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       battle: {
         getById: vi.fn().mockResolvedValue(BattleEntity.create({
@@ -107,14 +108,20 @@ describe('advanceCombatRound', () => {
       },
     } as unknown as Repository)
 
+    const advanced_at = 5_000
     await advanceCombatRound({
       battle_id: 'battle-id',
       round: 1,
-      advanced_at: 5_000,
+      advanced_at,
     })
 
+    assert.equal(COMBAT_ROUND_INTERVAL_MS, 0)
     assert.strictEqual(applyBattleOutcomes.mock.calls.length, 0)
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 1)
-    assert.strictEqual(scheduleCombatRoundAdvance.mock.calls[0][0].round, 2)
+    assert.deepStrictEqual(scheduleCombatRoundAdvance.mock.calls[0][0], {
+      battle_id: 'battle-id',
+      round: 2,
+      execute_at: advanced_at + COMBAT_ROUND_INTERVAL_MS,
+    })
   })
 })

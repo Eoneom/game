@@ -101,7 +101,7 @@ description: "Task list for slice 024 — Player combat (PvP)"
 
 ### Implementation
 
-- [x] T032 Add `COMBAT_ROUND_INTERVAL_MS` (proposed `30_000`) in `apps/server/src/app/scheduling/intervals.ts` per [`022-timing-and-resources`](../022-timing-and-resources/spec.md)
+- [x] T032 Add `COMBAT_ROUND_INTERVAL_MS` (`0` — instant round chaining) in `apps/server/src/app/scheduling/intervals.ts`
 - [x] T033 Extend `JobQueue` port in `apps/server/src/app/port/job-queue.ts` with `scheduleCombatRoundAdvance({ battle_id, round })` (and document queue name in `README.md`)
 - [x] T034 Implement worker `apps/server/src/adapter/job-queue/combat/advance-round.ts` for queue `combat.round.advance` payload `{ battle_id, round }`; register in `apps/server/src/adapter/job-queue/register-workers.ts`
 - [x] T035 Implement `CombatStrategyService` multiplier lookup in `apps/server/src/core/combat/strategy-service.ts`

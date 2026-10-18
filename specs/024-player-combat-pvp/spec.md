@@ -286,7 +286,7 @@ Symmetric rules when the defender inflicts losses on the attacker.
 
 - **Combat rounds**: each battle runs a fixed **strike of exactly 5 rounds** (rounds **1** through **5**). Casualties from each round apply before the next round begins.
 - **Early end**: if, after any round **1–4**, one side has **zero** `combat` units and the other has **≥ 1** `combat`, the battle **ends immediately** (no further rounds).
-- **Round interval**: `COMBAT_ROUND_INTERVAL_MS` — propose **30_000** ([`022`](../022-timing-and-resources/spec.md)) for **pacing between scheduled round jobs only**. It is **not** a battle timeout and does **not** award victory to either side.
+- **Round chaining**: `COMBAT_ROUND_INTERVAL_MS` is **0** — each round job schedules the next immediately so the battle resolves in one burst (not paced by real time). It is **not** a battle timeout and does **not** award victory to either side.
 - **After round 5**: if the battle has not already ended early, it **always ends** when round 5 finishes — even when both sides still have `combat` troops.
 
 ### Per-round algorithm (simultaneous exchange)

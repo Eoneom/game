@@ -70,7 +70,7 @@ On success (peaceful paths): `AppEvent.TroopMovementFinished` (`troop:movement-f
 
 Job data: `{ player_id, movement_id }`; `singletonKey: movement_id`. Scheduling from `TroopService.createMovement` path inside create command.
 
-**Gap**: second queue e.g. `combat.round.advance` with `{ battle_id, round }` and `startAfter: now + COMBAT_ROUND_INTERVAL_MS` (not registered in `register-workers.ts` today).
+**Gap**: second queue e.g. `combat.round.advance` with `{ battle_id, round }` and immediate `startAfter` (`COMBAT_ROUND_INTERVAL_MS` = 0) (not registered in `register-workers.ts` today).
 
 ## Reports (today)
 

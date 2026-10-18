@@ -12,7 +12,7 @@ From repository root (see `README.md`):
 3. `yarn server:dev` (API :3000, migrations on boot)
 4. `yarn web:dev` (:3001)
 
-Optional: set `GAME_TIME_SCALE` > 1 only if team accepts faster combat round pacing (round interval still uses `COMBAT_ROUND_INTERVAL_MS` scaled per [`022`](../022-timing-and-resources/spec.md)).
+Combat rounds resolve in one burst after movement arrival (`COMBAT_ROUND_INTERVAL_MS` = 0); `GAME_TIME_SCALE` does not pace combat rounds.
 
 ## Test accounts
 
@@ -23,10 +23,10 @@ Optional: set `GAME_TIME_SCALE` > 1 only if team accepts faster combat round pac
 
 To fight Alpha as a human: locate **Core I** (or singularity stacks) on the map, ensure cross-faction cells are reachable, recruit combat troops on a confederation city.
 
-### Accelerating combat (local)
+### Combat timing (local)
 
-- Lower `COMBAT_ROUND_INTERVAL_MS` in dev-only env if exposed, **or** run integration tests that call `advanceCombatRound` commands directly (preferred for CI).
-- For manual UI test, wait ~30s × rounds between movement arrival and battle report (default interval per spec).
+- After movement arrival, battle reports should appear within seconds (all rounds chain with no delay).
+- For CI, call `advanceCombatRound` directly in integration tests when not exercising the full job queue.
 
 ## Preconditions checklist
 
