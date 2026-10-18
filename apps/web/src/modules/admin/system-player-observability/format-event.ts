@@ -7,6 +7,11 @@ import {
   translateTechnologyCode,
   translateTroopCode,
 } from './labels'
+import {
+  formatMoveTroops,
+  formatTransportResources,
+  isMovementCategoryWithTroops,
+} from './format-move-troops'
 import { BuildingCode, TechnologyCode, TroopCode } from '@eoneom/api-client'
 
 function formatCoordinatesPair(payload: Record<string, unknown>): string | null {
@@ -40,7 +45,7 @@ function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
   if (typeof payload.technology_code === 'string') {
     details.push(translateTechnologyCode(payload.technology_code as TechnologyCode))
   }
-  if (typeof payload.troop_code === 'string') {
+  if (typeof payload.troop_code === 'string' && !isMovementCategoryWithTroops(category)) {
     details.push(translateTroopCode(payload.troop_code as TroopCode))
   }
   if (typeof payload.city_name === 'string') {
@@ -51,11 +56,16 @@ function formatSuccessSummary(event: SystemPlayerObservabilityEvent): string {
   if (typeof payload.outpost_id === 'string' && (category === 'make-permanent' || category === 'deploy-outpost')) {
     details.push(`avant-poste ${payload.outpost_id}`)
   }
-  if (category === 'deploy-outpost') {
-    const move_troops = payload.move_troops as { code?: string }[] | undefined
-    const troop_code = move_troops?.[0]?.code ?? (typeof payload.troop_code === 'string' ? payload.troop_code : undefined)
-    if (troop_code) {
-      details.push(translateTroopCode(troop_code as TroopCode))
+  if (isMovementCategoryWithTroops(category)) {
+    const troops_line = formatMoveTroops(payload.move_troops)
+    if (troops_line) {
+      details.push(troops_line)
+    }
+  }
+  if (category === 'transport') {
+    const resources_line = formatTransportResources(payload.resources)
+    if (resources_line) {
+      details.push(resources_line)
     }
   }
 

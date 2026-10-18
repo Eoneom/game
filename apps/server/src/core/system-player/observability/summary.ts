@@ -1,5 +1,10 @@
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
+import {
+  formatMoveTroops,
+  formatTransportResources,
+  isMovementCategoryWithTroops,
+} from '#core/system-player/observability/format-move-troops'
 
 const CATEGORY_LABEL: Record<SystemTickCategory, string> = {
   upgrade: 'Amélioration de bâtiment',
@@ -38,7 +43,7 @@ function formatSingleActionDetails(
   if (typeof payload.technology_code === 'string') {
     details.push(payload.technology_code)
   }
-  if (typeof payload.troop_code === 'string') {
+  if (typeof payload.troop_code === 'string' && !isMovementCategoryWithTroops(category)) {
     details.push(payload.troop_code)
   }
   if (typeof payload.city_name === 'string') {
@@ -49,11 +54,16 @@ function formatSingleActionDetails(
   if (typeof payload.outpost_id === 'string' && (category === 'make-permanent' || category === 'deploy-outpost')) {
     details.push(`avant-poste ${payload.outpost_id}`)
   }
-  if (category === 'deploy-outpost') {
-    const move_troops = payload.move_troops as { code?: string }[] | undefined
-    const troop_code = move_troops?.[0]?.code
-    if (troop_code) {
-      details.push(troop_code)
+  if (isMovementCategoryWithTroops(category)) {
+    const troops_line = formatMoveTroops(payload.move_troops)
+    if (troops_line) {
+      details.push(troops_line)
+    }
+  }
+  if (category === 'transport') {
+    const resources_line = formatTransportResources(payload.resources)
+    if (resources_line) {
+      details.push(resources_line)
     }
   }
 

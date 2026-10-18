@@ -107,7 +107,8 @@ As implemented on `main` (read-only **État** column; no new requirements beyond
 | Concern | Behavior |
 | --- | --- |
 | Category labels | `TICK_CATEGORY_LABEL` in `labels.ts` (web) and `CATEGORY_LABEL` in `core/system-player/observability/summary.ts` (server) stay aligned. |
-| `deploy-outpost` | Label **« Déploiement vers avant-poste »**. Success / partial bullet summaries append **`avant-poste {outpost_id}`** and the deployed troop (from `move_troops[0].code` or `troop_code` on web; server uses `move_troops[0].code`). Movement payloads may also append an `(origin) → (destination)` coordinate pair. Same detail rules in web `format-event.ts` (`formatSuccessSummary`) and server `formatSingleActionDetails`. |
+| Movement (`explore`, `base`, `transport`, `deploy-outpost`, `attack`) | When `payload.move_troops` is present, summaries append the full stack as French troop names with counts (e.g. `Explorateur ×1, Colon ×2`) via `formatMoveTroops` in `format-move-troops.ts` (web + server). `transport` also appends carried resources when `payload.resources` has positive amounts (`Plastique 100`, …). All movement categories may append `(origin) → (destination)` when coordinates are present. |
+| `deploy-outpost` | Label **« Déploiement vers avant-poste »**; also **`avant-poste {outpost_id}`** when set. Troop detail uses full `move_troops` (not only the first code). |
 
 Evidence: `apps/web/src/modules/admin/system-player-observability/stats-panel.tsx`, `labels.ts`, `format-event.ts`, `apps/server/src/core/system-player/observability/summary.ts`, `apps/web/src/index.css`, `apps/web/src/ui/energy-readout.tsx`.
 
