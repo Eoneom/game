@@ -95,6 +95,14 @@ describe('systemTickActions', () => {
     cell_id: city_cell.id
   })
 
+  /** Chebyshev ≥ 2 from `city_cell` for system `base` candidate tests. */
+  function validSystemBaseCoordinates(dx: number, dy: number) {
+    return {
+      x: city_cell.coordinates.x + dx,
+      y: city_cell.coordinates.y + dy,
+    }
+  }
+
   const fakeLogger = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -971,17 +979,14 @@ describe('systemTickActions', () => {
   it('skips explore when a strong explored base site beats marginal fog with many outposts', async () => {
     const base_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(4, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
         mushroom: 1,
         plasma: 1,
       },
-      solar_coefficient: 2.5,
+      solar_coefficient: 3.5,
     })
     const far_unexplored = CellEntity.create({
       id: id(),
@@ -1042,17 +1047,14 @@ describe('systemTickActions', () => {
   it('skips explore when a founder can base on a strong explored cell', async () => {
     const base_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(4, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
         mushroom: 1,
         plasma: 1,
       },
-      solar_coefficient: 2.5,
+      solar_coefficient: 3.5,
     })
     const far_unexplored = CellEntity.create({
       id: id(),
@@ -1118,10 +1120,7 @@ describe('systemTickActions', () => {
   it('skips explore for a large empire when a strong resource cell is already scouted', async () => {
     const resource_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(4, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 2.5,
@@ -1216,7 +1215,7 @@ describe('systemTickActions', () => {
     const base_site = CellEntity.create({
       id: id(),
       coordinates: {
-        x: outpost_cell.coordinates.x + 1,
+        x: outpost_cell.coordinates.x + 2,
         y: outpost_cell.coordinates.y,
       },
       type: CellType.LAKE,
@@ -1301,10 +1300,7 @@ describe('systemTickActions', () => {
   it('propagates createTroopMovement errors from base', async () => {
     const base_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(4, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
@@ -1380,10 +1376,7 @@ describe('systemTickActions', () => {
   it('bases with a combat troop when no founder is idle at the origin', async () => {
     const base_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(4, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
@@ -1438,10 +1431,7 @@ describe('systemTickActions', () => {
   it('bases on the highest-scoring explored cell in the viewport', async () => {
     const weak_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(3, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
@@ -1452,10 +1442,7 @@ describe('systemTickActions', () => {
     })
     const strong_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x,
-        y: city_cell.coordinates.y + 1,
-      },
+      coordinates: validSystemBaseCoordinates(6, 4),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,

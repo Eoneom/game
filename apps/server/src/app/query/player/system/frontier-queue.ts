@@ -5,6 +5,7 @@ import {
   type SystemFrontierQueueEntry,
 } from '#core/player/system/frontier'
 import {
+  isSystemBaseCellCandidate,
   sortCellsByExpansionScore,
   systemExpansionBaseCellScore,
   systemExpansionCitySiteScore,
@@ -20,10 +21,6 @@ import {
 } from '#app/query/player/system/system-tick-context'
 import type { Coordinates } from '#core/world/value/coordinates'
 
-function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
-  return left.x === right.x && left.y === right.y
-}
-
 export async function buildSystemFrontierQueue(
   player_id: string,
   tick_context?: SystemTickContext,
@@ -38,10 +35,11 @@ export async function buildSystemFrontierQueue(
     new OutpostListQuery().run({ player_id }),
   ])
   const can_found_city = cities.length < count_limit
-  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
   const occupied_cell_ids = new Set<string>()
+  const settlement_coordinates: Coordinates[] = []
   const origins: Coordinates[] = []
+  let founding_city_coordinates: Coordinates | null = null
 
   for (const city of cities) {
     const details = await new CityGetQuery().run({
@@ -49,6 +47,10 @@ export async function buildSystemFrontierQueue(
       player_id,
     })
     occupied_cell_ids.add(details.cell.id)
+    settlement_coordinates.push(details.cell.coordinates)
+    if (!founding_city_coordinates) {
+      founding_city_coordinates = details.cell.coordinates
+    }
     origins.push(details.cell.coordinates)
   }
 
@@ -58,7 +60,13 @@ export async function buildSystemFrontierQueue(
       return
     }
     occupied_cell_ids.add(cell.id)
+    settlement_coordinates.push(cell.coordinates)
     origins.push(cell.coordinates)
+  })
+
+  const base_cell_score = systemExpansionBaseCellScore({
+    can_found_city,
+    founding_city_coordinates,
   })
 
   const entries: SystemFrontierQueueEntry[] = []
@@ -102,9 +110,13 @@ export async function buildSystemFrontierQueue(
       context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
-      && !occupied_cell_ids.has(cell.id)
-      && !sameCoordinates(cell.coordinates, origin))
+    const base_candidates = viewport.cells.filter(cell => isSystemBaseCellCandidate({
+      cell,
+      explored: explored.has(cell.id),
+      occupied_cell_ids,
+      origin_coordinates: origin,
+      settlement_coordinates,
+    }))
     const best = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,

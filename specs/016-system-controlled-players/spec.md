@@ -46,6 +46,10 @@ Constants (`core/player/constant/system.ts`):
 | `SYSTEM_MAX_ACTIONS_PER_TICK` | `25` |
 | `SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS` | `2` |
 | `SYSTEM_MAX_OUTPOST_TRANSPORT_PREPENDS` | `5` |
+| `SYSTEM_BASE_MIN_CHEBYSHEV_FROM_SETTLEMENT` | `2` (no 8-neighbor adjacency to owned cities/outposts) |
+| `SYSTEM_BASE_ORIGIN_DISTANCE_MIN_MANHATTAN` | `4` |
+| `SYSTEM_BASE_ORIGIN_DISTANCE_PEAK_MANHATTAN` | `10` |
+| `SYSTEM_BASE_ORIGIN_DISTANCE_SOFT_MAX_MANHATTAN` | `22` |
 
 Interval: `SYSTEM_PLAYER_TICK_INTERVAL_MS` (`app/scheduling/intervals`).
 
@@ -96,7 +100,7 @@ When not pressured, building iteration order is unchanged (repository list order
 | Action | Candidate filter | Score |
 | --- | --- | --- |
 | `explore` | Unexplored cells in viewport (server has full coefficients) | `solar × 1.25 + plastic + mushroom` |
-| `base` | Explored, unoccupied | City site: `solar` when below city cap; else `plastic + mushroom` for gathering outposts |
+| `base` | Explored, unoccupied, **not** 8-adjacent to any owned city/outpost (Chebyshev ≥ `SYSTEM_BASE_MIN_CHEBYSHEV_FROM_SETTLEMENT`), same rules in frontier queue | City site: `solar` when below city cap; else `plastic + mushroom`, each multiplied by a **Manhattan distance band** from the founding (first) city (`min` → `peak` → `soft max` on `core/player/system/constants.ts`) |
 | `settle` | Temporary outposts with founder | Highest `solar` first |
 | `make-permanent` | Temporary outposts | Highest `plastic + mushroom` first |
 

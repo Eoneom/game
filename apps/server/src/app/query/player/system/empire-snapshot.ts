@@ -33,6 +33,7 @@ import { countSettleReadyTemporaryOutposts } from '#command/player/system/settle
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostService } from '#core/outpost/service'
 import {
+  isSystemBaseCellCandidate,
   shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
   systemExpansionBaseCellScore,
@@ -76,7 +77,9 @@ async function computeDeferExplore({
   } = await new OutpostListQuery().run({ player_id })
 
   const occupied_cell_ids = new Set<string>()
+  const settlement_coordinates: Coordinates[] = []
   const origins: Coordinates[] = []
+  let founding_city_coordinates: Coordinates | null = null
 
   for (const city of cities) {
     const details = await new CityGetQuery().run({
@@ -84,6 +87,10 @@ async function computeDeferExplore({
       player_id,
     })
     occupied_cell_ids.add(details.cell.id)
+    settlement_coordinates.push(details.cell.coordinates)
+    if (!founding_city_coordinates) {
+      founding_city_coordinates = details.cell.coordinates
+    }
     origins.push(details.cell.coordinates)
   }
 
@@ -93,6 +100,7 @@ async function computeDeferExplore({
       return
     }
     occupied_cell_ids.add(cell.id)
+    settlement_coordinates.push(cell.coordinates)
     origins.push(cell.coordinates)
   })
 
@@ -106,9 +114,13 @@ async function computeDeferExplore({
       context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
-      && !occupied_cell_ids.has(cell.id)
-      && !sameCoordinates(cell.coordinates, origin))
+    const base_candidates = viewport.cells.filter(cell => isSystemBaseCellCandidate({
+      cell,
+      explored: explored.has(cell.id),
+      occupied_cell_ids,
+      origin_coordinates: origin,
+      settlement_coordinates,
+    }))
     const best_base = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,
@@ -256,7 +268,16 @@ export async function collectSystemEmpireSnapshot(
   const settle_ready_temp_count = can_found_city
     ? await countSettleReadyTemporaryOutposts(player_id)
     : 0
-  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
+  const founding_city_coordinates = main_city
+    ? (await new CityGetQuery().run({
+      city_id: main_city.id,
+      player_id,
+    })).cell.coordinates
+    : null
+  const base_cell_score = systemExpansionBaseCellScore({
+    can_found_city,
+    founding_city_coordinates,
+  })
 
   const [
     production_ready_for_research,

@@ -21,3 +21,14 @@ export const SYSTEM_MAX_SETTLE_PREPENDS = 3
 
 /** Max `base` intents prepended to seed a city-site temp when under city cap and no settle-ready temps. */
 export const SYSTEM_MAX_CITY_FOUNDING_BASE_PREPENDS = 2
+
+/**
+ * Minimum Chebyshev grid distance from any owned city/outpost cell for a new `base` destination.
+ * Value `2` forbids 8-neighbor adjacency (orthogonal + diagonal) to settlements.
+ */
+export const SYSTEM_BASE_MIN_CHEBYSHEV_FROM_SETTLEMENT = 2
+
+/** Manhattan distance band from the founding (first) city when scoring `base` cells. */
+export const SYSTEM_BASE_ORIGIN_DISTANCE_MIN_MANHATTAN = 4
+export const SYSTEM_BASE_ORIGIN_DISTANCE_PEAK_MANHATTAN = 10
+export const SYSTEM_BASE_ORIGIN_DISTANCE_SOFT_MAX_MANHATTAN = 22

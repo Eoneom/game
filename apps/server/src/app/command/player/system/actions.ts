@@ -30,6 +30,7 @@ import { TroopService } from '#core/troop/service'
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import {
+  isSystemBaseCellCandidate,
   shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
   systemExpansionBaseCellScore,
@@ -79,7 +80,6 @@ import {
   scoreCityForEmpireRecruit,
   systemRecruitBatchCount,
 } from '#command/player/system/troops'
-import { isCoordinatesBlocked } from '#core/player/system/memory'
 import { selectTroopsForSystemBase } from '#core/player/system/base-troops'
 import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
 import {
@@ -560,6 +560,8 @@ async function pendingBaseMovementDestinations(
 
 async function ownedLocationCells(player_id: string): Promise<{
   occupied_cell_ids: Set<string>
+  settlement_coordinates: Coordinates[]
+  founding_city_coordinates: Coordinates | null
   origins: {
     coordinates: Coordinates
     location: { type: 'city', city_id: string } | { type: 'outpost', outpost_id: string }
@@ -570,6 +572,8 @@ async function ownedLocationCells(player_id: string): Promise<{
     outposts, cells 
   } = await new OutpostListQuery().run({ player_id })
   const occupied_cell_ids = new Set<string>()
+  const settlement_coordinates: Coordinates[] = []
+  let founding_city_coordinates: Coordinates | null = null
   const origins: {
     coordinates: Coordinates
     location: { type: 'city', city_id: string } | { type: 'outpost', outpost_id: string }
@@ -581,6 +585,10 @@ async function ownedLocationCells(player_id: string): Promise<{
       player_id
     })
     occupied_cell_ids.add(details.cell.id)
+    settlement_coordinates.push(details.cell.coordinates)
+    if (!founding_city_coordinates) {
+      founding_city_coordinates = details.cell.coordinates
+    }
     origins.push({
       coordinates: details.cell.coordinates,
       location: {
@@ -596,6 +604,7 @@ async function ownedLocationCells(player_id: string): Promise<{
       return
     }
     occupied_cell_ids.add(cell.id)
+    settlement_coordinates.push(cell.coordinates)
     origins.push({
       coordinates: cell.coordinates,
       location: {
@@ -607,6 +616,8 @@ async function ownedLocationCells(player_id: string): Promise<{
 
   return {
     occupied_cell_ids,
+    settlement_coordinates,
+    founding_city_coordinates,
     origins
   }
 }
@@ -622,19 +633,28 @@ async function tryExplore(
   }
 
   const [
-    { origins, occupied_cell_ids },
+    {
+      origins,
+      occupied_cell_ids,
+      settlement_coordinates,
+      founding_city_coordinates,
+    },
     { cities, count_limit },
   ] = await Promise.all([
     ownedLocationCells(player_id),
     new CityListQuery().run({ player_id }),
   ])
   const can_found_city = cities.length < count_limit
-  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
+  const base_cell_score = systemExpansionBaseCellScore({
+    can_found_city,
+    founding_city_coordinates,
+  })
 
   if (await shouldSkipExploreForBasing({
     player_id,
     origins,
     occupied_cell_ids,
+    settlement_coordinates,
     can_found_city,
     base_cell_score,
     tick_context,
@@ -703,6 +723,7 @@ async function shouldSkipExploreForBasing({
   player_id,
   origins,
   occupied_cell_ids,
+  settlement_coordinates,
   can_found_city,
   base_cell_score,
   tick_context,
@@ -710,6 +731,7 @@ async function shouldSkipExploreForBasing({
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
+  settlement_coordinates: Coordinates[]
   can_found_city: boolean
   base_cell_score: (cell: CellEntity) => number
   tick_context?: SystemTickContext
@@ -724,9 +746,13 @@ async function shouldSkipExploreForBasing({
       context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
-      && !occupied_cell_ids.has(cell.id)
-      && !sameCoordinates(cell.coordinates, origin.coordinates))
+    const base_candidates = viewport.cells.filter(cell => isSystemBaseCellCandidate({
+      cell,
+      explored: explored.has(cell.id),
+      occupied_cell_ids,
+      origin_coordinates: origin.coordinates,
+      settlement_coordinates,
+    }))
     const best_base = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,
@@ -761,6 +787,7 @@ async function findBestBaseDestination({
   player_id,
   origins,
   occupied_cell_ids,
+  settlement_coordinates,
   base_cell_score,
   blocked_base_cells = [],
   pending_base_destinations = [],
@@ -769,6 +796,7 @@ async function findBestBaseDestination({
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
+  settlement_coordinates: Coordinates[]
   base_cell_score: (cell: CellEntity) => number
   blocked_base_cells?: readonly { x: number, y: number }[]
   pending_base_destinations?: readonly Coordinates[]
@@ -788,10 +816,14 @@ async function findBestBaseDestination({
       context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
-    const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
-      && !occupied_cell_ids.has(cell.id)
-      && !sameCoordinates(cell.coordinates, origin.coordinates)
-      && !isCoordinatesBlocked(cell.coordinates, blocked_destinations))
+    const base_candidates = viewport.cells.filter(cell => isSystemBaseCellCandidate({
+      cell,
+      explored: explored.has(cell.id),
+      occupied_cell_ids,
+      origin_coordinates: origin.coordinates,
+      settlement_coordinates,
+      blocked_coordinates: blocked_destinations,
+    }))
     const destination = sortCellsByExpansionScore({
       cells: base_candidates,
       score: base_cell_score,
@@ -821,14 +853,18 @@ async function tryBase(
     new OutpostListQuery().run({ player_id }),
   ])
   const can_found_city = cities.length < city_count_limit
-  const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
   if (outposts.length >= outpost_count_limit) {
     return null
   }
 
   const [
-    { origins, occupied_cell_ids },
+    {
+      origins,
+      occupied_cell_ids,
+      settlement_coordinates,
+      founding_city_coordinates,
+    },
     memory,
     pending_base_destinations,
   ] = await Promise.all([
@@ -836,11 +872,16 @@ async function tryBase(
     loadSystemPlayerMemory(player_id),
     pendingBaseMovementDestinations(player_id),
   ])
+  const base_cell_score = systemExpansionBaseCellScore({
+    can_found_city,
+    founding_city_coordinates,
+  })
 
   const destination = await findBestBaseDestination({
     player_id,
     origins,
     occupied_cell_ids,
+    settlement_coordinates,
     base_cell_score,
     blocked_base_cells: memory.failed_base_cells,
     pending_base_destinations,
