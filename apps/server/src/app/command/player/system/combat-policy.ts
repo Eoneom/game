@@ -4,7 +4,10 @@ import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TroopListQuery } from '#query/troop/list'
-import { WorldGetCellsQuery } from '#query/world/get-cells'
+import {
+  getWorldViewportForOrigin,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
 import { Factory } from '#adapter/factory'
 import { countCombatStacks } from '#core/combat/troop-combat'
 import { combatRoleFor, combatTroopClassFor } from '#core/combat/troop-combat'
@@ -22,10 +25,6 @@ import {
   isCoordinatesBlocked,
   type SystemPlayerMemoryCoordinates,
 } from '#core/player/system/memory'
-import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
-  WORLD_SIZE,
-} from '#core/world/constant/size'
 import {
   accumulateCombatArmyCounts,
   emptySystemCombatArmyCounts,
@@ -191,12 +190,14 @@ export async function pickSystemAttack({
   army_counts,
   blocked_targets = [],
   confederation_target_score_bonus = 0,
+  tick_context,
 }: {
   player_id: string
   attacker_faction_code: FactionCode
   army_counts: SystemCombatArmyCounts
   blocked_targets?: readonly SystemPlayerMemoryCoordinates[]
   confederation_target_score_bonus?: number
+  tick_context?: SystemTickContext
 }): Promise<AttackCandidate | null> {
   if (!isSystemCombatArmyReady(army_counts)) {
     return null
@@ -250,9 +251,10 @@ export async function pickSystemAttack({
       continue
     }
 
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin.coordinates),
+      origin: origin.coordinates,
+      context: tick_context,
     })
 
     for (const cell of viewport.cells) {
@@ -309,17 +311,3 @@ export async function pickSystemAttack({
 }
 
 export const SYSTEM_ATTACK_COMBAT_STRATEGY = CombatStrategy.OPENING_STRIKE
-
-function viewportAround(coordinates: Coordinates): {
-  min_x: number
-  max_x: number
-  min_y: number
-  max_y: number
-} {
-  return {
-    min_x: Math.max(1, coordinates.x - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_x: Math.min(WORLD_SIZE, coordinates.x + INITIAL_VIEWPORT_HALF_EXTENT),
-    min_y: Math.max(1, coordinates.y - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_y: Math.min(WORLD_SIZE, coordinates.y + INITIAL_VIEWPORT_HALF_EXTENT),
-  }
-}

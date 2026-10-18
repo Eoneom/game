@@ -41,33 +41,18 @@ import {
 } from '#core/player/system/expansion-cell'
 import type { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
-import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
-  WORLD_SIZE,
-} from '#core/world/constant/size'
 import { TroopListQuery } from '#query/troop/list'
 import { BuildingListQuery } from '#query/building/list'
 import { CityGetQuery } from '#query/city/get'
 import { CityListQuery } from '#query/city/list'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TechnologyListQuery } from '#query/technology/list'
-import { WorldGetCellsQuery } from '#query/world/get-cells'
+import {
+  getWorldViewportForOrigin,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
 import { Factory } from '#adapter/factory'
 import { resolveSystemAiProfile } from '#core/player/system/ai-profile'
-
-function viewportAround(coordinates: Coordinates): {
-  min_x: number
-  max_x: number
-  min_y: number
-  max_y: number
-} {
-  return {
-    min_x: Math.max(1, coordinates.x - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_x: Math.min(WORLD_SIZE, coordinates.x + INITIAL_VIEWPORT_HALF_EXTENT),
-    min_y: Math.max(1, coordinates.y - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_y: Math.min(WORLD_SIZE, coordinates.y + INITIAL_VIEWPORT_HALF_EXTENT),
-  }
-}
 
 function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
   return left.x === right.x && left.y === right.y
@@ -77,10 +62,12 @@ async function computeDeferExplore({
   player_id,
   can_found_city,
   base_cell_score,
+  tick_context,
 }: {
   player_id: string
   can_found_city: boolean
   base_cell_score: (cell: CellEntity) => number
+  tick_context?: SystemTickContext
 }): Promise<boolean> {
   const { cities } = await new CityListQuery().run({ player_id })
   const {
@@ -113,9 +100,10 @@ async function computeDeferExplore({
   let best_unexplored_scout_score: number | null = null
 
   for (const origin of origins) {
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin),
+      origin,
+      context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
@@ -196,7 +184,10 @@ async function isProductionReadyForResearch(player_id: string): Promise<boolean>
   return true
 }
 
-export async function collectSystemEmpireSnapshot(player_id: string): Promise<SystemEmpireSnapshot> {
+export async function collectSystemEmpireSnapshot(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<SystemEmpireSnapshot> {
   const player = await Factory.getRepository().player.get(player_id)
   const ai_profile = resolveSystemAiProfile({
     player_name: player.name,
@@ -276,6 +267,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
         player_id,
         can_found_city,
         base_cell_score,
+        tick_context,
       }),
   ])
 
@@ -346,10 +338,11 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     intel,
     memory,
   ] = await Promise.all([
-    summarizeSystemFrontierQueue(player_id),
+    summarizeSystemFrontierQueue(player_id, tick_context),
     collectSystemEmpireIntel({
       player_id,
       owned_coordinates,
+      tick_context,
     }),
     loadSystemPlayerMemory(player_id),
   ])

@@ -14,32 +14,20 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { CityListQuery } from '#query/city/list'
 import { CityGetQuery } from '#query/city/get'
 import { OutpostListQuery } from '#query/outpost/list'
-import { WorldGetCellsQuery } from '#query/world/get-cells'
-import type { Coordinates } from '#core/world/value/coordinates'
 import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
-  WORLD_SIZE,
-} from '#core/world/constant/size'
-
-function viewportAround(coordinates: Coordinates): {
-  min_x: number
-  max_x: number
-  min_y: number
-  max_y: number
-} {
-  return {
-    min_x: Math.max(1, coordinates.x - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_x: Math.min(WORLD_SIZE, coordinates.x + INITIAL_VIEWPORT_HALF_EXTENT),
-    min_y: Math.max(1, coordinates.y - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_y: Math.min(WORLD_SIZE, coordinates.y + INITIAL_VIEWPORT_HALF_EXTENT),
-  }
-}
+  getWorldViewportForOrigin,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
+import type { Coordinates } from '#core/world/value/coordinates'
 
 function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
   return left.x === right.x && left.y === right.y
 }
 
-export async function buildSystemFrontierQueue(player_id: string): Promise<SystemFrontierQueueEntry[]> {
+export async function buildSystemFrontierQueue(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<SystemFrontierQueueEntry[]> {
   const [
     { cities, count_limit },
     settle_ready,
@@ -108,9 +96,10 @@ export async function buildSystemFrontierQueue(player_id: string): Promise<Syste
   }
 
   for (const origin of origins) {
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin),
+      origin,
+      context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
@@ -147,12 +136,15 @@ export async function buildSystemFrontierQueue(player_id: string): Promise<Syste
   return sortFrontierQueue([ ...deduped.values() ])
 }
 
-export async function summarizeSystemFrontierQueue(player_id: string): Promise<{
+export async function summarizeSystemFrontierQueue(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<{
   frontier_queue: SystemFrontierQueueEntry[]
   frontier_queue_length: number
   frontier_top_score: number | null
 }> {
-  const frontier_queue = await buildSystemFrontierQueue(player_id)
+  const frontier_queue = await buildSystemFrontierQueue(player_id, tick_context)
   const summary = frontierQueueSummary(frontier_queue)
   return {
     frontier_queue,

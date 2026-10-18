@@ -1,5 +1,8 @@
 import { Factory } from '#adapter/factory'
-import { WorldGetCellsQuery } from '#query/world/get-cells'
+import {
+  getWorldViewportForOrigin,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
 import { countCombatStacks } from '#core/combat/troop-combat'
 import { combatRoleFor } from '#core/combat/troop-combat'
 import { CombatRole } from '#core/troop/constant/combat-role'
@@ -11,31 +14,15 @@ import {
   type SystemEmpireIntelThreat,
 } from '#core/player/system/intel'
 import type { Coordinates } from '#core/world/value/coordinates'
-import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
-  WORLD_SIZE,
-} from '#core/world/constant/size'
-
-function viewportAround(coordinates: Coordinates): {
-  min_x: number
-  max_x: number
-  min_y: number
-  max_y: number
-} {
-  return {
-    min_x: Math.max(1, coordinates.x - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_x: Math.min(WORLD_SIZE, coordinates.x + INITIAL_VIEWPORT_HALF_EXTENT),
-    min_y: Math.max(1, coordinates.y - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_y: Math.min(WORLD_SIZE, coordinates.y + INITIAL_VIEWPORT_HALF_EXTENT),
-  }
-}
 
 export async function collectSystemEmpireIntel({
   player_id,
   owned_coordinates,
+  tick_context,
 }: {
   player_id: string
   owned_coordinates: Coordinates[]
+  tick_context?: SystemTickContext
 }): Promise<SystemEmpireIntel> {
   if (owned_coordinates.length === 0) {
     return EMPTY_SYSTEM_EMPIRE_INTEL
@@ -47,9 +34,10 @@ export async function collectSystemEmpireIntel({
   let visible_enemy_combat_stacks = 0
 
   for (const origin of owned_coordinates) {
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin),
+      origin,
+      context: tick_context,
     })
 
     for (const city of viewport.settlements.cities) {

@@ -12,7 +12,10 @@ import { OutpostListQuery } from '#query/outpost/list'
 import { TechnologyListQuery } from '#query/technology/list'
 import { TechnologyGetQuery } from '#query/technology/get'
 import { TroopListQuery } from '#query/troop/list'
-import { WorldGetCellsQuery } from '#query/world/get-cells'
+import {
+  getWorldViewportForOrigin,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
 import { BUILDING_UPGRADE_QUEUE_LIMIT } from '#core/building/constant/upgrade-queue'
 import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
@@ -24,10 +27,6 @@ import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopCode } from '#core/troop/constant/code'
 import { troop_role, TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
-import {
-  INITIAL_VIEWPORT_HALF_EXTENT,
-  WORLD_SIZE
-} from '#core/world/constant/size'
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import {
@@ -110,20 +109,6 @@ function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
     && stock.mushroom >= cost.mushroom
     && stock.plasma >= cost.plasma
-}
-
-function viewportAround(coordinates: Coordinates): {
-  min_x: number
-  max_x: number
-  min_y: number
-  max_y: number
-} {
-  return {
-    min_x: Math.max(1, coordinates.x - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_x: Math.min(WORLD_SIZE, coordinates.x + INITIAL_VIEWPORT_HALF_EXTENT),
-    min_y: Math.max(1, coordinates.y - INITIAL_VIEWPORT_HALF_EXTENT),
-    max_y: Math.min(WORLD_SIZE, coordinates.y + INITIAL_VIEWPORT_HALF_EXTENT),
-  }
 }
 
 function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
@@ -616,8 +601,12 @@ async function ownedLocationCells(player_id: string): Promise<{
   }
 }
 
-async function tryExplore(player_id: string): Promise<Record<string, unknown> | null> {
-  const { frontier_queue_length } = await summarizeSystemFrontierQueue(player_id)
+async function tryExplore(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
+  const frontier_queue_length = tick_context?.snapshot?.frontier_queue_length
+    ?? (await summarizeSystemFrontierQueue(player_id, tick_context)).frontier_queue_length
   if (frontier_queue_length > 0) {
     return null
   }
@@ -638,6 +627,7 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
     occupied_cell_ids,
     can_found_city,
     base_cell_score,
+    tick_context,
   })) {
     return null
   }
@@ -655,9 +645,10 @@ async function tryExplore(player_id: string): Promise<Record<string, unknown> | 
       continue
     }
 
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin.coordinates)
+      origin: origin.coordinates,
+      context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
     const unexplored = viewport.cells.filter(cell => !explored.has(cell.id)
@@ -704,20 +695,23 @@ async function shouldSkipExploreForBasing({
   occupied_cell_ids,
   can_found_city,
   base_cell_score,
+  tick_context,
 }: {
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
   can_found_city: boolean
   base_cell_score: (cell: CellEntity) => number
+  tick_context?: SystemTickContext
 }): Promise<boolean> {
   let best_base_score: number | null = null
   let best_unexplored_scout_score: number | null = null
 
   for (const origin of origins) {
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin.coordinates),
+      origin: origin.coordinates,
+      context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
@@ -759,20 +753,23 @@ async function findBestBaseDestination({
   occupied_cell_ids,
   base_cell_score,
   blocked_base_cells = [],
+  tick_context,
 }: {
   player_id: string
   origins: Awaited<ReturnType<typeof ownedLocationCells>>['origins']
   occupied_cell_ids: Set<string>
   base_cell_score: (cell: CellEntity) => number
   blocked_base_cells?: readonly { x: number, y: number }[]
+  tick_context?: SystemTickContext
 }): Promise<CellEntity | null> {
   let best_destination: CellEntity | null = null
   let best_score = -Infinity
 
   for (const origin of origins) {
-    const viewport = await new WorldGetCellsQuery().run({
+    const viewport = await getWorldViewportForOrigin({
       player_id,
-      ...viewportAround(origin.coordinates),
+      origin: origin.coordinates,
+      context: tick_context,
     })
     const explored = new Set(viewport.explored_cell_ids)
     const base_candidates = viewport.cells.filter(cell => explored.has(cell.id)
@@ -796,7 +793,10 @@ async function findBestBaseDestination({
   return best_destination
 }
 
-async function tryBase(player_id: string): Promise<Record<string, unknown> | null> {
+async function tryBase(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
   const {
     cities, count_limit 
   } = await new CityListQuery().run({ player_id })
@@ -822,6 +822,7 @@ async function tryBase(player_id: string): Promise<Record<string, unknown> | nul
     occupied_cell_ids,
     base_cell_score,
     blocked_base_cells: memory.failed_base_cells,
+    tick_context,
   })
   if (!destination) {
     return null
@@ -1175,14 +1176,19 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
   return null
 }
 
-async function tryAttack(player_id: string): Promise<Record<string, unknown> | null> {
+async function tryAttack(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
   const [
     army_counts,
     snapshot,
     memory,
   ] = await Promise.all([
     loadEmpireCombatArmyCounts(player_id),
-    collectSystemEmpireSnapshot(player_id),
+    tick_context?.snapshot
+      ? Promise.resolve(tick_context.snapshot)
+      : collectSystemEmpireSnapshot(player_id, tick_context),
     loadSystemPlayerMemory(player_id),
   ])
   if (!isSystemCombatArmyReady(army_counts)) {
@@ -1201,6 +1207,7 @@ async function tryAttack(player_id: string): Promise<Record<string, unknown> | n
     army_counts,
     blocked_targets,
     confederation_target_score_bonus: snapshot.ai_profile.confederation_target_score_bonus,
+    tick_context,
   })
   if (!attack) {
     return null

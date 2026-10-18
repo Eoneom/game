@@ -161,10 +161,9 @@ describe('tickSystemPlayers', () => {
       vi.mocked(actForSystemPlayer).mock.calls[0][0].snapshot,
       default_snapshot,
     )
-    assert.strictEqual(
-      vi.mocked(actForSystemPlayer).mock.calls[0][0].collect_snapshot,
-      empireSnapshot.collectSystemEmpireSnapshot,
-    )
+    const collect_snapshot = vi.mocked(actForSystemPlayer).mock.calls[0][0].collect_snapshot
+    assert.ok(collect_snapshot)
+    assert.strictEqual(typeof collect_snapshot, 'function')
   })
 
   it('emits observability with idle outcome and skipped attempts', async () => {

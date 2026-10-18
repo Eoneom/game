@@ -29,13 +29,20 @@ export {
 } from '#core/player/system/planner'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import { isSystemTickSkippableError } from '#command/player/system/skippable-error'
+import {
+  createSystemTickContext,
+  type SystemTickContext,
+} from '#app/query/player/system/system-tick-context'
 
 export { SYSTEM_TICK_CATEGORIES, type SystemTickCategory } from '#core/player/system/tick-category'
 export type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 
 export type SystemTickActionPayload = Record<string, unknown>
 
-export type SystemTickAction = (player_id: string) => Promise<SystemTickActionPayload | null>
+export type SystemTickAction = (
+  player_id: string,
+  tick_context?: SystemTickContext,
+) => Promise<SystemTickActionPayload | null>
 
 export type SystemPlayerTickCommittedAction = {
   category: SystemTickCategory
@@ -62,11 +69,13 @@ export async function executeSystemPlayerTick({
   plan,
   actions,
   max_actions = SYSTEM_MAX_ACTIONS_PER_TICK,
+  tick_context,
 }: {
   player_id: string
   plan: SystemPlayerActionIntent[]
   actions: Record<SystemTickCategory, SystemTickAction>
   max_actions?: number
+  tick_context?: SystemTickContext
 }): Promise<SystemPlayerTickResult> {
   const attempts: SystemPlayerTickAttempt[] = []
   const committed_actions: SystemPlayerTickCommittedAction[] = []
@@ -78,7 +87,7 @@ export async function executeSystemPlayerTick({
 
     let payload: SystemTickActionPayload | null
     try {
-      payload = await actions[intent.category](player_id)
+      payload = await actions[intent.category](player_id, tick_context)
     } catch (err) {
       if (isSystemTickSkippableError(err)) {
         attempts.push({
@@ -129,6 +138,7 @@ export async function actForSystemPlayer({
   categories,
   snapshot,
   collect_snapshot,
+  tick_context,
   max_actions = 1,
 }: {
   player_id: string
@@ -136,7 +146,11 @@ export async function actForSystemPlayer({
   actions: Record<SystemTickCategory, SystemTickAction>
   categories?: SystemTickCategory[]
   snapshot?: SystemEmpireSnapshot
-  collect_snapshot?: (player_id: string) => Promise<SystemEmpireSnapshot>
+  collect_snapshot?: (
+    player_id: string,
+    tick_context: SystemTickContext,
+  ) => Promise<SystemEmpireSnapshot>
+  tick_context?: SystemTickContext
   max_actions?: number
 }): Promise<SystemPlayerTickResult> {
   if (categories) {
@@ -149,6 +163,7 @@ export async function actForSystemPlayer({
       plan,
       actions,
       max_actions,
+      tick_context,
     })
   }
 
@@ -160,6 +175,7 @@ export async function actForSystemPlayer({
       collect_snapshot,
       max_actions,
       initial_snapshot: snapshot,
+      initial_tick_context: tick_context,
     })
   }
 
@@ -187,6 +203,7 @@ export async function actForSystemPlayer({
     plan,
     actions,
     max_actions,
+    tick_context,
   })
 }
 
@@ -197,21 +214,31 @@ async function executeSystemPlayerTickWithReplan({
   collect_snapshot,
   max_actions,
   initial_snapshot,
+  initial_tick_context,
 }: {
   player_id: string
   tick_index: number
   actions: Record<SystemTickCategory, SystemTickAction>
-  collect_snapshot: (player_id: string) => Promise<SystemEmpireSnapshot>
+  collect_snapshot: (
+    player_id: string,
+    tick_context: SystemTickContext,
+  ) => Promise<SystemEmpireSnapshot>
   max_actions: number
   initial_snapshot?: SystemEmpireSnapshot
+  initial_tick_context?: SystemTickContext
 }): Promise<SystemPlayerTickResult> {
   const attempts: SystemPlayerTickAttempt[] = []
   const committed_actions: SystemPlayerTickCommittedAction[] = []
 
   while (committed_actions.length < max_actions) {
-    const snapshot = committed_actions.length === 0 && initial_snapshot
+    const is_first_iteration = committed_actions.length === 0
+    const tick_context = is_first_iteration && initial_tick_context
+      ? initial_tick_context
+      : createSystemTickContext(player_id)
+    const snapshot = is_first_iteration && initial_snapshot
       ? initial_snapshot
-      : await collect_snapshot(player_id)
+      : await collect_snapshot(player_id, tick_context)
+    tick_context.snapshot = snapshot
     const plan = planSystemPlayerActions(snapshot, tick_index)
     let progressed = false
 
@@ -222,7 +249,7 @@ async function executeSystemPlayerTickWithReplan({
 
       let payload: SystemTickActionPayload | null
       try {
-        payload = await actions[intent.category](player_id)
+        payload = await actions[intent.category](player_id, tick_context)
       } catch (err) {
         if (isSystemTickSkippableError(err)) {
           attempts.push({

@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { SYSTEM_PLAYER_TICK_INTERVAL_MS } from '#app/scheduling/intervals'
 import { collectSystemEmpireSnapshot } from '#app/query/player/system/empire-snapshot'
+import { createSystemTickContext } from '#app/query/player/system/system-tick-context'
 import {
   actForSystemPlayer,
   SYSTEM_MAX_ACTIONS_PER_TICK,
@@ -20,13 +21,16 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
   const players = await repository.player.listSystemControlled()
   for (const player of players) {
     try {
-      const snapshot = await collectSystemEmpireSnapshot(player.id)
+      const tick_context = createSystemTickContext(player.id)
+      const snapshot = await collectSystemEmpireSnapshot(player.id, tick_context)
+      tick_context.snapshot = snapshot
       const result = await actForSystemPlayer({
         player_id: player.id,
         tick_index,
         actions: systemTickActions,
         snapshot,
-        collect_snapshot: collectSystemEmpireSnapshot,
+        tick_context,
+        collect_snapshot: (player_id, context) => collectSystemEmpireSnapshot(player_id, context),
         max_actions: SYSTEM_MAX_ACTIONS_PER_TICK,
       })
       logger.info('system player tick', {
