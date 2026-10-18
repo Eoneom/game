@@ -130,6 +130,77 @@ describe('ResourcesService', () => {
       assert.strictEqual(next.mushroom, base_state.mushroom + seconds * mushroom_eps)
     })
 
+    it('floors gathered amounts for fractional per-second rates (postgres integer stock)', () => {
+      const state = {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        last_plastic_gather: 0,
+        last_mushroom_gather: 0,
+        last_plasma_gather: 0,
+      }
+      const {
+        next, updated
+      } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: 76_832 * 1000,
+        earnings_per_second: {
+          plastic: 0.1,
+          mushroom: 0,
+          plasma: 0,
+        },
+        warehouses_capacity: {
+          plastic: 10_000,
+          mushroom: 10_000,
+        },
+      })
+      assert.strictEqual(updated, true)
+      assert.strictEqual(next.plastic, 7683)
+      assert.ok(Number.isInteger(next.plastic))
+      assert.ok(Number.isInteger(next.mushroom))
+      assert.ok(Number.isInteger(next.plasma))
+    })
+
+    it('floors stock after capacity clamping with floating-point residue', () => {
+      const state = {
+        plastic: 9499.999999999998,
+        mushroom: 0,
+        plasma: 0,
+        last_plastic_gather: 0,
+        last_mushroom_gather: 0,
+        last_plasma_gather: 0,
+      }
+      const { next } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: 10_000,
+        earnings_per_second: {
+          plastic: 100,
+          mushroom: 0,
+          plasma: 0,
+        },
+        warehouses_capacity: {
+          plastic: 10_000,
+          mushroom: 10_000,
+        },
+      })
+      assert.ok(Number.isInteger(next.plastic))
+      assert.ok(next.plastic <= 10_000)
+    })
+
+    it('normalizeResourceStockState floors resource columns', () => {
+      const normalized = ResourcesService.normalizeResourceStockState({
+        plastic: 7683.199999999998,
+        mushroom: 12.9,
+        plasma: 3.1,
+        last_plastic_gather: 1,
+        last_mushroom_gather: 1,
+        last_plasma_gather: 1,
+      })
+      assert.strictEqual(normalized.plastic, 7683)
+      assert.strictEqual(normalized.mushroom, 12)
+      assert.strictEqual(normalized.plasma, 3)
+    })
+
     it('gathers plasma without warehouse cap', () => {
       const state = {
         ...base_state,

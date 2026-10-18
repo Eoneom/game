@@ -220,6 +220,43 @@ describe('outpostGather', () => {
     })
   })
 
+  it('persists integer stock amounts when earnings per second are fractional', async () => {
+    const gather_at_time = now()
+    const seconds = 76_832
+
+    vi.spyOn(AppService, 'getOutpostEarningsBySecond').mockResolvedValue({
+      plastic: 0.1,
+      mushroom: 0,
+      plasma: 0,
+    })
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 10_000,
+      mushroom: 10_000,
+      plasma: 0,
+    })
+
+    const seeded = testResourceStock({
+      cell_id,
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      last_plastic_gather: gather_at_time - seconds * 1000,
+      last_mushroom_gather: gather_at_time,
+    })
+    repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(seeded)
+
+    await outpostGather({
+      outpost_id: outpost.id,
+      player_id,
+      gather_at_time,
+    })
+
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+    const updated_stock = stockUpdateOne.mock.calls[0][0]
+    assert.ok(Number.isInteger(updated_stock.plastic))
+    assert.strictEqual(updated_stock.plastic, 7683)
+  })
+
   it('should not emit event when stock is not updated (cooldown)', async () => {
     const gather_at_time = now()
     const blocked = testResourceStock({

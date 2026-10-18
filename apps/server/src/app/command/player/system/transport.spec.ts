@@ -137,6 +137,55 @@ describe('system transport helpers', () => {
     assert.strictEqual(projected[0].plastic, 1000)
   })
 
+  it('projects integer stock for fractional outpost earnings rates', async () => {
+    const gather_at_time = now()
+    const cell = testCityCell({ cell_id: id() })
+    const outpost = OutpostEntity.create({
+      id: id(),
+      player_id,
+      cell_id: cell.id,
+      type: OutpostType.PERMANENT,
+    })
+    const stock = testResourceStock({
+      cell_id: cell.id,
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      last_plastic_gather: gather_at_time - 76_832 * 1000,
+      last_mushroom_gather: gather_at_time,
+    })
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 0.1,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 0.1,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
+
+    const projected = await projectPermanentOutpostResourceStocks({
+      outposts: [ outpost ],
+      resource_stocks: [ stock ],
+      warehouses_capacity: {
+        plastic: 10_000,
+        mushroom: 10_000,
+      },
+      gather_at_time,
+    })
+
+    assert.strictEqual(projected[0].plastic, 7683)
+    assert.ok(Number.isInteger(projected[0].plastic))
+  })
+
   it('counts permanent outposts at transport pressure', () => {
     const permanent_cell = testCityCell({ cell_id: id() })
     const temporary_cell = testCityCell({ cell_id: id() })

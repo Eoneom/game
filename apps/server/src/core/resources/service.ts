@@ -142,8 +142,18 @@ export class ResourcesService {
     }
 
     return {
-      next,
+      next: ResourcesService.normalizeResourceStockState(next),
       updated 
+    }
+  }
+
+  /** Stock columns are Postgres integers; troop rates can be fractional. */
+  static normalizeResourceStockState(state: ResourceStockState): ResourceStockState {
+    return {
+      ...state,
+      plastic: Math.floor(state.plastic),
+      mushroom: Math.floor(state.mushroom),
+      plasma: Math.floor(state.plasma),
     }
   }
 
@@ -253,7 +263,10 @@ export class ResourcesService {
     capacity: number
     current_resource: number
   }): number {
-    return earnings + current_resource > capacity ? capacity - current_resource : earnings
+    const capped = earnings + current_resource > capacity
+      ? capacity - current_resource
+      : earnings
+    return Math.floor(capped)
   }
 
   private static getEarnings({
