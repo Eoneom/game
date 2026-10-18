@@ -259,36 +259,41 @@ export const useWorld = () => {
   const panEnd = useCallback(
     (nextCenter: Coordinates) => {
       skipDebounceRef.current = true
-      pendingDetailRef.current = 'full'
+      pendingDetailRef.current = 'terrain'
       panDirectionRef.current = null
       setCenter(nextCenter)
-      void loadCells({
-        center: nextCenter,
-        half_extent,
-        detail: 'full',
-      })
+
+      if (!token) return
+      const bounds = fetchBoundsAround(nextCenter, half_extent, null)
+      if (boundsNeedsFetch(cellCacheRef.current, bounds)) {
+        void loadCells({
+          center: nextCenter,
+          half_extent,
+          detail: 'terrain',
+        })
+      }
     },
     [
       half_extent,
       loadCells,
+      token,
     ],
   )
 
-  const refreshFullAtCenter = useCallback(async () => {
-    if (!center) return
-    skipDebounceRef.current = true
-    pendingDetailRef.current = 'full'
-    panDirectionRef.current = null
-    await loadCells({
-      center,
-      half_extent,
-      detail: 'full',
-    })
-  }, [
-    center,
-    half_extent,
-    loadCells,
-  ])
+  const loadCellIntel = useCallback(
+    async (coordinates: Coordinates) => {
+      if (!token) return
+      skipDebounceRef.current = true
+      pendingDetailRef.current = 'full'
+      panDirectionRef.current = null
+      await loadCells({
+        center: coordinates,
+        half_extent: 0,
+        detail: 'full',
+      })
+    },
+    [loadCells, token],
+  )
 
   const setZoom = useCallback((nextHalf: number) => {
     pendingDetailRef.current = 'terrain'
@@ -319,7 +324,7 @@ export const useWorld = () => {
     navigate,
     panDuringDrag,
     panEnd,
-    refreshFullAtCenter,
+    loadCellIntel,
     setZoom,
   }
 }

@@ -33,6 +33,14 @@ const cell = (
 })
 
 describe('cell-cache', () => {
+  it('mergeCells does not clear explored when a terrain-only batch arrives after full intel', () => {
+    const cache = createCellCache()
+    mergeCells(cache, [cell(1, 1, true, true)])
+    mergeCells(cache, [cell(1, 1, false, false)])
+    expect(cache.get('1,1')?.explored).toBe(true)
+    expect(cache.get('1,1')?.characteristic?.solar_coefficient).toBe(3)
+  })
+
   it('mergeCells keeps richer characteristics when terrain batch arrives first', () => {
     const cache = createCellCache()
     mergeCells(cache, [cell(1, 1)])

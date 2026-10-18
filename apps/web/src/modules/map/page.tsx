@@ -30,7 +30,7 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
     navigate,
     panDuringDrag,
     panEnd,
-    refreshFullAtCenter,
+    loadCellIntel,
   } = useWorld()
   const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(null)
 
@@ -92,7 +92,7 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
           navigation={navigation}
           onCellClicked={coordinates => {
             setSelectedCoordinates(coordinates)
-            void refreshFullAtCenter()
+            void loadCellIntel(coordinates)
           }}
           selectedCoordinates={selectedCoordinates}
           highlightCity={cityCoordinates}

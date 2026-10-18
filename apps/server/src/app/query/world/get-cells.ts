@@ -75,6 +75,22 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
       max_y
     }
 
+    if (detail === 'terrain') {
+      const [cells, viewer] = await Promise.all([
+        this.repository.cell.getByBounds(bounds),
+        this.repository.player.get(player_id)
+      ])
+      return {
+        cells,
+        explored_cell_ids: [],
+        viewer_faction_code: viewer.faction_code,
+        settlements: {
+          cities: [],
+          outposts: []
+        }
+      }
+    }
+
     const [
       cells,
       exploration,
@@ -84,18 +100,6 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
       this.repository.exploration.get({ player_id }),
       this.repository.player.get(player_id)
     ])
-
-    if (detail === 'terrain') {
-      return {
-        cells,
-        explored_cell_ids: exploration.cell_ids,
-        viewer_faction_code: viewer.faction_code,
-        settlements: {
-          cities: [],
-          outposts: []
-        }
-      }
-    }
 
     const [
       cities_in_bounds,

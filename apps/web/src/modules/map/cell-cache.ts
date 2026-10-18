@@ -21,7 +21,11 @@ export const mergeCells = (cache: CellCache, batch: WorldCell[]): void => {
     }
     cache.set(key, {
       ...existing,
-      ...cell,
+      type: cell.type,
+      explored:
+        cell.characteristic !== undefined
+          ? cell.explored
+          : (existing.explored || cell.explored),
       characteristic: cell.characteristic ?? existing.characteristic,
     })
   }
