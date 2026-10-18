@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
-import { describe, it } from 'vitest'
+import { describe, it, vi } from 'vitest'
+import { AppService } from '#app/service'
+import { now } from '#shared/time'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopService } from '#core/troop/service'
@@ -14,6 +16,7 @@ import {
   countPermanentOutpostsWorthTransport,
   isPermanentOutpostStockWorthTransport,
   pickCityForSystemTransport,
+  projectPermanentOutpostResourceStocks,
   sortOutpostsForSystemTransport,
 } from '#command/player/system/transport'
 
@@ -84,6 +87,54 @@ describe('system transport helpers', () => {
         mushroom: 1000,
       },
     }), true)
+  })
+
+  it('projects passive gather for permanent outpost stock reads', async () => {
+    const gather_at_time = now()
+    const cell = testCityCell({ cell_id: id() })
+    const outpost = OutpostEntity.create({
+      id: id(),
+      player_id,
+      cell_id: cell.id,
+      type: OutpostType.PERMANENT,
+    })
+    const stock = testResourceStock({
+      cell_id: cell.id,
+      plastic: 100,
+      mushroom: 0,
+      plasma: 0,
+      last_plastic_gather: gather_at_time - 5_000,
+      last_mushroom_gather: gather_at_time - 5_000,
+    })
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
+
+    const projected = await projectPermanentOutpostResourceStocks({
+      outposts: [ outpost ],
+      resource_stocks: [ stock ],
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      gather_at_time,
+    })
+
+    assert.strictEqual(projected[0].plastic, 1000)
   })
 
   it('counts permanent outposts at transport pressure', () => {

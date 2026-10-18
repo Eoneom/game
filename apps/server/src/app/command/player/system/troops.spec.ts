@@ -286,6 +286,26 @@ describe('loadOutpostRecruitHints', () => {
   const outpost_id = id()
   const outpost_cell_id = id()
 
+  beforeEach(() => {
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
+  })
+
   afterEach(() => {
     vi.restoreAllMocks()
   })

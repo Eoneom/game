@@ -3,6 +3,7 @@ import * as combatPolicy from './combat-policy'
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import { researchTechnology } from '#app/command/technology/research'
 import { citySettle } from '#app/command/city/settle'
+import { outpostGather } from '#app/command/outpost/gather'
 import { createTroopMovement } from '#app/command/troop/movement/create'
 import { AppService } from '#app/service'
 import { recruitTroop } from '#app/command/troop/recruit'
@@ -39,6 +40,7 @@ import {
 import * as empireSnapshot from '#app/query/player/system/empire-snapshot'
 import * as frontierQueue from '#app/query/player/system/frontier-queue'
 import { defaultSystemEmpireSnapshotFields } from '#core/player/system/empire-snapshot'
+import { now } from '#shared/time'
 import assert from 'assert'
 
 const empty_system_memory = {
@@ -77,6 +79,7 @@ vi.mock('#app/command/technology/research', () => ({ researchTechnology: vi.fn()
 vi.mock('#app/command/city/settle', () => ({ citySettle: vi.fn().mockResolvedValue({ city_id: 'new-city' }) }))
 vi.mock('#app/command/troop/movement/create', () => ({ createTroopMovement: vi.fn().mockResolvedValue({}) }))
 vi.mock('#app/command/troop/recruit', () => ({ recruitTroop: vi.fn().mockResolvedValue(undefined) }))
+vi.mock('#app/command/outpost/gather', () => ({ outpostGather: vi.fn().mockResolvedValue(undefined) }))
 
 describe('systemTickActions', () => {
   const player_id = id()
@@ -103,11 +106,29 @@ describe('systemTickActions', () => {
       plastic: 1000,
       mushroom: 1000,
     })
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
     vi.mocked(upgradeBuilding).mockClear()
     vi.mocked(researchTechnology).mockClear()
     vi.mocked(citySettle).mockClear()
     vi.mocked(createTroopMovement).mockClear()
     vi.mocked(recruitTroop).mockClear()
+    vi.mocked(outpostGather).mockClear()
     vi.spyOn(empireSnapshot, 'collectSystemEmpireSnapshot').mockImplementation(
       async (for_player_id: string) => defaultAttackEmpireSnapshot(for_player_id),
     )
@@ -1601,6 +1622,93 @@ describe('systemTickActions', () => {
         },
       ],
     })
+  })
+
+  it('transports using projected outpost stock when persisted stock lags gather', async () => {
+    const gather_at_time = now()
+    const outpost_cell = testCityCell({ cell_id: id() })
+    const outpost_id = id()
+    vi.spyOn(AppService, 'getOutpostProductionBreakdown').mockResolvedValue({
+      earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      pre_cell_earnings_per_second: {
+        plastic: 200,
+        mushroom: 0,
+        plasma: 0,
+      },
+      cell_resource_coefficient: {
+        plastic: 1,
+        mushroom: 0,
+        plasma: 0,
+      },
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+      resource_stock: testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 0,
+        mushroom: 0,
+      }),
+      warehouse_space_remaining: {
+        plastic: 500,
+        mushroom: 500,
+      },
+    } as never)
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 100,
+          mushroom: 0,
+          plasma: 0,
+          last_plastic_gather: gather_at_time - 5_000,
+          last_mushroom_gather: gather_at_time - 5_000,
+        }),
+      ],
+      count_limit: 10,
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [
+        TroopEntity.create({
+          id: id(),
+          player_id,
+          cell_id: outpost_cell.id,
+          code: TroopCode.HAULER,
+          count: 1,
+          movement_id: null,
+        }),
+      ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+
+    const acted = await systemTickActions.transport(player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(outpostGather).mock.calls.length, 1)
+    assert.strictEqual(vi.mocked(outpostGather).mock.calls[0][0].outpost_id, outpost_id)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
+    assert.strictEqual(
+      vi.mocked(createTroopMovement).mock.calls[0][0].action,
+      MovementAction.TRANSPORT,
+    )
   })
 
   it('limits transport cargo to destination warehouse free space', async () => {

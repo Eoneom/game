@@ -6,9 +6,12 @@ import { TroopService } from '#core/troop/service'
 import { TroopCount } from '#core/troop/type'
 import { Coordinates } from '#core/world/value/coordinates'
 import type { CellEntity } from '#core/world/cell/entity'
+import { AppService } from '#app/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
+import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { Resource, WarehouseCapacity } from '#shared/resource'
+import { now } from '#shared/time'
 import {
   isStorageResourcePressured,
   resourcesForTransportToDestination,
@@ -175,6 +178,48 @@ export function sortOutpostsForSystemTransport(
 
 export function hasTransportableStock(stock: Resource): boolean {
   return stock.plastic + stock.mushroom + stock.plasma > 0
+}
+
+/** Match outpost reads: project passive gather since last persist so AI matches UI/admin fill levels. */
+export async function projectPermanentOutpostResourceStocks({
+  outposts,
+  resource_stocks,
+  warehouses_capacity,
+  gather_at_time = now(),
+}: {
+  outposts: OutpostEntity[]
+  resource_stocks: (ResourceStockEntity | null | undefined)[]
+  warehouses_capacity: WarehouseCapacity
+  gather_at_time?: number
+}): Promise<Resource[]> {
+  return Promise.all(outposts.map(async (outpost, index) => {
+    const stock_row = resource_stocks[index]
+    if (!stock_row) {
+      return {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      }
+    }
+    if (outpost.type !== OutpostType.PERMANENT) {
+      return {
+        plastic: stock_row.plastic,
+        mushroom: stock_row.mushroom,
+        plasma: stock_row.plasma,
+      }
+    }
+    const production = await AppService.getOutpostProductionBreakdown({ outpost_id: outpost.id })
+    const { stock } = stock_row.gather({
+      gather_at_time,
+      earnings_per_second: production.earnings_per_second,
+      warehouses_capacity,
+    })
+    return {
+      plastic: stock.plastic,
+      mushroom: stock.mushroom,
+      plasma: stock.plasma,
+    }
+  }))
 }
 
 export function countPermanentOutpostsWorthTransport({

@@ -27,6 +27,7 @@ import {
 import { AppService } from '#app/service'
 import {
   countPermanentOutpostsWorthTransport,
+  projectPermanentOutpostResourceStocks,
 } from '#command/player/system/transport'
 import { countSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -272,9 +273,14 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     needs_carrier_on_outpost: outpost_recruit_hints.needs_carrier_on_outpost,
   })
 
-  const outpost_transport_pressure_count = countPermanentOutpostsWorthTransport({
+  const projected_outpost_stocks = await projectPermanentOutpostResourceStocks({
     outposts,
     resource_stocks,
+    warehouses_capacity: outpost_warehouses_capacity,
+  })
+  const outpost_transport_pressure_count = countPermanentOutpostsWorthTransport({
+    outposts,
+    resource_stocks: projected_outpost_stocks,
     warehouses_capacity: outpost_warehouses_capacity,
   })
 

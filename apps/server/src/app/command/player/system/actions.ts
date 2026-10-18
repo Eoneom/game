@@ -1,5 +1,6 @@
 import { upgradeBuilding } from '#app/command/building/upgrade'
 import { citySettle } from '#app/command/city/settle'
+import { outpostGather } from '#app/command/outpost/gather'
 import { outpostSetPermanent } from '#app/command/outpost/set-permanent'
 import { researchTechnology } from '#app/command/technology/research'
 import { recruitTroop } from '#app/command/troop/recruit'
@@ -37,6 +38,7 @@ import {
   systemExpansionScoutScore,
 } from '#core/player/system/expansion-cell'
 import { Resource } from '#shared/resource'
+import { now } from '#shared/time'
 import type {
   SystemTickAction,
   SystemTickCategory,
@@ -101,6 +103,7 @@ import {
   hasTransportableStock,
   isPermanentOutpostStockWorthTransport,
   pickCityForSystemTransport,
+  projectPermanentOutpostResourceStocks,
   sortOutpostsForSystemTransport,
   SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
 } from '#command/player/system/transport'
@@ -969,11 +972,17 @@ async function tryDeployOutpostTroops(player_id: string): Promise<Record<string,
     AppService.getOutpostWarehousesCapacity({ player_id }),
   ])
 
+  const projected_stocks = await projectPermanentOutpostResourceStocks({
+    outposts,
+    resource_stocks,
+    warehouses_capacity: outpost_warehouses_capacity,
+  })
+
   const deploy_candidates = sortOutpostDeployCandidates(
     (
       await Promise.all(outposts.map(async (outpost, index) => {
         const cell = cells[index]
-        const stock = resource_stocks[index]
+        const stock = projected_stocks[index]
         if (!cell || !stock || outpost.type !== OutpostType.PERMANENT) {
           return null
         }
@@ -1074,15 +1083,21 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
     AppService.getOutpostWarehousesCapacity({ player_id }),
   ])
 
+  const projected_stocks = await projectPermanentOutpostResourceStocks({
+    outposts,
+    resource_stocks,
+    warehouses_capacity: outpost_warehouses_capacity,
+  })
+
   const outpost_candidates = sortOutpostsForSystemTransport(
     outposts
       .map((outpost, index) => ({
         outpost,
         cell: cells[index],
-        stock: resource_stocks[index],
+        stock: projected_stocks[index],
       }))
       .filter(({ outpost, cell, stock }) => {
-        if (outpost.type !== OutpostType.PERMANENT || !cell || !stock) {
+        if (outpost.type !== OutpostType.PERMANENT || !cell) {
           return false
         }
         return isPermanentOutpostStockWorthTransport({
@@ -1143,6 +1158,12 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
     if (!hasTransportableStock(resources)) {
       continue
     }
+
+    await outpostGather({
+      outpost_id: outpost.id,
+      player_id,
+      gather_at_time: now(),
+    })
 
     await createTroopMovement({
       player_id,
