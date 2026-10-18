@@ -11,6 +11,7 @@ export const SYSTEM_TECHNOLOGY_RESEARCH_PRIORITY: TechnologyCode[] = [
   TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
   TechnologyCode.REPLICATION_CATALYST,
   TechnologyCode.OUTPOST_LOGISTICS,
+  TechnologyCode.OUTPOST_EXPANSION,
 ]
 
 export type SystemResearchTechnology = {

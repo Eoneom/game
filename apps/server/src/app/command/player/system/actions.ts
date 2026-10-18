@@ -21,7 +21,6 @@ import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
-import { OutpostService } from '#core/outpost/service'
 import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopCode } from '#core/troop/constant/code'
@@ -803,8 +802,8 @@ async function tryBase(
   const can_found_city = cities.length < count_limit
   const base_cell_score = systemExpansionBaseCellScore({ can_found_city })
 
-  const { outposts } = await new OutpostListQuery().run({ player_id })
-  if (OutpostService.isLimitReached({ existing_outposts_count: outposts.length })) {
+  const { outposts, count_limit } = await new OutpostListQuery().run({ player_id })
+  if (outposts.length >= count_limit) {
     return null
   }
 

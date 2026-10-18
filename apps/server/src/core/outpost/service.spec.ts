@@ -1,3 +1,7 @@
+import {
+  OUTPOST_COUNT_LIMIT,
+  OUTPOST_EXPANSION_PER_LEVEL,
+} from '#core/outpost/constant/limit'
 import { OutpostService } from '#core/outpost/service'
 
 describe('OutpostService', () => {
@@ -25,8 +29,38 @@ describe('OutpostService', () => {
   })
 
   describe('getCountLimit', () => {
-    it('returns the outpost count limit', () => {
-      expect(OutpostService.getCountLimit()).toBeGreaterThan(0)
+    it('returns base limit at expansion level 0', () => {
+      expect(OutpostService.getCountLimit({ expansion_level: 0 })).toBe(OUTPOST_COUNT_LIMIT)
+    })
+
+    it('adds five outposts per expansion level', () => {
+      expect(OutpostService.getCountLimit({ expansion_level: 1 })).toBe(
+        OUTPOST_COUNT_LIMIT + OUTPOST_EXPANSION_PER_LEVEL,
+      )
+      expect(OutpostService.getCountLimit({ expansion_level: 2 })).toBe(
+        OUTPOST_COUNT_LIMIT + 2 * OUTPOST_EXPANSION_PER_LEVEL,
+      )
+    })
+  })
+
+  describe('isLimitReached', () => {
+    it('respects expansion level', () => {
+      expect(OutpostService.isLimitReached({
+        existing_outposts_count: 14,
+        expansion_level: 0,
+      })).toBe(false)
+      expect(OutpostService.isLimitReached({
+        existing_outposts_count: 15,
+        expansion_level: 0,
+      })).toBe(true)
+      expect(OutpostService.isLimitReached({
+        existing_outposts_count: 19,
+        expansion_level: 1,
+      })).toBe(false)
+      expect(OutpostService.isLimitReached({
+        existing_outposts_count: 20,
+        expansion_level: 1,
+      })).toBe(true)
     })
   })
 })

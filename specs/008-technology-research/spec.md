@@ -45,6 +45,20 @@ Duration/cost: `PricingService.getTechnologyLevelCost` (research lab level reduc
 
 `packages/api-client/src/endpoints/technology/`.
 
+## Technology catalog (v1)
+
+| `TechnologyCode` | Research lab | Technology prereqs | Effect (per level) |
+| --- | --- | --- | --- |
+| `architecture` | 1 | — | Building unlocks; −10% build time |
+| `replication_catalyst` | 5 | — | +10% troop recruit speed |
+| `outpost_logistics` | 3 | — | +40% outpost warehouse capacity |
+| `outpost_expansion` | 4 | `outpost_logistics` 1 | +5 max outposts (base 15; L1 → 20, L2 → 25, …) |
+| `photovoltaic_optimization` | 6 | — | +15% solar panel energy |
+
+Costs/durations: `technology_costs` in `apps/server/src/core/pricing/constant/technology.ts` (`outpost_expansion` mirrors `outpost_logistics`). Bootstrap (`TechnologyService.init`) creates every code at level 0; migration `00008_outpost_expansion_technology` backfills existing players.
+
+French UI: `apps/web/src/modules/technology/translations.ts` — **Expansion des avant-postes**, effect **+5 avant-postes max par niveau (base 15)**.
+
 ## Evidence index
 
 | Area | Paths |

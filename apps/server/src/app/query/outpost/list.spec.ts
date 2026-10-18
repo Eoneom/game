@@ -1,5 +1,6 @@
 import type { MockInstance } from 'vitest'
 import { OutpostListQuery } from '#app/query/outpost/list'
+import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { OutpostEntity } from '#core/outpost/entity'
@@ -17,9 +18,11 @@ describe('OutpostListQuery', () => {
     repository = {
       outpost: { list: vi.fn().mockResolvedValue([]) } as unknown as Repository['outpost'],
       cell: { getById: vi.fn() } as unknown as Repository['cell'],
-      resource_stock: { getByCellId: vi.fn() } as unknown as Repository['resource_stock']
+      resource_stock: { getByCellId: vi.fn() } as unknown as Repository['resource_stock'],
+      technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(AppService, 'getOutpostExpansionLevel').mockResolvedValue(0)
   })
 
   afterEach(() => {
@@ -33,6 +36,7 @@ describe('OutpostListQuery', () => {
     expect(result.cells).toEqual([])
     expect(result.resource_stocks).toEqual([])
     expect(result.count_limit).toBe(15)
+    expect(AppService.getOutpostExpansionLevel).toHaveBeenCalledWith({ player_id })
     expect(repository.outpost.list).toHaveBeenCalledWith({ player_id })
   })
 
@@ -73,5 +77,13 @@ describe('OutpostListQuery', () => {
     expect(result.resource_stocks).toEqual([ stock ])
     expect(result.count_limit).toBe(15)
     expect(repository.cell.getById).toHaveBeenCalledWith(cell.id)
+  })
+
+  it('includes outpost expansion in count_limit', async () => {
+    vi.mocked(AppService.getOutpostExpansionLevel).mockResolvedValue(2)
+
+    const result = await new OutpostListQuery().run({ player_id })
+
+    expect(result.count_limit).toBe(25)
   })
 })

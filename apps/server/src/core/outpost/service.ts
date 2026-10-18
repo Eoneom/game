@@ -1,14 +1,23 @@
-import { OUTPOST_COUNT_LIMIT } from '#core/outpost/constant/limit'
+import {
+  OUTPOST_COUNT_LIMIT,
+  OUTPOST_EXPANSION_PER_LEVEL,
+} from '#core/outpost/constant/limit'
 import { outpost_capacity } from '#core/outpost/constant/capacity'
 import { WarehouseCapacity } from '#shared/resource'
 
 export class OutpostService {
-  static getCountLimit(): number {
-    return OUTPOST_COUNT_LIMIT
+  static getCountLimit({ expansion_level }: { expansion_level: number }): number {
+    return OUTPOST_COUNT_LIMIT + expansion_level * OUTPOST_EXPANSION_PER_LEVEL
   }
 
-  static isLimitReached({ existing_outposts_count }: { existing_outposts_count: number }): boolean {
-    return existing_outposts_count >= OUTPOST_COUNT_LIMIT
+  static isLimitReached({
+    existing_outposts_count,
+    expansion_level,
+  }: {
+    existing_outposts_count: number
+    expansion_level: number
+  }): boolean {
+    return existing_outposts_count >= OutpostService.getCountLimit({ expansion_level })
   }
 
   static shouldBuildTemporaryOutpost({

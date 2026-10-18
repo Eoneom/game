@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import assert from 'assert'
 import { finishTroopBaseMovement } from '#app/command/troop/movement/finish/base'
+import { AppService } from '#app/service'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { CityEntity } from '#core/city/entity'
@@ -14,6 +15,7 @@ import { TroopEntity } from '#core/troop/entity'
 import { Coordinates } from '#core/world/value/coordinates'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostError } from '#core/outpost/error'
+import { OUTPOST_COUNT_LIMIT } from '#core/outpost/constant/limit'
 import { FactionCode } from '#core/faction/constant/code'
 import { PlayerEntity } from '#core/player/entity'
 import { id } from '#shared/identification'
@@ -54,11 +56,13 @@ describe('finishTroopBaseMovement', () => {
   function mountRepository({
     city_exists,
     outpost_exists,
-    existing_outposts_count 
+    existing_outposts_count,
+    expansion_level = 0,
   }: {
     city_exists: boolean
     outpost_exists: boolean
     existing_outposts_count: number
+    expansion_level?: number
   }) {
     movementDelete = vi.fn().mockResolvedValue(undefined)
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
@@ -116,6 +120,7 @@ describe('finishTroopBaseMovement', () => {
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    vi.spyOn(AppService, 'getOutpostExpansionLevel').mockResolvedValue(expansion_level)
   }
 
   beforeEach(() => {
@@ -216,7 +221,7 @@ describe('finishTroopBaseMovement', () => {
     mountRepository({
       city_exists: false,
       outpost_exists: false,
-      existing_outposts_count: 1000 
+      existing_outposts_count: OUTPOST_COUNT_LIMIT,
     })
 
     await assert.rejects(
@@ -227,6 +232,23 @@ describe('finishTroopBaseMovement', () => {
       }),
       new RegExp(OutpostError.LIMIT_REACHED)
     )
+  })
+
+  it('allows a temporary outpost when expansion raises the cap', async () => {
+    mountRepository({
+      city_exists: false,
+      outpost_exists: false,
+      existing_outposts_count: OUTPOST_COUNT_LIMIT,
+      expansion_level: 1,
+    })
+
+    await finishTroopBaseMovement({
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+
+    assert.strictEqual(outpostCreate.mock.calls.length, 1)
   })
 
   it('should create a temporary outpost if there is no city or outpost', async () => {

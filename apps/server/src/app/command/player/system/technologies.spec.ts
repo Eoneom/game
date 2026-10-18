@@ -24,6 +24,10 @@ describe('sortTechnologiesForSystemResearch', () => {
           code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
           level: 0,
         },
+        {
+          code: TechnologyCode.OUTPOST_EXPANSION,
+          level: 0,
+        },
       ],
     })
 
@@ -32,6 +36,7 @@ describe('sortTechnologiesForSystemResearch', () => {
       TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
       TechnologyCode.REPLICATION_CATALYST,
       TechnologyCode.OUTPOST_LOGISTICS,
+      TechnologyCode.OUTPOST_EXPANSION,
     ])
   })
 

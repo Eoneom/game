@@ -22,7 +22,7 @@ Missing `outpost_id` where required → **400** + `outpost_id:not-found` (`Reque
 | --- | --- |
 | `outpost:not-found` | Unknown outpost |
 | `outpost:not-owner` | Wrong player |
-| `outpost:limit-reached` | `OUTPOST_COUNT_LIMIT` |
+| `outpost:limit-reached` | Outpost count at cap (`OutpostService.getCountLimit`) |
 
 Tests: `apps/server/src/web/handler/outpost/*.spec.ts`, `apps/server/src/app/command/outpost/*.spec.ts`, `apps/server/src/core/outpost/service.spec.ts`.
 
@@ -37,7 +37,8 @@ Boot: `ensureOutpostResourcesGatherScheduled` in `index.ts`. Gather success emit
 ## Domain
 
 - `OutpostService.shouldBuildTemporaryOutpost` when neither city nor outpost exists on cell.
-- `OutpostService.isLimitReached` uses `OUTPOST_COUNT_LIMIT`.
+- `OutpostService.getCountLimit({ expansion_level })` = `OUTPOST_COUNT_LIMIT` (15) + `expansion_level` × `OUTPOST_EXPANSION_PER_LEVEL` (5); `expansion_level` is the player’s `outpost_expansion` technology level (`AppService.getOutpostExpansionLevel`).
+- `OutpostService.isLimitReached` compares owned outpost count to that limit (list query `count_limit`, base movement finish, system AI snapshot `outpost_limit_reached`).
 
 ## Web UI
 

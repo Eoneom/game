@@ -82,6 +82,7 @@ function finishBaseMovementInTemporaryOutpost({
   destination_cell_id,
   movement,
   existing_outposts_count,
+  expansion_level,
   player_id,
   faction_code,
   movement_troops,
@@ -90,12 +91,16 @@ function finishBaseMovementInTemporaryOutpost({
   destination_cell_id: string
   movement: MovementEntity
   existing_outposts_count: number
+  expansion_level: number
   player_id: string
   faction_code: FactionCode
   movement_troops: TroopEntity[]
   arrived_at: number
 }): FinishBaseSave {
-  const is_limit_reached = OutpostService.isLimitReached({ existing_outposts_count })
+  const is_limit_reached = OutpostService.isLimitReached({
+    existing_outposts_count,
+    expansion_level,
+  })
   if (is_limit_reached) {
     throw new Error(OutpostError.LIMIT_REACHED)
   }
@@ -197,16 +202,19 @@ async function buildSettlePlan({
   const [
     movement_troops,
     existing_outposts_count,
+    expansion_level,
     player
   ] = await Promise.all([
     repository.troop.listByMovement({ movement_id: movement.id }),
     repository.outpost.countForPlayer({ player_id }),
+    AppService.getOutpostExpansionLevel({ player_id }),
     repository.player.get(player_id),
   ])
   return finishBaseMovementInTemporaryOutpost({
     destination_cell_id: destination_cell.id,
     movement,
     existing_outposts_count,
+    expansion_level,
     movement_troops,
     player_id,
     faction_code: player.faction_code,

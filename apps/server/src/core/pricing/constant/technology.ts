@@ -46,6 +46,20 @@ export const technology_costs: Record<TechnologyCode, LevelCosts> = {
       multiplier: 2
     }
   },
+  [TechnologyCode.OUTPOST_EXPANSION]: {
+    plastic: {
+      base: 10000,
+      multiplier: 1.6
+    },
+    mushroom: {
+      base: 8000,
+      multiplier: 1.6
+    },
+    duration: {
+      base: 180,
+      multiplier: 2
+    }
+  },
   [TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION]: {
     plastic: {
       base: 15000,

@@ -302,6 +302,14 @@ export class AppService {
     return OutpostService.getWarehousesCapacity({ logistics_level })
   }
 
+  static async getOutpostExpansionLevel({ player_id }: { player_id: string }): Promise<number> {
+    const repository = Factory.getRepository()
+    return repository.technology.getLevel({
+      player_id,
+      code: TechnologyCode.OUTPOST_EXPANSION
+    })
+  }
+
   static async getOutpostEarningsBySecond({ outpost_id }: { outpost_id: string }): Promise<Resource> {
     const breakdown = await this.getOutpostProductionBreakdown({ outpost_id })
     return breakdown.earnings_per_second

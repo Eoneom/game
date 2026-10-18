@@ -214,8 +214,10 @@ export async function collectSystemEmpireSnapshot(
   const permanent_outpost_count = outposts.filter(
     outpost => outpost.type === OutpostType.PERMANENT,
   ).length
+  const expansion_level = await AppService.getOutpostExpansionLevel({ player_id })
   const outpost_limit_reached = OutpostService.isLimitReached({
     existing_outposts_count: outposts.length,
+    expansion_level,
   })
   const expansion_categories = systemTickExpansionCategories({
     temporary_outpost_count,

@@ -1,3 +1,4 @@
+import { AppService } from '#app/service'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostService } from '#core/outpost/service'
 import { GenericQuery } from '#query/generic'
@@ -21,7 +22,13 @@ export class OutpostListQuery extends GenericQuery<OutpostListQueryRequest, Outp
   }
 
   protected async get({ player_id }: OutpostListQueryRequest): Promise<OutpostListQueryResponse> {
-    const outposts = await this.repository.outpost.list({ player_id })
+    const [
+      outposts,
+      expansion_level,
+    ] = await Promise.all([
+      this.repository.outpost.list({ player_id }),
+      AppService.getOutpostExpansionLevel({ player_id }),
+    ])
     const [
       cells,
       resource_stocks
@@ -33,7 +40,7 @@ export class OutpostListQuery extends GenericQuery<OutpostListQueryRequest, Outp
       outposts,
       cells,
       resource_stocks,
-      count_limit: OutpostService.getCountLimit()
+      count_limit: OutpostService.getCountLimit({ expansion_level })
     }
   }
 }
