@@ -45,9 +45,12 @@ function formatProductionLine(earnings_per_second: Resource): string {
 function TroopsList({
   troops,
   pending,
+  one_per_line = false,
 }: {
   troops: AdminSystemPlayerTroopCount[]
   pending?: AdminSystemPlayerPendingRecruitment | null
+  /** Outpost cards are narrow — stack troop lines vertically. */
+  one_per_line?: boolean
 }): React.ReactElement | null {
   const present = troops.filter(troop => troop.count > 0)
   if (present.length === 0 && !pending) {
@@ -316,7 +319,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                             warehouse_space_remaining={outpost.warehouse_space_remaining}
                           />
                         )}
-                        <TroopsList troops={outpost.troops} />
+                        <TroopsList troops={outpost.troops} one_per_line />
                       </li>
                     ))}
                   </ul>
