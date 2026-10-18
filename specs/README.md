@@ -25,6 +25,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 021 | Admin operator tools | Implemented | [spec](./021-admin-operator-tools/spec.md) |
 | 022 | Timing & resources | Implemented | [spec](./022-timing-and-resources/spec.md) |
 | 024 | Player combat (PvP) | Implemented | [spec](./024-player-combat-pvp/spec.md) |
+| 025 | Lawless human system faction | Planned | [spec](./025-lawless-human-faction/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).
 
