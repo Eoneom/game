@@ -38,6 +38,7 @@ export function registerSystemPlayerObservabilityWsListener(): void {
       outposts: message.outposts,
       technologies: message.technologies,
       buildings_by_city: message.buildings_by_city,
+      ongoing_movements: message.ongoing_movements ?? [],
       updated_at: message.updated_at,
     })
   })

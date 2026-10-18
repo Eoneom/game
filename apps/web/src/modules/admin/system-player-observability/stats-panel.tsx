@@ -251,6 +251,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
   return (
     <div className="space-y-3">
       {visible.map(snapshot => {
+        const ongoing_movements = snapshot.ongoing_movements ?? []
         const buildings_by_city_id = new Map(
           snapshot.buildings_by_city.map(row => [ row.city_id, row.buildings ])
         )
@@ -282,15 +283,15 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
 
               <section>
                 <h3 className="field-label m-0 mb-1 text-label">
-                  Mouvements en cours ({snapshot.ongoing_movements.length})
+                  Mouvements en cours ({ongoing_movements.length})
                 </h3>
-                {snapshot.ongoing_movements.length === 0 ? (
+                {ongoing_movements.length === 0 ? (
                   <p className="m-0 text-sm text-amber-dim">
                     Aucun mouvement de troupes en cours pour ce joueur.
                   </p>
                 ) : (
                   <ul className="m-0 list-none space-y-2 p-0">
-                    {snapshot.ongoing_movements.map(movement => (
+                    {ongoing_movements.map(movement => (
                       <OngoingMovementItem key={movement.id} movement={movement} />
                     ))}
                   </ul>
