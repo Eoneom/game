@@ -6,113 +6,113 @@ export const ARCHITECTURE_REDUCTION_PER_LEVEL = 10
 export const building_costs: Record<BuildingCode, LevelCosts> = {
   [BuildingCode.RECYCLING_PLANT]: {
     plastic: {
-      base: 200,
+      base: 100,
       multiplier: 1.55
     },
     mushroom: {
-      base: 100,
+      base: 50,
       multiplier: 1.4
     },
     duration: {
-      base: 45,
+      base: 23,
       multiplier: 2.1
     }
   },
   [BuildingCode.PLASTIC_WAREHOUSE]: {
     plastic: {
-      base: 250,
+      base: 125,
       multiplier: 2.1
     },
     mushroom: {
-      base: 250,
+      base: 125,
       multiplier: 2.1
     },
     duration: {
-      base: 45,
+      base: 23,
       multiplier: 1.85
     }
   },
   [BuildingCode.MUSHROOM_FARM]: {
     plastic: {
-      base: 100,
+      base: 50,
       multiplier: 1.4
     },
     mushroom: {
-      base: 200,
+      base: 100,
       multiplier: 1.55,
     },
     duration: {
-      base: 45,
+      base: 23,
       multiplier: 2.1
     }
   },
   [BuildingCode.MUSHROOM_WAREHOUSE]: {
     plastic: {
-      base: 250,
+      base: 125,
       multiplier: 2.1
     },
     mushroom: {
-      base: 250,
+      base: 125,
       multiplier: 2.1
     },
     duration: {
-      base: 45,
+      base: 23,
       multiplier: 1.85
     }
   },
   [BuildingCode.RESEARCH_LAB]: {
     plastic: {
-      base: 6000,
+      base: 3000,
       multiplier: 1.45
     },
     mushroom: {
-      base: 6000,
+      base: 3000,
       multiplier: 1.45,
     },
     duration: {
-      base: 15,
+      base: 8,
       multiplier: 1.95
     }
   },
   [BuildingCode.CLONING_FACTORY]: {
     plastic: {
-      base: 14000,
+      base: 7000,
       multiplier: 1.35
     },
     mushroom: {
-      base: 12000,
+      base: 6000,
       multiplier: 1.25
     },
     duration: {
-      base: 150,
+      base: 75,
       multiplier: 1.65
     }
   },
   [BuildingCode.SOLAR_PANEL]: {
     plastic: {
-      base: 100,
+      base: 50,
       multiplier: 1.4
     },
     mushroom: {
-      base: 200,
+      base: 100,
       multiplier: 1.55
     },
     duration: {
-      base: 45,
+      base: 23,
       multiplier: 2.1
     }
   },
   [BuildingCode.CENTRAL_INDUCTOR]: {
     plastic: {
-      base: 4000,
+      base: 2000,
       multiplier: 1.45
     },
     mushroom: {
-      base: 4000,
+      base: 2000,
       multiplier: 1.45
     },
     duration: {
-      base: 20,
+      base: 10,
       multiplier: 1.95
     }
   }

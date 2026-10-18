@@ -13,7 +13,6 @@ import {
   REPLICATION_CATALYST_REDUCTION_PER_LEVEL,
   troop_costs
 } from '#core/pricing/constant/troop'
-import { PRICING_PACE_MULTIPLIER } from '#core/pricing/constant/pace'
 import { PricingService } from '#core/pricing/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
@@ -23,21 +22,13 @@ function reductionFrom(reduction_percent_per_level: number, level: number): numb
   return Math.pow(1 - 1 / reduction_percent_per_level, level)
 }
 
-function pacedResource(base: number): number {
-  return Math.max(1, Math.ceil(base * PRICING_PACE_MULTIPLIER))
-}
-
-function pacedDuration(seconds: number): number {
-  return Math.max(1, Math.ceil(seconds * PRICING_PACE_MULTIPLIER))
-}
-
 describe('PricingService', () => {
   describe('getTroopCost', () => {
     it('returns scaled resources and duration with no reductions', () => {
       const code = TroopCode.EXPLORER
       const count = 2
       const cost = troop_costs[code]
-      const reduced = pacedDuration(cost.duration *
+      const reduced = Math.ceil(cost.duration *
           count *
           reductionFrom(CLONING_FACTORY_REDUCTION_PER_LEVEL, 0) *
           reductionFrom(REPLICATION_CATALYST_REDUCTION_PER_LEVEL, 0))
@@ -50,14 +41,8 @@ describe('PricingService', () => {
       })
 
       assert.strictEqual(result.code, code)
-      assert.strictEqual(
-        result.resource.plastic,
-        pacedResource(cost.plastic * count)
-      )
-      assert.strictEqual(
-        result.resource.mushroom,
-        pacedResource(cost.mushroom * count)
-      )
+      assert.strictEqual(result.resource.plastic, cost.plastic * count)
+      assert.strictEqual(result.resource.mushroom, cost.mushroom * count)
       assert.strictEqual(result.duration, scaleGameDurationSeconds(reduced))
     })
 
@@ -67,7 +52,7 @@ describe('PricingService', () => {
       const cost = troop_costs[code]
       const cloning_factory_level = 1
       const replication_catalyst_level = 1
-      const reduced = pacedDuration(cost.duration *
+      const reduced = Math.ceil(cost.duration *
           count *
           reductionFrom(
             CLONING_FACTORY_REDUCTION_PER_LEVEL,
@@ -98,7 +83,7 @@ describe('PricingService', () => {
       } = building_costs[code]
       const arch = reductionFrom(ARCHITECTURE_REDUCTION_PER_LEVEL, 0)
       const baseDur = duration.base * Math.pow(duration.multiplier, level - 1)
-      const rawSeconds = pacedDuration(baseDur * arch)
+      const rawSeconds = Math.ceil(baseDur * arch)
 
       const result = PricingService.getBuildingLevelCost({
         code,
@@ -110,11 +95,11 @@ describe('PricingService', () => {
       assert.strictEqual(result.level, level)
       assert.strictEqual(
         result.resource.plastic,
-        pacedResource(plastic.base * Math.pow(plastic.multiplier, level - 1))
+        Math.ceil(plastic.base * Math.pow(plastic.multiplier, level - 1))
       )
       assert.strictEqual(
         result.resource.mushroom,
-        pacedResource(mushroom.base * Math.pow(mushroom.multiplier, level - 1))
+        Math.ceil(mushroom.base * Math.pow(mushroom.multiplier, level - 1))
       )
       assert.strictEqual(result.duration, scaleGameDurationSeconds(rawSeconds))
     })
@@ -124,12 +109,8 @@ describe('PricingService', () => {
       const level = 2
       const { duration } = building_costs[code]
       const baseDur = duration.base * Math.pow(duration.multiplier, level - 1)
-      const rawNoArch = pacedDuration(
-        baseDur * reductionFrom(ARCHITECTURE_REDUCTION_PER_LEVEL, 0)
-      )
-      const rawWithArch = pacedDuration(
-        baseDur * reductionFrom(ARCHITECTURE_REDUCTION_PER_LEVEL, 1)
-      )
+      const rawNoArch = Math.ceil(baseDur * reductionFrom(ARCHITECTURE_REDUCTION_PER_LEVEL, 0))
+      const rawWithArch = Math.ceil(baseDur * reductionFrom(ARCHITECTURE_REDUCTION_PER_LEVEL, 1))
 
       const without = PricingService.getBuildingLevelCost({
         code,
@@ -159,7 +140,7 @@ describe('PricingService', () => {
       } = technology_costs[code]
       const lab = reductionFrom(RESEARCH_LABEL_REDUCTION_PER_LEVEL, 0)
       const baseDur = duration.base * Math.pow(duration.multiplier, level - 1)
-      const rawSeconds = pacedDuration(baseDur * lab)
+      const rawSeconds = Math.ceil(baseDur * lab)
 
       const result = PricingService.getTechnologyLevelCost({
         code,
@@ -171,11 +152,11 @@ describe('PricingService', () => {
       assert.strictEqual(result.level, level)
       assert.strictEqual(
         result.resource.plastic,
-        pacedResource(plastic.base * Math.pow(plastic.multiplier, level - 1))
+        Math.ceil(plastic.base * Math.pow(plastic.multiplier, level - 1))
       )
       assert.strictEqual(
         result.resource.mushroom,
-        pacedResource(mushroom.base * Math.pow(mushroom.multiplier, level - 1))
+        Math.ceil(mushroom.base * Math.pow(mushroom.multiplier, level - 1))
       )
       assert.strictEqual(result.duration, scaleGameDurationSeconds(rawSeconds))
     })
@@ -185,12 +166,8 @@ describe('PricingService', () => {
       const level = 1
       const { duration } = technology_costs[code]
       const baseDur = duration.base * Math.pow(duration.multiplier, level - 1)
-      const raw0 = pacedDuration(
-        baseDur * reductionFrom(RESEARCH_LABEL_REDUCTION_PER_LEVEL, 0)
-      )
-      const raw1 = pacedDuration(
-        baseDur * reductionFrom(RESEARCH_LABEL_REDUCTION_PER_LEVEL, 1)
-      )
+      const raw0 = Math.ceil(baseDur * reductionFrom(RESEARCH_LABEL_REDUCTION_PER_LEVEL, 0))
+      const raw1 = Math.ceil(baseDur * reductionFrom(RESEARCH_LABEL_REDUCTION_PER_LEVEL, 1))
 
       const a = PricingService.getTechnologyLevelCost({
         code,

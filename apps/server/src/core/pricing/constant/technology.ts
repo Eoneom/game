@@ -6,71 +6,71 @@ export const RESEARCH_LABEL_REDUCTION_PER_LEVEL = 10
 export const technology_costs: Record<TechnologyCode, LevelCosts> = {
   [TechnologyCode.ARCHITECTURE]: {
     plastic: {
-      base: 4000,
+      base: 2000,
       multiplier: 2
     },
     mushroom: {
-      base: 4000,
+      base: 2000,
       multiplier: 2
     },
     duration: {
-      base: 60,
+      base: 30,
       multiplier: 2
     }
   },
   [TechnologyCode.REPLICATION_CATALYST]: {
     mushroom: {
-      base: 20000,
+      base: 10000,
       multiplier: 1.4
     },
     plastic: {
-      base: 40000,
+      base: 20000,
       multiplier: 1.4
     },
     duration: {
-      base: 300,
+      base: 150,
       multiplier: 2.2
     }
   },
   [TechnologyCode.OUTPOST_LOGISTICS]: {
     plastic: {
-      base: 10000,
+      base: 5000,
       multiplier: 1.6
     },
     mushroom: {
-      base: 8000,
+      base: 4000,
       multiplier: 1.6
     },
     duration: {
-      base: 180,
+      base: 90,
       multiplier: 2
     }
   },
   [TechnologyCode.OUTPOST_EXPANSION]: {
     plastic: {
-      base: 10000,
+      base: 5000,
       multiplier: 1.6
     },
     mushroom: {
-      base: 8000,
+      base: 4000,
       multiplier: 1.6
     },
     duration: {
-      base: 180,
+      base: 90,
       multiplier: 2
     }
   },
   [TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION]: {
     plastic: {
-      base: 15000,
+      base: 7500,
       multiplier: 1.6
     },
     mushroom: {
-      base: 12000,
+      base: 6000,
       multiplier: 1.6
     },
     duration: {
-      base: 240,
+      base: 120,
       multiplier: 2
     }
   }
