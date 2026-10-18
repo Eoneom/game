@@ -24,6 +24,7 @@ function baseSnapshot(overrides: Partial<SystemEmpireSnapshot> = {}): SystemEmpi
     defer_explore: false,
     expansion_starved: false,
     combat_army_ready: false,
+    needs_outpost_logistics: false,
     ...overrides,
   }
 }
@@ -132,11 +133,23 @@ describe('planSystemPlayerActions', () => {
     assert.ok(plan.slice(0, 3).every(intent => intent.reason === 'commit_temp_outpost'))
     assert.strictEqual(plan[3].category, 'upgrade')
   })
+
+  it('prepends deploy-outpost intents when outpost logistics are needed', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      needs_outpost_logistics: true,
+      expansion_starved: false,
+    }), 0)
+    assert.strictEqual(plan[0].category, 'deploy-outpost')
+    assert.strictEqual(plan[0].reason, 'outpost_logistics')
+    assert.strictEqual(plan[1].category, 'deploy-outpost')
+    assert.strictEqual(plan[1].reason, 'outpost_logistics')
+    assert.strictEqual(plan[2].category, 'base')
+  })
 })
 
 describe('categoriesForTick', () => {
   it('completes a full rotation over tick indices', () => {
-    assert.deepStrictEqual(categoriesForTick(9), [ ...SYSTEM_TICK_CATEGORIES ])
+    assert.deepStrictEqual(categoriesForTick(10), [ ...SYSTEM_TICK_CATEGORIES ])
   })
 })
 

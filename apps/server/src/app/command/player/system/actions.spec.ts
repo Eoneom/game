@@ -64,6 +64,10 @@ describe('systemTickActions', () => {
 
   beforeEach(() => {
     fakeLogger.child.mockReturnValue(fakeLogger)
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
     vi.mocked(upgradeBuilding).mockClear()
     vi.mocked(researchTechnology).mockClear()
     vi.mocked(citySettle).mockClear()
@@ -1443,6 +1447,89 @@ describe('systemTickActions', () => {
     assert.strictEqual(acted, null)
     const transport_calls = vi.mocked(createTroopMovement).mock.calls.filter(call => call[0].action === MovementAction.TRANSPORT)
     assert.strictEqual(transport_calls.length, 0)
+  })
+
+  it('deploys a harvester from a city garrison to a permanent outpost', async () => {
+    const outpost_cell = testCityCell({
+      cell_id: id(),
+      resource_coefficient: {
+        plastic: 0,
+        mushroom: 1,
+        plasma: 0,
+      },
+    })
+    const outpost_id = id()
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
+    vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
+      cities: [ city ],
+      count_limit: 5,
+    })
+    vi.spyOn(CityGetQuery.prototype, 'run').mockResolvedValue({
+      city,
+      cell: city_cell,
+    } as never)
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell.id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [ outpost_cell ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell.id,
+          plastic: 0,
+          mushroom: 0,
+        }),
+      ],
+      count_limit: 10,
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockImplementation(async ({ location }) => {
+      if (location?.type === 'outpost') {
+        return {
+          troops: [],
+          costs: {} as never,
+          pending_recruitment: null,
+        }
+      }
+      return {
+        troops: [
+          TroopEntity.create({
+            id: id(),
+            player_id,
+            cell_id: city_cell.id,
+            code: TroopCode.HARVESTER,
+            count: 2,
+            movement_id: null,
+          }),
+        ],
+        costs: {} as never,
+        pending_recruitment: null,
+      }
+    })
+
+    const acted = await systemTickActions['deploy-outpost'](player_id)
+
+    assert.ok(acted)
+    assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 1)
+    assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0], {
+      player_id,
+      action: MovementAction.BASE,
+      origin: city_cell.coordinates,
+      destination: outpost_cell.coordinates,
+      move_troops: [
+        {
+          code: TroopCode.HARVESTER,
+          count: 1,
+        },
+      ],
+    })
   })
 
   it('limits transport cargo to destination warehouse free space', async () => {

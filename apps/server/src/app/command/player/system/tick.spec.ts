@@ -47,6 +47,7 @@ describe('tickSystemPlayers', () => {
     defer_explore: false,
     expansion_starved: true,
     combat_army_ready: false,
+    needs_outpost_logistics: false,
   }
 
   let listSystemControlled: MockInstance

@@ -39,14 +39,16 @@ export function shouldSystemUpgradeSolarPanel({
 export function isStorageResourcePressured({
   stock,
   capacity,
+  pressure_fill_ratio = SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO,
 }: {
   stock: number
   capacity: number
+  pressure_fill_ratio?: number
 }): boolean {
   if (capacity <= 0) {
     return stock > 0
   }
-  return stock >= capacity * SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO
+  return stock >= capacity * pressure_fill_ratio
 }
 
 const CORE_PRODUCTION_BUILDING_CODES = [

@@ -1,3 +1,8 @@
+import { AppService } from '#app/service'
+import {
+  buildOutpostDeployCandidate,
+  outpostNeedsCarrier,
+} from '#command/player/system/outpost-logistics'
 import { OutpostListQuery } from '#query/outpost/list'
 import { TroopListQuery } from '#query/troop/list'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -82,6 +87,7 @@ function countRole(troops: TroopEntity[], role: TroopRole): number {
 export type SystemOutpostRecruitHints = {
   needs_harvester_on_outpost: boolean
   needs_reclaimer_on_outpost: boolean
+  needs_carrier_on_outpost: boolean
   /** At least one permanent outpost on a cell that can gather mushroom (cultivator). */
   has_harvester_outpost: boolean
   /** At least one permanent outpost on a cell that can gather plastic (salvager). */
@@ -113,6 +119,7 @@ export function recruitSortHintsForCity({
     founder_count: countRole(city_troops, TroopRole.FOUNDER),
     needs_harvester_on_outpost: outpost_hints.needs_harvester_on_outpost,
     needs_reclaimer_on_outpost: outpost_hints.needs_reclaimer_on_outpost,
+    needs_carrier_on_outpost: outpost_hints.needs_carrier_on_outpost,
     has_harvester_outpost: outpost_hints.has_harvester_outpost,
     has_reclaimer_outpost: outpost_hints.has_reclaimer_outpost,
     combat,
@@ -243,6 +250,15 @@ function recruitPriority({
     return 0
   }
 
+  if (role === TroopRole.CARRIER) {
+    if (hints.needs_carrier_on_outpost) {
+      return 1 + TroopService.getOrder(code)
+    }
+    if (ECONOMY_ROLES.has(role)) {
+      return 10 + TroopService.getOrder(code)
+    }
+  }
+
   if (ECONOMY_ROLES.has(role)) {
     return 10 + TroopService.getOrder(code)
   }
@@ -354,14 +370,21 @@ export function systemRecruitBatchCount({
 }
 
 export async function loadOutpostRecruitHints(player_id: string): Promise<SystemOutpostRecruitHints> {
-  const {
-    outposts,
-    cells,
-    resource_stocks,
-  } = await new OutpostListQuery().run({ player_id })
+  const [
+    {
+      outposts,
+      cells,
+      resource_stocks,
+    },
+    outpost_warehouses_capacity,
+  ] = await Promise.all([
+    new OutpostListQuery().run({ player_id }),
+    AppService.getOutpostWarehousesCapacity({ player_id }),
+  ])
 
   let needs_harvester_on_outpost = false
   let needs_reclaimer_on_outpost = false
+  let needs_carrier_on_outpost = false
   let has_harvester_outpost = false
   let has_reclaimer_outpost = false
 
@@ -373,15 +396,20 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
       continue
     }
     const cell = cells[index]
-    if (cell?.resource_coefficient.mushroom > 0) {
+    if (!cell) {
+      continue
+    }
+    const stock = resource_stocks[index] ?? {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    }
+
+    if (cell.resource_coefficient.mushroom > 0) {
       has_harvester_outpost = true
     }
-    if (cell?.resource_coefficient.plastic > 0) {
+    if (cell.resource_coefficient.plastic > 0) {
       has_reclaimer_outpost = true
-    }
-    const stock = resource_stocks[index]
-    if (!stock || !hasStock(stock)) {
-      continue
     }
 
     const { troops } = await new TroopListQuery().run({
@@ -391,25 +419,32 @@ export async function loadOutpostRecruitHints(player_id: string): Promise<System
         outpost_id: outpost.id,
       },
     })
-    const harvester = TroopService.findByRole({
+
+    const candidate = buildOutpostDeployCandidate({
+      outpost,
+      cell,
+      stock,
       troops,
-      role: TroopRole.CULTIVATOR,
+      warehouses_capacity: outpost_warehouses_capacity,
     })
-    const reclaimer = TroopService.findByRole({
-      troops,
-      role: TroopRole.SALVAGER,
-    })
-    if (!harvester || harvester.count < 1) {
+    if (!candidate) {
+      continue
+    }
+    if (candidate.missing_roles.includes(TroopRole.CULTIVATOR)) {
       needs_harvester_on_outpost = true
     }
-    if (!reclaimer || reclaimer.count < 1) {
+    if (candidate.missing_roles.includes(TroopRole.SALVAGER)) {
       needs_reclaimer_on_outpost = true
+    }
+    if (candidate.missing_roles.includes(TroopRole.CARRIER)) {
+      needs_carrier_on_outpost = true
     }
   }
 
   return {
     needs_harvester_on_outpost,
     needs_reclaimer_on_outpost,
+    needs_carrier_on_outpost,
     has_harvester_outpost,
     has_reclaimer_outpost,
   }

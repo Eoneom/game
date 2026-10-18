@@ -47,7 +47,7 @@ describe('system player tick policy', () => {
     assert.strictEqual(categoriesForTick(0)[0], 'base')
     assert.strictEqual(categoriesForTick(1)[0], 'settle')
     assert.strictEqual(categoriesForTick(4)[0], 'upgrade')
-    assert.deepStrictEqual(categoriesForTick(9), [ ...SYSTEM_TICK_CATEGORIES ])
+    assert.deepStrictEqual(categoriesForTick(10), [ ...SYSTEM_TICK_CATEGORIES ])
   })
 
   it('large empires still lead expansion ticks with base before explore', () => {
@@ -61,7 +61,7 @@ describe('system player tick policy', () => {
   it('rotates economy-first when the main city needs baseline upkeep', () => {
     assert.strictEqual(categoriesForTick(0, { economy_first: true })[0], 'upgrade')
     assert.strictEqual(categoriesForTick(1, { economy_first: true })[0], 'research')
-    assert.strictEqual(categoriesForTick(4, { economy_first: true })[0], 'attack')
+    assert.strictEqual(categoriesForTick(4, { economy_first: true })[0], 'transport')
   })
 
   it('walks from the rotated start until one action succeeds', async () => {
@@ -92,11 +92,15 @@ describe('system player tick policy', () => {
         result: 'skipped',
       },
       {
+        category: 'deploy-outpost',
+        result: 'skipped',
+      },
+      {
         category: 'recruit',
         result: 'success',
       },
     ])
-    assert.deepStrictEqual(calls, [ 'research', 'recruit' ])
+    assert.deepStrictEqual(calls, [ 'research', 'deploy-outpost', 'recruit' ])
   })
 
   it('commits up to max_actions successes in plan order', async () => {

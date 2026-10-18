@@ -1,6 +1,7 @@
 import {
   SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS,
   SYSTEM_MAX_ACTIONS_PER_TICK,
+  SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS,
 } from '#core/player/system/constants'
 import {
   SYSTEM_TICK_ECONOMY_CATEGORIES,
@@ -141,6 +142,22 @@ export function planSystemPlayerActions(
       })
     }
     seen_categories.add('base')
+  }
+
+  if (snapshot.needs_outpost_logistics) {
+    const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
+    const deploy_attempts = Math.min(
+      SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS,
+      remaining_budget,
+    )
+    for (let index = 0; index < deploy_attempts; index += 1) {
+      intents.push({
+        category: 'deploy-outpost',
+        priority: intents.length,
+        reason: 'outpost_logistics',
+      })
+    }
+    seen_categories.add('deploy-outpost')
   }
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {

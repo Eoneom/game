@@ -6,3 +6,6 @@ export const SYSTEM_EXPANSION_STARVED_PERMANENT_OUTPOST_TARGET = 2
 
 /** Max `base` intents prepended per tick when expansion-starved. */
 export const SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS = 2
+
+/** Max `deploy-outpost` intents prepended when outpost logistics are needed. */
+export const SYSTEM_MAX_OUTPOST_DEPLOY_PREPENDS = 2

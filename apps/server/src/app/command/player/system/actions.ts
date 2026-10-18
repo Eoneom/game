@@ -20,6 +20,7 @@ import { nextSystemCityName } from '#core/player/constant/system'
 import { OutpostType } from '#core/outpost/constant/type'
 import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { TroopCode } from '#core/troop/constant/code'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
 import {
@@ -76,12 +77,18 @@ import {
 } from '#command/player/system/requirements'
 import { AppService } from '#app/service'
 import {
+  buildOutpostDeployCandidate,
+  sortOutpostDeployCandidates,
+  type SystemOutpostDeployRole,
+} from '#command/player/system/outpost-logistics'
+import {
   carrierTroopsForTransportLoad,
   clampResourcesToTransportCapacity,
   hasTransportableStock,
   isPermanentOutpostStockWorthTransport,
   pickCityForSystemTransport,
   sortOutpostsForSystemTransport,
+  SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
 } from '#command/player/system/transport'
 
 function canAfford(stock: Resource, cost: Resource): boolean {
@@ -819,6 +826,136 @@ async function tryMakePermanent(player_id: string): Promise<Record<string, unkno
   return { outpost_id: temporary.id }
 }
 
+async function findCityTroopForRole({
+  player_id,
+  role,
+}: {
+  player_id: string
+  role: SystemOutpostDeployRole
+}): Promise<{
+  city_id: string
+  coordinates: Coordinates
+  troop_code: TroopCode
+} | null> {
+  const { cities } = await new CityListQuery().run({ player_id })
+  for (const city of cities) {
+    const city_details = await new CityGetQuery().run({
+      city_id: city.id,
+      player_id,
+    })
+    const { troops } = await new TroopListQuery().run({
+      player_id,
+      location: {
+        type: 'city',
+        city_id: city.id,
+      },
+    })
+    const troop = TroopService.findByRole({
+      troops,
+      role,
+    })
+    if (!troop || troop.count < 1) {
+      continue
+    }
+    return {
+      city_id: city.id,
+      coordinates: city_details.cell.coordinates,
+      troop_code: troop.code,
+    }
+  }
+  return null
+}
+
+async function tryDeployOutpostTroops(player_id: string): Promise<Record<string, unknown> | null> {
+  const [
+    {
+      outposts,
+      cells,
+      resource_stocks,
+    },
+    outpost_warehouses_capacity,
+  ] = await Promise.all([
+    new OutpostListQuery().run({ player_id }),
+    AppService.getOutpostWarehousesCapacity({ player_id }),
+  ])
+
+  const deploy_candidates = sortOutpostDeployCandidates(
+    (
+      await Promise.all(outposts.map(async (outpost, index) => {
+        const cell = cells[index]
+        const stock = resource_stocks[index]
+        if (!cell || !stock || outpost.type !== OutpostType.PERMANENT) {
+          return null
+        }
+        const { troops } = await new TroopListQuery().run({
+          player_id,
+          location: {
+            type: 'outpost',
+            outpost_id: outpost.id,
+          },
+        })
+        return buildOutpostDeployCandidate({
+          outpost,
+          cell,
+          stock,
+          troops,
+          warehouses_capacity: outpost_warehouses_capacity,
+        })
+      }))
+    ).filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null),
+  )
+
+  const role_priority: SystemOutpostDeployRole[] = [
+    TroopRole.CULTIVATOR,
+    TroopRole.SALVAGER,
+    TroopRole.CARRIER,
+  ]
+
+  for (const candidate of deploy_candidates) {
+    for (const role of role_priority) {
+      if (!candidate.missing_roles.includes(role)) {
+        continue
+      }
+      const source = await findCityTroopForRole({
+        player_id,
+        role,
+      })
+      if (!source) {
+        continue
+      }
+
+      await createTroopMovement({
+        player_id,
+        action: MovementAction.BASE,
+        origin: source.coordinates,
+        destination: candidate.cell.coordinates,
+        move_troops: [
+          {
+            code: source.troop_code,
+            count: 1,
+          },
+        ],
+      })
+      return {
+        action: MovementAction.BASE,
+        role,
+        origin: source.coordinates,
+        destination: candidate.cell.coordinates,
+        outpost_id: candidate.outpost.id,
+        city_id: source.city_id,
+        move_troops: [
+          {
+            code: source.troop_code,
+            count: 1,
+          },
+        ],
+      }
+    }
+  }
+
+  return null
+}
+
 async function tryTransport(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   if (cities.length === 0) {
@@ -860,6 +997,7 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
         return isPermanentOutpostStockWorthTransport({
           stock,
           warehouses_capacity: outpost_warehouses_capacity,
+          pressure_fill_ratio: SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
         })
       }),
   )
@@ -974,6 +1112,7 @@ export const systemTickActions: Record<SystemTickCategory, SystemTickAction> = {
   upgrade: tryUpgrade,
   research: tryResearch,
   recruit: tryRecruit,
+  'deploy-outpost': tryDeployOutpostTroops,
   explore: tryExplore,
   base: tryBase,
   settle: trySettle,

@@ -19,6 +19,33 @@ import {
 describe('system transport helpers', () => {
   const player_id = id()
 
+  it('uses a lower pressure threshold for system outpost transport', () => {
+    assert.strictEqual(isPermanentOutpostStockWorthTransport({
+      stock: {
+        plastic: 500,
+        mushroom: 0,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      pressure_fill_ratio: 0.5,
+    }), true)
+    assert.strictEqual(isPermanentOutpostStockWorthTransport({
+      stock: {
+        plastic: 400,
+        mushroom: 0,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+      pressure_fill_ratio: 0.5,
+    }), false)
+  })
+
   it('requires warehouse pressure before hauling plastic or mushroom', () => {
     assert.strictEqual(isPermanentOutpostStockWorthTransport({
       stock: {

@@ -13,6 +13,8 @@ export type SystemEmpireSnapshot = {
   /** True when the empire should prioritize creating temp outposts over economy-first ticks. */
   expansion_starved: boolean
   combat_army_ready: boolean
+  /** Permanent outposts lack on-site gatherers and/or haulers for logistics. */
+  needs_outpost_logistics: boolean
 }
 
 export function isExpansionStarved({

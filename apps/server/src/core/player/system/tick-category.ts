@@ -16,6 +16,7 @@ export const SYSTEM_TICK_EXPANSION_CATEGORIES_COMMIT_FIRST = [
 export const SYSTEM_TICK_ECONOMY_CATEGORIES = [
   'upgrade',
   'research',
+  'deploy-outpost',
   'recruit',
   'transport',
   'attack',

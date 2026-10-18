@@ -2,12 +2,16 @@ import { projectBuildingLevelsForPolicy } from '#command/player/system/pending-u
 import {
   loadEmpireCombatArmyCounts,
 } from '#command/player/system/combat-policy'
+import { needsOutpostLogistics } from '#command/player/system/outpost-logistics'
 import {
   isCityWarehouseUnderPressure,
   isCoreProductionSatisfied,
   shouldPrioritizeEconomyForSystemPlayer,
 } from '#command/player/system/storage'
-import { isSystemCombatArmyReady } from '#command/player/system/troops'
+import {
+  isSystemCombatArmyReady,
+  loadOutpostRecruitHints,
+} from '#command/player/system/troops'
 import {
   isExpansionStarved,
   type SystemEmpireSnapshot,
@@ -179,10 +183,12 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     { cities, count_limit: city_count_limit },
     { outposts },
     combat_counts,
+    outpost_recruit_hints,
   ] = await Promise.all([
     new CityListQuery().run({ player_id }),
     new OutpostListQuery().run({ player_id }),
     loadEmpireCombatArmyCounts(player_id),
+    loadOutpostRecruitHints(player_id),
   ])
 
   const temporary_outpost_count = outposts.filter(
@@ -240,6 +246,12 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     defer_explore,
   })
 
+  const needs_outpost_logistics = permanent_outpost_count > 0 && needsOutpostLogistics({
+    needs_harvester_on_outpost: outpost_recruit_hints.needs_harvester_on_outpost,
+    needs_reclaimer_on_outpost: outpost_recruit_hints.needs_reclaimer_on_outpost,
+    needs_carrier_on_outpost: outpost_recruit_hints.needs_carrier_on_outpost,
+  })
+
   return {
     player_id,
     temporary_outpost_count,
@@ -250,5 +262,6 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     defer_explore,
     expansion_starved,
     combat_army_ready: isSystemCombatArmyReady(combat_counts),
+    needs_outpost_logistics,
   }
 }

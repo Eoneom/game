@@ -18,6 +18,7 @@ import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { id } from '#shared/identification'
+import { AppService } from '#app/service'
 import { testResourceStock } from '../../../test-support/resource-stock'
 import assert from 'assert'
 
@@ -35,6 +36,7 @@ function troop(code: TroopCode, count: number): TroopEntity {
 const no_outpost_hints = {
   needs_harvester_on_outpost: false,
   needs_reclaimer_on_outpost: false,
+  needs_carrier_on_outpost: false,
   has_harvester_outpost: false,
   has_reclaimer_outpost: false,
 }
@@ -288,7 +290,11 @@ describe('loadOutpostRecruitHints', () => {
     vi.restoreAllMocks()
   })
 
-  it('flags harvester need on permanent outposts with stock and no cultivator', async () => {
+  it('flags harvester need on permanent mushroom outposts without stock', async () => {
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
     vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
       outposts: [
         OutpostEntity.create({
@@ -332,7 +338,59 @@ describe('loadOutpostRecruitHints', () => {
     const hints = await loadOutpostRecruitHints(player_id)
 
     assert.strictEqual(hints.needs_harvester_on_outpost, true)
+    assert.strictEqual(hints.needs_carrier_on_outpost, false)
     assert.strictEqual(hints.has_harvester_outpost, true)
     assert.strictEqual(hints.has_reclaimer_outpost, false)
+  })
+
+  it('flags carrier need when a gatherer is stationed but no hauler', async () => {
+    vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
+      plastic: 1000,
+      mushroom: 1000,
+    })
+    vi.spyOn(OutpostListQuery.prototype, 'run').mockResolvedValue({
+      outposts: [
+        OutpostEntity.create({
+          id: outpost_id,
+          player_id,
+          cell_id: outpost_cell_id,
+          type: OutpostType.PERMANENT,
+        }),
+      ],
+      cells: [
+        CellEntity.create({
+          id: outpost_cell_id,
+          coordinates: {
+            x: 2,
+            y: 2,
+          },
+          type: CellType.LAKE,
+          resource_coefficient: {
+            plastic: 0,
+            mushroom: 1,
+            plasma: 0,
+          },
+          solar_coefficient: 1,
+        }),
+      ],
+      resource_stocks: [
+        testResourceStock({
+          cell_id: outpost_cell_id,
+          plastic: 0,
+          mushroom: 0,
+        }),
+      ],
+      count_limit: 10,
+    })
+    vi.spyOn(TroopListQuery.prototype, 'run').mockResolvedValue({
+      troops: [ troop(TroopCode.HARVESTER, 1) ],
+      costs: {} as never,
+      pending_recruitment: null,
+    })
+
+    const hints = await loadOutpostRecruitHints(player_id)
+
+    assert.strictEqual(hints.needs_harvester_on_outpost, false)
+    assert.strictEqual(hints.needs_carrier_on_outpost, true)
   })
 })

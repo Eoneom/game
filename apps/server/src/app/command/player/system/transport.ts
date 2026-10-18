@@ -11,14 +11,23 @@ import { Resource, WarehouseCapacity } from '#shared/resource'
 import {
   isStorageResourcePressured,
   resourcesForTransportToDestination,
+  SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO,
 } from '#command/player/system/storage'
+
+/**
+ * System AI starts hauling from permanent outposts earlier than the city upgrade pressure bar (70%).
+ * Human transport UI still uses {@link SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO}.
+ */
+export const SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO = 0.5
 
 export function isPermanentOutpostStockWorthTransport({
   stock,
   warehouses_capacity,
+  pressure_fill_ratio = SYSTEM_WAREHOUSE_PRESSURE_FILL_RATIO,
 }: {
   stock: Resource
   warehouses_capacity: WarehouseCapacity
+  pressure_fill_ratio?: number
 }): boolean {
   if (stock.plasma > 0) {
     return true
@@ -26,10 +35,12 @@ export function isPermanentOutpostStockWorthTransport({
   return isStorageResourcePressured({
     stock: stock.plastic,
     capacity: warehouses_capacity.plastic,
+    pressure_fill_ratio,
   })
     || isStorageResourcePressured({
       stock: stock.mushroom,
       capacity: warehouses_capacity.mushroom,
+      pressure_fill_ratio,
     })
 }
 
