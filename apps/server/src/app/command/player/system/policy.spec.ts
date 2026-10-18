@@ -1,7 +1,9 @@
 import assert from 'assert'
+import { CityError } from '#core/city/error'
 import {
   actForSystemPlayer,
   categoriesForTick,
+  executeSystemPlayerTick,
   prioritizeResearchBeforeUpgrade,
   systemTickExpansionCategories,
   SYSTEM_TICK_CATEGORIES,
@@ -145,6 +147,34 @@ describe('system player tick policy', () => {
       'research',
       'recruit',
       'transport',
+    ])
+  })
+
+  it('treats expected resource errors as skipped attempts', async () => {
+    const actions = {
+      upgrade: async () => {
+        throw new Error(CityError.NOT_ENOUGH_RESOURCES)
+      },
+      research: async () => ({ technology_code: 'architecture' }),
+    } as Record<SystemTickCategory, SystemTickAction>
+
+    const acted = await executeSystemPlayerTick({
+      player_id: 'player-id',
+      plan: [
+        { category: 'upgrade', priority: 0 },
+        { category: 'research', priority: 1 },
+      ],
+      actions,
+      max_actions: 3,
+    })
+
+    assert.strictEqual(acted.outcome, 'success')
+    if (acted.outcome !== 'idle') {
+      assert.strictEqual(acted.committed_actions[0].category, 'research')
+    }
+    assert.deepStrictEqual(acted.attempts, [
+      { category: 'upgrade', result: 'skipped' },
+      { category: 'research', result: 'success' },
     ])
   })
 

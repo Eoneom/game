@@ -25,6 +25,7 @@ export {
   type SystemPlayerActionIntent,
 } from '#core/player/system/planner'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
+import { isSystemTickSkippableError } from '#command/player/system/skippable-error'
 
 export { SYSTEM_TICK_CATEGORIES, type SystemTickCategory } from '#core/player/system/tick-category'
 export type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
@@ -76,7 +77,19 @@ export async function executeSystemPlayerTick({
       break
     }
 
-    const payload = await actions[intent.category](player_id)
+    let payload: SystemTickActionPayload | null
+    try {
+      payload = await actions[intent.category](player_id)
+    } catch (err) {
+      if (isSystemTickSkippableError(err)) {
+        attempts.push({
+          category: intent.category,
+          result: 'skipped',
+        })
+        continue
+      }
+      throw err
+    }
     if (payload) {
       attempts.push({
         category: intent.category,
