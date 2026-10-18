@@ -8,16 +8,19 @@ Add a third faction: **human**, **non-playable**, **system-controlled only** (on
 
 **Depends on**: [`004`](../004-faction-domain/spec.md), [`016`](../016-system-controlled-players/spec.md), [`024`](../024-player-combat-pvp/spec.md) (four PvP troops per faction).
 
-## Faction identity (pick one wire code before implementation)
+## Faction identity (cult / ritual horror — wire code TBD)
 
-| Proposal | `FactionCode` wire | French UI name | Notes |
-| --- | --- | --- | --- |
-| **Recommended** | `the_ashen_covenant` | Covenant des Cendres | Human remnant; ash/char horror; clear break from Confederation |
-| Alt A | `the_unbound` | Les Affranchis | Anarchist humans; less body-horror |
-| Alt B | `the_black_choir` | Chœur noir | Cult horror; vocal/ritual vibe |
-| Alt C | `the_breach` | La Brèche | Minimalist “rupture with law” |
+Valentin direction: **cult/ritual** tone (not “Chœur noir”); human, lawless, horror art. Pick one row before implementation:
 
-**Default for implementation** unless Valentin picks another row: **`the_ashen_covenant`** / **Covenant des Cendres**.
+| `FactionCode` wire | French UI name | Notes |
+| --- | --- | --- |
+| `the_oblation` | **L'Oblation** | Ritual offering; sacrificial cult |
+| `the_vesper_cult` | **Culte des Vêpres** | Liturgical / evening-rite horror |
+| `the_hollow_rite` | **Rite creux** | Empty, wrong ritual — unsettling |
+| `the_penitent_host` | **Hostie pénitente** | Penitent cult; strong Catholic-horror echo |
+| `the_ash_liturgy` | **Liturgie cendrée** | Ash + ceremony (pairs with Harrow / Cinder) |
+
+**Not chosen yet** — no default until Valentin confirms wire + French name.
 
 Visibility: same as Singularity — on map, settlements, battle reports, admin; **not** in signup `playableFactionCodes()`.
 

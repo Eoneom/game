@@ -27,6 +27,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 021 | [`specs/021-admin-operator-tools/`](../specs/021-admin-operator-tools/spec.md) | Admin operator tools (observability + combat simulator) |
 | 022 | [`specs/022-timing-and-resources/`](../specs/022-timing-and-resources/spec.md) | Timing and resource pacing |
 | 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — implemented (`attack`, battle jobs, reports, UI) |
+| 025 | [`specs/025-lawless-human-faction/`](../specs/025-lawless-human-faction/spec.md) | Lawless human system faction (planned) |
 
 ## Brownfield inventory (dependency order)
 
