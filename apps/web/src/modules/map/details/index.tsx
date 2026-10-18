@@ -1,14 +1,12 @@
 import React, { useMemo } from 'react'
 
-import { MovementAction, TroopRole, troop_role } from '@eoneom/api-client'
+import { MovementAction } from '@eoneom/api-client'
 
-import { Button } from '#ui/button'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
-import { MapDetailsActionBase } from '#map/details/action/base'
+import { MovementCreate } from '#movement/create'
 import { WorldViewport } from '#types'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
-import { useCreateMovement, useListTroops } from '#troop/hooks'
 
 type Props =
   | { cityId: string; outpostId?: never }
@@ -21,17 +19,15 @@ interface DetailsInput {
   viewport: WorldViewport
 }
 
+const EXPLORED_CELL_ACTIONS = [
+  MovementAction.BASE,
+  MovementAction.TRANSPORT,
+  MovementAction.ATTACK,
+] as const
+
 export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, viewport }) => {
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
-  const { data: troops = [] } = useListTroops(
-    cityId ? { cityId } : { outpostId: outpostId as string }
-  )
-  const createMovement = useCreateMovement()
-
-  const scout = useMemo(() => {
-    return troops.find(troop => troop_role[troop.code] === TroopRole.SCOUT)
-  }, [troops])
 
   const selectedCell = useMemo(() => {
     if (!coordinates) return null
@@ -44,32 +40,13 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
     coordinates
   ])
 
-  const handleExplore = () => {
-    if (!viewport || !coordinates) return
-    const origin = city ? city.coordinates : outpost?.coordinates
-    if (!origin) return
-
-    if (!scout || scout.count < 1) return
-
-    createMovement.mutate({
-      action: MovementAction.EXPLORE,
-      origin,
-      destination: {
-        x: coordinates.x,
-        y: coordinates.y 
-      },
-      troops: [
-        {
-          code: scout.code,
-          count: 1 
-        }
-      ]
-    })
-  }
-
   const isCityTile =
     city?.coordinates.x === coordinates.x &&
     city?.coordinates.y === coordinates.y
+
+  const movementProps = cityId
+    ? { cityId, fixedDestination: coordinates, compact: true as const }
+    : { outpostId: outpostId as string, fixedDestination: coordinates, compact: true as const }
 
   return <LayoutDetailsContent>
     <div className="details-block">
@@ -109,28 +86,22 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
         </div>
       )}
       {selectedCell && !selectedCell.explored && (
-        <div className="details-actions">
-          <Button onClick={handleExplore}>Explorer</Button>
+        <div className="details-block">
+          <h3 className="m-0 field-label">Explorer</h3>
+          <MovementCreate
+            {...movementProps}
+            allowedActions={[MovementAction.EXPLORE]}
+          />
         </div>
       )}
-      {selectedCell?.explored && viewport && (
-        cityId
-          ? <MapDetailsActionBase
-            cityId={cityId}
-            coordinates={{
-              x: coordinates.x,
-              y: coordinates.y 
-            }}
+      {selectedCell?.explored && (
+        <div className="details-block">
+          <h3 className="m-0 field-label">Déplacement</h3>
+          <MovementCreate
+            {...movementProps}
+            allowedActions={[...EXPLORED_CELL_ACTIONS]}
           />
-          : outpostId
-            ? <MapDetailsActionBase
-              outpostId={outpostId}
-              coordinates={{
-                x: coordinates.x,
-                y: coordinates.y 
-              }}
-            />
-            : null
+        </div>
       )}
     </div>
   </LayoutDetailsContent>

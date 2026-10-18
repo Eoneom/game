@@ -7,16 +7,22 @@ import { MovementActionLabels } from '#movement/translations'
 interface Props {
   action: MovementAction
   onChange: (action: MovementAction) => void
+  /** When set, only these actions are shown (e.g. map panel: base/transport/attack). */
+  allowedActions?: MovementAction[]
 }
 
-export const MovementCreateAction: React.FC<Props> = ({ action, onChange }) => {
+export const MovementCreateAction: React.FC<Props> = ({ action, onChange, allowedActions }) => {
+  const choices = (allowedActions ?? Object.values(MovementAction)).slice().sort((a, b) => a.localeCompare(b))
+
   return (
     <fieldset className="m-0 border-0 p-0">
       <legend className="mb-2 px-0 field-label">Ordre</legend>
-      <div className="grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Type de déplacement">
-        {Object.values(MovementAction)
-          .sort((a, b) => a.localeCompare(b))
-          .map(movementAction => {
+      <div
+        className={`grid gap-2 ${choices.length <= 2 ? 'grid-cols-2' : 'sm:grid-cols-2 lg:grid-cols-3'}`}
+        role="radiogroup"
+        aria-label="Type de déplacement"
+      >
+        {choices.map(movementAction => {
             const id = `movement-action-${movementAction}`
             const selected = action === movementAction
             return (

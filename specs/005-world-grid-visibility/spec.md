@@ -58,6 +58,7 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 - **Pan**: `PAN_PIXEL_TO_CELL_SENSITIVITY` (0.4) damps cells-per-pixel; Konva group offset resets each drag move so terrain stays world-anchored without snapping when tiles arrive.
 - **Open / recenter**: `CITY_MAP_INITIAL_HALF_EXTENT` (3). Wheel zoom toward cursor, zoom buttons, recenter to city/outpost home cell.
 - Renders terrain on all visible cells; coefficients in the side panel when `explored` and present in cache (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Settlement markers for all players in view (`markers.tsx`, `legend-overlay.tsx`). Geometry in `geometry.ts` / `helper.ts` / `viewport.ts`.
+- **Side panel movements** (`map/details/index.tsx`): selecting a cell embeds compact `MovementCreate` with destination fixed to that cell — **explore** on fogged cells; **base**, **transport**, and **attack** (with strategy + cargo when applicable) on explored cells. Same estimation/submit flow as `/world/movement`.
 - Routes under `/city/$cityId/world/...` and outpost world map routes ([`019`](../019-web-shell-routing/spec.md)).
 
 ## API client

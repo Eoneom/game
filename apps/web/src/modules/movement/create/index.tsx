@@ -24,11 +24,24 @@ import { useAuth } from '#auth/context'
 import { useCreateMovement } from '#troop/hooks'
 import { Button } from '#ui/button'
 
-type MovementCreateProps =
+type MovementCreateProps = (
   | { cityId: string; outpostId?: never }
   | { cityId?: never; outpostId: string }
+) & {
+  /** Map side panel: destination is the selected cell. */
+  fixedDestination?: Coordinates
+  allowedActions?: MovementAction[]
+  /** Narrow layout for map details panel. */
+  compact?: boolean
+}
 
-export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostId }) => {
+export const MovementCreate: React.FC<MovementCreateProps> = ({
+  cityId,
+  outpostId,
+  fixedDestination,
+  allowedActions,
+  compact = false,
+}) => {
   const { token } = useAuth()
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
@@ -36,10 +49,9 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   const createMovement = useCreateMovement()
 
   const [ selectedTroops, setSelectedTroops ] = useState<Partial<Record<TroopCode, number>>>({})
-  const [ destination, setDestination ] = useState<Coordinates>({
-    x: 1,
-    y: 1 
-  })
+  const [ destination, setDestination ] = useState<Coordinates>(
+    fixedDestination ?? { x: 1, y: 1 },
+  )
   const [ estimation, setEstimation ] = useState<MovementEstimation>({
     speed: 0,
     duration: 0,
@@ -47,7 +59,8 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     transport_capacity: 0,
     destination_capacity_exceeded: false,
   })
-  const [ action, setAction ] = useState<MovementAction>(MovementAction.BASE)
+  const initial_action = allowedActions?.[0] ?? MovementAction.BASE
+  const [ action, setAction ] = useState<MovementAction>(initial_action)
   const [ combatStrategy, setCombatStrategy ] = useState<CombatStrategy>(CombatStrategy.BALANCED)
   const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0, plasma: 0 })
 
@@ -81,6 +94,18 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
     resources.plasma + Math.floor(remainingCapacity / resource_transport_weight.plasma)
   )
   const estimateResources = action === MovementAction.TRANSPORT ? resources : undefined
+
+  useEffect(() => {
+    if (fixedDestination) {
+      setDestination(fixedDestination)
+    }
+  }, [fixedDestination?.x, fixedDestination?.y, fixedDestination])
+
+  useEffect(() => {
+    if (allowedActions && !allowedActions.includes(action)) {
+      setAction(allowedActions[0])
+    }
+  }, [allowedActions, action])
 
   useEffect(() => {
     launchMovementEstimation()
@@ -162,16 +187,20 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
   return (
     <form
       id="movement-creation"
-      className="surface-chrome mb-4 rounded-sm p-4"
+      className={compact ? 'space-y-3' : 'surface-chrome mb-4 rounded-sm p-4'}
       onSubmit={event => onSubmit(event)}
     >
-      <h2 className="m-0 text-base uppercase tracking-wider text-amber">Nouveau déplacement</h2>
-      <p className="mt-1 text-sm text-amber-dim">
-        Choisissez les troupes, l&apos;ordre et la case cible : l&apos;estimation se met à jour
-        automatiquement avant l&apos;envoi.
-      </p>
+      {!compact && (
+        <>
+          <h2 className="m-0 text-base uppercase tracking-wider text-amber">Nouveau déplacement</h2>
+          <p className="mt-1 text-sm text-amber-dim">
+            Choisissez les troupes, l&apos;ordre et la case cible : l&apos;estimation se met à jour
+            automatiquement avant l&apos;envoi.
+          </p>
+        </>
+      )}
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+      <div className={compact ? 'flex flex-col gap-3' : 'mt-4 grid gap-6 lg:grid-cols-2'}>
         <div id="troop-selection">
           <h3 className="mb-2 text-sm uppercase tracking-wider text-label">Troupes à envoyer</h3>
           <MovementCreateTroops
@@ -182,19 +211,32 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({ cityId, outpostI
         </div>
 
         <div id="movement-submit" className="flex flex-col gap-4">
-          <MovementCreateAction action={action} onChange={setAction} />
+          <MovementCreateAction
+            action={action}
+            onChange={setAction}
+            allowedActions={allowedActions}
+          />
           {action === MovementAction.ATTACK && (
             <MovementCreateCombatStrategy
               strategy={combatStrategy}
               onChange={setCombatStrategy}
             />
           )}
-          <MovementCreateDestination
-            destination={destination}
-            onChange={setDestination}
-            excludeCityId={cityId}
-            excludeOutpostId={outpostId}
-          />
+          {fixedDestination ? (
+            <p className="m-0 text-sm text-amber-dim">
+              Destination{' '}
+              <span className="font-mono tabular-nums text-amber">
+                ({fixedDestination.x}, {fixedDestination.y})
+              </span>
+            </p>
+          ) : (
+            <MovementCreateDestination
+              destination={destination}
+              onChange={setDestination}
+              excludeCityId={cityId}
+              excludeOutpostId={outpostId}
+            />
+          )}
           {action === MovementAction.TRANSPORT && (
             <MovementCreateResources
               plastic={resources.plastic}
