@@ -33,8 +33,8 @@ export interface MapCanvasProps {
   navigation: MapNavigationProps
   onCellClicked: (params: { x: number; y: number }) => void
   selectedCoordinates?: { x: number; y: number } | null
-  cityMarker?: Coordinates | null
-  outpostMarker?: Coordinates | null
+  highlightCity?: Coordinates | null
+  highlightOutpost?: Coordinates | null
 }
 
 type HoverTooltip = {
@@ -49,8 +49,8 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
   navigation,
   onCellClicked,
   selectedCoordinates,
-  cityMarker,
-  outpostMarker,
+  highlightCity,
+  highlightOutpost,
 }) => {
   const {
     center,
@@ -317,8 +317,11 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
                 />
                 <MapMarkers
                   bounds={viewport.bounds}
-                  cityMarker={cityMarker}
-                  outpostMarker={outpostMarker}
+                  viewer={viewport.viewer}
+                  cities={viewport.settlements.cities}
+                  outposts={viewport.settlements.outposts}
+                  highlightCity={highlightCity}
+                  highlightOutpost={highlightOutpost}
                 />
               </Group>
               <MapLegendOverlay stageHeight={size.height} />

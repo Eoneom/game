@@ -29,11 +29,62 @@ export const getCellStrokeStyle = ({ type }: { type?: CellType }): string => {
   return '#2a2a32'
 }
 
-export type TerrainLegendKey = CellType | 'unexplored'
+export type TerrainLegendKey = CellType
 
 export const terrainLegend: { key: TerrainLegendKey; label: string; color: string }[] = [
   { key: CellType.FOREST, label: 'Forêt', color: getCellFillStyle({ type: CellType.FOREST }) },
   { key: CellType.RUINS, label: 'Ruines', color: getCellFillStyle({ type: CellType.RUINS }) },
   { key: CellType.LAKE, label: 'Lac', color: getCellFillStyle({ type: CellType.LAKE }) },
-  { key: 'unexplored', label: 'Inexploré', color: getCellFillStyle({}) },
+]
+
+export type SettlementOwnership = 'self' | 'ally' | 'enemy'
+
+export const getSettlementOwnership = ({
+  owner_player_id,
+  owner_faction_code,
+  viewer_player_id,
+  viewer_faction_code,
+}: {
+  owner_player_id: string
+  owner_faction_code: string
+  viewer_player_id: string
+  viewer_faction_code: string
+}): SettlementOwnership => {
+  if (owner_player_id === viewer_player_id) {
+    return 'self'
+  }
+  if (owner_faction_code === viewer_faction_code) {
+    return 'ally'
+  }
+  return 'enemy'
+}
+
+export const settlementMarkerStyles: Record<
+  SettlementOwnership,
+  { cityFill: string; cityStroke: string; outpostFill: string; outpostStroke: string }
+> = {
+  self: {
+    cityFill: 'rgba(241,196,15,0.45)',
+    cityStroke: '#f1c40f',
+    outpostFill: 'rgba(212,137,74,0.5)',
+    outpostStroke: '#D4894A',
+  },
+  ally: {
+    cityFill: 'rgba(46,204,113,0.35)',
+    cityStroke: '#2ecc71',
+    outpostFill: 'rgba(39,174,96,0.35)',
+    outpostStroke: '#27ae60',
+  },
+  enemy: {
+    cityFill: 'rgba(231,76,60,0.35)',
+    cityStroke: '#e74c3c',
+    outpostFill: 'rgba(192,57,43,0.35)',
+    outpostStroke: '#c0392b',
+  },
+}
+
+export const settlementLegend: { key: SettlementOwnership; label: string; color: string }[] = [
+  { key: 'self', label: 'Vos emplacements', color: settlementMarkerStyles.self.cityStroke },
+  { key: 'ally', label: 'Alliés (même faction)', color: settlementMarkerStyles.ally.cityStroke },
+  { key: 'enemy', label: 'Autres factions', color: settlementMarkerStyles.enemy.cityStroke },
 ]

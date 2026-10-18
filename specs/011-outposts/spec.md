@@ -41,7 +41,7 @@ Boot: `ensureOutpostResourcesGatherScheduled` in `index.ts`. Gather success emit
 
 ## Web UI
 
-`apps/web/src/modules/outpost/` — page, hooks, `ws-listener` for created/deleted/gather events.
+`apps/web/src/modules/outpost/` — page, hooks, `ws-listener` for created/deleted/gather events. World map (`apps/web/src/modules/map/`) shows every outpost in the viewport via `GET /world/cells` `settlements.outposts` (temporary vs permanent label; faction-colored marker).
 
 ## API client
 

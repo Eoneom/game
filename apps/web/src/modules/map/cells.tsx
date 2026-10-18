@@ -40,10 +40,10 @@ export const MapCells: React.FC<Props> = ({
         CELL_WORLD_SIZE,
       )
       const fill = getCellFillStyle({
-        type: cell.characteristic?.type,
+        type: cell.type,
       })
       const strokeBase = getCellStrokeStyle({
-        type: cell.characteristic?.type,
+        type: cell.type,
       })
       const isHovered =
         hoverTooltip?.cx === cell.coordinates.x &&

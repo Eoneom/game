@@ -4,6 +4,11 @@ import { Repository } from '#app/port/repository/generic'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { WorldError } from '#core/world/error'
+import { FactionCode } from '#core/faction/constant/code'
+import { OutpostType } from '#core/outpost/constant/type'
+import { PlayerEntity } from '#core/player/entity'
+import { CityEntity } from '#core/city/entity'
+import { OutpostEntity } from '#core/outpost/entity'
 import { id } from '#shared/identification'
 
 describe('WorldGetCellsQuery', () => {
@@ -17,7 +22,7 @@ describe('WorldGetCellsQuery', () => {
   const cell_id_1 = id()
   const cell_id_2 = id()
   let cells: CellEntity[]
-  let repository: Pick<Repository, 'cell' | 'exploration'>
+  let repository: Pick<Repository, 'cell' | 'exploration' | 'player' | 'city' | 'outpost'>
 
   beforeEach(() => {
     cells = [
@@ -45,7 +50,49 @@ describe('WorldGetCellsQuery', () => {
             cell_id_2
           ]
         })
-      } as unknown as Repository['exploration']
+      } as unknown as Repository['exploration'],
+      player: {
+        get: vi.fn().mockImplementation(async (requested_id: string) => PlayerEntity.create({
+          id: requested_id,
+          name: 'player',
+          faction_code: requested_id === player_id
+            ? FactionCode.THE_CONFEDERATION
+            : FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+          system_controlled: false
+        }))
+      } as unknown as Repository['player'],
+      city: {
+        listInBounds: vi.fn().mockResolvedValue([
+          {
+            city: CityEntity.create({
+              id: id(),
+              player_id: id(),
+              name: 'Rome',
+              cell_id: cell_id_1
+            }),
+            coordinates: {
+              x: 1,
+              y: 1
+            }
+          }
+        ])
+      } as unknown as Repository['city'],
+      outpost: {
+        listInBounds: vi.fn().mockResolvedValue([
+          {
+            outpost: OutpostEntity.create({
+              id: id(),
+              player_id,
+              cell_id: cell_id_2,
+              type: OutpostType.TEMPORARY
+            }),
+            coordinates: {
+              x: 2,
+              y: 2
+            }
+          }
+        ])
+      } as unknown as Repository['outpost']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   })
@@ -54,7 +101,7 @@ describe('WorldGetCellsQuery', () => {
     vi.restoreAllMocks()
   })
 
-  it('returns cells in bounds and explored ids', async () => {
+  it('returns cells in bounds, explored ids, and settlements', async () => {
     const result = await new WorldGetCellsQuery().run({
       ...bounds,
       player_id
@@ -65,8 +112,14 @@ describe('WorldGetCellsQuery', () => {
       cell_id_1,
       cell_id_2
     ])
+    expect(result.viewer_faction_code).toBe(FactionCode.THE_CONFEDERATION)
+    expect(result.settlements.cities).toHaveLength(1)
+    expect(result.settlements.outposts).toHaveLength(1)
+    expect(result.settlements.outposts[0].faction_code).toBe(FactionCode.THE_CONFEDERATION)
     expect(repository.cell.getByBounds).toHaveBeenCalledWith(bounds)
     expect(repository.exploration.get).toHaveBeenCalledWith({ player_id })
+    expect(repository.city.listInBounds).toHaveBeenCalledWith(bounds)
+    expect(repository.outpost.listInBounds).toHaveBeenCalledWith(bounds)
   })
 
   it('rejects invalid bounds', async () => {

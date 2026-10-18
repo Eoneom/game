@@ -1,4 +1,7 @@
 import { WorldError } from '#core/world/error'
+import { CellType } from '#core/world/value/cell-type'
+import { FactionCode } from '#core/faction/constant/code'
+import { OutpostType } from '#core/outpost/constant/type'
 import type { MockInstance } from 'vitest'
 import {
   Request, Response, NextFunction
@@ -21,7 +24,7 @@ const queryResult = {
         x: 2,
         y: 3
       },
-      type: 'PLAIN',
+      type: CellType.FOREST,
       resource_coefficient: {
         plastic: 1.2,
         mushroom: 0.8,
@@ -35,7 +38,7 @@ const queryResult = {
         x: 2,
         y: 4
       },
-      type: 'FOREST',
+      type: CellType.LAKE,
       resource_coefficient: {
         plastic: 0.5,
         mushroom: 1.5,
@@ -44,7 +47,34 @@ const queryResult = {
       solar_coefficient: 1.1
     }
   ],
-  explored_cell_ids: [ 'cell1' ]
+  explored_cell_ids: [ 'cell1' ],
+  viewer_faction_code: FactionCode.THE_CONFEDERATION,
+  settlements: {
+    cities: [
+      {
+        id: 'city-1',
+        name: 'Alpha',
+        player_id: 'p2',
+        faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+        coordinates: {
+          x: 2,
+          y: 3
+        }
+      }
+    ],
+    outposts: [
+      {
+        id: 'outpost-1',
+        player_id: 'p1',
+        faction_code: FactionCode.THE_CONFEDERATION,
+        type: OutpostType.TEMPORARY,
+        coordinates: {
+          x: 2,
+          y: 4
+        }
+      }
+    ]
+  }
 }
 
 describe('worldGetCellsHandler', () => {
@@ -101,14 +131,19 @@ describe('worldGetCellsHandler', () => {
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
       data: {
+        viewer: {
+          player_id: 'p1',
+          faction_code: FactionCode.THE_CONFEDERATION
+        },
         cells: [
           {
             coordinates: {
               x: 2,
               y: 3
             },
+            type: CellType.FOREST,
+            explored: true,
             characteristic: {
-              type: 'PLAIN',
               resource_coefficient: {
                 plastic: 1.2,
                 mushroom: 0.8
@@ -121,9 +156,12 @@ describe('worldGetCellsHandler', () => {
               x: 2,
               y: 4
             },
+            type: CellType.LAKE,
+            explored: false,
             characteristic: undefined
           }
-        ]
+        ],
+        settlements: queryResult.settlements
       }
     })
   })

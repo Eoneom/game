@@ -1,4 +1,4 @@
-import { terrainLegend } from '#map/helper'
+import { settlementLegend, terrainLegend } from '#map/helper'
 import React, { useMemo } from 'react'
 import { Group, Rect, Text } from 'react-konva'
 
@@ -6,13 +6,18 @@ const LEGEND_PAD = 10
 const LEGEND_INNER = 10
 const LEGEND_ROW_H = 18
 const LEGEND_ROW_GAP = 4
+const LEGEND_SECTION_GAP = 10
 const LEGEND_SWATCH = 14
-const LEGEND_WIDTH = 158
+const LEGEND_WIDTH = 210
+
+const rowBlockHeight = (count: number) =>
+  count * LEGEND_ROW_H + Math.max(0, count - 1) * LEGEND_ROW_GAP
 
 const legendBoxHeight =
   LEGEND_INNER * 2 +
-  terrainLegend.length * LEGEND_ROW_H +
-  (terrainLegend.length - 1) * LEGEND_ROW_GAP
+  rowBlockHeight(terrainLegend.length) +
+  LEGEND_SECTION_GAP +
+  rowBlockHeight(settlementLegend.length)
 
 interface Props {
   stageHeight: number
@@ -21,10 +26,13 @@ interface Props {
 export const MapLegendOverlay: React.FC<Props> = ({
   stageHeight,
 }) => {
-  const rows = useMemo(
-    () =>
-      terrainLegend.map((item, i) => {
-        const y = LEGEND_INNER + i * (LEGEND_ROW_H + LEGEND_ROW_GAP)
+  const rows = useMemo(() => {
+    const renderRows = (
+      items: { key: string; label: string; color: string }[],
+      startY: number,
+    ) =>
+      items.map((item, i) => {
+        const y = startY + i * (LEGEND_ROW_H + LEGEND_ROW_GAP)
         return (
           <Group
             key={String(item.key)}
@@ -52,9 +60,18 @@ export const MapLegendOverlay: React.FC<Props> = ({
             />
           </Group>
         )
-      }),
-    [],
-  )
+      })
+
+    const settlementStart =
+      LEGEND_INNER +
+      rowBlockHeight(terrainLegend.length) +
+      LEGEND_SECTION_GAP
+
+    return [
+      ...renderRows(terrainLegend, LEGEND_INNER),
+      ...renderRows(settlementLegend, settlementStart),
+    ]
+  }, [])
 
   return (
     <Group

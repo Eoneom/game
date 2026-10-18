@@ -41,6 +41,8 @@ export const useWorld = () => {
       setViewport({
         bounds,
         cells: fetched.cells,
+        viewer: fetched.viewer,
+        settlements: fetched.settlements,
       })
       setCenter(nextCenter)
       setHalfExtent(half)

@@ -83,12 +83,37 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
         </p>
       </div>
       {isCityTile && city && <p className="details-highlight">{city.name}</p>}
-      {selectedCell && !selectedCell.characteristic && (
+      {selectedCell?.explored && selectedCell.characteristic && (
+        <div className="details-block">
+          <h3 className="m-0 field-label">Coefficients de la cellule</h3>
+          <ul className="m-0 list-none space-y-1 p-0 text-sm text-amber-dim">
+            <li>
+              Plastique :{' '}
+              <span className="font-mono tabular-nums">
+                {selectedCell.characteristic.resource_coefficient.plastic.toFixed(2)}
+              </span>
+            </li>
+            <li>
+              Champignon :{' '}
+              <span className="font-mono tabular-nums">
+                {selectedCell.characteristic.resource_coefficient.mushroom.toFixed(2)}
+              </span>
+            </li>
+            <li>
+              Solaire :{' '}
+              <span className="font-mono tabular-nums">
+                {selectedCell.characteristic.solar_coefficient.toFixed(2)}
+              </span>
+            </li>
+          </ul>
+        </div>
+      )}
+      {selectedCell && !selectedCell.explored && (
         <div className="details-actions">
           <Button onClick={handleExplore}>Explorer</Button>
         </div>
       )}
-      {selectedCell && selectedCell.characteristic && viewport && (
+      {selectedCell?.explored && viewport && (
         cityId
           ? <MapDetailsActionBase
             cityId={cityId}
