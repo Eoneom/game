@@ -98,10 +98,19 @@ As implemented on `main` (read-only **État** column; no new requirements beyond
 | --- | --- |
 | Layered surfaces | Admin chrome uses `admin-surface-page`, `admin-surface-panel`, `admin-surface-card`, `admin-surface-nested`, `admin-surface-toolbar`, and `admin-surface-code` (`apps/web/src/index.css`; wired from `modules/admin/layout.tsx` and observability `page.tsx`). |
 | Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (always shown with count; empty empires show a short French placeholder). |
-| Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** two-column grid (counts only; optional in-progress recruit with countdown). |
-| Per-outpost row | Same nested surface: coordinates, optional production, warehouse bars when capacity > 0, troops grid. |
+| Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** (counts only; optional in-progress recruit with countdown). |
+| Per-city **Troupes** | `TroopsList` default: one column on narrow viewports, **two columns from `sm` breakpoint** (`sm:grid-cols-2`). |
+| **Avant-postes** layout | Section always visible (count + French empty copy). When outposts exist, cards render in a **three-column** grid (`grid-cols-3`, `gap-2`); each card is `admin-surface-nested`. |
+| Per-outpost card | Type label, coordinates, optional production line, warehouse bars when capacity &gt; 0, **Troupes** via `TroopsList` with `one_per_line` — **one troop per line** (vertical `flex-col` list; outpost cards are narrow). |
 
-Evidence: `apps/web/src/modules/admin/system-player-observability/stats-panel.tsx`, `apps/web/src/index.css`, `apps/web/src/ui/energy-readout.tsx`.
+### Tick feed copy (French)
+
+| Concern | Behavior |
+| --- | --- |
+| Category labels | `TICK_CATEGORY_LABEL` in `labels.ts` (web) and `CATEGORY_LABEL` in `core/system-player/observability/summary.ts` (server) stay aligned. |
+| `deploy-outpost` | Label **« Déploiement vers avant-poste »**. Success / partial bullet summaries append **`avant-poste {outpost_id}`** and the deployed troop (from `move_troops[0].code` or `troop_code` on web; server uses `move_troops[0].code`). Movement payloads may also append an `(origin) → (destination)` coordinate pair. Same detail rules in web `format-event.ts` (`formatSuccessSummary`) and server `formatSingleActionDetails`. |
+
+Evidence: `apps/web/src/modules/admin/system-player-observability/stats-panel.tsx`, `labels.ts`, `format-event.ts`, `apps/server/src/core/system-player/observability/summary.ts`, `apps/web/src/index.css`, `apps/web/src/ui/energy-readout.tsx`.
 
 ## Out of scope
 
