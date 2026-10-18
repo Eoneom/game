@@ -12,6 +12,7 @@ import { TroopService } from '#core/troop/service'
 import { now } from '#shared/time'
 import type { Resource, WarehouseCapacity } from '#shared/resource'
 import type {
+  AdminSystemPlayerOngoingMovement,
   AdminSystemPlayerStatsSnapshot,
 } from '@eoneom/api-client/src/endpoints/admin/system-player-stats'
 import { listSystemControlledPlayersForObservability } from '#app/query/admin/observability-access'
@@ -161,6 +162,50 @@ async function citySummary({
   }
 }
 
+export async function listOngoingMovementsForPlayer({
+  player_id,
+}: {
+  player_id: string
+}): Promise<AdminSystemPlayerOngoingMovement[]> {
+  const repository = Factory.getRepository()
+  const job_queue = Factory.getJobQueue()
+  const movements = await repository.movement.list({ player_id })
+
+  const entries = await Promise.all(movements.map(async (movement) => {
+    const pending = await job_queue.getPendingTroopMovementFinish({ movement_id: movement.id })
+    if (!pending) {
+      return null
+    }
+
+    const troops = await repository.troop.listByMovement({ movement_id: movement.id })
+
+    return {
+      id: movement.id,
+      action: movement.action,
+      origin: {
+        x: movement.origin.x,
+        y: movement.origin.y,
+      },
+      destination: {
+        x: movement.destination.x,
+        y: movement.destination.y,
+      },
+      arrive_at: pending.execute_at,
+      resources: {
+        plastic: movement.resources.plastic,
+        mushroom: movement.resources.mushroom,
+        plasma: movement.resources.plasma,
+      },
+      troops: TroopService.sortTroops({ troops }).map(troop => ({
+        code: troop.code,
+        count: troop.count,
+      })),
+    }
+  }))
+
+  return entries.filter((entry): entry is AdminSystemPlayerOngoingMovement => entry !== null)
+}
+
 async function outpostSummary({
   outpost,
   player_id,
@@ -254,10 +299,12 @@ export async function collectSystemPlayerStatsSnapshot({
   const [
     city_summaries,
     outpost_summaries,
+    ongoing_movements,
     buildings_by_city,
   ] = await Promise.all([
     Promise.all(cities.map(city => citySummary({ city, player_id }))),
     Promise.all(outposts.map(outpost => outpostSummary({ outpost, player_id }))),
+    listOngoingMovementsForPlayer({ player_id }),
     Promise.all(cities.map(async city => {
       const buildings = await repository.building.list({ city_id: city.id })
       const sorted = BuildingService.sortBuildings({ buildings })
@@ -288,6 +335,7 @@ export async function collectSystemPlayerStatsSnapshot({
       code: technology.code,
       level: technology.level,
     })),
+    ongoing_movements,
     buildings_by_city,
     updated_at: now(),
   }

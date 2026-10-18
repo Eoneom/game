@@ -27,6 +27,7 @@ import {
   translateTechnologyCode,
   translateTroopCode,
 } from './labels'
+import { OngoingMovementItem } from './ongoing-movement-item'
 
 type Props = {
   snapshots: AdminSystemPlayerStatsSnapshot[]
@@ -277,6 +278,23 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     </li>
                   ))}
                 </ul>
+              </section>
+
+              <section>
+                <h3 className="field-label m-0 mb-1 text-label">
+                  Mouvements en cours ({snapshot.ongoing_movements.length})
+                </h3>
+                {snapshot.ongoing_movements.length === 0 ? (
+                  <p className="m-0 text-sm text-amber-dim">
+                    Aucun mouvement de troupes en cours pour ce joueur.
+                  </p>
+                ) : (
+                  <ul className="m-0 list-none space-y-2 p-0">
+                    {snapshot.ongoing_movements.map(movement => (
+                      <OngoingMovementItem key={movement.id} movement={movement} />
+                    ))}
+                  </ul>
+                )}
               </section>
 
               <div className="space-y-2">

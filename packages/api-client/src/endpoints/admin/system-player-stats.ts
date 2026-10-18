@@ -1,6 +1,7 @@
 import { BuildingCode } from '@server-core/building/constant/code'
 import { OutpostType } from '@server-core/outpost/constant/type'
 import { TechnologyCode } from '@server-core/technology/constant/code'
+import { MovementAction } from '@server-core/troop/constant/movement-action'
 import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../response'
 import { Coordinates } from '../shared/coordinates'
@@ -59,12 +60,23 @@ export type AdminSystemPlayerTechnologyLevel = {
   level: number
 }
 
+export type AdminSystemPlayerOngoingMovement = {
+  id: string
+  action: MovementAction
+  origin: Coordinates
+  destination: Coordinates
+  arrive_at: number
+  resources: Resource
+  troops: AdminSystemPlayerTroopCount[]
+}
+
 export type AdminSystemPlayerStatsSnapshot = {
   player_id: string
   player_name: string
   cities: AdminSystemPlayerCitySummary[]
   outposts: AdminSystemPlayerOutpostSummary[]
   technologies: AdminSystemPlayerTechnologyLevel[]
+  ongoing_movements: AdminSystemPlayerOngoingMovement[]
   buildings_by_city: AdminSystemPlayerCityBuildings[]
   updated_at: number
 }

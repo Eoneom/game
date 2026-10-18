@@ -15,6 +15,7 @@ describe('adminSystemPlayerStatsGetHandler', () => {
       outposts: [],
       technologies: [],
       buildings_by_city: [],
+      ongoing_movements: [],
       updated_at: 1,
     }
     vi.spyOn(statsQuery, 'listSystemPlayerStatsSnapshots').mockResolvedValue([ snapshot ])

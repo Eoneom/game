@@ -103,6 +103,7 @@ describe('tickSystemPlayers', () => {
       outposts: [],
       technologies: [],
       buildings_by_city: [],
+      ongoing_movements: [],
       updated_at: tick_at,
     })
     const stats_emit = vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
@@ -126,6 +127,7 @@ describe('tickSystemPlayers', () => {
       outposts: [],
       technologies: [],
       buildings_by_city: [],
+      ongoing_movements: [],
       updated_at: tick_at,
     })
 
@@ -174,6 +176,7 @@ describe('tickSystemPlayers', () => {
       outposts: [],
       technologies: [],
       buildings_by_city: [],
+      ongoing_movements: [],
       updated_at: tick_at,
     })
     await tickSystemPlayers({ tick_index: 4 })

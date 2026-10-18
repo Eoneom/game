@@ -71,6 +71,7 @@ Idle ticks omit `committed_actions` and `payload`. Error ticks set `outcome` to 
 | `cities` | `id`, `name`, `coordinates`, `resources` (projected gather at `now()`), `earnings_per_second`, `energy`, `energy_consumption`, `production_energy_ratio`, `warehouses_capacity`, `warehouse_space_remaining` (plastic/mushroom; same as city page), `troops[]` (`code`, `count`, sorted like troop list), optional `pending_recruitment` (`troop_code`, `finish_at`, `remaining_count`) from recruit job queue |
 | `outposts` | `id`, `type`, `coordinates`, `resources`, `earnings_per_second`, warehouse fields for permanent outposts, `troops[]` (`code`, `count`) |
 | `technologies` | `code`, `level` (sorted like player UI) |
+| `ongoing_movements` | `id`, `action` (`MovementAction`), `origin`, `destination`, `arrive_at` (from troop-movement finish job), `resources`, `troops[]` (`code`, `count`, sorted like troop list). Movements without a pending finish job are omitted. |
 | `buildings_by_city` | per city: `city_id`, `city_name`, `buildings[]` with `code`, `level` |
 | `updated_at` | server ms timestamp when snapshot was built |
 
@@ -96,7 +97,8 @@ As implemented on `main` (read-only **État** column; no new requirements beyond
 | Concern | Behavior |
 | --- | --- |
 | Layered surfaces | Admin chrome uses `admin-surface-page`, `admin-surface-panel`, `admin-surface-card`, `admin-surface-nested`, `admin-surface-toolbar`, and `admin-surface-code` (`apps/web/src/index.css`; wired from `modules/admin/layout.tsx` and observability `page.tsx`). |
-| Player card order | Per system player: **Technologies** → **Colonies** → **Avant-postes** (always shown with count; empty empires show a short French placeholder). |
+| Player card order | Per system player: **Technologies** → **Mouvements en cours** → **Colonies** → **Avant-postes** (always shown with count; empty empires show a short French placeholder). |
+| **Mouvements en cours** | Section title `Mouvements en cours (N)`. Each row: French action label (`MovementActionLabels`), origin → destination coordinates, troop lines (`translateTroopCode`), optional cargo for `TRANSPORT`, countdown via `CountdownProgress` / `useCountdownProgress` to `arrive_at`. Empty: short French placeholder. |
 | Per-city section | Nested card: production line, **dense** `EnergyReadout` (`dense` prop — bar height/styling aligned with warehouse `<progress>` bars), plastic/mushroom warehouse bars, **Bâtiments** two-column grid, then **Troupes** (counts only; optional in-progress recruit with countdown). |
 | Per-city **Troupes** | `TroopsList` default: one column on narrow viewports, **two columns from `sm` breakpoint** (`sm:grid-cols-2`). |
 | **Avant-postes** layout | Section always visible (count + French empty copy). When outposts exist, cards render in a **three-column** grid (`grid-cols-3`, `gap-2`); each card is `admin-surface-nested`. Outposts are ordered by **increasing `coordinates.x`**, then **`coordinates.y`** (stats snapshot from `collectSystemPlayerStatsSnapshot`). |
