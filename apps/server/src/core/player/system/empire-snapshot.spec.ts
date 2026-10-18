@@ -7,6 +7,7 @@ describe('isExpansionStarved', () => {
       temporary_outpost_count: 0,
       permanent_outpost_count: 1,
       defer_explore: false,
+      outpost_limit_reached: false,
     }), true)
   })
 
@@ -15,6 +16,7 @@ describe('isExpansionStarved', () => {
       temporary_outpost_count: 0,
       permanent_outpost_count: 2,
       defer_explore: false,
+      outpost_limit_reached: false,
     }), false)
   })
 
@@ -23,6 +25,7 @@ describe('isExpansionStarved', () => {
       temporary_outpost_count: 0,
       permanent_outpost_count: 5,
       defer_explore: true,
+      outpost_limit_reached: false,
     }), true)
   })
 
@@ -31,6 +34,16 @@ describe('isExpansionStarved', () => {
       temporary_outpost_count: 1,
       permanent_outpost_count: 0,
       defer_explore: false,
+      outpost_limit_reached: false,
+    }), false)
+  })
+
+  it('is false when the outpost count limit is reached even if explore would defer for basing', () => {
+    assert.strictEqual(isExpansionStarved({
+      temporary_outpost_count: 0,
+      permanent_outpost_count: 15,
+      defer_explore: true,
+      outpost_limit_reached: true,
     }), false)
   })
 })

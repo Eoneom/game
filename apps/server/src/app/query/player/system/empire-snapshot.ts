@@ -30,6 +30,7 @@ import {
 } from '#command/player/system/transport'
 import { countSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
 import { OutpostType } from '#core/outpost/constant/type'
+import { OutpostService } from '#core/outpost/service'
 import {
   shouldDeferExploreForBasing,
   sortCellsByExpansionScore,
@@ -214,6 +215,9 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
   const permanent_outpost_count = outposts.filter(
     outpost => outpost.type === OutpostType.PERMANENT,
   ).length
+  const outpost_limit_reached = OutpostService.isLimitReached({
+    existing_outposts_count: outposts.length,
+  })
   const expansion_categories = systemTickExpansionCategories({
     temporary_outpost_count,
   })
@@ -253,11 +257,13 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     defer_explore,
   ] = await Promise.all([
     isProductionReadyForResearch(player_id),
-    computeDeferExplore({
-      player_id,
-      can_found_city,
-      base_cell_score,
-    }),
+    outpost_limit_reached
+      ? Promise.resolve(false)
+      : computeDeferExplore({
+        player_id,
+        can_found_city,
+        base_cell_score,
+      }),
   ])
 
   const needs_outpost_logistics = permanent_outpost_count > 0 && needsOutpostLogistics({
@@ -339,6 +345,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     temporary_outpost_count,
     permanent_outpost_count,
     defer_explore: effective_defer_explore,
+    outpost_limit_reached,
   })
   const empire_under_threat = isEmpireUnderThreat(intel)
 
@@ -356,6 +363,7 @@ export async function collectSystemEmpireSnapshot(player_id: string): Promise<Sy
     outpost_transport_pressure_count,
     can_found_city,
     settle_ready_temp_count,
+    outpost_limit_reached,
     frontier_queue_length,
     frontier_top_score,
     intel,

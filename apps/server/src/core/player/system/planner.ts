@@ -150,7 +150,8 @@ export function planSystemPlayerActions(
   }
 
   if (
-    snapshot.can_found_city
+    !snapshot.outpost_limit_reached
+    && snapshot.can_found_city
     && snapshot.settle_ready_temp_count === 0
     && snapshot.temporary_outpost_count === 0
   ) {
@@ -169,7 +170,7 @@ export function planSystemPlayerActions(
     seen_categories.add('base')
   }
 
-  if (expansion_starved) {
+  if (expansion_starved && !snapshot.outpost_limit_reached) {
     const remaining_budget = SYSTEM_MAX_ACTIONS_PER_TICK - intents.length
     const base_attempts = Math.min(
       SYSTEM_EXPANSION_STARVED_MAX_BASE_PREPENDS,
@@ -224,6 +225,9 @@ export function planSystemPlayerActions(
   }
 
   for (const category of dedupeCategoriesKeepingFirst(categories)) {
+    if (category === 'base' && snapshot.outpost_limit_reached) {
+      continue
+    }
     if (seen_categories.has(category)) {
       continue
     }

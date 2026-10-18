@@ -97,6 +97,20 @@ describe('planSystemPlayerActions', () => {
     assert.ok(plan.slice(2, 4).every(intent => intent.reason === 'commit_temp_outpost'))
   })
 
+  it('omits base intents when the outpost count limit is reached', () => {
+    const plan = planSystemPlayerActions(baseSnapshot({
+      outpost_limit_reached: true,
+      expansion_starved: true,
+      defer_explore: true,
+      can_found_city: true,
+      temporary_outpost_count: 0,
+      settle_ready_temp_count: 0,
+      economy_first: false,
+    }), 0)
+    assert.ok(!plan.some(intent => intent.category === 'base'))
+    assert.strictEqual(plan[0].category, 'settle')
+  })
+
   it('prepends city-founding base when under cap and no temps', () => {
     const plan = planSystemPlayerActions(baseSnapshot({
       can_found_city: true,

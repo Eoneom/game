@@ -25,6 +25,8 @@ export type SystemEmpireSnapshot = {
   can_found_city: boolean
   /** Temporary outposts with a founder on site (eligible for `settle`). */
   settle_ready_temp_count: number
+  /** No more outposts can be created (`base` would fail on temp creation). */
+  outpost_limit_reached: boolean
   /** Ranked expansion commit candidates (base / settle / make-permanent). */
   frontier_queue_length: number
   frontier_top_score: number | null
@@ -50,6 +52,7 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
   | 'outpost_logistics_needs_gatherer_count'
   | 'outpost_logistics_needs_haul_count'
   | 'memory'
+  | 'outpost_limit_reached'
 > {
   return {
     frontier_queue_length: 0,
@@ -60,6 +63,7 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
     outpost_logistics_needs_gatherer_count: 0,
     outpost_logistics_needs_haul_count: 0,
     memory: EMPTY_SYSTEM_PLAYER_MEMORY,
+    outpost_limit_reached: false,
   }
 }
 
@@ -67,10 +71,17 @@ export function isExpansionStarved({
   temporary_outpost_count,
   permanent_outpost_count,
   defer_explore,
+  outpost_limit_reached,
 }: Pick<
   SystemEmpireSnapshot,
-  'temporary_outpost_count' | 'permanent_outpost_count' | 'defer_explore'
+  | 'temporary_outpost_count'
+  | 'permanent_outpost_count'
+  | 'defer_explore'
+  | 'outpost_limit_reached'
 >): boolean {
+  if (outpost_limit_reached) {
+    return false
+  }
   if (defer_explore) {
     return true
   }
