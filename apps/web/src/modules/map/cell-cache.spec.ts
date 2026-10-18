@@ -1,5 +1,8 @@
 import {
+  boundsNeedsFetch,
   cellsInBounds,
+  countCachedCellsInBounds,
+  countCellsInBounds,
   createCellCache,
   mergeCells,
   mergeSettlements,
@@ -37,6 +40,28 @@ describe('cell-cache', () => {
     const merged = cache.get('1,1')
     expect(merged?.explored).toBe(true)
     expect(merged?.characteristic?.solar_coefficient).toBe(3)
+  })
+
+  it('countCachedCellsInBounds and boundsNeedsFetch detect cache holes', () => {
+    const cache = createCellCache()
+    const bounds = {
+      min_x: 1,
+      max_x: 2,
+      min_y: 1,
+      max_y: 2,
+    }
+    expect(countCellsInBounds(bounds)).toBe(4)
+    expect(countCachedCellsInBounds(cache, bounds)).toBe(0)
+    expect(boundsNeedsFetch(cache, bounds)).toBe(true)
+    mergeCells(cache, [cell(1, 1)])
+    expect(countCachedCellsInBounds(cache, bounds)).toBe(1)
+    expect(boundsNeedsFetch(cache, bounds)).toBe(true)
+    mergeCells(cache, [
+      cell(2, 1),
+      cell(1, 2),
+      cell(2, 2),
+    ])
+    expect(boundsNeedsFetch(cache, bounds)).toBe(false)
   })
 
   it('cellsInBounds returns only cached cells inside bounds', () => {

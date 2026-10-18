@@ -5,6 +5,7 @@ import { WorldViewport } from '#types'
 import { getCells } from '#map/api/cells'
 import { useAuth } from '#auth/context'
 import {
+  boundsNeedsFetch,
   cellsInBounds,
   createCellCache,
   mergeCells,
@@ -13,15 +14,26 @@ import {
 import {
   CITY_MAP_INITIAL_HALF_EXTENT,
   clampHalfExtent,
+  expandBoundsBy,
   fetchBoundsAround,
+  MAX_VIEWPORT_SIDE,
+  PanDirection,
   viewportBoundsAround,
 } from '#map/viewport'
 
-export const NAVIGATION_DEBOUNCE_MS = 150
+export const NAVIGATION_DEBOUNCE_MS = 90
 
 export type WorldNavigation = {
   center: Coordinates
   half_extent: number
+}
+
+const scheduleIdle = (callback: () => void): void => {
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(() => callback())
+    return
+  }
+  window.setTimeout(callback, 1)
 }
 
 export const useWorld = () => {
@@ -36,6 +48,7 @@ export const useWorld = () => {
   const fetchGeneration = useRef(0)
   const pendingDetailRef = useRef<WorldGetCellsDetail>('full')
   const skipDebounceRef = useRef(false)
+  const panDirectionRef = useRef<PanDirection | null>(null)
 
   const visibleBounds = useMemo(() => {
     if (!center) {
@@ -77,16 +90,51 @@ export const useWorld = () => {
     [],
   )
 
+  const prefetchIdleRing = useCallback(
+    (fetchedBounds: ReturnType<typeof fetchBoundsAround>) => {
+      if (!token) return
+      const ring = expandBoundsBy(fetchedBounds, 1)
+      const sideX = ring.max_x - ring.min_x + 1
+      const sideY = ring.max_y - ring.min_y + 1
+      if (
+        sideX > MAX_VIEWPORT_SIDE ||
+        sideY > MAX_VIEWPORT_SIDE ||
+        !boundsNeedsFetch(cellCacheRef.current, ring)
+      ) {
+        return
+      }
+
+      scheduleIdle(() => {
+        void (async () => {
+          const generation = ++fetchGeneration.current
+          const fetched = await getCells({
+            token,
+            bounds: ring,
+            detail: 'terrain',
+          })
+          if (!fetched || generation !== fetchGeneration.current) return
+          mergeCells(cellCacheRef.current, fetched.cells)
+          setCacheVersion(v => v + 1)
+        })()
+      })
+    },
+    [token],
+  )
+
   const loadCells = useCallback(
     async ({
       center: nextCenter,
       half_extent: nextHalf,
       detail,
-    }: WorldNavigation & { detail: WorldGetCellsDetail }) => {
+      panDirection = panDirectionRef.current,
+    }: WorldNavigation & {
+      detail: WorldGetCellsDetail
+      panDirection?: PanDirection | null
+    }) => {
       if (!token) return
 
       const half = clampHalfExtent(nextHalf)
-      const bounds = fetchBoundsAround(nextCenter, half)
+      const bounds = fetchBoundsAround(nextCenter, half, panDirection)
       const generation = ++fetchGeneration.current
       const fetched = await getCells({
         token,
@@ -96,10 +144,53 @@ export const useWorld = () => {
       if (!fetched || generation !== fetchGeneration.current) return
 
       applyFetchResult(fetched, bounds)
+      if (detail === 'terrain') {
+        prefetchIdleRing(bounds)
+      }
     },
     [
       token,
       applyFetchResult,
+      prefetchIdleRing,
+    ],
+  )
+
+  const scheduleLoadForNavigation = useCallback(
+    (nextCenter: Coordinates, nextHalf: number) => {
+      if (!token) return
+
+      const half = clampHalfExtent(nextHalf)
+      const bounds = fetchBoundsAround(
+        nextCenter,
+        half,
+        panDirectionRef.current,
+      )
+      const detail = pendingDetailRef.current
+      const needsFetch = boundsNeedsFetch(cellCacheRef.current, bounds)
+
+      if (needsFetch) {
+        skipDebounceRef.current = true
+        void loadCells({
+          center: nextCenter,
+          half_extent: half,
+          detail: 'terrain',
+        })
+        return
+      }
+
+      const timer = window.setTimeout(() => {
+        void loadCells({
+          center: nextCenter,
+          half_extent: half,
+          detail,
+        })
+      }, NAVIGATION_DEBOUNCE_MS)
+
+      return () => window.clearTimeout(timer)
+    },
+    [
+      token,
+      loadCells,
     ],
   )
 
@@ -110,6 +201,7 @@ export const useWorld = () => {
       )
       skipDebounceRef.current = true
       pendingDetailRef.current = 'full'
+      panDirectionRef.current = null
       setCenter(params.center)
       setHalfExtent(half)
       await loadCells({
@@ -130,17 +222,47 @@ export const useWorld = () => {
     setHalfExtent(clampHalfExtent(next.half_extent))
   }, [])
 
-  const panDuringDrag = useCallback((nextCenter: Coordinates) => {
-    pendingDetailRef.current = 'terrain'
-    setCenter(nextCenter)
-  }, [])
+  const panDuringDrag = useCallback(
+    (nextCenter: Coordinates) => {
+      pendingDetailRef.current = 'terrain'
+      if (center) {
+        panDirectionRef.current = {
+          dx: nextCenter.x - center.x,
+          dy: nextCenter.y - center.y,
+        }
+      }
+      setCenter(nextCenter)
+
+      if (!token) return
+      const bounds = fetchBoundsAround(
+        nextCenter,
+        half_extent,
+        panDirectionRef.current,
+      )
+      if (boundsNeedsFetch(cellCacheRef.current, bounds)) {
+        skipDebounceRef.current = true
+        void loadCells({
+          center: nextCenter,
+          half_extent,
+          detail: 'terrain',
+        })
+      }
+    },
+    [
+      center,
+      half_extent,
+      loadCells,
+      token,
+    ],
+  )
 
   const panEnd = useCallback(
-    async (nextCenter: Coordinates) => {
+    (nextCenter: Coordinates) => {
       skipDebounceRef.current = true
       pendingDetailRef.current = 'full'
+      panDirectionRef.current = null
       setCenter(nextCenter)
-      await loadCells({
+      void loadCells({
         center: nextCenter,
         half_extent,
         detail: 'full',
@@ -156,6 +278,7 @@ export const useWorld = () => {
     if (!center) return
     skipDebounceRef.current = true
     pendingDetailRef.current = 'full'
+    panDirectionRef.current = null
     await loadCells({
       center,
       half_extent,
@@ -179,20 +302,12 @@ export const useWorld = () => {
       return
     }
 
-    const detail = pendingDetailRef.current
-    const timer = window.setTimeout(() => {
-      void loadCells({
-        center,
-        half_extent,
-        detail,
-      })
-    }, NAVIGATION_DEBOUNCE_MS)
-
-    return () => window.clearTimeout(timer)
+    const cleanup = scheduleLoadForNavigation(center, half_extent)
+    return cleanup
   }, [
     center,
     half_extent,
-    loadCells,
+    scheduleLoadForNavigation,
     token,
   ])
 

@@ -131,7 +131,22 @@ describe('worldGetCellsHandler', () => {
       ...req.query,
       detail: 'terrain',
     }
+    vi.spyOn(WorldGetCellsQuery.prototype, 'run').mockResolvedValue({
+      ...queryResult,
+      settlements: {
+        cities: [],
+        outposts: [],
+      },
+    } as any)
     await worldGetCellsHandler(req as unknown as Request, res as unknown as Response, next as NextFunction)
+    expect(WorldGetCellsQuery.prototype.run).toHaveBeenCalledWith({
+      player_id: 'p1',
+      min_x: 1,
+      max_x: 5,
+      min_y: 1,
+      max_y: 5,
+      detail: 'terrain',
+    })
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
       data: {
@@ -159,7 +174,10 @@ describe('worldGetCellsHandler', () => {
             characteristic: undefined,
           },
         ],
-        settlements: queryResult.settlements,
+        settlements: {
+          cities: [],
+          outposts: [],
+        },
       },
     })
   })

@@ -53,7 +53,8 @@ export const worldGetCellsHandler = async (
       min_x,
       max_x,
       min_y,
-      max_y
+      max_y,
+      detail
     })
 
     const response = response_mapper({

@@ -18,8 +18,8 @@ The world is a fixed `100×100` integer grid of cells generated once at server s
 
 | `detail` | Cell payload |
 | --- | --- |
-| `terrain` | `coordinates`, `type`, `explored` only (no `characteristic`) |
-| `full` | Same as before: `characteristic` when `explored` |
+| `terrain` | `coordinates`, `type`, `explored` only (no `characteristic`); **`settlements` omitted on the wire** (`cities` / `outposts` empty arrays — client keeps markers via cache merge) |
+| `full` | Same as before: `characteristic` when `explored`; full `settlements` in bounds |
 
 | Outcome | HTTP | Body |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 ## Web UI (`apps/web/src/modules/map/`)
 
 - **Cache**: `cell-cache.ts` merges every `GET /world/cells` response; the map draws cached cells intersecting the logical viewport (`viewportBoundsAround(center, half_extent)`), so HTTP completion does not change pan/zoom framing.
-- **Fetch**: `fetchBoundsAround` adds `PREFETCH_MARGIN_CELLS` (2) around the visible window, clamped to server `MAX_VIEWPORT_SIDE`. While navigating (pan/zoom), debounced `detail=terrain` (150ms); `detail=full` on pan release and cell select. Stale responses ignored via generation counter.
+- **Fetch**: `fetchBoundsAround` adds `PREFETCH_MARGIN_CELLS` (3) around the visible window (+ optional +1 cell on the pan direction), clamped to server `MAX_VIEWPORT_SIDE`. **Cache holes** in fetch bounds trigger an **immediate** `detail=terrain` request (no debounce); when the visible fetch window is fully cached, optional debounced terrain refresh (~90ms). `detail=full` on pan release and cell select (non-blocking). Stale responses ignored via generation counter; idle ring prefetch for uncached strips outside the last fetch bounds.
 - **Pan**: `PAN_PIXEL_TO_CELL_SENSITIVITY` (0.4) damps cells-per-pixel; Konva group offset resets each drag move so terrain stays world-anchored without snapping when tiles arrive.
 - **Open / recenter**: `CITY_MAP_INITIAL_HALF_EXTENT` (3). Wheel zoom toward cursor, zoom buttons, recenter to city/outpost home cell.
 - Renders terrain on all visible cells; coefficients in the side panel when `explored` and present in cache (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Settlement markers for all players in view (`markers.tsx`, `legend-overlay.tsx`). Geometry in `geometry.ts` / `helper.ts` / `viewport.ts`.

@@ -108,5 +108,19 @@ describe('viewport', () => {
       const side = fetch.max_x - fetch.min_x + 1
       expect(side).toBeLessThanOrEqual(MAX_VIEWPORT_SIDE)
     })
+
+    it('extends fetch bounds toward pan direction when room allows', () => {
+      const center = {
+        x: 50,
+        y: 50,
+      }
+      const base = fetchBoundsAround(center, 3)
+      const east = fetchBoundsAround(center, 3, {
+        dx: 1,
+        dy: 0,
+      })
+      expect(east.max_x).toBe(base.max_x + 1)
+      expect(east.max_x - east.min_x + 1).toBeLessThanOrEqual(MAX_VIEWPORT_SIDE)
+    })
   })
 })

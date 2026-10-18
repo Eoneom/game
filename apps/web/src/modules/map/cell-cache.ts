@@ -27,6 +27,29 @@ export const mergeCells = (cache: CellCache, batch: WorldCell[]): void => {
   }
 }
 
+export const countCellsInBounds = (bounds: ViewportBounds): number =>
+  (bounds.max_x - bounds.min_x + 1) * (bounds.max_y - bounds.min_y + 1)
+
+export const countCachedCellsInBounds = (
+  cache: CellCache,
+  bounds: ViewportBounds,
+): number => {
+  let count = 0
+  for (let x = bounds.min_x; x <= bounds.max_x; x += 1) {
+    for (let y = bounds.min_y; y <= bounds.max_y; y += 1) {
+      if (cache.has(cellKey({ x, y }))) {
+        count += 1
+      }
+    }
+  }
+  return count
+}
+
+export const boundsNeedsFetch = (
+  cache: CellCache,
+  bounds: ViewportBounds,
+): boolean => countCachedCellsInBounds(cache, bounds) < countCellsInBounds(bounds)
+
 export const cellsInBounds = (
   cache: CellCache,
   bounds: ViewportBounds,

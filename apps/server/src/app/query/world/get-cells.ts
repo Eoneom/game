@@ -11,12 +11,15 @@ import { FactionCode } from '#core/faction/constant/code'
 import { OutpostType } from '#core/outpost/constant/type'
 import { Coordinates } from '#core/world/value/coordinates'
 
+type WorldGetCellsDetail = 'terrain' | 'full'
+
 interface WorldGetCellsQueryRequest {
   min_x: number
   max_x: number
   min_y: number
   max_y: number
   player_id: string
+  detail?: WorldGetCellsDetail
 }
 
 export interface WorldMapCityMarker {
@@ -55,7 +58,8 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
     max_x,
     min_y,
     max_y,
-    player_id
+    player_id,
+    detail = 'full'
   }: WorldGetCellsQueryRequest): Promise<WorldGetCellsQueryResponse> {
     this.assertValidBounds({
       min_x,
@@ -74,13 +78,29 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
     const [
       cells,
       exploration,
-      viewer,
-      cities_in_bounds,
-      outposts_in_bounds
+      viewer
     ] = await Promise.all([
       this.repository.cell.getByBounds(bounds),
       this.repository.exploration.get({ player_id }),
-      this.repository.player.get(player_id),
+      this.repository.player.get(player_id)
+    ])
+
+    if (detail === 'terrain') {
+      return {
+        cells,
+        explored_cell_ids: exploration.cell_ids,
+        viewer_faction_code: viewer.faction_code,
+        settlements: {
+          cities: [],
+          outposts: []
+        }
+      }
+    }
+
+    const [
+      cities_in_bounds,
+      outposts_in_bounds
+    ] = await Promise.all([
       this.repository.city.listInBounds(bounds),
       this.repository.outpost.listInBounds(bounds)
     ])
