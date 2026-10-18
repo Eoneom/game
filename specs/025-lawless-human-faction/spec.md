@@ -8,19 +8,15 @@ Add a third faction: **human**, **non-playable**, **system-controlled only** (on
 
 **Depends on**: [`004`](../004-faction-domain/spec.md), [`016`](../016-system-controlled-players/spec.md), [`024`](../024-player-combat-pvp/spec.md) (four PvP troops per faction).
 
-## Faction identity (cult / ritual horror — wire code TBD)
+## Faction identity (locked)
 
-Valentin direction: **cult/ritual** tone (not “Chœur noir”); human, lawless, horror art. Pick one row before implementation:
+| Field | Value |
+| --- | --- |
+| `FactionCode` wire | `the_ash_liturgy` |
+| French UI name | **Liturgie des cendres** |
+| Enum member (proposed) | `THE_ASH_LITURGY` |
 
-| `FactionCode` wire | French UI name | Notes |
-| --- | --- | --- |
-| `the_oblation` | **L'Oblation** | Ritual offering; sacrificial cult |
-| `the_vesper_cult` | **Culte des Vêpres** | Liturgical / evening-rite horror |
-| `the_hollow_rite` | **Rite creux** | Empty, wrong ritual — unsettling |
-| `the_penitent_host` | **Hostie pénitente** | Penitent cult; strong Catholic-horror echo |
-| `the_ash_liturgy` | **Liturgie cendrée** | Ash + ceremony (pairs with Harrow / Cinder) |
-
-**Not chosen yet** — no default until Valentin confirms wire + French name.
+Cult / ritual horror humans; lawless flavor only. Pairs with system player **Harrow** and capital **Cinder I**.
 
 Visibility: same as Singularity — on map, settlements, battle reports, admin; **not** in signup `playableFactionCodes()`.
 
