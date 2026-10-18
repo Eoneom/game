@@ -71,7 +71,7 @@ To fight Alpha as a human: locate **Core I** (or singularity stacks) on the map,
 
 ## System player (Alpha)
 
-1. Let system tick run until Alpha recruits `war_machine` / `disruptor` (watch admin observability if enabled [`020`](../020-system-player-observability/spec.md)).
+1. Let system tick run until Alpha recruits `war_machine` / `disruptor` (watch admin observability if enabled [`021`](../021-admin-operator-tools/spec.md)).
 2. When Alpha launches attack against human cell, human receives **defender** battle report with singularity troop names (**Machine de guerre**, **Perturbateur**) in UI.
 
 ## Regression checks

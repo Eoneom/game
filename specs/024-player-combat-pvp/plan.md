@@ -161,7 +161,7 @@ Recommended order (each phase should keep CI green):
 
 - Recruit `war_machine` / `disruptor` when below garrison thresholds ([`016`](../016-system-controlled-players/spec.md)).
 - New tick category or action: cross-faction `attack` with `opening_strike` / `balanced` heuristic from spec.
-- Observability payload includes attack commits (extends [`020`](../020-system-player-observability/spec.md) if needed).
+- Observability payload includes attack commits (extends [`021`](../021-admin-operator-tools/spec.md) if needed).
 
 ## Complexity Tracking
 

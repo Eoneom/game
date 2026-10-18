@@ -7,13 +7,12 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | # | Directory | Topic |
 | --- | --- | --- |
 | 001 | [`specs/001-health-api/`](../specs/001-health-api/spec.md) | Public `GET /api/v1/health`, legacy redirects |
-| 002 | [`specs/002-player-session-auth/`](../specs/002-player-session-auth/spec.md) | Player session token (HTTP + WebSocket) |
-| 003 | [`specs/003-player-registration-signup/`](../specs/003-player-registration-signup/spec.md) | Player signup and first-city bootstrap |
+| 002 | [`specs/002-player-session-auth/`](../specs/002-player-session-auth/spec.md) | Human player: session, signup, bootstrap |
 | 004 | [`specs/004-faction-domain/`](../specs/004-faction-domain/spec.md) | Faction codes, playable vs known, shared vocabulary |
 | 005 | [`specs/005-world-grid-visibility/`](../specs/005-world-grid-visibility/spec.md) | World grid and cell visibility |
 | 006 | [`specs/006-city-lifecycle-gathering/`](../specs/006-city-lifecycle-gathering/spec.md) | City lifecycle and passive gathering |
 | 007 | [`specs/007-buildings-upgrade-queue/`](../specs/007-buildings-upgrade-queue/spec.md) | Buildings and upgrade queue |
-| 008 | [`specs/008-technology-research/`](../specs/008-technology-research/spec.md) | Technology research |
+| 008 | [`specs/008-technology-research/`](../specs/008-technology-research/spec.md) | Technology research (incl. queue) |
 | 009 | [`specs/009-troops-stationary/`](../specs/009-troops-stationary/spec.md) | Troops (stationary stacks) |
 | 010 | [`specs/010-troop-movement-combat/`](../specs/010-troop-movement-combat/spec.md) | Troop movement and combat outcomes |
 | 011 | [`specs/011-outposts/`](../specs/011-outposts/spec.md) | Outposts |
@@ -25,26 +24,19 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 017 | [`specs/017-realtime-websocket/`](../specs/017-realtime-websocket/spec.md) | Real-time event fan-out (WebSocket) |
 | 018 | [`specs/018-app-composition-jobs/`](../specs/018-app-composition-jobs/spec.md) | Application composition and background jobs |
 | 019 | [`specs/019-web-shell-routing/`](../specs/019-web-shell-routing/spec.md) | Web application shell and routing |
-| 020 | [`specs/020-system-player-observability/`](../specs/020-system-player-observability/spec.md) | System Player observability (admin live feed) |
+| 021 | [`specs/021-admin-operator-tools/`](../specs/021-admin-operator-tools/spec.md) | Admin operator tools (observability + combat simulator) |
 | 022 | [`specs/022-timing-and-resources/`](../specs/022-timing-and-resources/spec.md) | Timing and resource pacing |
-| 023 | [`specs/023-technology-research-queue/`](../specs/023-technology-research-queue/spec.md) | Technology research queue |
 | 024 | [`specs/024-player-combat-pvp/`](../specs/024-player-combat-pvp/spec.md) | Player combat (PvP) — implemented (`attack`, battle jobs, reports, UI) |
 
 ## Brownfield inventory (dependency order)
 
-### 1. Player session authentication
+### 1. Human player (session, signup, bootstrap)
 
-- **Scope**: `packages/api-client` (`response.ts`, `fetcher.ts`, `error/request.ts`, `endpoints/player/login.ts`, `endpoints/player/logout.ts`); `apps/server/src/core/auth/`, `app/command/auth/{login,logout,authorize}.ts`, `web/middleware/auth.ts`, `web/handler/player/{login,logout}.ts`, `web/ws.ts` (token gate only); `apps/web/src/modules/auth/{context,hooks,login-form,unauthenticated}.tsx`, `helpers/api.ts`, `helpers/websocket.ts` (connect/disconnect with token).
-- **Spec**: [`specs/002-player-session-auth/spec.md`](../specs/002-player-session-auth/spec.md) (final, as implemented).
-- **Why coherent**: Single cross-cutting concern—how a **Player** obtains a session token, sends it on HTTP and WebSocket, and how the server resolves `player_id`. Signup is specified in slice 003.
+- **Scope**: Session: `packages/api-client` player login/logout; `apps/server/src/core/auth/`, `app/command/auth/{login,logout,authorize,signup}.ts`, `web/middleware/auth.ts`, `web/handler/player/{login,logout,signup}.ts`, `web/ws.ts`; `apps/web/src/modules/auth/`. Signup/bootstrap: `app/command/player/bootstrap.ts`.
+- **Spec**: [`specs/002-player-session-auth/spec.md`](../specs/002-player-session-auth/spec.md) (merged 002 + 003).
+- **Why coherent**: Login, logout, signup, and first-city bootstrap are one human onboarding surface.
 
-### 2. Player registration (signup) and bootstrap
-
-- **Scope**: `app/command/auth/signup.ts`, `app/command/player/bootstrap.ts`, `web/handler/player/signup.ts`, `core/player/`, `apps/web` signup form and `useSignup`; touches city/building/technology/troop/world only as side effects of bootstrap.
-- **Spec**: [`specs/003-player-registration-signup/spec.md`](../specs/003-player-registration-signup/spec.md) (final, as implemented).
-- **Why coherent**: One user journey (“create commander + first city”) implemented as one command chain; depends on slice 002 for post-signup login.
-
-### 3. Faction domain vocabulary
+### 2. Faction domain vocabulary
 
 - **Scope**: `apps/server/src/core/faction/`, `packages/api-client` faction codes and `playableFactionCodes`, `apps/web/src/modules/faction/translations.ts`.
 - **Spec**: [`specs/004-faction-domain/spec.md`](../specs/004-faction-domain/spec.md) (final, as implemented).
@@ -68,11 +60,11 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 - **Spec**: [`specs/007-buildings-upgrade-queue/spec.md`](../specs/007-buildings-upgrade-queue/spec.md).
 - **Why coherent**: Building list/detail, upgrade/cancel, queue timers and WS `building:upgrade-finished`.
 
-### 7. Technology research
+### 7. Technology research (including queue)
 
-- **Scope**: `core/technology/`, technology commands/queries, `technology.research.finish` job, `apps/web/src/modules/technology/`.
-- **Spec**: [`specs/008-technology-research/spec.md`](../specs/008-technology-research/spec.md).
-- **Why coherent**: Player-scoped research queue parallel to buildings but different singleton key semantics.
+- **Scope**: `core/technology/`, technology commands/queries, `technology.research.finish` job, `technology_research_queue`, `apps/web/src/modules/technology/`.
+- **Spec**: [`specs/008-technology-research/spec.md`](../specs/008-technology-research/spec.md) (merged 008 + 023).
+- **Why coherent**: Research start/cancel/finish and FIFO queue share one player-wide research lifecycle.
 
 ### 8. Troops (stationary stacks)
 

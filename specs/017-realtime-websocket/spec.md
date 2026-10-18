@@ -4,7 +4,7 @@
 
 ## Summary
 
-The HTTP server hosts **game** WebSocket upgrades on the default path and a separate **admin observability** path on the same port (see [`020`](../020-system-player-observability/spec.md)). Connections authenticate with the session token query param (`?token=`). The in-process `AppEventBus` bridges domain events to per-player game WS messages. The web client registers game module listeners on login/signup and invalidates React Query caches on events.
+The HTTP server hosts **game** WebSocket upgrades on the default path and a separate **admin observability** path on the same port (see [`021`](../021-admin-operator-tools/spec.md#system-player-observability)). Connections authenticate with the session token query param (`?token=`). The in-process `AppEventBus` bridges domain events to per-player game WS messages. The web client registers game module listeners on login/signup and invalidates React Query caches on events.
 
 **Depends on**: session auth ([`002`](../002-player-session-auth/spec.md)).
 

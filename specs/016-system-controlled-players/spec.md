@@ -6,7 +6,7 @@
 
 The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayer` creates one singularity-faction player named `Alpha` with city `Core I` if none exist. A recurring **system player tick** job loads an **empire snapshot**, builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (10)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
-**Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`003`](../003-player-registration-signup/spec.md)), all game commands invoked by tick actions.
+**Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)), all game commands invoked by tick actions.
 
 ## Boot
 
@@ -146,7 +146,7 @@ See also [`024`](../024-player-combat-pvp/spec.md) (system AI note).
 
 ## Out of scope
 
-Human signup/login ([`002`](../002-player-session-auth/spec.md), [`003`](../003-player-registration-signup/spec.md)).
+Human signup/login ([`002`](../002-player-session-auth/spec.md)).
 
 ## Evidence index
 

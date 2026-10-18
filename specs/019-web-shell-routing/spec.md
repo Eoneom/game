@@ -6,7 +6,7 @@
 
 The web SPA uses **TanStack Router** (file-based routes under `apps/web/src/routes/`). Unauthenticated users see login/signup (`AuthUnauthenticated`). Authenticated users with at least one city get the **app shell**: header, activity strip, nav menu, main workspace `Outlet`, location sidebar, FX layer, and toast notifications.
 
-**Depends on**: auth ([`002`](../002-player-session-auth/spec.md)), city list bootstrap ([`003`](../003-player-registration-signup/spec.md)).
+**Depends on**: auth ([`002`](../002-player-session-auth/spec.md)), city list bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)).
 
 ## Entry
 
