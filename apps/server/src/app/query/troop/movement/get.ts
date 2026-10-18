@@ -35,7 +35,6 @@ export class TroopMovementGetQuery extends GenericQuery<TroopMovementGetQueryReq
       resolveMovementArriveAt({
         movement_id,
         job_queue: Factory.getJobQueue(),
-        battle_repository: this.repository.battle,
       }),
     ])
 

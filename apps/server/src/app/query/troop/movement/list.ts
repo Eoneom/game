@@ -29,7 +29,6 @@ export class TroopMovementListQuery extends GenericQuery<TroopMovementListQueryR
       const arrive_at = await resolveMovementArriveAt({
         movement_id: movement.id,
         job_queue,
-        battle_repository: this.repository.battle,
       })
       if (arrive_at === null) {
         return null

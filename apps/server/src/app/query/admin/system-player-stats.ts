@@ -176,7 +176,6 @@ export async function listOngoingMovementsForPlayer({
     const arrive_at = await resolveMovementArriveAt({
       movement_id: movement.id,
       job_queue,
-      battle_repository: repository.battle,
     })
     if (arrive_at === null) {
       return null

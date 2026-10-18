@@ -154,7 +154,6 @@ export class LocationActivityQuery extends GenericQuery<
       return resolveMovementArriveAt({
         movement_id: movement.id,
         job_queue,
-        battle_repository: this.repository.battle,
       })
     }))
     const arrive_ats = movement_entries.filter((v): v is number => v !== null)

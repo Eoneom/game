@@ -3,9 +3,6 @@ import { TroopMovementGetQuery } from '#app/query/troop/movement/get'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
-import { BattleEntity } from '#core/combat/entity/battle'
-import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
-import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopEntity } from '#core/troop/entity'
@@ -46,7 +43,6 @@ describe('TroopMovementGetQuery', () => {
     repository = {
       movement: { getById: vi.fn().mockResolvedValue(movement) } as unknown as Repository['movement'],
       troop: { listByMovement: vi.fn().mockResolvedValue(troops) } as unknown as Repository['troop'],
-      battle: { getByMovementId: vi.fn().mockResolvedValue(null) } as unknown as Repository['battle'],
     }
     getPendingTroopMovementFinish = vi.fn().mockResolvedValue({
       player_id,
@@ -74,7 +70,7 @@ describe('TroopMovementGetQuery', () => {
     })).rejects.toThrow(TroopError.MOVEMENT_NOT_FOUND)
   })
 
-  it('returns arrive_at from in-progress battle when finish job is gone', async () => {
+  it('throws not-found when finish job is gone (attack arrived / in combat)', async () => {
     movement = MovementEntity.create({
       ...movement,
       action: MovementAction.ATTACK,
@@ -82,39 +78,11 @@ describe('TroopMovementGetQuery', () => {
     ;(repository.movement.getById as MockInstance).mockResolvedValue(movement)
     getPendingTroopMovementFinish = vi.fn().mockResolvedValue(null)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingTroopMovementFinish } as unknown as JobQueue)
-    ;(repository.battle.getByMovementId as MockInstance).mockResolvedValue(
-      BattleEntity.create({
-        id: id(),
-        movement_id,
-        attacker_player_id: player_id,
-        defender_player_id: id(),
-        cell_id: id(),
-        target_kind: BattleTargetKind.CITY,
-        target_id: id(),
-        attacker_strategy: CombatStrategy.BALANCED,
-        defender_strategy: CombatStrategy.BALANCED,
-        current_round: 1,
-        status: 'in_progress',
-        winner: null,
-        state_json: {
-          attacker_stacks: [],
-          defender_stacks: [],
-          attacker_origin: { x: 0, y: 0 },
-          round_summaries: [],
-          cumulative_attacker_losses: [],
-          cumulative_defender_losses: [],
-        },
-        started_at: 77_777,
-        finished_at: null,
-      }),
-    )
 
-    const result = await new TroopMovementGetQuery().run({
+    await expect(new TroopMovementGetQuery().run({
       player_id,
       movement_id,
-    })
-
-    expect(result.arrive_at).toBe(77_777)
+    })).rejects.toThrow(TroopError.MOVEMENT_NOT_FOUND)
   })
 
   it('returns movement, troops and arrive_at from pending job', async () => {

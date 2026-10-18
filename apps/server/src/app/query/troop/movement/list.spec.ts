@@ -2,9 +2,6 @@ import { TroopMovementListQuery } from '#app/query/troop/movement/list'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
-import { BattleEntity } from '#core/combat/entity/battle'
-import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
-import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { id } from '#shared/identification'
@@ -12,7 +9,7 @@ import { id } from '#shared/identification'
 describe('TroopMovementListQuery', () => {
   const player_id = id()
   let movements: MovementEntity[]
-  let repository: Pick<Repository, 'movement' | 'battle'>
+  let repository: Pick<Repository, 'movement'>
   let getPendingTroopMovementFinish: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
@@ -30,7 +27,6 @@ describe('TroopMovementListQuery', () => {
     ]
     repository = {
       movement: { list: vi.fn().mockResolvedValue(movements) } as unknown as Repository['movement'],
-      battle: { getByMovementId: vi.fn().mockResolvedValue(null) } as unknown as Repository['battle'],
     }
     getPendingTroopMovementFinish = vi.fn().mockResolvedValue({
       player_id,
@@ -74,7 +70,7 @@ describe('TroopMovementListQuery', () => {
     expect(result.movements[0].movement.id).toBe(movements[0].id)
   })
 
-  it('includes attack movements while battle is in progress', async () => {
+  it('excludes attack movements once the finish job is consumed (battle in progress)', async () => {
     const attack_movement = MovementEntity.create({
       id: id(),
       player_id,
@@ -86,41 +82,10 @@ describe('TroopMovementListQuery', () => {
     ;(repository.movement.list as MockInstance).mockResolvedValue(movements)
     getPendingTroopMovementFinish = vi.fn().mockResolvedValue(null)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingTroopMovementFinish } as unknown as JobQueue)
-    ;(repository.battle.getByMovementId as MockInstance).mockResolvedValue(
-      BattleEntity.create({
-        id: id(),
-        movement_id: attack_movement.id,
-        attacker_player_id: player_id,
-        defender_player_id: id(),
-        cell_id: id(),
-        target_kind: BattleTargetKind.OUTPOST,
-        target_id: id(),
-        attacker_strategy: CombatStrategy.BALANCED,
-        defender_strategy: CombatStrategy.BALANCED,
-        current_round: 2,
-        status: 'in_progress',
-        winner: null,
-        state_json: {
-          attacker_stacks: [],
-          defender_stacks: [],
-          attacker_origin: { x: 0, y: 1 },
-          round_summaries: [],
-          cumulative_attacker_losses: [],
-          cumulative_defender_losses: [],
-        },
-        started_at: 88_888,
-        finished_at: null,
-      }),
-    )
 
     const result = await new TroopMovementListQuery().run({ player_id })
 
-    expect(result.movements).toEqual([
-      {
-        movement: attack_movement,
-        arrive_at: 88_888,
-      },
-    ])
+    expect(result.movements).toEqual([])
   })
 
   it('returns movements for player with arrive_at from pending job', async () => {
