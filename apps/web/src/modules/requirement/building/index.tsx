@@ -26,7 +26,11 @@ export const RequirementBuilding: React.FC<Props> = ({ cityId, requirement }) =>
           : 'border border-danger/50 bg-danger-deep/30 font-semibold text-danger'
       )}
     >
-      {BuildingTranslations[requirement.code].name} {requirement.level}
+      <span className="text-xs font-normal uppercase tracking-wide text-label">Bâtiment</span>
+      {' '}
+      {BuildingTranslations[requirement.code].name}
+      {' '}
+      <span className="whitespace-nowrap">niveau {requirement.level}</span>
       {!isMet && (
         <span className="ml-1 text-xs font-normal opacity-90">
           (actuel {requiredBuildingLevel})

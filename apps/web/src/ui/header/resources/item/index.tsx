@@ -1,4 +1,8 @@
-import { transformApproximateTimeUntilSeconds, transformDailyEarnings, transformDecimals, transformHourlyEarnings } from '#helpers/transform'
+import {
+  formatEarningsRates,
+  transformApproximateTimeUntilSeconds,
+  transformDecimals,
+} from '#helpers/transform'
 import { getEnergyDisplayStatus, getEnergyUsagePercent } from '#helpers/energy'
 import { ResourceItem } from '#ui/resource-item'
 import { Tooltip } from '#ui/tooltip'
@@ -61,13 +65,9 @@ export const HeaderResourcesItem: React.FC<Props> = ({
     </>
   ) : null
 
-  const earningsTooltipContent = hasEarnings ? (
-    <>
-      {transformHourlyEarnings(earnings_per_second)}
-      <br />
-      {transformDailyEarnings(earnings_per_second)}
-    </>
-  ) : null
+  const earningsRatesLabel = hasEarnings
+    ? formatEarningsRates(earnings_per_second)
+    : null
 
   const storageLevel = hasWarehouse ? Math.round((value / warehouse_capacity) * 100 * 100) / 100 : 0
   const progressWarn = hasWarehouse && value >= warehouse_capacity * warnCapacity
@@ -87,13 +87,15 @@ export const HeaderResourcesItem: React.FC<Props> = ({
 
   return (
     <li className="flex flex-col gap-1">
-      {earningsTooltipContent ? (
-        <Tooltip content={earningsTooltipContent} position="bottom">
-          {resourceItem}
-        </Tooltip>
-      ) : (
-        resourceItem
-      )}
+      {resourceItem}
+      {earningsRatesLabel ? (
+        <span
+          className="max-w-[11rem] truncate font-mono text-[0.65rem] leading-tight text-label"
+          title={earningsRatesLabel}
+        >
+          {earningsRatesLabel}
+        </span>
+      ) : null}
       {hasWarehouse && storageTooltipContent && (
         <Tooltip content={storageTooltipContent} position="bottom">
           <progress

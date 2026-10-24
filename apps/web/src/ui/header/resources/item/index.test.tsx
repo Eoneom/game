@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, within } from '@testing-library/react'
 
-import { transformDecimals } from '#helpers/transform'
+import { formatEarningsRates, transformDecimals } from '#helpers/transform'
 import { getEnergyDisplayStatus } from '#helpers/energy'
 
 import { HeaderResourcesItem } from './index'
@@ -94,6 +94,21 @@ describe('HeaderResourcesItem', () => {
     )
     const item = container.querySelector('.resource-item')
     expect(item?.className).not.toContain('text-danger')
+  })
+
+  it('shows per-minute, hourly, and daily earnings under the stock value', () => {
+    render(
+      <ul>
+        <HeaderResourcesItem
+          {...baseProps}
+          earnings_per_second={1}
+          value={100}
+          warehouse_capacity={1000}
+        />
+      </ul>,
+    )
+    const li = screen.getByRole('listitem')
+    expect(within(li).getByText(formatEarningsRates(1))).toBeInTheDocument()
   })
 
   it('displays transformDecimals output for non-zero value', () => {
