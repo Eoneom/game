@@ -22,6 +22,9 @@ export type BuildingListEntry =
 export interface BuildingUpgradeQueueEntry {
   id: string
   building_code: BuildingCode
+  duration_seconds: number
+  start_at: number
+  finish_at: number
 }
 
 export interface BuildingListDataResponse {

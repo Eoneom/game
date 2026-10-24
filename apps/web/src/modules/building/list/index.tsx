@@ -13,6 +13,7 @@ import { CountdownProgress } from '#ui/countdown-progress'
 import { EntityThumb } from '#ui/entity-thumb'
 import { List } from '#ui/list'
 import { QueuePanel } from '#ui/queue-panel'
+import { QueueItemTiming } from '#ui/queue-item-timing'
 import { useCountdownProgress } from '#hook/countdown-progress'
 import {
   useListBuildings,
@@ -101,6 +102,11 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
                 {BuildingTranslations[item.building_code].name}{' '}
                 <span className="text-label">niveau {item.level}</span>
               </span>
+              <QueueItemTiming
+                start_at={item.start_at}
+                finish_at={item.finish_at}
+                duration_seconds={item.duration_seconds}
+              />
               <Button
                 variant="ghost"
                 className="shrink-0 !px-2 !py-1 text-xs"

@@ -125,11 +125,14 @@ describe('BuildingListQuery', () => {
       player_id
     })
 
-    expect(result.upgrade_queue).toEqual([
-      {
-        id: queue_item.id,
-        building_code: BuildingCode.RESEARCH_LAB
-      }
-    ])
+    expect(result.upgrade_queue).toHaveLength(1)
+    expect(result.upgrade_queue[0]).toMatchObject({
+      id: queue_item.id,
+      building_code: BuildingCode.RESEARCH_LAB,
+      duration_seconds: expect.any(Number),
+      start_at: 10_000,
+      finish_at: expect.any(Number),
+    })
+    expect(result.upgrade_queue[0].finish_at).toBeGreaterThan(result.upgrade_queue[0].start_at)
   })
 })

@@ -20,6 +20,9 @@ export interface TechnologyResearchQueueEntry {
   technology_code: TechnologyCode
   city_id: string
   city_name: string
+  duration_seconds: number
+  start_at: number
+  finish_at: number
 }
 
 export interface TechnologyListDataResponse {

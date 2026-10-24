@@ -28,6 +28,9 @@ export type BuildingListEntry =
 export interface BuildingUpgradeQueueEntry {
   id: string
   building_code: BuildingCode
+  duration_seconds: number
+  start_at: number
+  finish_at: number
 }
 
 export interface ListBuildingQueryResponse {
@@ -88,12 +91,38 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
       }
     })
 
+    const projected_levels = new Map<BuildingCode, number>()
+    for (const building of sorted) {
+      const level_after_active = pending_upgrade?.building_id === building.id
+        ? building.level + 1
+        : building.level
+      projected_levels.set(building.code, level_after_active)
+    }
+
+    let schedule_cursor = pending_upgrade?.execute_at ?? Date.now()
+    const upgrade_queue_response: BuildingUpgradeQueueEntry[] = upgrade_queue.map(item => {
+      const target_level = (projected_levels.get(item.building_code) ?? 0) + 1
+      projected_levels.set(item.building_code, target_level)
+      const { duration } = PricingService.getBuildingLevelCost({
+        level: target_level,
+        code: item.building_code,
+        architecture_level: architecture.level,
+      })
+      const start_at = schedule_cursor
+      const finish_at = schedule_cursor + duration * 1000
+      schedule_cursor = finish_at
+      return {
+        id: item.id,
+        building_code: item.building_code,
+        duration_seconds: duration,
+        start_at,
+        finish_at,
+      }
+    })
+
     return {
       buildings: response_buildings,
-      upgrade_queue: upgrade_queue.map(item => ({
-        id: item.id,
-        building_code: item.building_code
-      }))
+      upgrade_queue: upgrade_queue_response,
     }
   }
 }
