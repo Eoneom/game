@@ -51,7 +51,7 @@ At production **level 1**, plastic earnings ≈ **3.6/s** per unit coefficient (
 
 | File | Change |
 | --- | --- |
-| `apps/server/src/core/pricing/constant/building.ts` | Early building `duration.base` → **23** (halved from 45) for production + warehouses; resource `base` values halved; sharpened level **multipliers** unchanged; mid/late buildings steeper curves with halved bases. |
+| `apps/server/src/core/pricing/constant/building.ts` | Early building `duration.base` → **23** (halved from 45) for warehouses and solar; **`recycling_plant` / `mushroom_farm` duration `base` → 12** for faster bootstrap upgrades; resource `base` values halved; level **multipliers** unchanged on duration. |
 | `apps/server/src/core/pricing/constant/technology.ts` | Resource and duration `base` values halved (multipliers unchanged). |
 | `apps/server/src/core/pricing/constant/troop.ts` | Per-unit plastic, mushroom, and duration values halved. |
 | `apps/server/src/core/building/constant/earnings.ts` | `building_earnings` `base` values doubled (multipliers unchanged). |
