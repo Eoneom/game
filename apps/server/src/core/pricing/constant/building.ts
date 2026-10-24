@@ -15,7 +15,7 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
     },
     duration: {
       base: 12,
-      multiplier: 2.1
+      multiplier: 1.6
     }
   },
   [BuildingCode.PLASTIC_WAREHOUSE]: {
@@ -43,7 +43,7 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
     },
     duration: {
       base: 12,
-      multiplier: 2.1
+      multiplier: 1.6
     }
   },
   [BuildingCode.MUSHROOM_WAREHOUSE]: {
