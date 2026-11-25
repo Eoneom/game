@@ -514,11 +514,16 @@ See project `docs/combat-spec-interview.md` (max 5 open questions): exploration 
 | Web | Combat PNGs + `TroopTranslations`; troop list/detail `image.alt` uses FR name |
 | Sagas / jobs | `sagaFinishAttack`, `combat.round.advance` |
 
-## Evidence index (expected after implementation)
+## Evidence index
 
-| Area | Paths (TBD) |
+| Area | Paths |
 | --- | --- |
 | Core | `apps/server/src/core/combat/`, `core/troop/constant/` |
+| Commands / sagas / jobs | `app/saga/finish/attack.ts`, `app/command/combat/{advance-round,apply-battle-outcomes,simulate}.ts`, `adapter/job-queue/combat/advance-round.ts` |
+| Persistence | `adapter/database/repository/{battle,report-battle}.ts`, migrations `00006_player_combat_pvp.ts`, `00009_battle_round.ts` |
+| Garrison strategy | `app/command/{city,outpost}/set-combat-strategy.ts`, `web/handler/{city,outpost}/set-combat-strategy.ts`, web `troop/garrison-strategy/` |
 | Web art | `apps/web/public/troops/{legionnaire,interceptor,assault_behemoth,shock_trooper,prime_unit,striker_drone,war_machine,disruptor}.png` |
 | Web UI | `apps/web/src/modules/troop/{image,translations}.ts` |
-| Reports | `core/communication/value/report-type.ts`, `report_battle` metadata, `communication/ws-listener` |
+| Reports | `core/communication/value/report-type.ts`, `report_battle` metadata, web `communication/{ws-listener.ts,report/battle-toast.tsx,report/details.tsx}` |
+
+Post-implementation follow-ups (tasks O001–O005) are recorded in [`tasks.md`](./tasks.md#optional--nice-to-have-not-required-for-slice-closure); slice specs [`009`](../009-troops-stationary/spec.md), [`010`](../010-troop-movement-combat/spec.md), [`012`](../012-communication-reports/spec.md), [`016`](../016-system-controlled-players/spec.md) and [`017`](../017-realtime-websocket/spec.md) describe the shipped behavior.

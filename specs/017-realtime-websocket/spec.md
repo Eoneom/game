@@ -30,8 +30,11 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 | --- | --- | --- |
 | `city:resources-gathered` | same | `city_id` |
 | `building:upgrade-finished` | same | `city_id` |
+| `building:queue-item-dropped` | same | `city_id`, `building_code`, `error_code` |
 | `technology:research-finished` | same | — |
+| `technology:queue-item-dropped` | same | `city_id`, `technology_code`, `error_code` |
 | `troop:movement-finished` | same | — |
+| `battle:finished` | same | `player_id`, `report_id`, `perspective` (`attacker` \| `defender`), `winner` (`attacker` \| `defender` \| `draw`) — once per participant, after the battle reports commit ([`024`](../024-player-combat-pvp/spec.md)) |
 | `troop:recruitment-updated` | same | `city_id` |
 | `outpost:created` | same | — |
 | `outpost:deleted` | same | `outpost_id` |
@@ -39,7 +42,7 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 
 Bus implementation: `apps/server/src/app/event-bus.ts` (typed payloads, info logging). Tests: `apps/server/src/app/event-bus.spec.ts`.
 
-Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, outpost lifecycle/gather.
+Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), outpost lifecycle/gather.
 
 ## Web listeners
 
@@ -50,6 +53,7 @@ Registered in `startSession` (`apps/web/src/modules/auth/hooks.ts`):
 - `technology/ws-listener.ts`
 - `troop/ws-listener.ts`
 - `outpost/ws-listener.ts`
+- `communication/ws-listener.ts` (battle report toast; registers once per page load)
 
 Client: `apps/web/src/helpers/websocket.ts` — connect/disconnect, parse `type`, dispatch to registered handlers.
 

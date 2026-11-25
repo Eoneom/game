@@ -15,6 +15,7 @@ Players own **cities** anchored to world cells. Signup creates the first city; a
 | `GET` | `/city` | yes | `cityListHandler` |
 | `GET` | `/city/:city_id` | yes | `cityGetHandler` |
 | `POST` | `/city` | yes | `citySettleHandler` |
+| `PUT` | `/city/:city_id/combat-strategy` | yes | `citySetCombatStrategyHandler` — garrison defense strategy, see [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024) |
 
 Handler validation uses `RequestError` for missing ids/names where applicable (`city_id:not-found`, etc.).
 

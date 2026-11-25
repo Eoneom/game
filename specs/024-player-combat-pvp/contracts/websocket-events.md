@@ -1,6 +1,6 @@
 # Contract — WebSocket events (PvP)
 
-**Slice**: 024 | **Status**: Planned  
+**Slice**: 024 | **Status**: Implemented  
 **Aligns with**: [`017-realtime-websocket`](../017-realtime-websocket/spec.md), `packages/api-client/src/events.ts`
 
 ## Existing event (unchanged)
@@ -15,7 +15,7 @@
 
 | `AppEvent` | Wire | Payload | When |
 | --- | --- | --- | --- |
-| `BattleFinished` | `battle:finished` | `{ player_id: string }` | After that player's `battle` report row is committed |
+| `BattleFinished` | `battle:finished` | `{ player_id, report_id, perspective, winner }` | After both `battle` report rows are committed (O001 added `report_id`, `perspective`, `winner`) |
 
 Emit **once per participant** (attacker and defender), same pattern as movement finish targeting the affected player session(s).
 
@@ -59,7 +59,10 @@ BattleFinished = 'battle:finished'
 Payload type (optional explicit interface in api-client):
 
 ```typescript
-export interface BattleFinishedEventPayload {
+export type BattleFinishedEventPayload = {
   player_id: string
+  report_id: string
+  perspective: 'attacker' | 'defender'
+  winner: 'attacker' | 'defender' | 'draw'
 }
 ```

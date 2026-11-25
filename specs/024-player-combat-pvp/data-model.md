@@ -91,13 +91,25 @@ Backfill existing ten codes per spec roster table in [`spec.md`](./spec.md#exten
 | `current_round` | int | 0 before round 1; 1–5 during |
 | `status` | text | `in_progress` \| `finished` |
 | `winner` | text nullable | set on finish |
-| `state_json` | jsonb | snapshot stacks per side, cumulative casualties, `round_summaries[]` |
+| `state_json` | jsonb | snapshot stacks per side, attacker origin, cumulative casualties (rounds moved to `battle_round` in migration `00009`) |
 | `started_at` | timestamptz | movement arrival |
 | `finished_at` | timestamptz nullable | |
 
 Indexes: `movement_id` unique; `status` for admin queries optional.
 
-**Alternative**: normalize rounds to `battle_round` rows — optional if `state_json.round_summaries` suffices for v1 reports.
+### `battle_round` (new, migration `00009_battle_round.ts`)
+
+One row per resolved round; replaced `state_json.round_summaries` (task O004). Up backfills from the JSON and drops the key; down restores it.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `battle_id` | uuid FK → `battle.id` ON DELETE CASCADE | PK part |
+| `round` | int | PK part; 1–5 |
+| `attacker_attack_pool` / `defender_attack_pool` | double precision | |
+| `attacker_life_pool` / `defender_life_pool` | double precision | |
+| `attacker_losses` / `defender_losses` | jsonb | `[{ code, count }]` |
+
+`BattleEntity.round_summaries` is loaded from these rows; the repository appends rounds with `ON CONFLICT DO NOTHING`.
 
 ### `movement` (alter)
 

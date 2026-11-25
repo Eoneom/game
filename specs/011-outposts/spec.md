@@ -15,6 +15,7 @@
 | `GET` | `/outpost` | yes | `outpostListHandler` |
 | `GET` | `/outpost/:outpost_id` | yes | `outpostGetHandler` |
 | `PUT` | `/outpost/permanent` | yes | `outpostSetPermanentHandler` |
+| `PUT` | `/outpost/:outpost_id/combat-strategy` | yes | `outpostSetCombatStrategyHandler` — garrison defense strategy, see [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024) |
 
 Missing `outpost_id` where required → **400** + `outpost_id:not-found` (`RequestError`).
 

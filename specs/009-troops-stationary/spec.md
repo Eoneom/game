@@ -1,10 +1,10 @@
 # Slice 009 — Troops (stationary stacks)
 
-**Status**: As implemented on `main` (brownfield).
+**Status**: As implemented on `main` (brownfield). PvP evidence updated after slice [`024`](../024-player-combat-pvp/spec.md) (O005).
 
 ## Summary
 
-**Troop stacks** (`TroopEntity`) sit on a `cell_id`, belong to a `player_id`, have a `TroopCode` and `count`, and may reference an active `movement_id`. Players **recruit** (batched job `troop.recruit.progress`), **cancel** recruitment, and **list/get** troops by city or outpost. Faction determines which troop codes exist at bootstrap (`TroopService.codesForFaction`). Movement creation is [`010`](../010-troop-movement-combat/spec.md). **Recruit** gates and costs use [`014`](../014-requirements-pricing/spec.md) (`TroopRequirement`, `PricingService.getTroopCost`); **combat** `TroopCode`s (eight codes — four per faction, roster in [`024`](../024-player-combat-pvp/spec.md)) include `life_capacity`, `combat_troop_class`, `troop_faction`, per-code recruit rows, and web art on `main`.
+**Troop stacks** (`TroopEntity`) sit on a `cell_id`, belong to a `player_id`, have a `TroopCode` and `count`, and may reference an active `movement_id`. Players **recruit** (batched job `troop.recruit.progress`), **cancel** recruitment, and **list/get** troops by city or outpost. Faction determines which troop codes exist at bootstrap (`TroopService.codesForFaction`). Movement creation is [`010`](../010-troop-movement-combat/spec.md). **Recruit** gates and costs use [`014`](../014-requirements-pricing/spec.md) (`TroopRequirement`, `PricingService.getTroopCost`); **combat** `TroopCode`s (four per faction, one per `CombatTroopClass`; see [Combat roles](#combat-roles), [`024`](../024-player-combat-pvp/spec.md) and [`025`](../025-lawless-human-faction/spec.md)) include `life_capacity`, `combat_troop_class`, `troop_faction`, per-code recruit rows, and web art on `main`.
 
 **Depends on**: city/outpost location, requirements/pricing ([`014`](../014-requirements-pricing/spec.md)), faction ([`004`](../004-faction-domain/spec.md)).
 
@@ -31,6 +31,33 @@ Recruitment progress emits `troop:recruitment-updated` (WebSocket [`017`](../017
 
 Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, `apps/server/src/app/command/troop/{recruit,cancel,progress-recruit}.spec.ts`, `apps/server/src/core/troop/service.spec.ts`.
 
+## Combat roles
+
+Every `TroopCode` has a `combat_role` (`core/troop/constant/characteristic.ts`); combat-role codes also have a `combat_troop_class`:
+
+| Faction | `legionnaire` class | `interceptor` class | `war_machine` class | `disruptor` class |
+| --- | --- | --- | --- | --- |
+| `the_confederation` | `legionnaire` | `interceptor` | `assault_behemoth` | `shock_trooper` |
+| `the_technological_singularity` | `prime_unit` | `striker_drone` | `war_machine` | `disruptor` |
+| `the_ash_liturgy` | `penitent_horde` | `wraith_lancer` | `cinder_titan` | `hemorrhage_cultist` |
+
+Other roles: **scout** (`explorer`, `seeker`, `ash_emissary`), **carrier** (`light_transporter`, `hauler`, `bone_cart`), **civilian** (settlers and gatherers, incl. `pyre_pilgrim`, `spore_acolyte`, `scrap_lector`). Role decides battle pools and whether a stack may join an attack ([`010`](../010-troop-movement-combat/spec.md)).
+
+## Garrison defense strategy (024)
+
+Troops stationed on a city or outpost defend with that location's **`default_combat_strategy`** (`city` / `outpost` column; `null` → `balanced` via `resolveDefaultCombatStrategy`). The owner sets it:
+
+| Method | Path | Auth | Handler | Body |
+| --- | --- | --- | --- | --- |
+| `PUT` | `/city/:city_id/combat-strategy` | yes | `citySetCombatStrategyHandler` | `{ combat_strategy }` |
+| `PUT` | `/outpost/:outpost_id/combat-strategy` | yes | `outpostSetCombatStrategyHandler` | `{ combat_strategy }` |
+
+Unknown or missing strategy → 400 `combat_strategy:not-found`; another player's location → `city:not-owner` / `outpost:not-owner`. `GET /city/:city_id` and `GET /outpost/:outpost_id` return the effective `default_combat_strategy`. The strategy is read when a battle starts (`sagaFinishAttack`), so changing it mid-battle does not affect that battle. System players never set it, so their garrisons defend `balanced`.
+
+Web: « Défense de la garnison » panel (`troop/garrison-strategy`) on the city troop page and the outpost page.
+
+Tests: `apps/server/src/app/command/{city,outpost}/set-combat-strategy.spec.ts`, `apps/server/src/web/handler/{city,outpost}/set-combat-strategy.spec.ts`, `apps/web/src/modules/outpost/page.test.tsx`.
+
 ## Background jobs
 
 | Queue | Command |
@@ -45,7 +72,7 @@ Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, 
 
 ## Web UI
 
-`apps/web/src/modules/troop/` — details, recruit form (not movement list; see movement module).
+`apps/web/src/modules/troop/` — details, recruit form, garrison defense strategy panel (not movement list; see movement module).
 
 ## API client
 
@@ -60,4 +87,5 @@ Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, 
 | Queries | `apps/server/src/app/query/troop/` (except movement) |
 | Jobs | `apps/server/src/adapter/job-queue/troop/recruit-progress.ts` |
 | HTTP | `apps/server/src/web/handler/troop/` (except `movement/`) |
-| Combat (024) | `characteristic.ts` combat stats; codes `legionnaire`/`interceptor`/`war_machine`/`disruptor`; `TroopRequirement` + `troop_costs` rows |
+| Combat (024) | `characteristic.ts` combat stats and roles; `TroopRequirement` + `troop_costs` rows |
+| Garrison strategy (024) | `app/command/{city,outpost}/set-combat-strategy.ts`, `web/handler/{city,outpost}/set-combat-strategy.ts`, `core/combat/value/combat-strategy.ts`, `apps/web/src/modules/troop/garrison-strategy/` |

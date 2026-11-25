@@ -1,10 +1,10 @@
 # Slice 016 — System-controlled players
 
-**Status**: As implemented on `main` (brownfield).
+**Status**: As implemented on `main` (brownfield). PvP evidence updated after slice [`024`](../024-player-combat-pvp/spec.md) (O005).
 
 ## Summary
 
-The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayers` creates registered empires if missing: **Alpha** (`the_technological_singularity`, `Core I`) and **Harrow** (`the_ash_liturgy`, `Cinder I` — see [`025`](../025-lawless-human-faction/spec.md)). A recurring **system player tick** job loads an **empire snapshot** (including per-player **AI profile**), builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (10)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
+The server maintains **system-controlled** players (non-human opponents) that cannot log in (`player:system-controlled`). On boot, `ensureSystemPlayers` creates registered empires if missing: **Alpha** (`the_technological_singularity`, `Core I`) and **Harrow** (`the_ash_liturgy`, `Cinder I` — see [`025`](../025-lawless-human-faction/spec.md)). A recurring **system player tick** job loads an **empire snapshot** (including per-player **AI profile**), builds a **deterministic action plan** (including `deploy-outpost` for on-site gatherers and haulers), then commits **up to `SYSTEM_MAX_ACTIONS_PER_TICK` (25)** successful commands per tick when intents remain feasible. By default the plan is **expansion-first**; when the main city needs baseline upkeep (warehouse pressure, energy starvation, or missing core production), the plan flips to **economy-first** for that tick.
 
 **Depends on**: faction ([`004`](../004-faction-domain/spec.md)), bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)), all game commands invoked by tick actions.
 
@@ -133,7 +133,7 @@ System AI does **not** launch `attack` movements until the empire meets **army r
 | `SYSTEM_DISRUPTOR_RATIO` | **`disruptor` class** count (`disruptor`) ≥ **30%** of total combat-role troops (all four classes), empire-wide |
 | Economy gate for combat recruiting | At least one city and the main city has **any** resource stock; while below readiness, `sortTroopsForSystemRecruit` boosts missing **combat classes** (war_machine → legionnaire → interceptor → disruptor) before other non-economy troops |
 
-**Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit`. Returns idle when the army is not ready, when **`empire_under_threat`** (enemy stacks or settlements within **6** Manhattan cells of owned territory), when no simulated-winning target exists, or when no origin has a combat garrison. `pickSystemAttack` scores targets in viewport, runs **`simulateCombat`** (`CombatService.simulateBattle`) with **attacker strategy from defender composition** (`opening_strike` vs war machines, `balanced` vs disruptors, else `hold_the_line`), and commits only when the simulator predicts an **attacker** win. Skips coordinates in **`system_player_memory.failed_attack_targets`**; failed movement attempts append to that list.
+**Attack** (`tryAttack`): runs in the economy tick ring **after** `recruit`. Returns idle when the army is not ready, when **`empire_under_threat`** (enemy stacks or settlements within **6** Manhattan cells of owned territory), when no simulated-winning target exists, or when no origin has a combat garrison. `pickSystemAttack` scores targets in viewport, runs **`simulateCombat`** (`CombatService.simulateBattle`) with **attacker strategy from defender composition** (`opening_strike` vs war machines, `balanced` vs disruptors, else `hold_the_line`), and commits only when the simulator predicts an **attacker** win. The simulation assumes the defender plays the same composition-based strategy; it does not read the target garrison's `default_combat_strategy` (which the real battle uses — [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024)). Skips coordinates in **`system_player_memory.failed_attack_targets`**; failed movement attempts append to that list.
 
 **Cross-tick memory** (`system_player_memory` table, migration `00007`): JSON per system player with `failed_base_cells` and `failed_attack_targets`. `tryBase` skips blocked coordinates and records a failed destination when no origin can move.
 
@@ -142,6 +142,10 @@ System AI does **not** launch `attack` movements until the empire meets **army r
 **Empire allocation**: `tryUpgrade` / `tryRecruit` iterate cities by `city-allocation.ts` / `troops.ts` priority scores (warehouse pressure, logistics, combat boost) instead of repository list order only.
 
 **Outpost logistics FSM** (`outpost-logistics.ts`): per permanent outpost phase `needs_gatherer` → `producing` → `needs_haul`; deploy candidates and planner reasons (`outpost_logistics_needs_gatherer` / `needs_haul`) follow phase priority.
+
+**Defense**: system players never set `default_combat_strategy`, so their cities and outposts defend `balanced`. Battle outcomes against them follow [`010`](../010-troop-movement-combat/spec.md); `battle:finished` is emitted for them too but no socket is connected.
+
+**AI profiles** (`core/player/system/ai-profile.ts`): Alpha uses `singularity_default`; **Harrow** (`the_ash_liturgy`, [`025`](../025-lawless-human-faction/spec.md)) uses `ash_liturgy_aggressive` — higher attack utility, ignores `empire_under_threat` for attack idling, +500 score on Confederation targets, no failed-attack memory, more scouts/founders, lower make-permanent priority.
 
 See also [`024`](../024-player-combat-pvp/spec.md) (system AI note).
 

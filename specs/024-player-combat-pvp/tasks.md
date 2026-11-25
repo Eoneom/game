@@ -187,11 +187,11 @@ description: "Task list for slice 024 — Player combat (PvP)"
 
 ## Optional / nice-to-have (not required for slice closure)
 
-- [ ] O001 [P] Optional toast « Nouveau rapport de bataille » on `battle:finished` in `apps/web/src/modules/communication/ws-listener.ts`
-- [ ] O002 [P] Expose `battle_id` on `GET /troop/movement/:movement_id` response (api-client + handler) for future battle page
-- [ ] O003 [P] Web UI to edit `default_combat_strategy` on city/outpost garrison settings (DB column from Phase 1; API + forms)
-- [ ] O004 [P] Normalize `battle_round` table instead of `state_json.round_summaries` ([`data-model.md`](./data-model.md) alternative)
-- [ ] O005 Post-implementation spec evidence updates in `specs/009-troops-stationary/spec.md`, `specs/010-troop-movement-combat/spec.md`, `specs/012-communication-reports/spec.md`, `specs/016-system-controlled-players/spec.md` (separate doc PR per plan)
+- [x] O001 [P] Optional toast « Nouveau rapport de bataille » on `battle:finished` in `apps/web/src/modules/communication/ws-listener.ts` — payload now carries `report_id`, `perspective`, `winner`; toast links to `/inbox/report?report_id=`
+- [x] O002 [P] Expose `battle_id` on `GET /troop/movement/:movement_id` response (api-client + handler) for future battle page — arrived attacks in battle are returned by id (`arrive_at` = battle start)
+- [x] O003 [P] Web UI to edit `default_combat_strategy` on city/outpost garrison settings (DB column from Phase 1; API + forms) — `PUT /city/:city_id/combat-strategy`, `PUT /outpost/:outpost_id/combat-strategy`
+- [x] O004 [P] Normalize `battle_round` table instead of `state_json.round_summaries` ([`data-model.md`](./data-model.md) alternative) — migration `00009_battle_round.ts`
+- [x] O005 Post-implementation spec evidence updates in `specs/009-troops-stationary/spec.md`, `specs/010-troop-movement-combat/spec.md`, `specs/012-communication-reports/spec.md`, `specs/016-system-controlled-players/spec.md` (separate doc PR per plan)
 
 ---
 
