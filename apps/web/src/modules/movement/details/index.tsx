@@ -15,12 +15,21 @@ export const MovementDetails: React.FC<Props> = ({ movement }) => {
     <LayoutDetailsContent>
       <h2>{MovementActionLabels[movement.action]}</h2>
       <div className="details-block">
-        <p className="details-meta">
-          Arrivée prévue :{' '}
-          <time dateTime={new Date(movement.arrive_at).toISOString()}>
-            {new Date(movement.arrive_at).toLocaleString()}
-          </time>
-        </p>
+        {movement.battle_id ? (
+          <p className="details-meta text-amber">
+            Bataille en cours depuis{' '}
+            <time dateTime={new Date(movement.arrive_at).toISOString()}>
+              {new Date(movement.arrive_at).toLocaleString()}
+            </time>
+          </p>
+        ) : (
+          <p className="details-meta">
+            Arrivée prévue :{' '}
+            <time dateTime={new Date(movement.arrive_at).toISOString()}>
+              {new Date(movement.arrive_at).toLocaleString()}
+            </time>
+          </p>
+        )}
         <p className="details-meta">
           Départ :{' '}
           <span className="details-coordinates">{formatCoordinates(movement.origin)}</span>

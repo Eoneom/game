@@ -29,6 +29,7 @@ const queryResult = {
       y: 4
     } }),
   arrive_at: 1_744_000_000_000,
+  battle_id: null,
   troops: [
     {
       code: 'WARRIOR',
@@ -81,6 +82,7 @@ describe('troopGetMovementHandler', () => {
       status: 'ok',
       data: {
         action: MovementAction.EXPLORE,
+        battle_id: null,
         origin: {
           x: 0,
           y: 0

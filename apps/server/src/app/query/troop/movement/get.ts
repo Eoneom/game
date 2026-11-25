@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { resolveMovementArriveAt } from '#app/query/troop/movement/resolve-arrive-at'
 import { GenericQuery } from '#query/generic'
+import { MovementAction } from '#core/troop/constant/movement-action'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
@@ -14,6 +15,7 @@ export interface TroopMovementGetQueryResponse {
   movement: MovementEntity
   troops: TroopEntity[]
   arrive_at: number
+  battle_id: string | null
 }
 
 export class TroopMovementGetQuery extends GenericQuery<TroopMovementGetQueryRequest, TroopMovementGetQueryResponse> {
@@ -38,14 +40,29 @@ export class TroopMovementGetQuery extends GenericQuery<TroopMovementGetQueryReq
       }),
     ])
 
-    if (arrive_at === null) {
-      throw new Error(TroopError.MOVEMENT_NOT_FOUND)
+    if (arrive_at !== null) {
+      return {
+        movement,
+        troops,
+        arrive_at,
+        battle_id: null,
+      }
     }
 
-    return {
-      movement,
-      troops,
-      arrive_at,
+    // An attack that has arrived keeps its movement row until the battle ends:
+    // expose it by id (not in lists) so clients can follow the battle.
+    if (movement.action === MovementAction.ATTACK) {
+      const battle = await this.repository.battle.getByMovementId(movement_id)
+      if (battle && battle.status === 'in_progress') {
+        return {
+          movement,
+          troops,
+          arrive_at: battle.started_at,
+          battle_id: battle.id,
+        }
+      }
     }
+
+    throw new Error(TroopError.MOVEMENT_NOT_FOUND)
   }
 }

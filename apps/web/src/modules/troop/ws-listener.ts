@@ -10,12 +10,14 @@ import { activityKeys } from '#location/activity-hooks'
 export function registerTroopWsListeners(): void {
   wsClient.on(AppEvent.TroopMovementFinished, () => {
     queryClient.invalidateQueries({ queryKey: troopKeys.movements })
+    queryClient.invalidateQueries({ queryKey: ['movement'] })
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
   })
 
   wsClient.on(AppEvent.BattleFinished, () => {
     queryClient.invalidateQueries({ queryKey: troopKeys.movements })
+    queryClient.invalidateQueries({ queryKey: ['movement'] })
     queryClient.invalidateQueries({ queryKey: ['troops'] })
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: ['reports'] })

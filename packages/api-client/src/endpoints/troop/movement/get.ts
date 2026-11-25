@@ -10,6 +10,8 @@ export interface TroopGetMovementRequest {
 
 export interface TroopGetMovementDataResponse {
   action: MovementAction
+  /** Set while an arrived attack movement is in battle; `arrive_at` is then the battle start. */
+  battle_id: string | null
   origin: Coordinates
   destination: Coordinates
   arrive_at: number

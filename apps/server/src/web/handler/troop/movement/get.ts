@@ -45,9 +45,11 @@ export const troopGetMovementHandler = async (
 const response_mapper = ({
   movement,
   troops,
-  arrive_at }: TroopMovementGetQueryResponse): TroopGetMovementDataResponse => {
+  arrive_at,
+  battle_id }: TroopMovementGetQueryResponse): TroopGetMovementDataResponse => {
   const response_movements: TroopGetMovementDataResponse = {
     action: movement.action,
+    battle_id,
     origin: {
       x: movement.origin.x,
       y: movement.origin.y
