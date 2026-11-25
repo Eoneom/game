@@ -1494,10 +1494,7 @@ describe('systemTickActions', () => {
   it('skips base destinations that already have an in-flight BASE movement', async () => {
     const weak_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x + 1,
-        y: city_cell.coordinates.y,
-      },
+      coordinates: validSystemBaseCoordinates(3, 0),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
@@ -1508,10 +1505,7 @@ describe('systemTickActions', () => {
     })
     const strong_site = CellEntity.create({
       id: id(),
-      coordinates: {
-        x: city_cell.coordinates.x,
-        y: city_cell.coordinates.y + 1,
-      },
+      coordinates: validSystemBaseCoordinates(6, 4),
       type: CellType.LAKE,
       resource_coefficient: {
         plastic: 1,
