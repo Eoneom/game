@@ -31,7 +31,7 @@ export async function createBattleReports({
   const attacker = await repository.player.get(battle.attacker_player_id)
   const defender = await repository.player.get(battle.defender_player_id)
 
-  const rounds_played = battle.state_json.round_summaries.length
+  const rounds_played = battle.round_summaries.length
 
   const shared = {
     battle_id: battle.id,
@@ -49,7 +49,7 @@ export async function createBattleReports({
     outcome,
     casualties_attacker: battle.state_json.cumulative_attacker_losses,
     casualties_defender: battle.state_json.cumulative_defender_losses,
-    round_summaries: battle.state_json.round_summaries,
+    round_summaries: battle.round_summaries,
   }
 
   const attacker_report = ReportEntity.create({

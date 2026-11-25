@@ -31,10 +31,10 @@ const makeBattle = ({ movement_id, status }: { movement_id: string; status: Batt
       attacker_stacks: [],
       defender_stacks: [],
       attacker_origin: { x: 0, y: 0 },
-      round_summaries: [],
       cumulative_attacker_losses: [],
       cumulative_defender_losses: [],
     },
+    round_summaries: [],
     started_at: 42_000,
     finished_at: null,
   })

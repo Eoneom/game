@@ -74,6 +74,17 @@ export interface Battle {
   winner: string | null;
 }
 
+export interface BattleRound {
+  attacker_attack_pool: number;
+  attacker_life_pool: number;
+  attacker_losses: Json;
+  battle_id: string;
+  defender_attack_pool: number;
+  defender_life_pool: number;
+  defender_losses: Json;
+  round: number;
+}
+
 export interface City {
   cell_id: string;
   default_combat_strategy: string | null;
@@ -342,6 +353,7 @@ export interface Troop {
 export interface DB {
   auth: Auth;
   battle: Battle;
+  battle_round: BattleRound;
   building: Building;
   building_upgrade_queue: BuildingUpgradeQueue;
   cell: Cell;

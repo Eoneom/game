@@ -50,10 +50,10 @@ describe('createBattleReports', () => {
         attacker_stacks: [{ code: 'legionnaire', count: 2 }],
         defender_stacks: [],
         attacker_origin: { x: 1, y: 1 },
-        round_summaries: [{ round: 1, attacker_attack_pool: 1, defender_attack_pool: 1, attacker_life_pool: 1, defender_life_pool: 1, attacker_losses: [], defender_losses: [] }],
         cumulative_attacker_losses: [],
         cumulative_defender_losses: [{ code: 'war_machine', count: 3 }],
       },
+      round_summaries: [{ round: 1, attacker_attack_pool: 1, defender_attack_pool: 1, attacker_life_pool: 1, defender_life_pool: 1, attacker_losses: [], defender_losses: [] }],
       started_at: 1_000,
       finished_at: 2_000,
     })

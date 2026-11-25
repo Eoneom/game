@@ -24,7 +24,6 @@ export type BattleStateJson = {
   attacker_stacks: BattleStack[]
   defender_stacks: BattleStack[]
   attacker_origin: { x: number; y: number }
-  round_summaries: BattleRoundSummary[]
   cumulative_attacker_losses: BattleCasualtyLine[]
   cumulative_defender_losses: BattleCasualtyLine[]
 }

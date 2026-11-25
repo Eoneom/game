@@ -1,5 +1,9 @@
 import { BattleEntity } from '#core/combat/entity/battle'
-import { BattleStateJson } from '#core/combat/type/battle-stack'
+import {
+  BattleCasualtyLine,
+  BattleRoundSummary,
+  BattleStateJson,
+} from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatError } from '#core/combat/error'
@@ -22,6 +26,7 @@ export class PostgresBattleRepository implements BattleRepository {
   async create(battle: BattleEntity): Promise<string> {
     const row = this.toRow(battle)
     await this.db.insertInto('battle').values(row).execute()
+    await this.insertRounds(battle)
     return battle.id
   }
 
@@ -32,6 +37,53 @@ export class PostgresBattleRepository implements BattleRepository {
       .set(row)
       .where('id', '=', battle.id)
       .execute()
+    await this.insertRounds(battle)
+  }
+
+  /** Rounds are append-only: existing (battle_id, round) rows are left untouched. */
+  private async insertRounds(battle: BattleEntity): Promise<void> {
+    if (battle.round_summaries.length === 0) {
+      return
+    }
+
+    await this.db
+      .insertInto('battle_round')
+      .values(battle.round_summaries.map(summary => this.toRoundRow(battle.id, summary)))
+      .onConflict(oc => oc.columns(['battle_id', 'round']).doNothing())
+      .execute()
+  }
+
+  private async listRounds(battle_id: string): Promise<BattleRoundSummary[]> {
+    const rows = await this.db
+      .selectFrom('battle_round')
+      .selectAll()
+      .where('battle_id', '=', battle_id)
+      .orderBy('round', 'asc')
+      .execute()
+
+    return rows.map(row => ({
+      round: row.round,
+      attacker_attack_pool: row.attacker_attack_pool,
+      defender_attack_pool: row.defender_attack_pool,
+      attacker_life_pool: row.attacker_life_pool,
+      defender_life_pool: row.defender_life_pool,
+      attacker_losses: row.attacker_losses as BattleCasualtyLine[],
+      defender_losses: row.defender_losses as BattleCasualtyLine[],
+    }))
+  }
+
+  private toRoundRow(battle_id: string, summary: BattleRoundSummary): Insertable<DB['battle_round']> {
+    return {
+      battle_id,
+      round: summary.round,
+      attacker_attack_pool: summary.attacker_attack_pool,
+      defender_attack_pool: summary.defender_attack_pool,
+      attacker_life_pool: summary.attacker_life_pool,
+      defender_life_pool: summary.defender_life_pool,
+      // Pre-serialized: node-postgres would send arrays as Postgres array literals.
+      attacker_losses: JSON.stringify(summary.attacker_losses),
+      defender_losses: JSON.stringify(summary.defender_losses),
+    }
   }
 
   async getById(id: string): Promise<BattleEntity> {
@@ -45,7 +97,7 @@ export class PostgresBattleRepository implements BattleRepository {
       throw new Error(CombatError.BATTLE_NOT_FOUND)
     }
 
-    return this.buildFromRow(row)
+    return this.buildFromRow(row, await this.listRounds(row.id))
   }
 
   async getByMovementId(movement_id: string): Promise<BattleEntity | null> {
@@ -59,10 +111,13 @@ export class PostgresBattleRepository implements BattleRepository {
       return null
     }
 
-    return this.buildFromRow(row)
+    return this.buildFromRow(row, await this.listRounds(row.id))
   }
 
-  private buildFromRow(row: Selectable<DB['battle']>): BattleEntity {
+  private buildFromRow(
+    row: Selectable<DB['battle']>,
+    round_summaries: BattleRoundSummary[]
+  ): BattleEntity {
     return BattleEntity.create({
       id: row.id,
       movement_id: row.movement_id,
@@ -77,6 +132,7 @@ export class PostgresBattleRepository implements BattleRepository {
       status: row.status as 'in_progress' | 'finished',
       winner: row.winner as BattleWinner | null,
       state_json: row.state_json as BattleStateJson,
+      round_summaries,
       started_at: fromTimestampRequired(row.started_at),
       finished_at: row.finished_at ? fromTimestampRequired(row.finished_at) : null,
     })

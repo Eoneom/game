@@ -48,7 +48,6 @@ export async function advanceCombatRound({
       ...battle.state_json,
       attacker_stacks,
       defender_stacks,
-      round_summaries: [...battle.state_json.round_summaries, round_summary],
       cumulative_attacker_losses: CombatService.mergeCumulativeLosses(
         battle.state_json.cumulative_attacker_losses,
         round_summary.attacker_losses
@@ -59,8 +58,8 @@ export async function advanceCombatRound({
       ),
     }
 
-    let updated = battle.withRoundAdvance({
-      current_round: round,
+    const updated = battle.withRoundAdvance({
+      round_summary,
       state_json,
     })
 

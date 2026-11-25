@@ -51,10 +51,10 @@ describe('advanceCombatRound', () => {
         attacker_stacks: [{ code: TroopCode.LEGIONNAIRE, count: 10 }],
         defender_stacks: [{ code: TroopCode.WAR_MACHINE, count: 1 }],
         attacker_origin: { x: 0, y: 0 },
-        round_summaries: [],
         cumulative_attacker_losses: [],
         cumulative_defender_losses: [],
       },
+      round_summaries: [],
       started_at: 1_000,
       finished_at: null,
     })
@@ -85,6 +85,10 @@ describe('advanceCombatRound', () => {
       finished_at: 5_000,
     })
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 0)
+    const updated = battleUpdate.mock.calls[0][0]
+    assert.strictEqual(updated.current_round, 1)
+    assert.deepStrictEqual(updated.round_summaries.map((r: { round: number }) => r.round), [1])
+    assert.strictEqual('round_summaries' in updated.state_json, false)
     assert.strictEqual(emit.mock.calls.length, 2)
     assert.strictEqual(emit.mock.calls[0][0], AppEvent.BattleFinished)
     assert.deepStrictEqual(emit.mock.calls[0][1], {
@@ -148,10 +152,10 @@ describe('advanceCombatRound', () => {
             attacker_stacks: [{ code: TroopCode.LEGIONNAIRE, count: 50 }],
             defender_stacks: [{ code: TroopCode.WAR_MACHINE, count: 50 }],
             attacker_origin: { x: 0, y: 0 },
-            round_summaries: [],
             cumulative_attacker_losses: [],
             cumulative_defender_losses: [],
           },
+          round_summaries: [],
           started_at: 1_000,
           finished_at: null,
         })),

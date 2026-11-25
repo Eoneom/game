@@ -64,7 +64,6 @@ export const sagaFinishAttack = async ({
     attacker_stacks,
     defender_stacks,
     attacker_origin: movement.origin,
-    round_summaries: [],
     cumulative_attacker_losses: [],
     cumulative_defender_losses: [],
   }
@@ -83,6 +82,7 @@ export const sagaFinishAttack = async ({
     status: 'in_progress',
     winner: null,
     state_json,
+    round_summaries: [],
     started_at: arrived_at,
     finished_at: null,
   })

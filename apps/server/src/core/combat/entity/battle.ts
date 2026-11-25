@@ -1,4 +1,4 @@
-import { BattleStateJson } from '#core/combat/type/battle-stack'
+import { BattleRoundSummary, BattleStateJson } from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -19,6 +19,8 @@ type BattleEntityProps = BaseEntityProps & {
   status: BattleStatus
   winner: BattleWinner | null
   state_json: BattleStateJson
+  /** Resolved rounds in order (persisted in `battle_round`). */
+  round_summaries: BattleRoundSummary[]
   started_at: number
   finished_at: number | null
 }
@@ -36,6 +38,7 @@ export class BattleEntity extends BaseEntity {
   readonly status: BattleStatus
   readonly winner: BattleWinner | null
   readonly state_json: BattleStateJson
+  readonly round_summaries: BattleRoundSummary[]
   readonly started_at: number
   readonly finished_at: number | null
 
@@ -53,6 +56,7 @@ export class BattleEntity extends BaseEntity {
     this.status = props.status
     this.winner = props.winner
     this.state_json = props.state_json
+    this.round_summaries = props.round_summaries
     this.started_at = props.started_at
     this.finished_at = props.finished_at
   }
@@ -62,17 +66,18 @@ export class BattleEntity extends BaseEntity {
   }
 
   withRoundAdvance({
-    current_round,
+    round_summary,
     state_json,
   }: {
-    current_round: number
+    round_summary: BattleRoundSummary
     state_json: BattleStateJson
   }): BattleEntity {
     return BattleEntity.create({
       ...this,
       id: this.id,
-      current_round,
+      current_round: round_summary.round,
       state_json,
+      round_summaries: [...this.round_summaries, round_summary],
     })
   }
 
