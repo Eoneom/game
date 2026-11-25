@@ -22,6 +22,13 @@ export type ReportBattleMetadataRow = {
   round_summaries_json: unknown
 }
 
+/**
+ * node-postgres encodes JS arrays as Postgres array literals, which jsonb rejects
+ * (and `[]` would become `{}`), so JSON values are sent pre-serialized.
+ */
+const toJsonb = (value: unknown): DB['report_battle']['outcome_json'] =>
+  JSON.stringify(value) as unknown as DB['report_battle']['outcome_json']
+
 export async function insertReportBattleRow(
   db: Kysely<DB>,
   row: ReportBattleMetadataRow
@@ -41,10 +48,10 @@ export async function insertReportBattleRow(
     attacker_strategy: row.attacker_strategy,
     defender_strategy: row.defender_strategy,
     rounds_played: row.rounds_played,
-    outcome_json: row.outcome_json as DB['report_battle']['outcome_json'],
-    casualties_attacker_json: row.casualties_attacker_json as DB['report_battle']['casualties_attacker_json'],
-    casualties_defender_json: row.casualties_defender_json as DB['report_battle']['casualties_defender_json'],
-    round_summaries_json: row.round_summaries_json as DB['report_battle']['round_summaries_json'],
+    outcome_json: toJsonb(row.outcome_json),
+    casualties_attacker_json: toJsonb(row.casualties_attacker_json),
+    casualties_defender_json: toJsonb(row.casualties_defender_json),
+    round_summaries_json: toJsonb(row.round_summaries_json),
   }).execute()
 }
 
