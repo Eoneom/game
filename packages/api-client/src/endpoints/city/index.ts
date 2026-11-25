@@ -5,6 +5,10 @@ import {
 } from './get'
 import { CityListResponse } from './list'
 import {
+  CitySetCombatStrategyRequest,
+  CitySetCombatStrategyResponse
+} from './set-combat-strategy'
+import {
   CitySettleRequest,
   CitySettleResponse
 } from './settle'
@@ -22,6 +26,16 @@ export class CityEndpoint {
 
   list(token: string): Promise<CityListResponse> {
     return this.fetcher.get('/city', { token })
+  }
+
+  setCombatStrategy(
+    token: string,
+    { city_id, combat_strategy }: CitySetCombatStrategyRequest
+  ): Promise<CitySetCombatStrategyResponse> {
+    return this.fetcher.put(`/city/${city_id}/combat-strategy`, {
+      token,
+      body: { combat_strategy }
+    })
   }
 
   settle(token: string, body: CitySettleRequest): Promise<CitySettleResponse> {

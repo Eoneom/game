@@ -1,5 +1,6 @@
 import { GenericResponse } from '../../response'
 import { Coordinates } from '../shared/coordinates'
+import { CombatStrategy } from '@server-core/combat/value/combat-strategy'
 
 export interface CityGetRequest {
   city_id: string
@@ -8,6 +9,8 @@ export interface CityGetRequest {
 export interface CityGetDataResponse {
   id: string
   name: string
+  /** Strategy the garrison uses when defending (balanced when never set). */
+  default_combat_strategy: CombatStrategy
   plastic: number
   mushroom: number
   plasma: number

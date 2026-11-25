@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, screen, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { OutpostType } from '@eoneom/api-client'
+import { CombatStrategy, OutpostType } from '@eoneom/api-client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { vi } from 'vitest'
 
@@ -14,6 +14,7 @@ import { OutpostPage } from './page'
 
 const mockSettleCity = vi.fn()
 const mockSetPermanent = vi.fn()
+const mockSetCombatStrategy = vi.fn()
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -39,7 +40,8 @@ vi.mock('@tanstack/react-router', () => ({
 
 vi.mock('#outpost/hooks', async () => ({
   ...(await vi.importActual<typeof import('#outpost/hooks')>('#outpost/hooks')),
-  useSetOutpostPermanent: () => ({ mutate: mockSetPermanent }) }))
+  useSetOutpostPermanent: () => ({ mutate: mockSetPermanent }),
+  useSetOutpostCombatStrategy: () => ({ mutate: mockSetCombatStrategy, isPending: false }) }))
 
 vi.mock('#city/hooks', async () => ({
   ...(await vi.importActual<typeof import('#city/hooks')>('#city/hooks')),
@@ -57,6 +59,7 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   id: 'o1',
   coordinates: { x: 1, y: 1 },
   type: OutpostType.TEMPORARY,
+  default_combat_strategy: CombatStrategy.BALANCED,
   plastic: 10,
   mushroom: 20,
   plasma: 0,
@@ -90,6 +93,7 @@ describe('OutpostPage', () => {
   beforeEach(() => {
     mockSettleCity.mockReset()
     mockSetPermanent.mockReset()
+    mockSetCombatStrategy.mockReset()
   })
 
   it('shows make permanent button only for temporary outpost', async () => {
@@ -136,5 +140,15 @@ describe('OutpostPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Rendre permanent' }))
     expect(mockSetPermanent).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows the garrison strategy and dispatches a change', async () => {
+    renderWithOutpost(minimalOutpost({ default_combat_strategy: CombatStrategy.HOLD_THE_LINE }))
+
+    expect(screen.getByRole('heading', { name: 'Défense de la garnison' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Tenir la ligne' })).toBeChecked()
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Frappe d\'ouverture' }))
+    expect(mockSetCombatStrategy).toHaveBeenCalledWith(CombatStrategy.OPENING_STRIKE)
   })
 })

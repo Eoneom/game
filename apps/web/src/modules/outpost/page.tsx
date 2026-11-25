@@ -5,7 +5,12 @@ import {
   formatCoordinates,
   transformDecimals,
 } from '#helpers/transform'
-import { useGetOutpost, useSetOutpostPermanent } from '#outpost/hooks'
+import {
+  useGetOutpost,
+  useSetOutpostCombatStrategy,
+  useSetOutpostPermanent,
+} from '#outpost/hooks'
+import { GarrisonCombatStrategy } from '#troop/garrison-strategy'
 import { useSettleCity } from '#city/hooks'
 import { OutpostSettle } from '#outpost/settle'
 import { Button } from '#ui/button'
@@ -30,6 +35,7 @@ const warehouseFillPercent = (capacity: number, stored: number): number => {
 export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
   const { data: outpost } = useGetOutpost(outpostId)
   const setPermanent = useSetOutpostPermanent(outpostId)
+  const setCombatStrategy = useSetOutpostCombatStrategy(outpostId)
   const settleCity = useSettleCity()
   const RouterLink = Link as React.ComponentType<{
     to: string
@@ -179,6 +185,12 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
             </div>
           </article>
         )}
+
+        <GarrisonCombatStrategy
+          strategy={outpost.default_combat_strategy}
+          pending={setCombatStrategy.isPending}
+          onChange={strategy => setCombatStrategy.mutate(strategy)}
+        />
       </div>
     </section>
   )

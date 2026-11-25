@@ -41,6 +41,13 @@ export class OutpostEntity extends BaseEntity {
     return this.player_id === player_id
   }
 
+  withDefaultCombatStrategy(default_combat_strategy: CombatStrategy): OutpostEntity {
+    return OutpostEntity.create({
+      ...this,
+      default_combat_strategy,
+    })
+  }
+
   setPermanent(): OutpostEntity {
     return OutpostEntity.create({
       ...this,

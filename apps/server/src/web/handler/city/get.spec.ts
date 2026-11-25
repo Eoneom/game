@@ -111,6 +111,7 @@ describe('cityGetHandler', () => {
       data: {
         id: 'c1',
         name: 'Aliceton',
+        default_combat_strategy: 'balanced',
         plastic: 500,
         mushroom: 300,
         plasma: 0,

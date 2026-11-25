@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
+import type { CombatStrategy } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -63,6 +64,23 @@ export const useSettleCity = () => {
       queryClient.invalidateQueries({ queryKey: cityKeys.all })
       queryClient.invalidateQueries({ queryKey: ['outposts'] })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(newCityId) })
+    },
+    onError: (err: Error) => toast.error(translateError(err.message)),
+  })
+}
+
+export const useSetCityCombatStrategy = (cityId: string) => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (combat_strategy: CombatStrategy) => {
+      if (!token) throw new Error('no token')
+      const res = await client.city.setCombatStrategy(token, { city_id: cityId, combat_strategy })
+      if (isError(res)) throw new Error(res.error_code)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
     },
     onError: (err: Error) => toast.error(translateError(err.message)),
   })

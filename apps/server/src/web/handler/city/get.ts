@@ -1,3 +1,4 @@
+import { resolveDefaultCombatStrategy } from '#core/combat/value/combat-strategy'
 import { RequestError } from '@eoneom/api-client'
 import {
   NextFunction,
@@ -68,6 +69,7 @@ const response_mapper = ({
   return {
     id: city.id,
     name: city.name,
+    default_combat_strategy: resolveDefaultCombatStrategy(city.default_combat_strategy),
     plastic: resource_stock.plastic,
     mushroom: resource_stock.mushroom,
     plasma: resource_stock.plasma,

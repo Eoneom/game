@@ -1,6 +1,7 @@
 import { GenericResponse } from '../../response'
 import { Coordinates } from '../shared/coordinates'
 import { OutpostType } from '@server-core/outpost/constant/type'
+import { CombatStrategy } from '@server-core/combat/value/combat-strategy'
 
 export interface OutpostGetRequest {
   outpost_id: string
@@ -10,6 +11,8 @@ export interface OutpostGetDataResponse {
   id: string
   coordinates: Coordinates
   type: OutpostType
+  /** Strategy the garrison uses when defending (balanced when never set). */
+  default_combat_strategy: CombatStrategy
   plastic: number
   mushroom: number
   plasma: number

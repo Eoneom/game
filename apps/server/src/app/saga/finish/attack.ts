@@ -6,7 +6,10 @@ import {
 import { BattleEntity } from '#core/combat/entity/battle'
 import { BattleStateJson } from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
-import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import {
+  CombatStrategy,
+  resolveDefaultCombatStrategy,
+} from '#core/combat/value/combat-strategy'
 import { TroopError } from '#core/troop/error'
 import { id } from '#shared/identification'
 
@@ -49,10 +52,10 @@ export const sagaFinishAttack = async ({
   let defender_strategy = CombatStrategy.BALANCED
   if (target.target_kind === BattleTargetKind.CITY && target.target_id) {
     const city = await repository.city.get(target.target_id)
-    defender_strategy = city.default_combat_strategy ?? CombatStrategy.BALANCED
+    defender_strategy = resolveDefaultCombatStrategy(city.default_combat_strategy)
   } else if (target.target_kind === BattleTargetKind.OUTPOST && target.target_id) {
     const outpost = await repository.outpost.getById(target.target_id)
-    defender_strategy = outpost.default_combat_strategy ?? CombatStrategy.BALANCED
+    defender_strategy = resolveDefaultCombatStrategy(outpost.default_combat_strategy)
   }
 
   const attacker_strategy = movement.combat_strategy ?? CombatStrategy.BALANCED

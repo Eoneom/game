@@ -24,6 +24,8 @@ import { technologyGetHandler } from '#web/handler/technology/get'
 import { outpostListHandler } from '#web/handler/outpost/list'
 import { outpostGetHandler } from '#web/handler/outpost/get'
 import { outpostSetPermanentHandler } from '#web/handler/outpost/set-permanent'
+import { outpostSetCombatStrategyHandler } from '#web/handler/outpost/set-combat-strategy'
+import { citySetCombatStrategyHandler } from '#web/handler/city/set-combat-strategy'
 import { communicationGetReportHandler } from '#web/handler/communication/report/get'
 import { communicationCountUnreadReportHandler } from '#web/handler/communication/report/count-unread'
 import { communicationMarkReportHandler } from '#web/handler/communication/report/mark'
@@ -65,6 +67,7 @@ export const router = (): Router => {
   r.get('/city/:city_id', authMiddleware, cityGetHandler)
   r.get('/city/:city_id/activity', authMiddleware, cityActivityHandler)
   r.post('/city', authMiddleware, citySettleHandler)
+  r.put('/city/:city_id/combat-strategy', authMiddleware, citySetCombatStrategyHandler)
 
   r.put('/building/cancel', authMiddleware, buildingCancelHandler)
   r.put('/building/queue/cancel', authMiddleware, buildingCancelQueuedHandler)
@@ -93,6 +96,7 @@ export const router = (): Router => {
   r.get('/outpost/:outpost_id', authMiddleware, outpostGetHandler)
   r.get('/outpost/:outpost_id/activity', authMiddleware, outpostActivityHandler)
   r.put('/outpost/permanent', authMiddleware, outpostSetPermanentHandler)
+  r.put('/outpost/:outpost_id/combat-strategy', authMiddleware, outpostSetCombatStrategyHandler)
 
   r.get('/world/cells', authMiddleware, worldGetCellsHandler)
 

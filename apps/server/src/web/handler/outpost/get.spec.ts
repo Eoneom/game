@@ -16,7 +16,8 @@ type MockRes = {
 const queryResult = {
   outpost: {
     id: 'o1',
-    type: 'permanent'
+    type: 'permanent',
+    default_combat_strategy: 'hold_the_line'
   },
   cell: {
     coordinates: {
@@ -101,6 +102,7 @@ describe('outpostGetHandler', () => {
           x: 3,
           y: 5 },
         type: 'permanent',
+        default_combat_strategy: 'hold_the_line',
         plastic: 150,
         mushroom: 75,
         plasma: 0,

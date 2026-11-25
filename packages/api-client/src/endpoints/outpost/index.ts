@@ -5,6 +5,10 @@ import {
 } from './get'
 import { OutpostListResponse } from './list'
 import {
+  OutpostSetCombatStrategyRequest,
+  OutpostSetCombatStrategyResponse
+} from './set-combat-strategy'
+import {
   OutpostSetPermanentRequest,
   OutpostSetPermanentResponse
 } from './set-permanent'
@@ -22,6 +26,16 @@ export class OutpostEndpoint {
 
   list(token: string): Promise<OutpostListResponse> {
     return this.fetcher.get('/outpost', { token })
+  }
+
+  setCombatStrategy(
+    token: string,
+    { outpost_id, combat_strategy }: OutpostSetCombatStrategyRequest
+  ): Promise<OutpostSetCombatStrategyResponse> {
+    return this.fetcher.put(`/outpost/${outpost_id}/combat-strategy`, {
+      token,
+      body: { combat_strategy }
+    })
   }
 
   setPermanent(token: string, body: OutpostSetPermanentRequest): Promise<OutpostSetPermanentResponse> {

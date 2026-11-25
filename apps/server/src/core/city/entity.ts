@@ -57,4 +57,11 @@ export class CityEntity extends BaseEntity {
   isOwnedBy(player_id: string): boolean {
     return this.player_id === player_id
   }
+
+  withDefaultCombatStrategy(default_combat_strategy: CombatStrategy): CityEntity {
+    return CityEntity.create({
+      ...this,
+      default_combat_strategy,
+    })
+  }
 }
