@@ -4,6 +4,8 @@ import type { BuildingCode } from '#core/building/constant/code'
 import type { TechnologyCode } from '#core/technology/constant/code'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
+import type { BattleWinner } from '#core/combat/value/battle-winner'
+import type { ReportPerspective } from '#core/combat/value/report-perspective'
 import { AppLogger } from '#app/port/logger'
 
 export type CityResourcesGatheredPayload = {
@@ -40,6 +42,9 @@ export type TroopMovementFinishedPayload = {
 
 export type BattleFinishedPayload = {
   player_id: string
+  report_id: string
+  perspective: ReportPerspective
+  winner: BattleWinner
 }
 
 export type TroopRecruitmentUpdatedPayload = {

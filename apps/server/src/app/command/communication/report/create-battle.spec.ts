@@ -67,7 +67,7 @@ describe('createBattleReports', () => {
       combat_strategy: CombatStrategy.BALANCED,
     })
 
-    await createBattleReports({
+    const result = await createBattleReports({
       battle,
       movement,
       outcome: {
@@ -81,5 +81,10 @@ describe('createBattleReports', () => {
     })
 
     assert.strictEqual(createBattleReportsRepo.mock.calls.length, 1)
+    const call = createBattleReportsRepo.mock.calls[0][0]
+    assert.deepStrictEqual(result, {
+      attacker_report_id: call.attacker_report.id,
+      defender_report_id: call.defender_report.id,
+    })
   })
 })

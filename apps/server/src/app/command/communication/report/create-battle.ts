@@ -8,6 +8,11 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
 
+export type CreatedBattleReports = {
+  attacker_report_id: string
+  defender_report_id: string
+}
+
 export async function createBattleReports({
   battle,
   movement,
@@ -20,7 +25,7 @@ export async function createBattleReports({
   outcome: BattleOutcomeFlags
   loot: Resource
   finished_at: number
-}): Promise<void> {
+}): Promise<CreatedBattleReports> {
   const repository = Factory.getRepository()
 
   const attacker = await repository.player.get(battle.attacker_player_id)
@@ -85,4 +90,9 @@ export async function createBattleReports({
       perspective: ReportPerspective.DEFENDER,
     },
   })
+
+  return {
+    attacker_report_id: attacker_report.id,
+    defender_report_id: defender_report.id,
+  }
 }

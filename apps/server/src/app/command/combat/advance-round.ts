@@ -1,7 +1,12 @@
 import { Factory } from '#adapter/factory'
-import { applyBattleOutcomes } from '#app/command/combat/apply-battle-outcomes'
+import {
+  applyBattleOutcomes,
+  ApplyBattleOutcomesResult,
+} from '#app/command/combat/apply-battle-outcomes'
 import { runCommand } from '#command/run'
 import { CombatService } from '#core/combat/combat-service'
+import { BattleWinner } from '#core/combat/value/battle-winner'
+import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { COMBAT_ROUND_INTERVAL_MS } from '#app/scheduling/intervals'
 import { AppEvent } from '#core/events'
 
@@ -14,10 +19,8 @@ export async function advanceCombatRound({
   round: number
   advanced_at: number
 }): Promise<void> {
-  let battle_finished_participants: {
-    attacker_player_id: string
-    defender_player_id: string
-  } | null = null
+  type FinishedBattle = ApplyBattleOutcomesResult & { winner: BattleWinner }
+  let finished_battle: FinishedBattle | null = null
 
   await runCommand('combat:advance-round', async () => {
     const repository = Factory.getRepository()
@@ -63,11 +66,12 @@ export async function advanceCombatRound({
 
     if (winner) {
       await repository.battle.update(updated)
-      battle_finished_participants = await applyBattleOutcomes({
+      const result = await applyBattleOutcomes({
         battle_id,
         winner,
         finished_at: advanced_at,
       })
+      finished_battle = { ...result, winner }
       return
     }
 
@@ -80,13 +84,21 @@ export async function advanceCombatRound({
     })
   })
 
-  if (battle_finished_participants) {
+  // Assigned inside the runCommand callback, so TS cannot see it change from null.
+  const finished = finished_battle as FinishedBattle | null
+  if (finished) {
     const event_bus = Factory.getEventBus()
     event_bus.emit(AppEvent.BattleFinished, {
-      player_id: battle_finished_participants.attacker_player_id,
+      player_id: finished.attacker_player_id,
+      report_id: finished.attacker_report_id,
+      perspective: ReportPerspective.ATTACKER,
+      winner: finished.winner,
     })
     event_bus.emit(AppEvent.BattleFinished, {
-      player_id: battle_finished_participants.defender_player_id,
+      player_id: finished.defender_player_id,
+      report_id: finished.defender_report_id,
+      perspective: ReportPerspective.DEFENDER,
+      winner: finished.winner,
     })
   }
 }

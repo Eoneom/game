@@ -17,6 +17,8 @@ vi.mock('#app/command/combat/apply-battle-outcomes', () => ({
   applyBattleOutcomes: vi.fn().mockResolvedValue({
     attacker_player_id: 'attacker-id',
     defender_player_id: 'defender-id',
+    attacker_report_id: 'attacker-report-id',
+    defender_report_id: 'defender-report-id',
   }),
 }))
 
@@ -85,9 +87,19 @@ describe('advanceCombatRound', () => {
     assert.strictEqual(scheduleCombatRoundAdvance.mock.calls.length, 0)
     assert.strictEqual(emit.mock.calls.length, 2)
     assert.strictEqual(emit.mock.calls[0][0], AppEvent.BattleFinished)
-    assert.deepStrictEqual(emit.mock.calls[0][1], { player_id: 'attacker-id' })
+    assert.deepStrictEqual(emit.mock.calls[0][1], {
+      player_id: 'attacker-id',
+      report_id: 'attacker-report-id',
+      perspective: 'attacker',
+      winner: 'attacker',
+    })
     assert.strictEqual(emit.mock.calls[1][0], AppEvent.BattleFinished)
-    assert.deepStrictEqual(emit.mock.calls[1][1], { player_id: 'defender-id' })
+    assert.deepStrictEqual(emit.mock.calls[1][1], {
+      player_id: 'defender-id',
+      report_id: 'defender-report-id',
+      perspective: 'defender',
+      winner: 'attacker',
+    })
   })
 
   it('emits BattleFinished only after the advance-round transaction completes', async () => {

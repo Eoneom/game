@@ -82,6 +82,8 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number): {
 export type ApplyBattleOutcomesResult = {
   attacker_player_id: string
   defender_player_id: string
+  attacker_report_id: string
+  defender_report_id: string
 }
 
 export async function applyBattleOutcomes({
@@ -211,7 +213,7 @@ export async function applyBattleOutcomes({
     }
     await Promise.all(promises)
 
-    await createBattleReports({
+    const { attacker_report_id, defender_report_id } = await createBattleReports({
       battle: finished_battle,
       movement,
       outcome,
@@ -222,6 +224,8 @@ export async function applyBattleOutcomes({
     return {
       attacker_player_id: battle.attacker_player_id,
       defender_player_id: battle.defender_player_id,
+      attacker_report_id,
+      defender_report_id,
     }
   })
 }

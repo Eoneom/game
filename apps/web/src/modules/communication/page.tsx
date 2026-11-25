@@ -9,10 +9,12 @@ import {
   useMarkAllReportsAsRead,
 } from '#communication/report/hooks'
 
-export const ReportPage: React.FC = () => {
+export const ReportPage: React.FC<{
+  selectedReportId: string | null
+  onReportSelect: (reportId: string) => void
+}> = ({ selectedReportId, onReportSelect }) => {
   const [currentPage, setCurrentPage] = useState(1)
   const [wasReadFilter, setWasReadFilter] = useState<ReportReadFilter>(undefined)
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
 
   const { data: reportsData } = useListReports(currentPage, wasReadFilter)
   const { data: report } = useGetReport(selectedReportId)
@@ -37,7 +39,7 @@ export const ReportPage: React.FC = () => {
       markAllPending={markAllAsRead.isPending}
       onPageChange={setCurrentPage}
       onFilterChange={handleFilterChange}
-      onReportSelect={setSelectedReportId}
+      onReportSelect={onReportSelect}
       onMarkAllAsRead={() => markAllAsRead.mutate()}
     />
   </LayoutPage>
