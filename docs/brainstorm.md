@@ -20,7 +20,7 @@ Document de travail : décisions prises et questions encore ouvertes. Chaque th�
 | Arsenal | Alliages balistiques (+% attaque), Blindage organique (+% vie), Propulsion tactique (+vitesse combat) |
 | ~~Doctrine~~ | Retirée pour l'instant (*Assaut de siège* reste prévu avec les défenses, 029) |
 | Fortification | Débloque les défenses, +vie des structures, *Contre-mesures* (−butin perdu) |
-| Renseignement | *Espionnage* (mission éclaireur → rapport de composition, sert d'aperçu d'attaque), *Détection* (alerte attaque entrante) |
+| Renseignement | *Espionnage* (mission éclaireur → rapport de composition, sert d'aperçu d'attaque), *Détection* (alerte attaque entrante) — spec [`030-intelligence`](../specs/030-intelligence/spec.md) : rien sans Détection, rapport selon l'écart Espionnage − Détection, échec aléatoire |
 | Plasma | Confinement plasma (rendement inducteur), Armes à plasma (unité d'élite par faction) |
 | Économie | Recyclage avancé, Agronomie, Compression (entrepôts) |
 

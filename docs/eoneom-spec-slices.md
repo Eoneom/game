@@ -32,6 +32,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 027 | [`specs/027-military-economy-technologies/`](../specs/027-military-economy-technologies/spec.md) | Military and economy technologies (planned) |
 | 028 | [`specs/028-command-center-shelter/`](../specs/028-command-center-shelter/spec.md) | Command center and underground shelter (planned) |
 | 029 | [`specs/029-city-defenses/`](../specs/029-city-defenses/spec.md) | City defenses (planned) |
+| 030 | [`specs/030-intelligence/`](../specs/030-intelligence/spec.md) | Intelligence: espionage and detection (planned) |
 
 ## Brownfield inventory (dependency order)
 
