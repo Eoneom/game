@@ -3,7 +3,11 @@ import { RESEARCH_QUEUE_LIMIT } from '@eoneom/api-client'
 
 import { TechnologyListItem } from '#technology/list/item'
 import { projectResearchQueueLevels } from '#technology/queue-levels'
-import { TechnologyTranslations } from '#technology/translations'
+import { groupByTechnologyBranch } from '#technology/branch'
+import {
+  TechnologyBranchLabels,
+  TechnologyTranslations
+} from '#technology/translations'
 import { technologyImageSrc } from '#technology/image'
 import { Button } from '#ui/button'
 import { CountdownProgress } from '#ui/countdown-progress'
@@ -115,25 +119,29 @@ export const TechnologyList: React.FC<Props> = ({ selectedCode, onSelect }) => {
     />
   )
 
-  const items = useMemo(() => {
-    return technologies.map(technologyItem => {
-      const isResearching = inProgress?.code === technologyItem.code
-      const isQueued = queuedCodes.has(technologyItem.code)
-      return (
-        <TechnologyListItem
-          active={technologyItem.code === selectedCode}
-          key={technologyItem.id}
-          technologyItem={technologyItem}
-          onSelect={onSelect}
-          badge={isResearching ? 'En cours' : isQueued ? 'File' : undefined}
-          busy={isResearching || isQueued}
-        />
-      )
-    })
+  const groups = useMemo(() => {
+    return groupByTechnologyBranch(technologies).map(({ branch, items }) => ({
+      id: branch,
+      title: TechnologyBranchLabels[branch],
+      items: items.map(technologyItem => {
+        const isResearching = inProgress?.code === technologyItem.code
+        const isQueued = queuedCodes.has(technologyItem.code)
+        return (
+          <TechnologyListItem
+            active={technologyItem.code === selectedCode}
+            key={technologyItem.id}
+            technologyItem={technologyItem}
+            onSelect={onSelect}
+            badge={isResearching ? 'En cours' : isQueued ? 'File' : undefined}
+            busy={isResearching || isQueued}
+          />
+        )
+      })
+    }))
   }, [selectedCode, technologies, onSelect, inProgress, queuedCodes])
 
   return <List
     inProgress={inProgressComponent}
-    items={items}
+    groups={groups}
   />
 }

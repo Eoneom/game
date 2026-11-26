@@ -18,6 +18,7 @@ const minimalCity = (overrides: Partial<City> = {}): City => ({
   earnings_per_second: { plastic: 0.1, mushroom: 0.2 , plasma: 0},
   pre_cell_earnings_per_second: { plastic: 0.1, mushroom: 0.2 , plasma: 0},
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
+  technology_production_multiplier: { plastic: 1, mushroom: 1, plasma: 1 },
   warehouses_capacity: { plastic: 1000, mushroom: 1000 },
   warehouse_space_remaining: { plastic: 900, mushroom: 800 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
@@ -40,6 +41,7 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   earnings_per_second: { plastic: 0, mushroom: 0 , plasma: 0},
   pre_cell_earnings_per_second: { plastic: 0, mushroom: 0 , plasma: 0},
   cell_resource_coefficient: { plastic: 1, mushroom: 1 },
+  technology_production_multiplier: { plastic: 1, mushroom: 1, plasma: 1 },
   warehouses_capacity: { plastic: 2000, mushroom: 1500 },
   warehouse_full_in_seconds: { plastic: 0, mushroom: 0 },
   ...overrides })

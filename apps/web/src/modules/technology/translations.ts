@@ -1,5 +1,7 @@
 import { TechnologyCode } from '@eoneom/api-client'
 
+import { TechnologyBranch } from '#technology/branch'
+
 interface TechnologyTranslation {
   name: string
   description: string
@@ -31,5 +33,46 @@ export const TechnologyTranslations: Record<TechnologyCode, TechnologyTranslatio
     name: 'Optimisation photovoltaïque',
     description: 'Améliorer le rendement des cellules solaires permet d\'extraire davantage d\'énergie des panneaux',
     effect: 'Augmente la production d\'énergie des panneaux solaires de 15% par niveau'
+  },
+  [TechnologyCode.BALLISTIC_ALLOYS]: {
+    name: 'Alliages balistiques',
+    description: 'Des alliages récupérés et retrempés donnent aux armes de nos combattants un mordant inégalé',
+    effect: 'Augmente l\'attaque des troupes de combat de 3% par niveau'
+  },
+  [TechnologyCode.ORGANIC_PLATING]: {
+    name: 'Blindage organique',
+    description: 'Des plaques cultivées sur mycélium renforcent les protections sans alourdir les combattants',
+    effect: 'Augmente la vie des troupes de combat de 3% par niveau'
+  },
+  [TechnologyCode.TACTICAL_PROPULSION]: {
+    name: 'Propulsion tactique',
+    description: 'Des propulseurs alimentés au plasma permettent aux unités de combat de fondre sur leurs cibles',
+    effect: 'Augmente la vitesse des troupes de combat de 4% par niveau (le mouvement garde la vitesse de l\'unité la plus lente)'
+  },
+  [TechnologyCode.ADVANCED_RECYCLING]: {
+    name: 'Recyclage avancé',
+    description: 'Un tri plus fin des déchets permet d\'extraire davantage de plastique de chaque tonne de rebuts',
+    effect: 'Augmente la production de plastique (usines et troupes) de 5% par niveau'
+  },
+  [TechnologyCode.AGRONOMY]: {
+    name: 'Agronomie',
+    description: 'Maîtriser l\'humidité et les substrats rend les cultures de champignons plus généreuses',
+    effect: 'Augmente la production de champignons (fermes et troupes) de 5% par niveau'
+  },
+  [TechnologyCode.STORAGE_COMPRESSION]: {
+    name: 'Compression',
+    description: 'Compacter les stocks libère de la place dans les entrepôts des villes',
+    effect: 'Augmente la capacité des entrepôts de plastique et de champignons des villes de 10% par niveau'
+  },
+  [TechnologyCode.PLASMA_CONTAINMENT]: {
+    name: 'Confinement plasma',
+    description: 'De meilleurs champs de confinement limitent les pertes de l\'inducteur central',
+    effect: 'Augmente la production de plasma de 5% par niveau'
   }
+}
+
+export const TechnologyBranchLabels: Record<TechnologyBranch, string> = {
+  [TechnologyBranch.FOUNDATIONS]: 'Fondations',
+  [TechnologyBranch.ARSENAL]: 'Arsenal',
+  [TechnologyBranch.ECONOMY]: 'Économie',
 }

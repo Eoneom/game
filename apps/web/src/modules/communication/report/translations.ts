@@ -29,3 +29,23 @@ const BattleResultLabels: Record<BattleResultKind, string> = {
 
 export const battleResultLabel = (args: Parameters<typeof battleResultKind>[0]): string =>
   BattleResultLabels[battleResultKind(args)]
+
+type CombatModifiers = {
+  attack: number
+  life: number
+}
+
+const formatModifierPercent = (multiplier: number): string => {
+  const percent = Math.round((multiplier - 1) * 100)
+  return `${percent > 0 ? '+' : ''}${percent} %`
+}
+
+/** Arsenal technology bonus for one side, e.g. "+9 % attaque, +6 % vie"; null when neutral. */
+export const formatCombatModifiers = (modifiers?: CombatModifiers): string | null => {
+  if (!modifiers) return null
+  const parts = [
+    modifiers.attack !== 1 ? `${formatModifierPercent(modifiers.attack)} attaque` : null,
+    modifiers.life !== 1 ? `${formatModifierPercent(modifiers.life)} vie` : null,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : null
+}

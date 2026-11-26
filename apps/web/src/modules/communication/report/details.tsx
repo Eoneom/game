@@ -6,7 +6,10 @@ import React from 'react'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
 import { formatCoordinates } from '#helpers/transform'
 import { CombatStrategyLabels } from '#movement/translations'
-import { ReportTypeLabels } from '#communication/report/translations'
+import {
+  formatCombatModifiers,
+  ReportTypeLabels,
+} from '#communication/report/translations'
 
 interface Props {
   report?: Report
@@ -37,6 +40,8 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
 
   if (report.type === ReportType.BATTLE && report.battle) {
     const battle = report.battle
+    const attacker_modifiers = formatCombatModifiers(battle.attacker_modifiers)
+    const defender_modifiers = formatCombatModifiers(battle.defender_modifiers)
     return (
       <LayoutDetailsContent>
         <h1>{ReportTypeLabels[report.type]}</h1>
@@ -48,6 +53,12 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
           Stratégies — attaquant : {CombatStrategyLabels[battle.attacker_strategy]} ;
           défenseur : {CombatStrategyLabels[battle.defender_strategy]}
         </p>
+        {(attacker_modifiers || defender_modifiers) && (
+          <p className="details-meta">
+            Technologies — attaquant : {attacker_modifiers ?? 'aucune'} ;
+            défenseur : {defender_modifiers ?? 'aucune'}
+          </p>
+        )}
         {hasResources(report.resources) && (
           <p className="details-meta">Butin : {formatResources(report.resources)}</p>
         )}

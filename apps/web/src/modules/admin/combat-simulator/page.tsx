@@ -3,12 +3,15 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   AdminCombatSimulatorDataResponse,
   AdminCombatSimulatorRoundSummaryWire,
+  AdminCombatSimulatorTechnologyLevelsWire,
   CombatStrategy,
   FactionCode,
+  TechnologyCode,
   TroopCode,
 } from '@eoneom/api-client'
 import { AdminRouteGate } from '#admin/session'
 import { CombatStrategyLabels } from '#movement/translations'
+import { TechnologyTranslations } from '#technology/translations'
 import { troopImageSrc } from '#troop/image'
 import { TroopTranslations } from '#troop/translations'
 import { EntityThumb } from '#ui/entity-thumb'
@@ -216,6 +219,47 @@ const StackEditor: React.FC<StackEditorProps> = ({
   )
 }
 
+type SimulatorTechnologyLevels = Required<AdminCombatSimulatorTechnologyLevelsWire>
+
+const DEFAULT_TECHNOLOGY_LEVELS: SimulatorTechnologyLevels = {
+  ballistic_alloys: 0,
+  organic_plating: 0,
+}
+
+const SIMULATOR_TECHNOLOGY_CODES = [
+  TechnologyCode.BALLISTIC_ALLOYS,
+  TechnologyCode.ORGANIC_PLATING,
+] as const
+
+const parseTechnologyLevel = (raw: string): number => {
+  const value = Number.parseInt(raw, 10)
+  return Number.isNaN(value) || value < 0 ? 0 : value
+}
+
+const TechnologyLevelInputs: React.FC<{
+  side: string
+  levels: SimulatorTechnologyLevels
+  onChange: (levels: SimulatorTechnologyLevels) => void
+}> = ({ side, levels, onChange }) => (
+  <>
+    {SIMULATOR_TECHNOLOGY_CODES.map(code => (
+      <label key={code} className="flex flex-col gap-1 text-sm">
+        <span className="field-label text-label">
+          {TechnologyTranslations[code].name} ({side})
+        </span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          className="field-input w-24 py-1 text-sm"
+          value={levels[code]}
+          onChange={e => onChange({ ...levels, [code]: parseTechnologyLevel(e.target.value) })}
+        />
+      </label>
+    ))}
+  </>
+)
+
 const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> = ({ row }) => (
   <article className="admin-surface-nested flex min-w-0 flex-col gap-1 rounded-sm p-2 text-[11px] text-amber-dim">
     <h3 className="m-0 text-xs font-normal text-amber">Round {row.round}</h3>
@@ -257,6 +301,10 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
   const [ defender_strategy, setDefenderStrategy ] = useState<CombatStrategy>(
     CombatStrategy.BALANCED,
   )
+  const [ attacker_technology_levels, setAttackerTechnologyLevels ] =
+    useState<SimulatorTechnologyLevels>(DEFAULT_TECHNOLOGY_LEVELS)
+  const [ defender_technology_levels, setDefenderTechnologyLevels ] =
+    useState<SimulatorTechnologyLevels>(DEFAULT_TECHNOLOGY_LEVELS)
   const [ show_json, setShowJson ] = useState(false)
 
   const can_submit = useMemo(
@@ -275,6 +323,8 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
         defender_stacks,
         attacker_strategy,
         defender_strategy,
+        attacker_technology_levels,
+        defender_technology_levels,
       })
     }, SIMULATION_DEBOUNCE_MS)
 
@@ -286,6 +336,8 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
     defender_stacks,
     attacker_strategy,
     defender_strategy,
+    attacker_technology_levels,
+    defender_technology_levels,
     runSimulation,
   ])
 
@@ -354,6 +406,19 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
               ))}
             </select>
           </label>
+        </div>
+
+        <div className="admin-surface-toolbar mt-3 flex flex-wrap items-end gap-4">
+          <TechnologyLevelInputs
+            side="att."
+            levels={attacker_technology_levels}
+            onChange={setAttackerTechnologyLevels}
+          />
+          <TechnologyLevelInputs
+            side="déf."
+            levels={defender_technology_levels}
+            onChange={setDefenderTechnologyLevels}
+          />
         </div>
       </div>
 

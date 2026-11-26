@@ -181,6 +181,7 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
               <ProductionTerrainReadout
                 current={outpost.earnings_per_second}
                 terrain={outpost.cell_resource_coefficient}
+                technology={outpost.technology_production_multiplier}
               />
             </div>
           </article>
