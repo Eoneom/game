@@ -44,6 +44,11 @@ const queryResult = {
     mushroom: 1,
     plasma: 0
   },
+  technology_production_multiplier: {
+    plastic: 1.1,
+    mushroom: 1.05,
+    plasma: 1.15
+  },
   warehouses_capacity: {
     plastic: 2000,
     mushroom: 1500
@@ -119,6 +124,11 @@ describe('outpostGetHandler', () => {
         cell_resource_coefficient: {
           plastic: 1,
           mushroom: 1
+        },
+        technology_production_multiplier: {
+          plastic: 1.1,
+          mushroom: 1.05,
+          plasma: 1.15
         },
         warehouses_capacity: {
           plastic: 2000,

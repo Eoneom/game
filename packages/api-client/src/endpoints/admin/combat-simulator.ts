@@ -17,11 +17,19 @@ export type AdminCombatSimulatorRoundSummaryWire = {
   defender_losses: AdminCombatSimulatorStackWire[]
 }
 
+/** Arsenal levels applied to one side's `combat`-role stacks (slice 027); omitted = 0. */
+export type AdminCombatSimulatorTechnologyLevelsWire = {
+  ballistic_alloys?: number
+  organic_plating?: number
+}
+
 export type AdminCombatSimulatorRequest = {
   attacker_stacks: AdminCombatSimulatorStackWire[]
   defender_stacks: AdminCombatSimulatorStackWire[]
   attacker_strategy: CombatStrategy
   defender_strategy: CombatStrategy
+  attacker_technology_levels?: AdminCombatSimulatorTechnologyLevelsWire
+  defender_technology_levels?: AdminCombatSimulatorTechnologyLevelsWire
 }
 
 export type AdminCombatSimulatorDataResponse = {

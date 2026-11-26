@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { runCommand } from '#command/run'
 import { AppEvent } from '#core/events'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -99,6 +100,8 @@ export async function createTroopMovement({
       troops_to_split: move_troops,
     })
 
+    const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id })
+
     const { movement, arrive_at } = TroopService.createMovement({
       player_id,
       origin,
@@ -109,6 +112,7 @@ export async function createTroopMovement({
       start_at: now(),
       resources,
       combat_strategy: action === MovementAction.ATTACK ? combat_strategy ?? null : null,
+      propulsion_level,
     })
 
     const movement_troops = TroopService.assignToMovement({

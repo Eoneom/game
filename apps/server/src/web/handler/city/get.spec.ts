@@ -35,6 +35,11 @@ const queryResult = {
     mushroom: 1.0 ,
     plasma: 0
   },
+  technology_production_multiplier: {
+    plastic: 1.1,
+    mushroom: 1.05,
+    plasma: 1.15
+  },
   cell: {
     coordinates: {
       x: 1,
@@ -130,6 +135,11 @@ describe('cityGetHandler', () => {
         cell_resource_coefficient: {
           plastic: 1.2,
           mushroom: 1.0
+        },
+        technology_production_multiplier: {
+          plastic: 1.1,
+          mushroom: 1.05,
+          plasma: 1.15
         },
         warehouses_capacity: {
           plastic: 2000,

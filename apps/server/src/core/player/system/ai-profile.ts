@@ -18,6 +18,8 @@ export type SystemAiProfile = {
   max_scout_troops: number
   max_founder_troops: number
   make_permanent_utility_multiplier: number
+  /** Research Arsenal technologies ahead of Économie (slice 027). */
+  research_arsenal_first: boolean
 }
 
 const SINGULARITY_DEFAULT_PROFILE: SystemAiProfile = {
@@ -30,6 +32,7 @@ const SINGULARITY_DEFAULT_PROFILE: SystemAiProfile = {
   max_scout_troops: 2,
   max_founder_troops: 1,
   make_permanent_utility_multiplier: 1,
+  research_arsenal_first: false,
 }
 
 const ASH_LITURGY_AGGRESSIVE_PROFILE: SystemAiProfile = {
@@ -42,6 +45,7 @@ const ASH_LITURGY_AGGRESSIVE_PROFILE: SystemAiProfile = {
   max_scout_troops: 4,
   max_founder_troops: 2,
   make_permanent_utility_multiplier: 0.45,
+  research_arsenal_first: true,
 }
 
 const PROFILES: Record<SystemAiProfileId, SystemAiProfile> = {

@@ -13,7 +13,9 @@ import {
   RequirementService
 } from '#core/requirement/service'
 import { RequirementValue } from '#core/requirement/value/requirement'
+import { CombatModifiers } from '#core/combat/type/battle-stack'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyService } from '#core/technology/service'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
@@ -32,6 +34,12 @@ export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
 }
 
 export const NEUTRAL_SOLAR_COEFFICIENT = 1
+
+const NEUTRAL_TECHNOLOGY_PRODUCTION_MULTIPLIER: Resource = {
+  plastic: 1,
+  mushroom: 1,
+  plasma: 1
+}
 
 export class AppService {
   static async getExploredCellIds({ coordinates }: { coordinates: Coordinates }): Promise<string[]> {
@@ -62,31 +70,36 @@ export class AppService {
 
     const [
       coefficients,
-      { production_energy_ratio }
+      { production_energy_ratio },
+      technology_multiplier
     ] = await Promise.all([
       Promise.resolve(city_cell.resource_coefficient),
       this.getCityEnergyConsumptionBreakdown({
         city_id,
         player_id
-      })
+      }),
+      this.getProductionTechnologyMultipliers({ player_id })
     ])
 
     const plastic = BuildingService.getEarningsBySecond({
       code: BuildingCode.RECYCLING_PLANT,
       level: recycling_plant_level,
       coefficients,
+      technology_multiplier: technology_multiplier.plastic,
     }) * production_energy_ratio
 
     const mushroom = BuildingService.getEarningsBySecond({
       level: mushroom_farm_level,
       code: BuildingCode.MUSHROOM_FARM,
       coefficients,
+      technology_multiplier: technology_multiplier.mushroom,
     }) * production_energy_ratio
 
     const plasma = BuildingService.getEarningsBySecond({
       code: BuildingCode.CENTRAL_INDUCTOR,
       level: central_inductor_level,
       coefficients,
+      technology_multiplier: technology_multiplier.plasma,
     }) * production_energy_ratio
 
     return {
@@ -106,6 +119,7 @@ export class AppService {
     earnings_per_second: Resource
     pre_cell_earnings_per_second: Resource
     cell_resource_coefficient: Resource
+    technology_production_multiplier: Resource
     production_energy_ratio: number
   }> {
     const {
@@ -117,27 +131,36 @@ export class AppService {
 
     const cell_resource_coefficient = city_cell.resource_coefficient
 
-    const { production_energy_ratio } = await this.getCityEnergyConsumptionBreakdown({
-      city_id,
-      player_id
-    })
+    const [
+      { production_energy_ratio },
+      technology_production_multiplier
+    ] = await Promise.all([
+      this.getCityEnergyConsumptionBreakdown({
+        city_id,
+        player_id
+      }),
+      this.getProductionTechnologyMultipliers({ player_id })
+    ])
 
     const plastic = BuildingService.getEarningsBySecond({
       code: BuildingCode.RECYCLING_PLANT,
       level: recycling_plant_level,
       coefficients: cell_resource_coefficient,
+      technology_multiplier: technology_production_multiplier.plastic,
     }) * production_energy_ratio
 
     const mushroom = BuildingService.getEarningsBySecond({
       level: mushroom_farm_level,
       code: BuildingCode.MUSHROOM_FARM,
       coefficients: cell_resource_coefficient,
+      technology_multiplier: technology_production_multiplier.mushroom,
     }) * production_energy_ratio
 
     const plasma = BuildingService.getEarningsBySecond({
       code: BuildingCode.CENTRAL_INDUCTOR,
       level: central_inductor_level,
       coefficients: cell_resource_coefficient,
+      technology_multiplier: technology_production_multiplier.plasma,
     }) * production_energy_ratio
 
     const pre_cell_plastic = BuildingService.getEarningsBySecond({
@@ -170,6 +193,7 @@ export class AppService {
         plasma: pre_cell_plasma
       },
       cell_resource_coefficient,
+      technology_production_multiplier,
       production_energy_ratio
     }
   }
@@ -266,9 +290,11 @@ export class AppService {
 
   static async getCityWarehousesCapacity({ city_id }: { city_id: string }): Promise<WarehouseCapacity> {
     const repository = Factory.getRepository()
+    const city = await repository.city.get(city_id)
     const [
       mushroom_warehouse_level,
-      plastic_warehouse_level
+      plastic_warehouse_level,
+      { [TechnologyCode.STORAGE_COMPRESSION]: storage_compression_level }
     ] = await Promise.all([
       repository.building.getLevel({
         city_id,
@@ -277,19 +303,91 @@ export class AppService {
       repository.building.getLevel({
         city_id,
         code: BuildingCode.PLASTIC_WAREHOUSE
+      }),
+      this.getTechnologyLevels({
+        player_id: city.player_id,
+        codes: [ TechnologyCode.STORAGE_COMPRESSION ]
       })
     ])
+
+    const compression_multiplier = TechnologyService.getBonusMultiplier({
+      code: TechnologyCode.STORAGE_COMPRESSION,
+      level: storage_compression_level
+    })
 
     return {
       mushroom: BuildingService.getWarehouseCapacity({
         level: mushroom_warehouse_level,
         code: BuildingCode.MUSHROOM_WAREHOUSE
-      }),
+      }) * compression_multiplier,
       plastic: BuildingService.getWarehouseCapacity({
         level: plastic_warehouse_level,
         code: BuildingCode.PLASTIC_WAREHOUSE
-      })
+      }) * compression_multiplier
     }
+  }
+
+  /** Levels for `codes`; a missing technology row counts as level 0. */
+  static async getTechnologyLevels<C extends TechnologyCode>({
+    player_id,
+    codes
+  }: {
+    player_id: string
+    codes: C[]
+  }): Promise<Record<C, number>> {
+    const repository = Factory.getRepository()
+    const technologies = await repository.technology.list({
+      player_id,
+      codes
+    })
+
+    return codes.reduce((acc, code) => ({
+      ...acc,
+      [code]: technologies.find(technology => technology.code === code)?.level ?? 0
+    }), {} as Record<C, number>)
+  }
+
+  /** `advanced_recycling` / `agronomy` / `plasma_containment` multipliers (slice 027). */
+  static async getProductionTechnologyMultipliers({ player_id }: { player_id: string }): Promise<Resource> {
+    const levels = await this.getTechnologyLevels({
+      player_id,
+      codes: [
+        TechnologyCode.ADVANCED_RECYCLING,
+        TechnologyCode.AGRONOMY,
+        TechnologyCode.PLASMA_CONTAINMENT
+      ]
+    })
+
+    return TechnologyService.getProductionMultipliers({
+      advanced_recycling_level: levels[TechnologyCode.ADVANCED_RECYCLING],
+      agronomy_level: levels[TechnologyCode.AGRONOMY],
+      plasma_containment_level: levels[TechnologyCode.PLASMA_CONTAINMENT]
+    })
+  }
+
+  /** Arsenal attack / life multipliers for `combat`-role stacks (slice 027). */
+  static async getCombatModifiers({ player_id }: { player_id: string }): Promise<CombatModifiers> {
+    const levels = await this.getTechnologyLevels({
+      player_id,
+      codes: [
+        TechnologyCode.BALLISTIC_ALLOYS,
+        TechnologyCode.ORGANIC_PLATING
+      ]
+    })
+
+    return TechnologyService.getCombatModifiers({
+      ballistic_alloys_level: levels[TechnologyCode.BALLISTIC_ALLOYS],
+      organic_plating_level: levels[TechnologyCode.ORGANIC_PLATING]
+    })
+  }
+
+  /** `tactical_propulsion` level read when a movement is created (slice 027). */
+  static async getTacticalPropulsionLevel({ player_id }: { player_id: string }): Promise<number> {
+    const levels = await this.getTechnologyLevels({
+      player_id,
+      codes: [ TechnologyCode.TACTICAL_PROPULSION ]
+    })
+    return levels[TechnologyCode.TACTICAL_PROPULSION]
   }
 
   static async getOutpostWarehousesCapacity({ player_id }: { player_id: string }): Promise<WarehouseCapacity> {
@@ -319,6 +417,7 @@ export class AppService {
     earnings_per_second: Resource
     pre_cell_earnings_per_second: Resource
     cell_resource_coefficient: Resource
+    technology_production_multiplier: Resource
   }> {
     const {
       outpost,
@@ -339,17 +438,20 @@ export class AppService {
           mushroom: 0,
           plasma: 0
         },
-        cell_resource_coefficient: cell.resource_coefficient
+        cell_resource_coefficient: cell.resource_coefficient,
+        technology_production_multiplier: NEUTRAL_TECHNOLOGY_PRODUCTION_MULTIPLIER
       }
     }
 
     const cell_resource_coefficient = cell.resource_coefficient
+    const technology_production_multiplier = await this.getProductionTechnologyMultipliers({ player_id: outpost.player_id })
 
     const plastic = salvager
       ? TroopService.getEarningsBySecond({
         code: salvager.code,
         count: salvager.count,
         coefficients: cell_resource_coefficient,
+        technology_multiplier: technology_production_multiplier.plastic,
       })
       : 0
 
@@ -358,6 +460,7 @@ export class AppService {
         code: cultivator.code,
         count: cultivator.count,
         coefficients: cell_resource_coefficient,
+        technology_multiplier: technology_production_multiplier.mushroom,
       })
       : 0
 
@@ -388,7 +491,8 @@ export class AppService {
         mushroom: pre_cell_mushroom,
         plasma: 0
       },
-      cell_resource_coefficient
+      cell_resource_coefficient,
+      technology_production_multiplier
     }
   }
 

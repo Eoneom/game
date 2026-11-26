@@ -161,6 +161,38 @@ describe('BuildingService.getEarningsBySecond', () => {
       coefficients: { plastic: 9, mushroom: 9, plasma: 9 }
     }), 0.1)
   })
+
+  it('applies plasma_containment multiplier to central inductor before rounding', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: 1,
+      coefficients: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1
+      },
+      technology_multiplier: 1.5
+    }), 0.15)
+  })
+
+  it('applies the technology multiplier after the cell coefficient', () => {
+    const coefficients = {
+      plastic: 1.2,
+      mushroom: 1,
+      plasma: 1
+    }
+    const neutral = BuildingService.getEarningsBySecond({
+      code: BuildingCode.RECYCLING_PLANT,
+      level: 4,
+      coefficients
+    })
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.RECYCLING_PLANT,
+      level: 4,
+      coefficients,
+      technology_multiplier: 1.1
+    }), Math.round(neutral * 1.1 * 100) / 100)
+  })
 })
 
 describe('BuildingService.getProductionEnergyRatio', () => {

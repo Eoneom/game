@@ -42,6 +42,8 @@ export async function advanceCombatRound({
       defender_stacks: battle.state_json.defender_stacks,
       attacker_strategy: battle.attacker_strategy,
       defender_strategy: battle.defender_strategy,
+      attacker_modifiers: battle.state_json.attacker_modifiers,
+      defender_modifiers: battle.state_json.defender_modifiers,
     })
 
     const state_json = {

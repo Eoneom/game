@@ -133,6 +133,11 @@ describe('systemTickActions', () => {
         mushroom: 0,
         plasma: 0,
       },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
     })
     vi.mocked(upgradeBuilding).mockClear()
     vi.mocked(researchTechnology).mockClear()
@@ -1712,6 +1717,11 @@ describe('systemTickActions', () => {
         mushroom: 0,
         plasma: 0,
       },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
     })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({
       cities: [ city ],
@@ -1793,6 +1803,11 @@ describe('systemTickActions', () => {
         plastic: 1,
         mushroom: 0,
         plasma: 0,
+      },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
       },
     })
     vi.spyOn(CityListQuery.prototype, 'run').mockResolvedValue({

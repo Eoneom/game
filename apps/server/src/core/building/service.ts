@@ -30,10 +30,13 @@ export class BuildingService {
     code,
     level,
     coefficients,
+    technology_multiplier = 1,
   }: {
     code: BuildingCode.MUSHROOM_FARM | BuildingCode.RECYCLING_PLANT | BuildingCode.CENTRAL_INDUCTOR
     level: number
     coefficients: Resource
+    /** Économie technology bonus (slice 027), applied after cell coefficient and game time scale. */
+    technology_multiplier?: number
   }): number {
     if (level === 0) {
       return 0
@@ -53,7 +56,7 @@ export class BuildingService {
     const coefficient_value = base_value * coefficient
 
     const per_game_second = Math.round(coefficient_value * 100) / 100
-    return Math.round(per_game_second * gameTimeScale * 100) / 100
+    return Math.round(per_game_second * gameTimeScale * technology_multiplier * 100) / 100
   }
 
   static getEnergyConsumption({

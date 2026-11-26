@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { createTroopMovement } from '#app/command/troop/movement/create'
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { TroopRepository } from '#app/port/repository/troop'
@@ -42,6 +43,7 @@ describe('createTroopMovement', () => {
   let repository: Pick<Repository, 'cell' | 'troop' | 'outpost' | 'movement'>
 
   beforeEach(() => {
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
     origin_troop = TroopEntity.create({
       id: id(),
       code: TroopCode.EXPLORER,

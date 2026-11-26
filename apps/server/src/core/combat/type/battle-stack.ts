@@ -20,10 +20,24 @@ export type BattleRoundSummary = {
   defender_losses: BattleCasualtyLine[]
 }
 
+/** Technology multipliers for one side's `combat`-role stacks (slice 027). */
+export type CombatModifiers = {
+  attack: number
+  life: number
+}
+
+export const NEUTRAL_COMBAT_MODIFIERS: CombatModifiers = {
+  attack: 1,
+  life: 1,
+}
+
 export type BattleStateJson = {
   attacker_stacks: BattleStack[]
   defender_stacks: BattleStack[]
   attacker_origin: { x: number; y: number }
   cumulative_attacker_losses: BattleCasualtyLine[]
   cumulative_defender_losses: BattleCasualtyLine[]
+  /** Snapshot at battle start; absent on battles started before slice 027 (= neutral). */
+  attacker_modifiers?: CombatModifiers
+  defender_modifiers?: CombatModifiers
 }

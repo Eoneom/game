@@ -52,5 +52,89 @@ export const TechnologyRequirement: Record<TechnologyCode, RequirementValue> = {
       }
     ],
     technologies: []
+  },
+  [TechnologyCode.BALLISTIC_ALLOYS]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 5
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.ORGANIC_PLATING]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 5
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.TACTICAL_PROPULSION]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 6
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 2
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.ADVANCED_RECYCLING]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.AGRONOMY]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.STORAGE_COMPRESSION]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 4
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 3
+      }
+    ]
+  },
+  [TechnologyCode.PLASMA_CONTAINMENT]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 5
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 3
+      }
+    ],
+    technologies: []
   }
 }

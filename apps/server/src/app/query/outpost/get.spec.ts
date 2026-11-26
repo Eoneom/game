@@ -36,6 +36,11 @@ describe('OutpostGetQuery', () => {
       plastic: 0.85,
       mushroom: 1.1,
       plasma: 0
+    },
+    technology_production_multiplier: {
+      plastic: 1,
+      mushroom: 1,
+      plasma: 1,
     }
   }
 

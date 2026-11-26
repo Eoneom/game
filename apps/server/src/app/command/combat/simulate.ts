@@ -1,5 +1,9 @@
 import { CombatService } from '#core/combat/combat-service'
-import { BattleRoundSummary, BattleStack } from '#core/combat/type/battle-stack'
+import {
+  BattleRoundSummary,
+  BattleStack,
+  CombatModifiers,
+} from '#core/combat/type/battle-stack'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 
@@ -8,6 +12,8 @@ export type SimulateCombatParams = {
   defender_stacks: BattleStack[]
   attacker_strategy: CombatStrategy
   defender_strategy: CombatStrategy
+  attacker_modifiers?: CombatModifiers
+  defender_modifiers?: CombatModifiers
 }
 
 export type SimulateCombatResult = {

@@ -1,6 +1,7 @@
 import { TroopMovementEstimateQuery } from '#app/query/troop/movement/estimate'
 import * as shared from '#app/command/troop/movement/shared'
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { Repository } from '#app/port/repository/generic'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
@@ -22,6 +23,7 @@ describe('TroopMovementEstimateQuery', () => {
   let destination_cell: CellEntity
 
   beforeEach(() => {
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
     const origin_cell = CellEntity.create({
       id: id(),
       coordinates: origin,
@@ -88,6 +90,34 @@ describe('TroopMovementEstimateQuery', () => {
     expect(result.destination_capacity_exceeded).toBe(false)
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: origin })
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: destination })
+  })
+
+  it('applies the player tactical_propulsion level to combat troops', async () => {
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(5)
+    const troop_codes = [ TroopCode.LEGIONNAIRE ]
+    const distance = WorldService.getDistance({
+      origin: destination,
+      destination: origin
+    })
+
+    const result = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes,
+      player_id
+    })
+
+    expect(AppService.getTacticalPropulsionLevel).toHaveBeenCalledWith({ player_id })
+    expect(result.speed).toBe(TroopService.getSpeed(TroopCode.LEGIONNAIRE) * 1.2)
+    expect(result.duration).toBe(TroopService.getMovementDuration({
+      distance,
+      troop_codes,
+      propulsion_level: 5
+    }) / 1000)
+    expect(result.duration).toBeLessThan(TroopService.getMovementDuration({
+      distance,
+      troop_codes
+    }) / 1000)
   })
 
   it('returns transport capacity from troop counts when provided', async () => {

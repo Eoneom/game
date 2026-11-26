@@ -1,6 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { rebaseTroopMovement } from '#app/command/troop/movement/rebase'
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { ReportType } from '#core/communication/value/report-type'
@@ -28,6 +29,7 @@ describe('rebaseTroopMovement', () => {
   let repository: Pick<Repository, 'troop' | 'movement' | 'report'>
 
   beforeEach(() => {
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
     initial_base_movement = MovementEntity.create({
       id: id(),
       action: MovementAction.BASE,
@@ -119,6 +121,38 @@ describe('rebaseTroopMovement', () => {
     const scheduled = scheduleTroopMovementFinish.mock.calls[0][0]
     assert.strictEqual(scheduled.movement_id, movement_to_create.id)
     assert.ok(scheduled.execute_at > arrived_at)
+  })
+
+  it('should use the owner tactical_propulsion level for the return trip', async () => {
+    const combat_troops = [
+      TroopEntity.create({
+        id: id(),
+        code: TroopCode.LEGIONNAIRE,
+        count: 4,
+        player_id,
+        cell_id: null,
+        movement_id: initial_base_movement.id
+      })
+    ]
+    repository.troop.listByMovement = vi.fn().mockResolvedValue(combat_troops)
+
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    const base_execute_at = scheduleTroopMovementFinish.mock.calls[0][0].execute_at
+
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(10)
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    const boosted_execute_at = scheduleTroopMovementFinish.mock.calls[1][0].execute_at
+
+    expect(AppService.getTacticalPropulsionLevel).toHaveBeenCalledWith({ player_id })
+    assert.ok(boosted_execute_at < base_execute_at)
   })
 
   it('should create a report indicating that a rebase was needed', async () => {

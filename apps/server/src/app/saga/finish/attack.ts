@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import {
   resolveAttackTarget,
   stacksToBattleStacks,
@@ -60,12 +61,22 @@ export const sagaFinishAttack = async ({
 
   const attacker_strategy = movement.combat_strategy ?? CombatStrategy.BALANCED
 
+  const [
+    attacker_modifiers,
+    defender_modifiers,
+  ] = await Promise.all([
+    AppService.getCombatModifiers({ player_id }),
+    AppService.getCombatModifiers({ player_id: target.defender_player_id }),
+  ])
+
   const state_json: BattleStateJson = {
     attacker_stacks,
     defender_stacks,
     attacker_origin: movement.origin,
     cumulative_attacker_losses: [],
     cumulative_defender_losses: [],
+    attacker_modifiers,
+    defender_modifiers,
   }
 
   const battle = BattleEntity.create({

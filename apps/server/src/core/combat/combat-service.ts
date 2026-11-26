@@ -4,6 +4,8 @@ import {
   BattleCasualtyLine,
   BattleRoundSummary,
   BattleStack,
+  CombatModifiers,
+  NEUTRAL_COMBAT_MODIFIERS,
 } from '#core/combat/type/battle-stack'
 import {
   attackContribution,
@@ -42,10 +44,12 @@ function computePools({
   stacks,
   strategy,
   round,
+  modifiers,
 }: {
   stacks: BattleStack[]
   strategy: CombatStrategy
   round: number
+  modifiers: CombatModifiers
 }): { attack_pool: number; life_pool: number; class_attack: Map<CombatTroopClass, number> } {
   let attack_pool = 0
   let life_pool = 0
@@ -68,7 +72,7 @@ function computePools({
       const att = attackContribution({
         code: stack.code,
         count: stack.count,
-        attack_multiplier: mult.attack,
+        attack_multiplier: mult.attack * modifiers.attack,
       })
       attack_pool += att
       if (cls) {
@@ -77,7 +81,7 @@ function computePools({
       life_pool += lifeContribution({
         code: stack.code,
         count: stack.count,
-        life_multiplier: mult.life,
+        life_multiplier: mult.life * modifiers.life,
       })
     } else {
       attack_pool += attackContribution({ code: stack.code, count: stack.count })
@@ -208,12 +212,16 @@ export class CombatService {
     defender_stacks,
     attacker_strategy,
     defender_strategy,
+    attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
   }: {
     round: number
     attacker_stacks: BattleStack[]
     defender_stacks: BattleStack[]
     attacker_strategy: CombatStrategy
     defender_strategy: CombatStrategy
+    attacker_modifiers?: CombatModifiers
+    defender_modifiers?: CombatModifiers
   }): {
     attacker_stacks: BattleStack[]
     defender_stacks: BattleStack[]
@@ -224,11 +232,13 @@ export class CombatService {
       stacks: attacker_stacks,
       strategy: attacker_strategy,
       round,
+      modifiers: attacker_modifiers,
     })
     const def_pools = computePools({
       stacks: defender_stacks,
       strategy: defender_strategy,
       round,
+      modifiers: defender_modifiers,
     })
 
     const att_dominant = dominantClass(att_pools.class_attack)
@@ -289,12 +299,16 @@ export class CombatService {
     defender_stacks,
     attacker_strategy,
     defender_strategy,
+    attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
     max_round = 5,
   }: {
     attacker_stacks: BattleStack[]
     defender_stacks: BattleStack[]
     attacker_strategy: CombatStrategy
     defender_strategy: CombatStrategy
+    attacker_modifiers?: CombatModifiers
+    defender_modifiers?: CombatModifiers
     max_round?: number
   }): {
     winner: BattleWinner | null
@@ -314,6 +328,8 @@ export class CombatService {
         defender_stacks: current_defender,
         attacker_strategy,
         defender_strategy,
+        attacker_modifiers,
+        defender_modifiers,
       })
       round_summaries.push(result.round_summary)
       current_attacker = result.attacker_stacks

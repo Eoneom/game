@@ -30,6 +30,8 @@ export async function createReturnBaseTrip({
     destination: inbound_movement.origin,
   })
 
+  const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id: inbound_movement.player_id })
+
   const { movement: base_movement, arrive_at: base_arrive_at } = TroopService.createMovement({
     troops,
     start_at: arrived_at,
@@ -39,6 +41,7 @@ export async function createReturnBaseTrip({
     player_id: inbound_movement.player_id,
     action: MovementAction.BASE,
     resources,
+    propulsion_level,
   })
 
   const base_troops = TroopService.assignToMovement({

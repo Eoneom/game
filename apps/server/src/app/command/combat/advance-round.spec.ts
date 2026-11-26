@@ -4,6 +4,7 @@ import { Factory } from '#adapter/factory'
 import { advanceCombatRound } from '#app/command/combat/advance-round'
 import { applyBattleOutcomes } from '#app/command/combat/apply-battle-outcomes'
 import { COMBAT_ROUND_INTERVAL_MS } from '#app/scheduling/intervals'
+import { CombatService } from '#core/combat/combat-service'
 import { BattleEntity } from '#core/combat/entity/battle'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -179,5 +180,123 @@ describe('advanceCombatRound', () => {
       round: 2,
       execute_at: advanced_at + COMBAT_ROUND_INTERVAL_MS,
     })
+  })
+
+  function mockBattleWithState(state_json: Partial<BattleEntity['state_json']>) {
+    const battle = BattleEntity.create({
+      id: 'battle-id',
+      movement_id: 'movement-id',
+      attacker_player_id: 'attacker-id',
+      defender_player_id: 'defender-id',
+      cell_id: 'cell-id',
+      target_kind: BattleTargetKind.FIELD,
+      target_id: null,
+      attacker_strategy: CombatStrategy.BALANCED,
+      defender_strategy: CombatStrategy.BALANCED,
+      current_round: 0,
+      status: 'in_progress',
+      winner: null,
+      state_json: {
+        attacker_stacks: [
+          {
+            code: TroopCode.LEGIONNAIRE,
+            count: 50
+          }
+        ],
+        defender_stacks: [
+          {
+            code: TroopCode.WAR_MACHINE,
+            count: 50
+          }
+        ],
+        attacker_origin: {
+          x: 0,
+          y: 0
+        },
+        cumulative_attacker_losses: [],
+        cumulative_defender_losses: [],
+        ...state_json,
+      },
+      round_summaries: [],
+      started_at: 1_000,
+      finished_at: null,
+    })
+    // No technology repository: rounds must never read live technology levels.
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      battle: {
+        getById: vi.fn().mockResolvedValue(battle),
+        update: battleUpdate,
+      },
+    } as unknown as Repository)
+    return battle
+  }
+
+  it('uses the modifiers snapshotted in state_json', async () => {
+    const battle = mockBattleWithState({
+      attacker_modifiers: {
+        attack: 1.09,
+        life: 1.06
+      },
+      defender_modifiers: {
+        attack: 1,
+        life: 1.03
+      },
+    })
+
+    await advanceCombatRound({
+      battle_id: 'battle-id',
+      round: 1,
+      advanced_at: 5_000
+    })
+
+    const expected = CombatService.advanceRound({
+      round: 1,
+      attacker_stacks: battle.state_json.attacker_stacks,
+      defender_stacks: battle.state_json.defender_stacks,
+      attacker_strategy: CombatStrategy.BALANCED,
+      defender_strategy: CombatStrategy.BALANCED,
+      attacker_modifiers: {
+        attack: 1.09,
+        life: 1.06
+      },
+      defender_modifiers: {
+        attack: 1,
+        life: 1.03
+      },
+    })
+    const updated = battleUpdate.mock.calls[0][0]
+    assert.deepStrictEqual(updated.round_summaries[0], expected.round_summary)
+    assert.deepStrictEqual(updated.state_json.attacker_modifiers, {
+      attack: 1.09,
+      life: 1.06
+    })
+  })
+
+  it('treats a missing snapshot as neutral modifiers', async () => {
+    const battle = mockBattleWithState({})
+
+    await advanceCombatRound({
+      battle_id: 'battle-id',
+      round: 1,
+      advanced_at: 5_000
+    })
+
+    const expected = CombatService.advanceRound({
+      round: 1,
+      attacker_stacks: battle.state_json.attacker_stacks,
+      defender_stacks: battle.state_json.defender_stacks,
+      attacker_strategy: CombatStrategy.BALANCED,
+      defender_strategy: CombatStrategy.BALANCED,
+      attacker_modifiers: {
+        attack: 1,
+        life: 1
+      },
+      defender_modifiers: {
+        attack: 1,
+        life: 1
+      },
+    })
+    const updated = battleUpdate.mock.calls[0][0]
+    assert.deepStrictEqual(updated.round_summaries[0], expected.round_summary)
   })
 })

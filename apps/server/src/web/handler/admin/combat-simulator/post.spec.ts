@@ -118,4 +118,83 @@ describe('adminCombatSimulatorPostHandler', () => {
       error_code: RequestError.TROOP_CODE_NOT_FOUND,
     })
   })
+
+  it('converts per-side Arsenal levels into combat modifiers (default 0)', async () => {
+    const simulate_spy = vi.spyOn(simulate, 'simulateCombat').mockReturnValue({
+      winner: BattleWinner.DRAW,
+      round_summaries: [],
+      final_attacker_stacks: [],
+      final_defender_stacks: [],
+    })
+    const res = { json: vi.fn() } as unknown as Response
+
+    await adminCombatSimulatorPostHandler(
+      {
+        body: {
+          attacker_stacks: [
+            {
+              troop_code: TroopCode.INTERCEPTOR,
+              count: 5
+            }
+          ],
+          defender_stacks: [
+            {
+              troop_code: TroopCode.DISRUPTOR,
+              count: 5
+            }
+          ],
+          attacker_strategy: CombatStrategy.BALANCED,
+          defender_strategy: CombatStrategy.BALANCED,
+          attacker_technology_levels: {
+            ballistic_alloys: 3,
+            organic_plating: 2
+          },
+        },
+      } as never,
+      res,
+      vi.fn(),
+    )
+
+    const params = simulate_spy.mock.calls[0][0]
+    expect(params.attacker_modifiers?.attack).toBeCloseTo(1.09)
+    expect(params.attacker_modifiers?.life).toBeCloseTo(1.06)
+    expect(params.defender_modifiers).toEqual({
+      attack: 1,
+      life: 1
+    })
+  })
+
+  it('returns 400 for an invalid technology level', async () => {
+    const status = vi.fn().mockReturnThis()
+    const json = vi.fn()
+    const res = {
+      status,
+      json
+    } as unknown as Response
+
+    await adminCombatSimulatorPostHandler(
+      {
+        body: {
+          attacker_stacks: [
+            {
+              troop_code: TroopCode.INTERCEPTOR,
+              count: 5
+            }
+          ],
+          defender_stacks: [],
+          attacker_strategy: CombatStrategy.BALANCED,
+          defender_strategy: CombatStrategy.BALANCED,
+          defender_technology_levels: { organic_plating: -1 },
+        },
+      } as never,
+      res,
+      vi.fn(),
+    )
+
+    expect(status).toHaveBeenCalledWith(400)
+    expect(json).toHaveBeenCalledWith({
+      status: 'nok',
+      error_code: RequestError.TECHNOLOGY_LEVEL_NOT_FOUND,
+    })
+  })
 })

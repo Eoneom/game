@@ -5,6 +5,7 @@ import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingEntity } from '#core/building/entity'
 import { BuildingCode } from '#core/building/constant/code'
+import { BuildingService } from '#core/building/service'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { TechnologyCode } from '#core/technology/constant/code'
@@ -195,5 +196,54 @@ describe('BuildingGetQuery', () => {
       current_energy: 159,
       next_energy: 238
     })
+  })
+
+  it('applies storage_compression to warehouse capacity metadata', async () => {
+    const warehouse = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.PLASTIC_WAREHOUSE,
+      level: 1
+    })
+    vi.mocked(repository.building.getInCity).mockResolvedValue(warehouse)
+    vi.spyOn(AppService, 'getTechnologyLevels').mockResolvedValue({ [TechnologyCode.STORAGE_COMPRESSION]: 3 } as Record<TechnologyCode, number>)
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.PLASTIC_WAREHOUSE,
+      player_id
+    })
+
+    expect(result.metadata.current_capacity).toBeCloseTo(BuildingService.getWarehouseCapacity({
+      code: BuildingCode.PLASTIC_WAREHOUSE,
+      level: 1
+    }) * 1.3)
+    expect(result.metadata.next_capacity).toBeCloseTo(BuildingService.getWarehouseCapacity({
+      code: BuildingCode.PLASTIC_WAREHOUSE,
+      level: 2
+    }) * 1.3)
+  })
+
+  it('applies plasma_containment to central inductor production metadata', async () => {
+    const inductor = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.CENTRAL_INDUCTOR,
+      level: 1
+    })
+    vi.mocked(repository.building.getInCity).mockResolvedValue(inductor)
+    vi.spyOn(AppService, 'getProductionTechnologyMultipliers').mockResolvedValue({
+      plastic: 1,
+      mushroom: 1,
+      plasma: 1.5
+    })
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.CENTRAL_INDUCTOR,
+      player_id
+    })
+
+    expect(result.metadata.current_production).toBe(0.15)
   })
 })

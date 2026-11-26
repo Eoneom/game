@@ -27,6 +27,19 @@ describe('AppService', () => {
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository)
   }
 
+  /** `repository.technology.list` stub returning rows for the requested codes only. */
+  const technologyList = (levels: Partial<Record<TechnologyCode, number>> = {}) => vi.fn().mockImplementation(({
+    player_id,
+    codes = []
+  }: { player_id: string, codes?: TechnologyCode[] }) => Promise.resolve(codes
+    .filter(code => levels[code] !== undefined)
+    .map(code => TechnologyEntity.create({
+      id: id(),
+      player_id,
+      code,
+      level: levels[code] ?? 0
+    }))))
+
   beforeEach(() => {
     setRepositoryMock({} as Repository)
   })
@@ -89,7 +102,8 @@ describe('AppService', () => {
             player_id: id(),
             code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
             level: 0
-          }))
+          })),
+          list: technologyList()
         }
       } as unknown as Repository
   
@@ -173,7 +187,8 @@ describe('AppService', () => {
             player_id,
             code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
             level: 0
-          }))
+          })),
+          list: technologyList()
         }
       } as unknown as Repository
 
@@ -197,6 +212,79 @@ describe('AppService', () => {
 
       expect(earnings.plastic).toBeLessThan(base_plastic)
       expect(earnings.mushroom).toBeLessThan(base_mushroom)
+    })
+
+    it('applies Économie technology multipliers to building earnings', async () => {
+      const player_id = id()
+      const repository = {
+        building: {
+          getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
+            if (code === BuildingCode.MUSHROOM_FARM) {
+              return Promise.resolve(2)
+            }
+            if (code === BuildingCode.RECYCLING_PLANT) {
+              return Promise.resolve(3)
+            }
+            if (code === BuildingCode.CENTRAL_INDUCTOR) {
+              return Promise.resolve(2)
+            }
+            if (code === BuildingCode.SOLAR_PANEL) {
+              return Promise.resolve(20)
+            }
+            return Promise.resolve(0)
+          })
+        },
+        city: { get: vi.fn().mockResolvedValue(city) },
+        cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        technology: {
+          get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+            id: id(),
+            player_id,
+            code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+            level: 0
+          })),
+          list: technologyList({
+            [TechnologyCode.ADVANCED_RECYCLING]: 2,
+            [TechnologyCode.AGRONOMY]: 4,
+            [TechnologyCode.PLASMA_CONTAINMENT]: 3
+          })
+        }
+      } as unknown as Repository
+      setRepositoryMock(repository)
+
+      const breakdown = await AppService.getCityProductionBreakdown({
+        city_id,
+        player_id
+      })
+
+      expect(breakdown.production_energy_ratio).toBe(1)
+      expect(breakdown.technology_production_multiplier.plastic).toBeCloseTo(1.1)
+      expect(breakdown.technology_production_multiplier.mushroom).toBeCloseTo(1.2)
+      expect(breakdown.technology_production_multiplier.plasma).toBeCloseTo(1.15)
+      expect(breakdown.earnings_per_second.plastic).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.RECYCLING_PLANT,
+        level: 3,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.1
+      }))
+      expect(breakdown.earnings_per_second.mushroom).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.MUSHROOM_FARM,
+        level: 2,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.2
+      }))
+      const neutral_plasma = BuildingService.getEarningsBySecond({
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 2,
+        coefficients: resource_coefficient
+      })
+      expect(breakdown.earnings_per_second.plasma).toBeGreaterThan(neutral_plasma)
+      expect(breakdown.earnings_per_second.plasma).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 2,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.15
+      }))
     })
   })
 
@@ -231,6 +319,7 @@ describe('AppService', () => {
       const repository = {
         outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
         cell: { getById: vi.fn().mockResolvedValue(cell) },
+        technology: { list: technologyList() },
         troop: {
           listInCell: vi.fn().mockResolvedValue([
             {
@@ -323,6 +412,7 @@ describe('AppService', () => {
       const repository = {
         outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
         cell: { getById: vi.fn().mockResolvedValue(cell) },
+        technology: { list: technologyList() },
         troop: {
           listInCell: vi.fn().mockResolvedValue([
             {
@@ -353,6 +443,77 @@ describe('AppService', () => {
     })
   })
   
+  describe('getOutpostProductionBreakdown with Économie technologies', () => {
+    const player_id = id()
+    const cell = CellEntity.create({
+      id: id(),
+      coordinates: {
+        x: 3,
+        y: 3
+      },
+      type: CellType.LAKE,
+      resource_coefficient: {
+        plastic: 1.2,
+        mushroom: 0.9,
+        plasma: 0
+      },
+      solar_coefficient: 1
+    })
+    const outpost = OutpostEntity.create({
+      id: id(),
+      player_id,
+      cell_id: cell.id,
+      type: OutpostType.PERMANENT
+    })
+
+    it('applies recycling and agronomy multipliers to troop earnings', async () => {
+      const technology_list = technologyList({
+        [TechnologyCode.ADVANCED_RECYCLING]: 3,
+        [TechnologyCode.AGRONOMY]: 1
+      })
+      setRepositoryMock({
+        outpost: { getById: vi.fn().mockResolvedValue(outpost) },
+        cell: { getById: vi.fn().mockResolvedValue(cell) },
+        technology: { list: technology_list },
+        troop: {
+          listInCell: vi.fn().mockResolvedValue([
+            {
+              code: TroopCode.FARMER,
+              count: 40
+            },
+            {
+              code: TroopCode.RECYCLER,
+              count: 30
+            }
+          ])
+        }
+      } as unknown as Repository)
+
+      const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id: outpost.id })
+
+      expect(technology_list.mock.calls[0][0].player_id).toBe(player_id)
+      expect(breakdown.technology_production_multiplier.plastic).toBeCloseTo(1.15)
+      expect(breakdown.technology_production_multiplier.mushroom).toBeCloseTo(1.05)
+      expect(breakdown.earnings_per_second.plastic).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 30,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.15
+      }))
+      expect(breakdown.earnings_per_second.mushroom).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 40,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.05
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBeGreaterThan(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 30,
+        coefficients: cell.resource_coefficient
+      }))
+    })
+  })
+
   describe('getExploredCellIds', () => {
     const coordinates: Coordinates = {
       x: 4,
@@ -402,9 +563,17 @@ describe('AppService', () => {
   
   describe('getCityWarehousesCapacity', () => {
     const city_id = id()
+    const city = CityEntity.create({
+      id: city_id,
+      name: 'c',
+      player_id: id(),
+      cell_id: id()
+    })
   
     beforeEach(() => {
       const repository = {
+        city: { get: vi.fn().mockResolvedValue(city) },
+        technology: { list: technologyList() },
         building: {
           getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
             if (code === BuildingCode.MUSHROOM_WAREHOUSE) {
@@ -431,6 +600,27 @@ describe('AppService', () => {
         level: 2
       }))
     })
+
+    it('scales both warehouses by the city owner storage_compression level', async () => {
+      const technology_list = technologyList({ [TechnologyCode.STORAGE_COMPRESSION]: 3 })
+      setRepositoryMock({
+        city: { get: vi.fn().mockResolvedValue(city) },
+        technology: { list: technology_list },
+        building: { getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => Promise.resolve(code === BuildingCode.MUSHROOM_WAREHOUSE ? 3 : 2)) }
+      } as unknown as Repository)
+
+      const capacity = await AppService.getCityWarehousesCapacity({ city_id })
+
+      expect(technology_list.mock.calls[0][0].player_id).toBe(city.player_id)
+      expect(capacity.mushroom).toBeCloseTo(BuildingService.getWarehouseCapacity({
+        code: BuildingCode.MUSHROOM_WAREHOUSE,
+        level: 3
+      }) * 1.3)
+      expect(capacity.plastic).toBeCloseTo(BuildingService.getWarehouseCapacity({
+        code: BuildingCode.PLASTIC_WAREHOUSE,
+        level: 2
+      }) * 1.3)
+    })
   })
 
   describe('getOutpostWarehousesCapacity', () => {
@@ -448,6 +638,17 @@ describe('AppService', () => {
     it('matches OutpostService capacity for logistics technology level', async () => {
       const capacity = await AppService.getOutpostWarehousesCapacity({ player_id })
       expect(capacity).toEqual(OutpostService.getWarehousesCapacity({ logistics_level: 2 }))
+    })
+
+    it('ignores storage_compression (city warehouses only)', async () => {
+      const get_level = vi.fn().mockImplementation(({ code }: { code: TechnologyCode }) => Promise.resolve(code === TechnologyCode.OUTPOST_LOGISTICS ? 2 : 5))
+      setRepositoryMock({ technology: { getLevel: get_level } } as unknown as Repository)
+
+      const capacity = await AppService.getOutpostWarehousesCapacity({ player_id })
+
+      expect(capacity).toEqual(OutpostService.getWarehousesCapacity({ logistics_level: 2 }))
+      expect(get_level).toHaveBeenCalledTimes(1)
+      expect(get_level.mock.calls[0][0].code).toBe(TechnologyCode.OUTPOST_LOGISTICS)
     })
   })
   

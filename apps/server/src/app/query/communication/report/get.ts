@@ -1,4 +1,5 @@
 import { GenericQuery } from '#query/generic'
+import { NEUTRAL_COMBAT_MODIFIERS } from '#core/combat/type/battle-stack'
 import { ReportBattleMetadata } from '#core/combat/type/report-battle-metadata'
 import { ReportEntity } from '#core/communication/report/entity'
 import { CommunicationError } from '#core/communication/error'
@@ -34,7 +35,16 @@ export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetRe
 
     return {
       report,
-      battle: battle ?? undefined,
+      battle: battle ? await this.withCombatModifiers(battle) : undefined,
+    }
+  }
+
+  private async withCombatModifiers(battle: ReportBattleMetadata): Promise<ReportBattleMetadata> {
+    const { state_json } = await this.repository.battle.getById(battle.battle_id)
+    return {
+      ...battle,
+      attacker_modifiers: state_json.attacker_modifiers ?? NEUTRAL_COMBAT_MODIFIERS,
+      defender_modifiers: state_json.defender_modifiers ?? NEUTRAL_COMBAT_MODIFIERS,
     }
   }
 }

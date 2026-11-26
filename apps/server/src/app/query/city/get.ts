@@ -19,6 +19,7 @@ export interface CityGetQueryResponse {
   earnings_per_second: Resource
   pre_cell_earnings_per_second: Resource
   cell_resource_coefficient: Resource
+  technology_production_multiplier: Resource
   maximum_building_levels: number
   building_levels_used: number
   cell: CellEntity
@@ -117,6 +118,7 @@ export class CityGetQuery extends GenericQuery<CityGetQueryRequest, CityGetQuery
       earnings_per_second: production.earnings_per_second,
       pre_cell_earnings_per_second: production.pre_cell_earnings_per_second,
       cell_resource_coefficient: production.cell_resource_coefficient,
+      technology_production_multiplier: production.technology_production_multiplier,
       maximum_building_levels,
       building_levels_used,
       cell,

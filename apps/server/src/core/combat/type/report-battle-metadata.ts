@@ -1,4 +1,8 @@
-import { BattleCasualtyLine, BattleRoundSummary } from '#core/combat/type/battle-stack'
+import {
+  BattleCasualtyLine,
+  BattleRoundSummary,
+  CombatModifiers,
+} from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -30,4 +34,7 @@ export type ReportBattleMetadata = {
   casualties_attacker: BattleCasualtyLine[]
   casualties_defender: BattleCasualtyLine[]
   round_summaries: BattleRoundSummary[]
+  /** Technology modifiers snapshotted at battle start (slice 027); read from `battle.state_json`. */
+  attacker_modifiers?: CombatModifiers
+  defender_modifiers?: CombatModifiers
 }

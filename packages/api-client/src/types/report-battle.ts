@@ -9,6 +9,11 @@ export type ReportBattleOutcome = {
   attacker_retreated: boolean
 }
 
+type ReportBattleModifiers = {
+  attack: number
+  life: number
+}
+
 export type ReportBattleMetadata = {
   battle_id: string
   movement_id: string
@@ -35,4 +40,7 @@ export type ReportBattleMetadata = {
     attacker_losses: { code: TroopCode; count: number }[]
     defender_losses: { code: TroopCode; count: number }[]
   }[]
+  /** Arsenal technology multipliers for each side's `combat`-role stacks (1 = no bonus). */
+  attacker_modifiers?: ReportBattleModifiers
+  defender_modifiers?: ReportBattleModifiers
 }

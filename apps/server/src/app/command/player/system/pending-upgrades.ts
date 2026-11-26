@@ -1,6 +1,7 @@
 import { BuildingService } from '#core/building/service'
 import { BuildingCode } from '#core/building/constant/code'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyService } from '#core/technology/service'
 import type {
   BuildingListEntry,
   BuildingUpgradeQueueEntry
@@ -83,9 +84,12 @@ export function projectBuildingLevelsForPolicy<
 export function projectWarehousesCapacity({
   buildings,
   upgrade_queue,
+  storage_compression_level = 0,
 }: {
   buildings: BuildingListEntry[]
   upgrade_queue: BuildingUpgradeQueueEntry[]
+  /** City owner's `storage_compression` level (slice 027). */
+  storage_compression_level?: number
 }): WarehouseCapacity {
   const projected = projectBuildingLevelsForPolicy({
     buildings,
@@ -97,16 +101,20 @@ export function projectWarehousesCapacity({
 
   const plastic_level = plastic_warehouse?.level ?? 0
   const mushroom_level = mushroom_warehouse?.level ?? 0
+  const compression_multiplier = TechnologyService.getBonusMultiplier({
+    code: TechnologyCode.STORAGE_COMPRESSION,
+    level: storage_compression_level,
+  })
 
   return {
     plastic: BuildingService.getWarehouseCapacity({
       level: plastic_level,
       code: BuildingCode.PLASTIC_WAREHOUSE,
-    }),
+    }) * compression_multiplier,
     mushroom: BuildingService.getWarehouseCapacity({
       level: mushroom_level,
       code: BuildingCode.MUSHROOM_WAREHOUSE,
-    }),
+    }) * compression_multiplier,
   }
 }
 

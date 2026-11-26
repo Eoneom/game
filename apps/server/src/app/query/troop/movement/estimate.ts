@@ -1,4 +1,5 @@
 import { resolveOwnedDepositTarget } from '#app/command/troop/movement/shared'
+import { AppService } from '#app/service'
 import { GenericQuery } from '#query/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopCount } from '#core/troop/type'
@@ -46,12 +47,18 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
       destination: origin
     })
 
+    const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id })
+
     const duration = TroopService.getMovementDuration({
       distance,
-      troop_codes
+      troop_codes,
+      propulsion_level
     })
 
-    const speed = TroopService.getSlowestSpeed({ troop_codes })
+    const speed = TroopService.getSlowestSpeed({
+      troop_codes,
+      propulsion_level
+    })
     const transport_capacity = TroopService.getTotalTransportCapacity({
       troops: troops.length
         ? troops

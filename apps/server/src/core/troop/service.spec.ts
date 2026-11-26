@@ -270,6 +270,19 @@ describe('TroopService', () => {
       )
     })
 
+    it('applies the technology multiplier after the game time scale, before rounding', () => {
+      assert.strictEqual(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 10,
+        coefficients: {
+          plastic: 1.5,
+          mushroom: 2,
+          plasma: 0
+        },
+        technology_multiplier: 1.15
+      }), Math.round(3.6 * 1.15 * 100) / 100)
+    })
+
     it('scales reclaimer earnings like recycler', () => {
       assert.strictEqual(
         TroopService.getEarningsBySecond({
@@ -283,6 +296,83 @@ describe('TroopService', () => {
           coefficients: { plastic: 1.5, mushroom: 2, plasma: 0 }
         })
       )
+    })
+  })
+
+  describe('getMovementDuration with tactical_propulsion', () => {
+    const distance = 10_000
+
+    it('shortens combat-only movements by 4 % speed per level', () => {
+      const base = TroopService.getMovementDuration({
+        distance,
+        troop_codes: [ TroopCode.LEGIONNAIRE ]
+      })
+      const boosted = TroopService.getMovementDuration({
+        distance,
+        troop_codes: [ TroopCode.LEGIONNAIRE ],
+        propulsion_level: 5
+      })
+      assert.ok(boosted < base)
+      assert.strictEqual(TroopService.getSlowestSpeed({
+        troop_codes: [ TroopCode.LEGIONNAIRE ],
+        propulsion_level: 5
+      }), TroopService.getSpeed(TroopCode.LEGIONNAIRE) * 1.2)
+    })
+
+    it('keeps the slower carrier speed when a carrier joins the movement', () => {
+      const troop_codes = [
+        TroopCode.WAR_MACHINE,
+        TroopCode.LIGHT_TRANSPORTER
+      ]
+      // war_machine 0.9 → 0.9 × 1.4 = 1.26 at level 10; light_transporter stays at 1.
+      assert.strictEqual(TroopService.getSlowestSpeed({
+        troop_codes,
+        propulsion_level: 10
+      }), TroopService.getSpeed(TroopCode.LIGHT_TRANSPORTER))
+      assert.strictEqual(TroopService.getMovementDuration({
+        distance,
+        troop_codes,
+        propulsion_level: 10
+      }), TroopService.getMovementDuration({
+        distance,
+        troop_codes: [ TroopCode.LIGHT_TRANSPORTER ]
+      }))
+    })
+
+    it('does not change non-combat unit speed', () => {
+      assert.strictEqual(TroopService.getEffectiveSpeed({
+        code: TroopCode.FARMER,
+        propulsion_level: 8
+      }), TroopService.getSpeed(TroopCode.FARMER))
+    })
+
+    it('createMovement uses the propulsion level for arrival time', () => {
+      const params = {
+        troops: [
+          {
+            code: TroopCode.LEGIONNAIRE,
+            count: 5
+          }
+        ],
+        start_at: 0,
+        distance,
+        origin: {
+          x: 1,
+          y: 1
+        },
+        destination: {
+          x: 5,
+          y: 5
+        },
+        player_id,
+        action: MovementAction.ATTACK
+      }
+      const { arrive_at: base_arrive_at } = TroopService.createMovement(params)
+      const { arrive_at: boosted_arrive_at } = TroopService.createMovement({
+        ...params,
+        propulsion_level: 3
+      })
+      assert.ok(boosted_arrive_at < base_arrive_at)
     })
   })
 

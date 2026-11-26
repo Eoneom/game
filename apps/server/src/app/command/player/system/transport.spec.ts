@@ -123,6 +123,11 @@ describe('system transport helpers', () => {
         mushroom: 0,
         plasma: 0,
       },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
     })
 
     const projected = await projectPermanentOutpostResourceStocks({
@@ -170,6 +175,11 @@ describe('system transport helpers', () => {
         plastic: 1,
         mushroom: 0,
         plasma: 0,
+      },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
       },
     })
 

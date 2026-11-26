@@ -6,6 +6,8 @@ import { TroopCode } from '#core/troop/constant/code'
 import { troop_faction } from '#core/troop/constant/faction'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { troop_order } from '#core/troop/constant/order'
+import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyService } from '#core/technology/service'
 import { CombatError } from '#core/combat/error'
 import {
   EarningTroopCode,
@@ -239,6 +241,7 @@ export class TroopService {
     action,
     resources = { plastic: 0, mushroom: 0, plasma: 0 },
     combat_strategy = null,
+    propulsion_level = 0,
   }: {
     troops: TroopCount[]
     start_at: number
@@ -249,10 +252,13 @@ export class TroopService {
     action: MovementAction
     resources?: Resource
     combat_strategy?: CombatStrategy | null
+    /** Owner's `tactical_propulsion` level at creation time (slice 027). */
+    propulsion_level?: number
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
-      troop_codes: troops.map(troop => troop.code)
+      troop_codes: troops.map(troop => troop.code),
+      propulsion_level
     })
 
     const arrive_at = start_at + duration
@@ -343,18 +349,32 @@ export class TroopService {
 
   static getMovementDuration({
     distance,
-    troop_codes
+    troop_codes,
+    propulsion_level = 0
   }: {
     distance: number
     troop_codes: TroopCode[]
+    propulsion_level?: number
   }): number {
-    const slowest_speed = this.getSlowestSpeed({ troop_codes })
+    const slowest_speed = this.getSlowestSpeed({
+      troop_codes,
+      propulsion_level
+    })
     return scaleGameDurationMs(distance / slowest_speed)
   }
 
-  static getSlowestSpeed({ troop_codes }: { troop_codes: TroopCode[] }): number {
+  static getSlowestSpeed({
+    troop_codes,
+    propulsion_level = 0
+  }: {
+    troop_codes: TroopCode[]
+    propulsion_level?: number
+  }): number {
     return troop_codes.reduce((acc, code) => {
-      const speed = this.getSpeed(code)
+      const speed = this.getEffectiveSpeed({
+        code,
+        propulsion_level
+      })
       if (speed < acc) {
         return speed
       }
@@ -397,6 +417,24 @@ export class TroopService {
     return troop_characteristics[code].speed
   }
 
+  /** `tactical_propulsion` boosts `combat`-role units only (slice 027). */
+  static getEffectiveSpeed({
+    code,
+    propulsion_level = 0
+  }: {
+    code: TroopCode
+    propulsion_level?: number
+  }): number {
+    const speed = this.getSpeed(code)
+    if (this.combatRoleFor(code) !== CombatRole.COMBAT) {
+      return speed
+    }
+    return speed * TechnologyService.getBonusMultiplier({
+      code: TechnologyCode.TACTICAL_PROPULSION,
+      level: propulsion_level
+    })
+  }
+
   static getOrder(code: TroopCode): number {
     return troop_order[code]
   }
@@ -405,10 +443,13 @@ export class TroopService {
     code,
     count,
     coefficients,
+    technology_multiplier = 1,
   }: {
     code: TroopCode
     count: number
     coefficients: Resource
+    /** Économie technology bonus (slice 027), applied after cell coefficient and game time scale. */
+    technology_multiplier?: number
   }): number {
     if (count <= 0) {
       return 0
@@ -424,6 +465,6 @@ export class TroopService {
       ? coefficients.mushroom
       : coefficients.plastic
     const per_game_second = Math.round(base * count * coefficient * 100) / 100
-    return Math.round(per_game_second * gameTimeScale * 100) / 100
+    return Math.round(per_game_second * gameTimeScale * technology_multiplier * 100) / 100
   }
 }

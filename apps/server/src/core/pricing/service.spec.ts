@@ -363,3 +363,80 @@ describe('PricingService plasma costs', () => {
     assert.strictEqual(refund.plasma, 12)
   })
 })
+
+describe('PricingService military and economy technologies (slice 027)', () => {
+  const arsenal = [
+    {
+      code: TechnologyCode.BALLISTIC_ALLOYS,
+      plasma_base: 500
+    },
+    {
+      code: TechnologyCode.ORGANIC_PLATING,
+      plasma_base: 500
+    },
+    {
+      code: TechnologyCode.TACTICAL_PROPULSION,
+      plasma_base: 800
+    },
+  ]
+  const economy = [
+    TechnologyCode.ADVANCED_RECYCLING,
+    TechnologyCode.AGRONOMY,
+    TechnologyCode.STORAGE_COMPRESSION,
+    TechnologyCode.PLASMA_CONTAINMENT,
+  ]
+
+  it('charges plasma for Arsenal from level 1', () => {
+    for (const {
+      code, plasma_base
+    } of arsenal) {
+      assert.strictEqual(PricingService.getTechnologyLevelCost({
+        code,
+        level: 1,
+        research_lab_level: 0
+      }).resource.plasma, plasma_base)
+      const plasma = technology_costs[code].plasma
+      assert.ok(plasma)
+      assert.strictEqual(PricingService.getTechnologyLevelCost({
+        code,
+        level: 3,
+        research_lab_level: 4
+      }).resource.plasma, Math.ceil(plasma.base * Math.pow(plasma.multiplier, 2)))
+    }
+  })
+
+  it('charges no plasma for Économie', () => {
+    for (const code of economy) {
+      const cost = PricingService.getTechnologyLevelCost({
+        code,
+        level: 4,
+        research_lab_level: 0
+      })
+      assert.strictEqual(cost.resource.plasma, 0)
+      assert.ok(cost.resource.plastic > 0)
+      assert.ok(cost.resource.mushroom > 0)
+    }
+  })
+
+  it('uses the spec level-1 plastic / mushroom / duration values', () => {
+    const level_one = (code: TechnologyCode) => PricingService.getTechnologyLevelCost({
+      code,
+      level: 1,
+      research_lab_level: 0
+    })
+    assert.deepStrictEqual(level_one(TechnologyCode.TACTICAL_PROPULSION).resource, {
+      plastic: 10000,
+      mushroom: 8000,
+      plasma: 800
+    })
+    assert.deepStrictEqual(level_one(TechnologyCode.STORAGE_COMPRESSION).resource, {
+      plastic: 5000,
+      mushroom: 5000,
+      plasma: 0
+    })
+    assert.strictEqual(
+      level_one(TechnologyCode.PLASMA_CONTAINMENT).duration,
+      scaleGameDurationSeconds(150)
+    )
+  })
+})

@@ -36,6 +36,7 @@ describe('finishTroopExploreMovement', () => {
   let repository: Pick<Repository, 'troop' | 'movement' | 'exploration' | 'report'>
 
   beforeEach(() => {
+    vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
     movement = MovementEntity.create({
       id: movement_id,
       player_id,

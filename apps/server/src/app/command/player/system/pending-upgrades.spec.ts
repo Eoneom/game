@@ -72,6 +72,28 @@ describe('system player pending upgrades', () => {
     assert.strictEqual(capacity.mushroom, 3000)
   })
 
+  it('scales projected warehouse capacity by storage_compression', () => {
+    const capacity = projectWarehousesCapacity({
+      buildings: [
+        {
+          id: 'plastic',
+          code: BuildingCode.PLASTIC_WAREHOUSE,
+          level: 1,
+        },
+        {
+          id: 'mushroom',
+          code: BuildingCode.MUSHROOM_WAREHOUSE,
+          level: 0,
+        },
+      ],
+      upgrade_queue: [],
+      storage_compression_level: 2,
+    })
+
+    assert.strictEqual(capacity.plastic, 8000 * 1.2)
+    assert.strictEqual(capacity.mushroom, 3000 * 1.2)
+  })
+
   it('projects building levels for policy checks', () => {
     const projected = projectBuildingLevelsForPolicy({
       buildings: [

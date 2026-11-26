@@ -30,6 +30,12 @@ export interface OutpostGetDataResponse {
     plastic: number
     mushroom: number
   }
+  /** Économie technology multipliers (`advanced_recycling`, `agronomy`, `plasma_containment`); 1 = no bonus. */
+  technology_production_multiplier: {
+    plastic: number
+    mushroom: number
+    plasma: number
+  }
   warehouses_capacity: {
     plastic: number
     mushroom: number

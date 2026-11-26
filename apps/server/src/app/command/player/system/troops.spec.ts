@@ -305,6 +305,11 @@ describe('loadOutpostRecruitHints', () => {
         mushroom: 0,
         plasma: 0,
       },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
     })
   })
 

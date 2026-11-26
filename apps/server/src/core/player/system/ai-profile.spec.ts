@@ -46,6 +46,7 @@ describe('resolveSystemAiProfile', () => {
     assert.strictEqual(profile.id, SystemAiProfileId.ASH_LITURGY_AGGRESSIVE)
     assert.strictEqual(profile.ignore_empire_under_threat_for_attack, true)
     assert.strictEqual(profile.use_failed_attack_memory, false)
+    assert.strictEqual(profile.research_arsenal_first, true)
   })
 
   it('maps Alpha to the singularity default profile', () => {
@@ -54,6 +55,7 @@ describe('resolveSystemAiProfile', () => {
       faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
     })
     assert.strictEqual(profile.id, SystemAiProfileId.SINGULARITY_DEFAULT)
+    assert.strictEqual(profile.research_arsenal_first, false)
   })
 })
 

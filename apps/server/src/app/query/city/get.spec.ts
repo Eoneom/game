@@ -80,6 +80,11 @@ describe('CityGetQuery', () => {
         mushroom: 1,
         plasma: 1
       },
+      technology_production_multiplier: {
+        plastic: 1,
+        mushroom: 1,
+        plasma: 1,
+      },
       production_energy_ratio: 1
     })
     vi.spyOn(AppService, 'getCityEnergyConsumptionBreakdown').mockResolvedValue({

@@ -5,6 +5,7 @@ import { BuildingEntity } from '#core/building/entity'
 import { PricingService } from '#core/pricing/service'
 import { LevelCostValue } from '#core/pricing/value/level'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { TechnologyService } from '#core/technology/service'
 import { BuildingCode } from '#core/building/constant/code'
 import { RequirementValue } from '#core/requirement/value/requirement'
 import { RequirementService } from '#core/requirement/service'
@@ -97,14 +98,22 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
     player_id: string
   }): Promise<Record<string, unknown>> {
     if (isWarehouseBuildingCode(building.code)) {
+      const { [TechnologyCode.STORAGE_COMPRESSION]: storage_compression_level } = await AppService.getTechnologyLevels({
+        player_id,
+        codes: [ TechnologyCode.STORAGE_COMPRESSION ]
+      })
+      const compression_multiplier = TechnologyService.getBonusMultiplier({
+        code: TechnologyCode.STORAGE_COMPRESSION,
+        level: storage_compression_level
+      })
       const current_capacity = BuildingService.getWarehouseCapacity({
         level: building.level,
         code: building.code
-      })
+      }) * compression_multiplier
       const next_capacity = BuildingService.getWarehouseCapacity({
         level: building.level + 1,
         code: building.code
-      })
+      }) * compression_multiplier
 
       return {
         current_capacity,
@@ -116,20 +125,33 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       const city = await this.repository.city.get(building.city_id)
       const city_cell = await this.repository.cell.getById(city.cell_id)
       const coefficients = city_cell.resource_coefficient
-      const { production_energy_ratio } = await AppService.getCityEnergyConsumptionBreakdown({
-        city_id: building.city_id,
-        player_id
-      })
+      const [
+        { production_energy_ratio },
+        technology_production_multiplier
+      ] = await Promise.all([
+        AppService.getCityEnergyConsumptionBreakdown({
+          city_id: building.city_id,
+          player_id
+        }),
+        AppService.getProductionTechnologyMultipliers({ player_id })
+      ])
+      const technology_multiplier = building.code === BuildingCode.RECYCLING_PLANT
+        ? technology_production_multiplier.plastic
+        : building.code === BuildingCode.MUSHROOM_FARM
+          ? technology_production_multiplier.mushroom
+          : technology_production_multiplier.plasma
 
       const base_current_production = BuildingService.getEarningsBySecond({
         level: building.level,
         code: building.code,
-        coefficients
+        coefficients,
+        technology_multiplier
       })
       const base_next_production = BuildingService.getEarningsBySecond({
         level: building.level + 1,
         code: building.code,
-        coefficients
+        coefficients,
+        technology_multiplier
       })
 
       const energy_upgrade_warning = await this.getEnergyUpgradeWarning({

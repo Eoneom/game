@@ -19,8 +19,13 @@ import {
 } from '#app/query/player/system/system-tick-context'
 import { BUILDING_UPGRADE_QUEUE_LIMIT } from '#core/building/constant/upgrade-queue'
 import { RESEARCH_QUEUE_LIMIT } from '#core/technology/constant/research-queue'
+import { TechnologyCode } from '#core/technology/constant/code'
 import { BuildingCode } from '#core/building/constant/code'
 import { nextSystemCityName } from '#core/player/constant/system'
+import {
+  resolveSystemAiProfile,
+  type SystemAiProfile,
+} from '#core/player/system/ai-profile'
 import { OutpostType } from '#core/outpost/constant/type'
 import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
@@ -81,7 +86,10 @@ import {
   systemRecruitBatchCount,
 } from '#command/player/system/troops'
 import { selectTroopsForSystemBase } from '#core/player/system/base-troops'
-import { sortTechnologiesForSystemResearch } from '#command/player/system/technologies'
+import {
+  sortTechnologiesForSystemResearch,
+  systemTechnologyResearchPriority,
+} from '#command/player/system/technologies'
 import {
   levelsForSystemRequirementGate,
   meetsBuildingUpgradeRequirement,
@@ -106,6 +114,14 @@ import {
   SYSTEM_OUTPOST_TRANSPORT_PRESSURE_FILL_RATIO,
 } from '#command/player/system/transport'
 
+async function loadSystemAiProfile(player_id: string): Promise<SystemAiProfile> {
+  const player = await Factory.getRepository().player.get(player_id)
+  return resolveSystemAiProfile({
+    player_name: player.name,
+    faction_code: player.faction_code,
+  })
+}
+
 function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
     && stock.mushroom >= cost.mushroom
@@ -119,6 +135,8 @@ function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
 async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | null> {
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
+  const storage_compression_level = technologies
+    .find(technology => technology.code === TechnologyCode.STORAGE_COMPRESSION)?.level ?? 0
 
   const upgrade_city_scores = await Promise.all(cities.map(async (city) => {
     const [
@@ -137,6 +155,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
     const projected_warehouses_capacity = projectWarehousesCapacity({
       buildings: building_list.buildings,
       upgrade_queue: building_list.upgrade_queue,
+      storage_compression_level,
     })
     return scoreCityForUpgradePriority({
       production_energy_ratio: city_details.production_energy_ratio,
@@ -189,6 +208,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
     const projected_warehouses_capacity = projectWarehousesCapacity({
       buildings: building_list.buildings,
       upgrade_queue: building_list.upgrade_queue,
+      storage_compression_level,
     })
 
     const use_projected_levels = !can_start && can_enqueue
@@ -269,7 +289,12 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
   return null
 }
 
-async function tryResearch(player_id: string): Promise<Record<string, unknown> | null> {
+async function tryResearch(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
+  const ai_profile = tick_context?.snapshot?.ai_profile
+    ?? await loadSystemAiProfile(player_id)
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
 
@@ -289,6 +314,7 @@ async function tryResearch(player_id: string): Promise<Record<string, unknown> |
     technologies: projected_technology_levels,
     all_technologies: technologies,
     research_queue,
+    priority: systemTechnologyResearchPriority({ arsenal_first: ai_profile.research_arsenal_first }),
   })
 
   for (const city of cities) {

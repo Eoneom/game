@@ -11,9 +11,12 @@ import {
   AdminCombatSimulatorStackWire,
 } from '@eoneom/api-client/src/endpoints/admin/combat-simulator'
 import { simulateCombat } from '#command/combat/simulate'
-import { BattleStack } from '#core/combat/type/battle-stack'
+import {
+  BattleStack, CombatModifiers
+} from '#core/combat/type/battle-stack'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
+import { TechnologyService } from '#core/technology/service'
 import { TroopCode } from '#core/troop/constant/code'
 
 const TROOP_CODE_VALUES = new Set<string>(Object.values(TroopCode))
@@ -69,6 +72,49 @@ function parseStrategy(
   return { ok: true, strategy: raw as CombatStrategy }
 }
 
+function parseTechnologyLevel(raw: unknown): number | null {
+  if (raw === undefined) {
+    return 0
+  }
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 0) {
+    return null
+  }
+  return raw
+}
+
+function parseCombatModifiers(raw: unknown): { ok: true; modifiers: CombatModifiers } | { ok: false; error_code: RequestError } {
+  if (raw === undefined || raw === null) {
+    return {
+      ok: true,
+      modifiers: TechnologyService.getCombatModifiers({
+        ballistic_alloys_level: 0,
+        organic_plating_level: 0,
+      }),
+    }
+  }
+  if (typeof raw !== 'object') {
+    return {
+      ok: false,
+      error_code: RequestError.TECHNOLOGY_LEVEL_NOT_FOUND
+    }
+  }
+  const ballistic_alloys_level = parseTechnologyLevel((raw as { ballistic_alloys?: unknown }).ballistic_alloys)
+  const organic_plating_level = parseTechnologyLevel((raw as { organic_plating?: unknown }).organic_plating)
+  if (ballistic_alloys_level === null || organic_plating_level === null) {
+    return {
+      ok: false,
+      error_code: RequestError.TECHNOLOGY_LEVEL_NOT_FOUND
+    }
+  }
+  return {
+    ok: true,
+    modifiers: TechnologyService.getCombatModifiers({
+      ballistic_alloys_level,
+      organic_plating_level,
+    }),
+  }
+}
+
 function toWireStacks(stacks: BattleStack[]): AdminCombatSimulatorStackWire[] {
   return stacks.map(s => ({
     troop_code: s.code,
@@ -120,12 +166,30 @@ export const adminCombatSimulatorPostHandler = async (
     })
   }
 
+  const attacker_modifiers_parsed = parseCombatModifiers(req.body.attacker_technology_levels)
+  if (!attacker_modifiers_parsed.ok) {
+    return res.status(400).json({
+      status: 'nok',
+      error_code: attacker_modifiers_parsed.error_code,
+    })
+  }
+
+  const defender_modifiers_parsed = parseCombatModifiers(req.body.defender_technology_levels)
+  if (!defender_modifiers_parsed.ok) {
+    return res.status(400).json({
+      status: 'nok',
+      error_code: defender_modifiers_parsed.error_code,
+    })
+  }
+
   try {
     const result = simulateCombat({
       attacker_stacks: attacker_parsed.stacks,
       defender_stacks: defender_parsed.stacks,
       attacker_strategy: attacker_strategy_parsed.strategy,
       defender_strategy: defender_strategy_parsed.strategy,
+      attacker_modifiers: attacker_modifiers_parsed.modifiers,
+      defender_modifiers: defender_modifiers_parsed.modifiers,
     })
 
     const data: AdminCombatSimulatorDataResponse = {
