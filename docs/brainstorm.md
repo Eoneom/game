@@ -77,7 +77,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 
 - **Classement** : score global + Militaire + Économie, classement des factions et des alliances. **Joueurs système exclus.** Spec [`034-rankings`](../specs/034-rankings/spec.md) : valeur investie, militaire = pertes infligées, calcul horaire, alliances et factions classées par moyenne.
 - **Messagerie** : courrier simple vers n'importe quel joueur ; **chat** global, de faction et d'alliance. Spec [`032-messaging`](../specs/032-messaging/spec.md) : lettres avec objet, chat global + faction (alliance avec 033), historique 30 jours, limite de débit, blocage, signalement, panneau de chat repliable.
-- **Bourse de faction** : ordres d'échange entre joueurs de la même faction, livraison **uniquement par transporteurs** (trajet réel, interceptable).
+- **Bourse de faction** : ordres d'échange entre joueurs de la même faction, livraison **uniquement par transporteurs** (trajet réel). Spec [`035-faction-exchange`](../specs/035-faction-exchange/spec.md) : nouvelle ressource-monnaie **eau pure** produite par un Purificateur d'eau ; carnet d'ordres par faction (plastique, champignons, plasma contre eau) ; chacun expédie sa part ; pas d'interception, pas de bornes de prix, convois hors plafond de mouvements.
 
 ### Vue globale de l'empire
 

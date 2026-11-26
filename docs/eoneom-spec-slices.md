@@ -37,6 +37,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 032 | [`specs/032-messaging/`](../specs/032-messaging/spec.md) | Messaging: mail and chat (planned) |
 | 033 | [`specs/033-alliances/`](../specs/033-alliances/spec.md) | Alliances (planned) |
 | 034 | [`specs/034-rankings/`](../specs/034-rankings/spec.md) | Rankings (planned) |
+| 035 | [`specs/035-faction-exchange/`](../specs/035-faction-exchange/spec.md) | Faction exchange and water (planned) |
 
 ## Brownfield inventory (dependency order)
 

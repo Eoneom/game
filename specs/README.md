@@ -35,6 +35,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 032 | Messaging: mail and chat | Planned | [spec](./032-messaging/spec.md) |
 | 033 | Alliances | Planned | [spec](./033-alliances/spec.md) |
 | 034 | Rankings | Planned | [spec](./034-rankings/spec.md) |
+| 035 | Faction exchange and water | Planned | [spec](./035-faction-exchange/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).
 
