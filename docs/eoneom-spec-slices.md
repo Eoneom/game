@@ -34,6 +34,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 029 | [`specs/029-city-defenses/`](../specs/029-city-defenses/spec.md) | City defenses (planned) |
 | 030 | [`specs/030-intelligence/`](../specs/030-intelligence/spec.md) | Intelligence: espionage and detection (planned) |
 | 032 | [`specs/032-messaging/`](../specs/032-messaging/spec.md) | Messaging: mail and chat (planned) |
+| 033 | [`specs/033-alliances/`](../specs/033-alliances/spec.md) | Alliances (planned) |
 
 ## Brownfield inventory (dependency order)
 

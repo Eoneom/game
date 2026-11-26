@@ -71,6 +71,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 - Chat d'alliance, classement d'alliance, liste des membres et positions.
 - Nouvelle action de mouvement **« renforcer »** : stationner ses troupes dans la ville d'un allié ; elles défendent avec sa garnison.
 - Note glossaire : `CONTEXT.md` interdit aujourd'hui « alliance » comme synonyme de Faction ; il faudra ajouter **Alliance** comme terme distinct.
+- Spec : [`033-alliances`](../specs/033-alliances/spec.md) — création gratuite, délai de 24 h après un départ volontaire, renforts uniquement dans les villes alliées, rappel par le propriétaire seul.
 
 ### Social
 
