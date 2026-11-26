@@ -36,6 +36,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 031 | [`specs/031-empire-overview/`](../specs/031-empire-overview/spec.md) | Empire overview (**draft**, needs refinement, not implementable) |
 | 032 | [`specs/032-messaging/`](../specs/032-messaging/spec.md) | Messaging: mail and chat (planned) |
 | 033 | [`specs/033-alliances/`](../specs/033-alliances/spec.md) | Alliances (planned) |
+| 034 | [`specs/034-rankings/`](../specs/034-rankings/spec.md) | Rankings (planned) |
 
 ## Brownfield inventory (dependency order)
 
