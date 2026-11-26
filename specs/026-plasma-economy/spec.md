@@ -1,6 +1,6 @@
 # Slice 026 — Plasma economy
 
-**Status**: Planned.
+**Status**: Implemented on `main` (slice 026): optional plasma in pricing tables, plasma debit / refund, 25 % plasma loot, plasma in web costs. No content is plasma-priced yet.
 
 ## Summary
 
@@ -78,11 +78,11 @@ The system planner already includes plasma in affordability checks (`canAfford` 
 | --- | --- |
 | `modules/cost/index.tsx` (`Cost`) | Accept `plasma` (default `0`). When `plasma > 0`, render it with `IconPlasma`, and flag it as short when it exceeds the city's plasma stock (same style as plastic / mushroom). Hidden when `0`, so current screens look identical. |
 | Building, technology, troop details | Pass `plasma` from the API cost to `Cost`. |
-| Build and research queues | Show plasma in queued item costs when non-zero. |
+| Build and research queues | Show plasma in queued item costs when non-zero. *As implemented:* queued items display no cost at all (they are paid when dequeued, not when queued, and `upgrade_queue` / `research_queue` entries carry only timing), so there is nothing to change; the cost is shown in the details panel via `Cost`. |
 | Battle report details | Already formats plasma in loot (`communication/report/details.tsx`); no change beyond verifying the 25 % amount displays. |
 | Header resources | Already shows plasma stock and earnings; no change. |
 
-API responses already carry `plasma` in every `Resource` (`packages/api-client/src/endpoints/shared/resource.ts`); no contract change.
+API responses already carry `plasma` in every `Resource` (`packages/api-client/src/endpoints/shared/resource.ts`). *As implemented:* the entity cost objects were not `Resource`s and omitted plasma, so `plasma: number` was added (additive) to building `upgrade_cost`, technology `research_cost` and troop `cost` (`packages/api-client/src/endpoints/{building,technology,troop}/get.ts`, mapped in `apps/server/src/web/handler/{building,technology,troop}/get.ts`). The web `hasEnoughResources` helper also checks plasma so action buttons stay disabled when plasma is short.
 
 ## Testing
 
@@ -110,11 +110,13 @@ API responses already carry `plasma` in every `Resource` (`packages/api-client/s
 | [`015`](../015-resources-model/spec.md) | Plasma is spendable; loot ratio table. |
 | [`024`](../024-player-combat-pvp/spec.md) | Loot row: plasma 25 %, others 50 %. |
 
-## Evidence index (when implemented)
+## Evidence index
 
-| Area | Expected paths |
+| Area | Paths |
 | --- | --- |
-| Pricing types | `apps/server/src/core/pricing/value/level.ts`, `value/count.ts` |
-| Pricing service | `apps/server/src/core/pricing/service.ts`, `service.spec.ts` |
-| Loot | `apps/server/src/app/command/combat/apply-battle-outcomes.ts`, `core/combat/constant/loot.ts` |
-| Web cost | `apps/web/src/modules/cost/index.tsx`, building / technology / troop `details/index.tsx`, queue components |
+| Pricing types | `apps/server/src/core/pricing/value/level.ts`, `apps/server/src/core/pricing/value/count.ts` |
+| Pricing service | `apps/server/src/core/pricing/service.ts`, `apps/server/src/core/pricing/service.spec.ts` (`PricingService plasma costs`, fixture mutates the cost tables per test) |
+| Purchase | `apps/server/src/app/command/building/upgrade.spec.ts`, `apps/server/src/app/command/technology/research.spec.ts` (incl. queued item dropped on short plasma), `apps/server/src/app/command/troop/recruit.spec.ts` |
+| Loot | `apps/server/src/core/combat/constant/loot.ts` (`combat_loot_ratio`), `apps/server/src/app/command/combat/apply-battle-outcomes.ts`, `apps/server/src/app/command/combat/apply-battle-outcomes.spec.ts` |
+| API cost DTOs | `packages/api-client/src/endpoints/building/get.ts`, `technology/get.ts`, `troop/get.ts`; `apps/server/src/web/handler/building/get.ts`, `technology/get.ts`, `troop/get.ts` (+ `get.spec.ts`) |
+| Web cost | `apps/web/src/modules/cost/index.tsx`, `apps/web/src/modules/cost/index.test.tsx`, `apps/web/src/modules/troop/details/index.tsx` (building / technology details spread the API cost into `Cost`), `apps/web/src/modules/city/helper.ts` (`hasEnoughResources`) |

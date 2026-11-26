@@ -30,25 +30,27 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 
 | API | Role |
 | --- | --- |
-| `PricingService.getBuildingLevelCost` | Plastic/mushroom + duration; `ARCHITECTURE_REDUCTION_PER_LEVEL` |
-| `PricingService.getBuildingUpgradeRefund` | Partial refund on cancel |
-| `PricingService.getTechnologyResearchRefund` | Partial refund on research cancel |
-| `PricingService.getTechnologyLevelCost` | Research lab duration reduction |
-| `PricingService.getTroopCost` | Per-count cost; cloning factory + replication catalyst reductions |
+| `PricingService.getBuildingLevelCost` | Plastic/mushroom/plasma + duration; `ARCHITECTURE_REDUCTION_PER_LEVEL` (duration only) |
+| `PricingService.getBuildingUpgradeRefund` | Partial refund on cancel: `round(cost / 2)` per resource, plasma included |
+| `PricingService.getTechnologyResearchRefund` | Partial refund on research cancel: `round(cost / 2)` per resource, plasma included |
+| `PricingService.getTechnologyLevelCost` | Plastic/mushroom/plasma; research lab duration reduction |
+| `PricingService.getTroopCost` | Per-count cost (plasma = per-unit plasma × count); cloning factory + replication catalyst reductions (duration only). Troop cancel refunds the full remaining cost, plasma included |
 | `scaleGameDurationSeconds` | Applies `gameTimeScale` from `shared/game-time-scale` |
 
 Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`; values in `value/level.ts`, `value/count.ts`.
+
+**Plasma** ([`026`](../026-plasma-economy/spec.md)): `LevelCosts.plasma?: LevelCost` (same `ceil(base × multiplier^(level−1))` curve, no level reduction) and `CountCosts.plasma?: number` (per unit). Absent means a plasma cost of `0`; no current building, technology or troop sets one. Purchases debit plasma with plastic and mushroom and fail with `city:not-enough-resources` when short.
 
 Tests: `apps/server/src/core/pricing/service.spec.ts`; requirement checks exercised in building/technology/troop command specs.
 
 ## Web UI
 
 - `apps/web/src/modules/requirement/` — requirement display helpers.
-- `apps/web/src/modules/cost/` — cost display components used by building/technology/troop UIs.
+- `apps/web/src/modules/cost/` — cost display components used by building/technology/troop UIs. Plasma is shown (with `IconPlasma`, flagged short vs city stock) only when non-zero.
 
 ## API client
 
-Requirement/pricing types are mostly server-internal; client surfaces resulting costs on entity DTOs where returned by list/get endpoints.
+Requirement/pricing types are mostly server-internal; client surfaces resulting costs on entity DTOs where returned by list/get endpoints (`upgrade_cost`, `research_cost`, troop `cost`: `plastic`, `mushroom`, `plasma`, `duration`).
 
 ## Evidence index
 

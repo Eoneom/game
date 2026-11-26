@@ -31,6 +31,22 @@ Tests: `apps/server/src/core/resources/service.spec.ts`, `service.deposit.spec.t
 
 Starting constants: `apps/server/src/core/city/constant` (`STARTING_MUSHROOM`, `STARTING_PLASTIC`).
 
+## Plasma
+
+Plasma is a **spendable** resource ([`026`](../026-plasma-economy/spec.md)): produced by the `central_inductor` into the city cell's stock (unlimited storage), it can be priced in building / technology / troop cost tables ([`014`](../014-requirements-pricing/spec.md)), is debited by `purchaseResourceStock` with plastic and mushroom and refunded by the same cancel rules. No current content costs plasma.
+
+### Loot ratio
+
+After an attacker win with surviving carriers ([`024`](../024-player-combat-pvp/spec.md)), each resource is looted in order plastic → mushroom → plasma as `min(floor(stock × ratio), remaining capacity)`:
+
+| Resource | Lootable share of defender stock |
+| --- | --- |
+| plastic | 50 % |
+| mushroom | 50 % |
+| plasma | 25 % |
+
+Constant: `combat_loot_ratio` in `apps/server/src/core/combat/constant/loot.ts`; applied by `lootFromStock` in `apps/server/src/app/command/combat/apply-battle-outcomes.ts`.
+
 ## Consumers
 
 - `cityGather` / outpost gather commands.

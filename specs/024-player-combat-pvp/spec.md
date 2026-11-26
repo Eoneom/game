@@ -351,7 +351,7 @@ City buildings are **not** deleted on capture.
 | Outcome | Winning attacker requirement |
 | --- | --- |
 | **Occupy** | ≥ 1 surviving `combat` unit. |
-| **Loot** | Surviving `carrier` stacks with total `transport_capacity` ≥ 1; transfer `min(50%` of each lootable resource`, remaining capacity)` ([`015`](../015-resources-model/spec.md)). |
+| **Loot** | Surviving `carrier` stacks with total `transport_capacity` ≥ 1; taken in order plastic → mushroom → plasma, each `min(floor(stock × ratio), remaining capacity)` with ratio **50 %** for plastic and mushroom, **25 %** for plasma (`combat_loot_ratio` in `core/combat/constant/loot.ts`, [`026`](../026-plasma-economy/spec.md); [`015`](../015-resources-model/spec.md)). |
 | **Destroy** (temp outpost / troops) | Attacker win per matrix. |
 
 ## Battle lifecycle (jobs)
