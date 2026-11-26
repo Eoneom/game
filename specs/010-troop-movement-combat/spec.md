@@ -8,6 +8,8 @@ Players create **movements** between map coordinates with an action (`MovementAc
 
 **`attack`** ([`024`](../024-player-combat-pvp/spec.md)) requires a `combat_strategy`, at least one `combat`-role troop, no `scout`-role troop, and an enemy-faction target. On arrival `sagaFinishAttack` opens a **battle** (attacker strategy from the movement; defender strategy from the target garrison's `default_combat_strategy`, `balanced` when unset — see [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024)). Up to five rounds run through `combat.round.advance`; outcomes (occupation, loot, temporary-outpost destruction, retreat) are applied and two battle reports are written.
 
+**Movement duration**: `TroopService.getMovementDuration` uses the **slowest** unit in the movement. Since slice [`027`](../027-military-economy-technologies/spec.md), a `combat`-role unit's speed is multiplied by `1 + 0.04 × tactical_propulsion` (owner's level); carriers, civilians and scouts are unchanged, so a mixed movement keeps the slower speed. The level is read when the movement is created (`createTroopMovement`, `POST /troop/movement/estimate`, return trips via `createReturnBaseTrip`); research finished later does not change a movement under way. Battle retreats are instantaneous placement on the origin cell ([`024`](../024-player-combat-pvp/spec.md)), so no duration applies.
+
 **Depends on**: troops ([`009`](../009-troops-stationary/spec.md)), world ([`005`](../005-world-grid-visibility/spec.md)), outposts ([`011`](../011-outposts/spec.md)), cities ([`006`](../006-city-lifecycle-gathering/spec.md)).
 
 ## HTTP

@@ -39,7 +39,7 @@ Duration/cost: `PricingService.getTechnologyLevelCost` (research lab level reduc
 
 ## Web UI
 
-`apps/web/src/modules/technology/` — page, list items, `ws-listener` for research finish.
+`apps/web/src/modules/technology/` — page, list items, `ws-listener` for research finish. The list is grouped by branch (**Fondations**, **Arsenal**, **Économie**) via the web constant `technology_branch` (`modules/technology/branch.ts`); plasma costs render through `Cost` ([`026`](../026-plasma-economy/spec.md)).
 
 ## API client
 
@@ -54,6 +54,20 @@ Duration/cost: `PricingService.getTechnologyLevelCost` (research lab level reduc
 | `outpost_logistics` | 3 | — | +40% outpost warehouse capacity |
 | `outpost_expansion` | 4 | `outpost_logistics` 1 | +5 max outposts (base 15; L1 → 20, L2 → 25, …) |
 | `photovoltaic_optimization` | 6 | — | +15% solar panel energy |
+
+The table above is the **Fondations** branch. Slice [`027`](../027-military-economy-technologies/spec.md) adds two branches (7 codes, linear bonus `1 + per_level × level`, no cap):
+
+| Branch | `TechnologyCode` | Buildings | Technology prereqs | Effect (per level) |
+| --- | --- | --- | --- | --- |
+| Arsenal | `ballistic_alloys` | `research_lab` 5, `central_inductor` 1 | — | +3% attack (`combat` role) |
+| Arsenal | `organic_plating` | `research_lab` 5, `central_inductor` 1 | — | +3% life (`combat` role) |
+| Arsenal | `tactical_propulsion` | `research_lab` 6, `central_inductor` 2 | — | +4% speed (`combat` role) |
+| Économie | `advanced_recycling` | `research_lab` 3 | — | +5% plastic production |
+| Économie | `agronomy` | `research_lab` 3 | — | +5% mushroom production |
+| Économie | `storage_compression` | `research_lab` 4 | `architecture` 3 | +10% city warehouse capacity |
+| Économie | `plasma_containment` | `research_lab` 5, `central_inductor` 3 | — | +5% plasma production |
+
+Arsenal costs plasma from level 1; Économie costs plastic and mushroom only. Per-level bonuses: `technology_bonus_per_level` (`core/technology/constant/bonus.ts`); migration `00010_military_economy_technologies` backfills existing players.
 
 Costs/durations: `technology_costs` in `apps/server/src/core/pricing/constant/technology.ts` (`outpost_expansion` mirrors `outpost_logistics`). Bootstrap (`TechnologyService.init`) creates every code at level 0; migration `00008_outpost_expansion_technology` backfills existing players.
 

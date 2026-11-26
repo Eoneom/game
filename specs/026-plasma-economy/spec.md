@@ -1,6 +1,6 @@
 # Slice 026 — Plasma economy
 
-**Status**: Implemented on `main` (slice 026): optional plasma in pricing tables, plasma debit / refund, 25 % plasma loot, plasma in web costs. No content is plasma-priced yet.
+**Status**: Implemented on `main` (slice 026): optional plasma in pricing tables, plasma debit / refund, 25 % plasma loot, plasma in web costs. No content was plasma-priced in this slice; the Arsenal technologies of [`027`](../027-military-economy-technologies/spec.md) are the first plasma consumer.
 
 ## Summary
 

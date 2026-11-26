@@ -1,6 +1,6 @@
 # Slice 027 — Military and economy technologies
 
-**Status**: Planned.
+**Status**: Implemented on `main` (slice 027): 7 Arsenal / Économie technologies with plasma-priced Arsenal, combat modifiers snapshotted per battle, propulsion in movement durations, production and city warehouse bonuses, system AI research order, simulator inputs, branch-grouped web list. Artwork uses placeholders (see [Follow-ups](#follow-ups)).
 
 ## Summary
 
@@ -160,14 +160,33 @@ City `plastic_warehouse` and `mushroom_warehouse` capacity × `1 + 0.10 × stora
 | [`016`](../016-system-controlled-players/spec.md) | Research priority. |
 | [`021`](../021-admin-operator-tools/spec.md) | Simulator technology inputs. |
 
-## Evidence index (when implemented)
+## Implementation notes
 
-| Area | Expected paths |
+- **Casualties**: the engine has no separate per-unit life in the casualty formula — `loss_budget = max(1, floor(attack_pool / life_pool))` ([`024`](../024-player-combat-pvp/spec.md)). The life modifier scales `life_pool`, which is what converts damage into whole-unit casualties, so it lowers losses as specified.
+- **Retreat**: battle retreats place surviving attackers on the origin cell instantly (no movement), so propulsion has nothing to shorten there. It applies to every movement that does have a duration: create, estimate, and return trips (`createReturnBaseTrip`: explore, transport, rebase).
+- **Troop earnings**: only outposts have troop earnings (cities produce through buildings only), so the plastic / mushroom bonus covers city buildings and outpost salvagers / cultivators.
+- **Building details** (`GET /building`) apply the same production and compression bonuses to `current_production` / `next_production` and `current_capacity` / `next_capacity`, and the system AI warehouse projection (`projectWarehousesCapacity`) applies compression, so they match the city readouts.
+- **Missing technology rows** count as level 0 when reading bonuses (`AppService.getTechnologyLevels`).
+- **Report modifiers**: `report_battle` is unchanged; `CommunicationGetReportQuery` adds `attacker_modifiers` / `defender_modifiers` from `battle.state_json` (neutral when absent).
+- **Central inductor rank** (`system/storage.ts`): unchanged. It already ranks 2 once core production is satisfied (same tier as warehouses, before core production at 4), and Arsenal requires only inductor 1–2, so system players reach plasma before Arsenal research becomes eligible. Not yet validated on the observability screen.
+- **Admin simulator wire**: `attacker_technology_levels` / `defender_technology_levels` (`{ ballistic_alloys?, organic_plating? }`); invalid level → `technology_level:not-found`.
+
+## Follow-ups
+
+- **Artwork**: no dedicated images yet. `technology/image.ts` maps the 7 codes to existing pictures (Arsenal → combat troop portraits, Économie → matching building art) until `/technologies/<code>.png` exists; remove each placeholder entry when its image lands.
+- **Balance**: validate costs and the system AI (central inductor rank, Arsenal timing) on the observability screen after playtests.
+
+## Evidence index
+
+| Area | Paths |
 | --- | --- |
-| Codes and order | `core/technology/constant/code.ts`, `order.ts` |
-| Requirements and costs | `core/requirement/constant/technology.ts`, `core/pricing/constant/technology.ts` |
-| Combat | `core/combat/combat-service.ts`, `saga/finish/attack.ts` |
-| Speed | `core/troop/service.ts` (`getMovementDuration`), movement create / estimate / battle outcomes |
-| Production | `core/building/service.ts`, `core/troop/service.ts`, `app/service.ts` breakdowns |
-| Migration | `adapter/database/migrations/00010_military_economy_technologies.ts` |
-| Web | `modules/technology/*`, `modules/communication/report/details.tsx`, `modules/admin/combat-simulator` |
+| Codes and order | `apps/server/src/core/technology/constant/code.ts`, `order.ts`, `bonus.ts` (`technology_bonus_per_level`), `apps/server/src/core/technology/service.ts` (`getBonusMultiplier`, `getCombatModifiers`, `getProductionMultipliers`) |
+| Requirements and costs | `apps/server/src/core/requirement/constant/technology.ts`, `apps/server/src/core/pricing/constant/technology.ts`, `apps/server/src/core/pricing/service.spec.ts` (`military and economy technologies`) |
+| Combat | `apps/server/src/core/combat/combat-service.ts` (+ `.spec.ts`, `technology modifiers`), `apps/server/src/core/combat/type/battle-stack.ts` (`CombatModifiers`, `state_json` snapshot), `apps/server/src/app/saga/finish/attack.ts` (+ `.spec.ts`), `apps/server/src/app/command/combat/advance-round.ts` (+ `.spec.ts`), `apps/server/src/app/query/communication/report/get.ts` (+ `.spec.ts`) |
+| Speed | `apps/server/src/core/troop/service.ts` (`getMovementDuration`, `getEffectiveSpeed`, + `.spec.ts`), `apps/server/src/app/command/troop/movement/create.ts`, `shared.ts` (`createReturnBaseTrip`), `apps/server/src/app/query/troop/movement/estimate.ts` (+ `estimate.spec.ts`, `rebase.spec.ts`) |
+| Production and warehouses | `apps/server/src/core/building/service.ts`, `apps/server/src/core/troop/service.ts` (`technology_multiplier`), `apps/server/src/app/service.ts` (breakdowns expose `technology_production_multiplier`; `getCityWarehousesCapacity` applies `storage_compression`), `apps/server/src/app/service.spec.ts`, `apps/server/src/core/building/service.spec.ts`, `apps/server/src/app/query/building/get.ts` (+ `.spec.ts`, building details current / next production and capacity), `apps/server/src/app/command/player/system/pending-upgrades.ts` (+ `.spec.ts`, system AI projected capacity) |
+| API | `packages/api-client/src/endpoints/city/get.ts`, `outpost/get.ts` (`technology_production_multiplier`), `packages/api-client/src/types/report-battle.ts` (modifiers), `packages/api-client/src/endpoints/admin/combat-simulator.ts`, `packages/api-client/src/error/request.ts` |
+| Migration | `apps/server/src/adapter/database/migrations/00010_military_economy_technologies.ts` (verified locally: existing player gets the 7 rows at level 0, existing rows untouched) |
+| System AI | `apps/server/src/app/command/player/system/technologies.ts` (+ `.spec.ts`), `apps/server/src/core/player/system/ai-profile.ts` (`research_arsenal_first`, + `.spec.ts`), `apps/server/src/app/command/player/system/actions.ts` (`tryResearch`) |
+| Admin simulator | `apps/server/src/web/handler/admin/combat-simulator/post.ts` (+ `.spec.ts`), `apps/web/src/modules/admin/combat-simulator/page.tsx` |
+| Web | `apps/web/src/modules/technology/branch.ts` (+ `branch.test.ts`), `translations.ts`, `image.ts`, `list/index.tsx`, `apps/web/src/ui/list/index.tsx` (groups), `apps/web/src/modules/communication/report/details.tsx`, `translations.ts` (`formatCombatModifiers`, + test), `apps/web/src/ui/production-terrain-readout.tsx` (+ test), `apps/web/src/modules/city/page.tsx`, `apps/web/src/modules/outpost/page.tsx` |

@@ -27,7 +27,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 024 | Player combat (PvP) | Implemented | [spec](./024-player-combat-pvp/spec.md) |
 | 025 | Lawless human system faction | Implemented | [spec](./025-lawless-human-faction/spec.md) |
 | 026 | Plasma economy | Implemented | [spec](./026-plasma-economy/spec.md) |
-| 027 | Military and economy technologies | Planned | [spec](./027-military-economy-technologies/spec.md) |
+| 027 | Military and economy technologies | Implemented | [spec](./027-military-economy-technologies/spec.md) |
 | 028 | Command center and underground shelter | Planned | [spec](./028-command-center-shelter/spec.md) |
 | 029 | City defenses | Planned | [spec](./029-city-defenses/spec.md) |
 | 030 | Intelligence: espionage and detection | Planned | [spec](./030-intelligence/spec.md) |

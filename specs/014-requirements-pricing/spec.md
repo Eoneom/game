@@ -39,7 +39,19 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 
 Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`; values in `value/level.ts`, `value/count.ts`.
 
-**Plasma** ([`026`](../026-plasma-economy/spec.md)): `LevelCosts.plasma?: LevelCost` (same `ceil(base × multiplier^(level−1))` curve, no level reduction) and `CountCosts.plasma?: number` (per unit). Absent means a plasma cost of `0`; no current building, technology or troop sets one. Purchases debit plasma with plastic and mushroom and fail with `city:not-enough-resources` when short.
+**Plasma** ([`026`](../026-plasma-economy/spec.md)): `LevelCosts.plasma?: LevelCost` (same `ceil(base × multiplier^(level−1))` curve, no level reduction) and `CountCosts.plasma?: number` (per unit). Absent means a plasma cost of `0`. The Arsenal technologies of slice [`027`](../027-military-economy-technologies/spec.md) are the first to set one. Purchases debit plasma with plastic and mushroom and fail with `city:not-enough-resources` when short.
+
+**Slice 027 technologies** ([`027`](../027-military-economy-technologies/spec.md)) — requirements (`constant/technology.ts` in `core/requirement/`; buildings checked in the research city) and costs (`base` / `multiplier`):
+
+| Code | Buildings | Technologies | Plastic | Mushroom | Plasma | Duration (s) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `ballistic_alloys` | `research_lab` 5, `central_inductor` 1 | — | 8000 / 1.7 | 6000 / 1.7 | 500 / 1.7 | 180 / 2 |
+| `organic_plating` | `research_lab` 5, `central_inductor` 1 | — | 6000 / 1.7 | 8000 / 1.7 | 500 / 1.7 | 180 / 2 |
+| `tactical_propulsion` | `research_lab` 6, `central_inductor` 2 | — | 10000 / 1.8 | 8000 / 1.8 | 800 / 1.8 | 240 / 2 |
+| `advanced_recycling` | `research_lab` 3 | — | 4000 / 1.6 | 3000 / 1.6 | — | 90 / 2 |
+| `agronomy` | `research_lab` 3 | — | 3000 / 1.6 | 4000 / 1.6 | — | 90 / 2 |
+| `storage_compression` | `research_lab` 4 | `architecture` 3 | 5000 / 1.7 | 5000 / 1.7 | — | 120 / 2 |
+| `plasma_containment` | `research_lab` 5, `central_inductor` 3 | — | 8000 / 1.6 | 8000 / 1.6 | — | 150 / 2 |
 
 Tests: `apps/server/src/core/pricing/service.spec.ts`; requirement checks exercised in building/technology/troop command specs.
 

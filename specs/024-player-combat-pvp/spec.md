@@ -297,7 +297,8 @@ For round `r` ∈ {1…5}:
 2. **Pools** (side `S`):
    - `attack_pool(S) = Σ_stack (count × effective_attack)` with [role weights](#who-fights) and, for combat stacks, `effective_attack = attack_capacity × att_multiplier(class, r)`.
    - `life_pool(S) = Σ_stack (count × effective_life)` with role weights; combat stacks use `effective_life = life_capacity × life_multiplier(class, r)`; other roles use `defense_capacity` per table.
-   - Apply [composition exposure](#composition-exposure-homogeneous-combat) to `life_pool(S)` when applicable.
+   - **Technology modifiers** ([`027`](../027-military-economy-technologies/spec.md)): combat stacks also multiply `effective_attack` by `modifiers(S).attack = 1 + 0.03 × ballistic_alloys` and `effective_life` by `modifiers(S).life = 1 + 0.03 × organic_plating` (owner's levels). Both are snapshotted at battle start in `battle.state_json` (`attacker_modifiers`, `defender_modifiers`); rounds never read live levels and a missing field means `{ attack: 1, life: 1 }`. Since `loss_budget` divides by `life_pool`, the life modifier also lowers whole-unit casualties. Carriers, civilians and scouts are unchanged.
+   - Apply [composition exposure](#composition-exposure-homogeneous-combat) to `life_pool(S)` when applicable (after the modifiers).
 3. **Strike order**: **Simultaneous** each round (no first-strike in v1).
 4. **Casualties (whole units)** attacker → defender:  
    `loss_budget = max(1, floor(attack_pool(attacker) / max(1, life_pool(defender))))` when `attack_pool(attacker) > 0`; distribute losses using [target priority](#target-priority-combat-casualties). Symmetric for defender → attacker.
@@ -461,7 +462,7 @@ Follow `apps/web/src/modules/communication/` patterns:
 | --- | --- |
 | `report/translations.ts` | `ReportTypeLabels[ReportType.BATTLE] = 'Bataille'` (FR, like existing labels). |
 | `report/list.tsx` | No change required; list already shows `report.type` + origin → destination. |
-| `report/details.tsx` | Branch on `type === 'battle'`: show factions, **strategies**, winner, rounds, **round-by-round table** (`round_summaries`), outcome flags (loot / occupy / destroy / **attacker retreated**), casualty totals for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
+| `report/details.tsx` | Branch on `type === 'battle'`: show factions, **strategies**, technology modifiers when ≠ 1 (e.g. « +9 % attaque, +6 % vie », `attacker_modifiers` / `defender_modifiers` added to the report metadata from the battle snapshot, [`027`](../027-military-economy-technologies/spec.md)), winner, rounds, **round-by-round table** (`round_summaries`), outcome flags (loot / occupy / destroy / **attacker retreated**), casualty totals for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
 | Troop lines | Use `TroopTranslations[troop.code].name` for all codes (confederation + singularity) per [Web artwork convention](#web-translations-and-artwork-convention). |
 
 Unread badge: existing `GET /communication/report/unread/count` includes new `battle` rows.
