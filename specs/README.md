@@ -37,6 +37,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 034 | Rankings | Planned | [spec](./034-rankings/spec.md) |
 | 035 | Faction exchange and water | Planned | [spec](./035-faction-exchange/spec.md) |
 | 036 | Playable faction: La Symbiose | Planned | [spec](./036-faction-symbiosis/spec.md) |
+| 037 | Playable faction: L'Ordre du Bastion | Planned | [spec](./037-faction-bastion-order/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).
 
