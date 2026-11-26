@@ -63,6 +63,8 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
   - **La Symbiose** : colonie humaine fusionnée au mycélium. Unités de masse, régénération après combat, bonus champignons, défenses organiques. Style défensif et d'usure.
   - **L'Ordre du Bastion** : héritiers d'une armée d'avant l'effondrement. Défenses moins chères et plus solides, infanterie lourde, unités lentes. Style forteresse.
 - Par faction : 9 unités (5 rôles civils + 4 classes de combat) avec illustrations, 1 unité d'élite plasma, 1 défense propre, 1 bonus passif.
+- Spec [`036-faction-symbiosis`](../specs/036-faction-symbiosis/spec.md) : +10 % champignons / −10 % plastique, unités de masse, **deux** défenses propres (Mur de mycélium, Nuage de spores), apparition n'importe où.
+- À faire : **deux défenses propres pour la Confédération** (à imaginer), pour l'équité avec la Symbiose.
 
 ### Alliances (nouveau concept)
 
