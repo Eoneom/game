@@ -29,6 +29,7 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
   const numberCount = Number.isNaN(count) ? 1 : count
   const plasticCost = numberCount * troop.cost.plastic
   const mushroomCost = numberCount * troop.cost.mushroom
+  const plasmaCost = numberCount * troop.cost.plasma
 
   const { isRequirementMet } = useRequirement({ cityId, requirement: troop.requirement })
 
@@ -41,7 +42,8 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
       city: city ?? null,
       cost: {
         plastic: plasticCost,
-        mushroom: mushroomCost
+        mushroom: mushroomCost,
+        plasma: plasmaCost
       }
     }) &&
     isRequirementMet
@@ -72,6 +74,7 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
         cityId={cityId}
         plastic={plasticCost}
         mushroom={mushroomCost}
+        plasma={plasmaCost}
         duration={numberCount * troop.cost.duration}
       />
     </aside>
