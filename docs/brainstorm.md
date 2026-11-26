@@ -44,7 +44,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 - Couche **séparée** des bâtiments (onglet « Enceinte », emplacements propres, hors des 100 de la ville).
 - Défenses en **quantité** (comme des troupes), **destructibles en combat**, donc à **reconstruire**.
 - Catalogue de départ : Rempart, Tourelle, Batterie plasma, Champ de mines, Bouclier énergétique.
-- La classe `war_machine` gagne un rôle de **siège** (bonus contre les structures).
+- Le siège passe par la stratégie *Assaut de siège* (machines de guerre renforcées), sans bonus passif.
 - **Uniquement en ville** (pas sur les avant-postes).
 - Construction via une **file de fortification** par ville ; un bâtiment « Enceinte » fixe la capacité en points de défense.
 - En combat : nouveau rôle `structure` (immobile) dans le snapshot.
@@ -54,6 +54,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
   - Batterie plasma : consomme du plasma à chaque round de tir ; inactive sans plasma.
   - Bouclier : réduit les dégâts reçus tant que le générateur survit.
 - Si l'attaquant gagne : les défenses restantes sont **détruites**. À revoir quand les conséquences d'une victoire (occupation ou pillage seul) seront précisées.
+- Spec : [`029-city-defenses`](../specs/029-city-defenses/spec.md) — seules les défenses armées (tourelle, batterie) empêchent la victoire ; stratégie *Assaut de siège* pour tous, sans bonus passif ; seule la batterie consomme du plasma ; l'IA construit remparts et tourelles.
 
 ### Factions
 

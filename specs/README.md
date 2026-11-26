@@ -29,6 +29,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 026 | Plasma economy | Planned | [spec](./026-plasma-economy/spec.md) |
 | 027 | Military and economy technologies | Planned | [spec](./027-military-economy-technologies/spec.md) |
 | 028 | Command center and underground shelter | Planned | [spec](./028-command-center-shelter/spec.md) |
+| 029 | City defenses | Planned | [spec](./029-city-defenses/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).
 
