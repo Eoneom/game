@@ -30,6 +30,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 025 | [`specs/025-lawless-human-faction/`](../specs/025-lawless-human-faction/spec.md) | Lawless human system faction (planned) |
 | 026 | [`specs/026-plasma-economy/`](../specs/026-plasma-economy/spec.md) | Plasma economy (planned) |
 | 027 | [`specs/027-military-economy-technologies/`](../specs/027-military-economy-technologies/spec.md) | Military and economy technologies (planned) |
+| 028 | [`specs/028-command-center-shelter/`](../specs/028-command-center-shelter/spec.md) | Command center and underground shelter (planned) |
 
 ## Brownfield inventory (dependency order)
 
