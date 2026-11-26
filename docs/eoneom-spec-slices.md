@@ -41,6 +41,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 036 | [`specs/036-faction-symbiosis/`](../specs/036-faction-symbiosis/spec.md) | Playable faction: La Symbiose (planned) |
 | 037 | [`specs/037-faction-bastion-order/`](../specs/037-faction-bastion-order/spec.md) | Playable faction: L'Ordre du Bastion (planned) |
 | 038 | [`specs/038-security-pass/`](../specs/038-security-pass/spec.md) | Security pass before public launch (planned) |
+| 039 | [`specs/039-confederation-identity/`](../specs/039-confederation-identity/spec.md) | Confederation identity: defenses and logistics bonus (planned) |
 
 ## Brownfield inventory (dependency order)
 

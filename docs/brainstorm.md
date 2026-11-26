@@ -65,7 +65,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 - Par faction : 9 unités (5 rôles civils + 4 classes de combat) avec illustrations, 1 unité d'élite plasma, 1 défense propre, 1 bonus passif.
 - Spec [`036-faction-symbiosis`](../specs/036-faction-symbiosis/spec.md) : +10 % champignons / −10 % plastique, unités de masse, **deux** défenses propres (Mur de mycélium, Nuage de spores), apparition n'importe où.
 - Spec [`037-faction-bastion-order`](../specs/037-faction-bastion-order/spec.md) : garnison +15 % de vie en défense de ses villes, unités lourdes, défenses propres Artillerie de position et Barbelés.
-- À faire : **deux défenses propres pour la Confédération** (à imaginer), pour l'équité avec la Symbiose et le Bastion.
+- Confédération : spec [`039-confederation-identity`](../specs/039-confederation-identity/spec.md) — bonus logistique (+10 % transport, +5 % vitesse hors combat), défenses propres Canon électromagnétique (anti-siège) et Leurres holographiques.
 
 ### Alliances (nouveau concept)
 
