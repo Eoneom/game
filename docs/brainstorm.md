@@ -90,6 +90,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 ### Sécurité (passe dédiée, plus tard)
 
 - Mots de passe, expiration de session, jeton WS en query string, rate limiting, validation des entrées, multi-comptes (critique avec la bourse), modération du chat.
+- Spec [`038-security-pass`](../specs/038-security-pass/spec.md) : connexion par lien magique e-mail (+ code à 6 chiffres), sessions en cookie sécurisé, durcissement HTTP/WS, modération (signalements, muet, bannissement). Multi-comptes reportés.
 
 ### Écarté pour l'instant
 
