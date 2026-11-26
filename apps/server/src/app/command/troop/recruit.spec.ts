@@ -172,6 +172,62 @@ describe('recruitTroop', () => {
     assert.ok(updated_stock.mushroom < stock.mushroom)
   })
 
+  describe('with a plasma-priced troop', () => {
+    beforeEach(() => {
+      vi.spyOn(PricingService, 'getTroopCost').mockReturnValue({
+        code: TroopCode.EXPLORER,
+        resource: {
+          plastic: 50,
+          mushroom: 80,
+          plasma: 30
+        },
+        duration: 300
+      })
+    })
+
+    it('should reject recruitment when plasma is short', async () => {
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(testResourceStock({
+        cell_id,
+        plastic: 100000,
+        mushroom: 100000,
+        plasma: 29
+      }))
+
+      await assert.rejects(
+        () => recruitTroop({
+          city_id: city.id,
+          player_id,
+          troop_code: TroopCode.EXPLORER,
+          count: requested_troop_count,
+        }),
+        new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+      assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 0)
+    })
+
+    it('should debit plasma with plastic and mushroom', async () => {
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(testResourceStock({
+        cell_id,
+        plastic: 100000,
+        mushroom: 100000,
+        plasma: 100
+      }))
+
+      await recruitTroop({
+        city_id: city.id,
+        player_id,
+        troop_code: TroopCode.EXPLORER,
+        count: requested_troop_count,
+      })
+
+      const updated_stock = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated_stock.plastic, 99950)
+      assert.strictEqual(updated_stock.mushroom, 99920)
+      assert.strictEqual(updated_stock.plasma, 70)
+    })
+  })
+
   it('should schedule troop recruit progress job', async () => {
     const { duration } = PricingService.getTroopCost({
       code: TroopCode.EXPLORER,

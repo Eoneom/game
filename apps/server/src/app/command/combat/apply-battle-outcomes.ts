@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { createBattleReports } from '#app/command/communication/report/create-battle'
 import { runCommand } from '#command/run'
+import { combat_loot_ratio } from '#core/combat/constant/loot'
 import { combatRoleFor } from '#core/combat/troop-combat'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
@@ -57,8 +58,8 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number): {
   const next = { plastic: stock.plastic, mushroom: stock.mushroom, plasma: stock.plasma }
 
   for (const key of keys) {
-    const half = Math.floor(next[key] * 0.5)
-    const transfer = Math.min(half, remaining)
+    const lootable = Math.floor(next[key] * combat_loot_ratio[key])
+    const transfer = Math.min(lootable, remaining)
     loot[key] = transfer
     next[key] -= transfer
     remaining -= transfer

@@ -97,6 +97,7 @@ describe('technologyGetHandler', () => {
         research_cost: {
           plastic: 200,
           mushroom: 100,
+          plasma: 0,
           duration: 7200 
         },
         requirement: {

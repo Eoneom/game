@@ -54,7 +54,7 @@ export class PricingService {
       resource: {
         plastic: cost.plastic * count,
         mushroom: cost.mushroom * count,
-        plasma: 0
+        plasma: (cost.plasma ?? 0) * count
       },
       duration: scaleGameDurationSeconds(reduced_duration)
     }
@@ -72,6 +72,7 @@ export class PricingService {
     const {
       plastic,
       mushroom,
+      plasma,
       duration
     } = building_costs[code]
 
@@ -86,7 +87,7 @@ export class PricingService {
       resource: {
         plastic: this.computeLevelResourceCost(plastic, level),
         mushroom: this.computeLevelResourceCost(mushroom, level),
-        plasma: 0
+        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0
       },
       duration: this.computeLevelDurationCost(duration, level, architecture_reduction)
     }
@@ -108,7 +109,7 @@ export class PricingService {
     return {
       plastic: Math.round(costs.resource.plastic/2),
       mushroom: Math.round(costs.resource.mushroom/2),
-      plasma: 0
+      plasma: Math.round(costs.resource.plasma/2)
     }
   }
 
@@ -130,7 +131,7 @@ export class PricingService {
     return {
       plastic: Math.round(costs.resource.plastic / 2),
       mushroom: Math.round(costs.resource.mushroom / 2),
-      plasma: 0
+      plasma: Math.round(costs.resource.plasma / 2)
     }
   }
 
@@ -146,6 +147,7 @@ export class PricingService {
     const {
       plastic,
       mushroom,
+      plasma,
       duration
     } = technology_costs[code]
 
@@ -160,7 +162,7 @@ export class PricingService {
       resource: {
         plastic: this.computeLevelResourceCost(plastic, level),
         mushroom: this.computeLevelResourceCost(mushroom, level),
-        plasma: 0
+        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0
       },
       duration: this.computeLevelDurationCost(duration, level, research_lab_reduction)
     }

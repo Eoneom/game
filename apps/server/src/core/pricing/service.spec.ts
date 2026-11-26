@@ -238,3 +238,128 @@ describe('PricingService', () => {
     })
   })
 })
+
+describe('PricingService plasma costs', () => {
+  const building_code = BuildingCode.MUSHROOM_FARM
+  const technology_code = TechnologyCode.ARCHITECTURE
+  const troop_code = TroopCode.EXPLORER
+  const plasma_curve = {
+    base: 15,
+    multiplier: 1.5
+  }
+
+  afterEach(() => {
+    delete building_costs[building_code].plasma
+    delete technology_costs[technology_code].plasma
+    delete troop_costs[troop_code].plasma
+  })
+
+  it('returns 0 plasma when tables define no plasma cost', () => {
+    assert.strictEqual(PricingService.getBuildingLevelCost({
+      code: building_code,
+      level: 3,
+      architecture_level: 0
+    }).resource.plasma, 0)
+    assert.strictEqual(PricingService.getTechnologyLevelCost({
+      code: technology_code,
+      level: 3,
+      research_lab_level: 0
+    }).resource.plasma, 0)
+    assert.strictEqual(PricingService.getTroopCost({
+      code: troop_code,
+      count: 4,
+      cloning_factory_level: 0,
+      replication_catalyst_level: 0
+    }).resource.plasma, 0)
+  })
+
+  it('computes building plasma on the level curve, unaffected by architecture', () => {
+    building_costs[building_code].plasma = plasma_curve
+
+    const level = 3
+    const expected = Math.ceil(plasma_curve.base * Math.pow(plasma_curve.multiplier, level - 1))
+    const without = PricingService.getBuildingLevelCost({
+      code: building_code,
+      level,
+      architecture_level: 0
+    })
+    const withArch = PricingService.getBuildingLevelCost({
+      code: building_code,
+      level,
+      architecture_level: 5
+    })
+
+    assert.strictEqual(without.resource.plasma, expected)
+    assert.strictEqual(withArch.resource.plasma, expected)
+  })
+
+  it('computes technology plasma on the level curve, unaffected by research lab', () => {
+    technology_costs[technology_code].plasma = plasma_curve
+
+    const level = 2
+    const expected = Math.ceil(plasma_curve.base * Math.pow(plasma_curve.multiplier, level - 1))
+    const without = PricingService.getTechnologyLevelCost({
+      code: technology_code,
+      level,
+      research_lab_level: 0
+    })
+    const withLab = PricingService.getTechnologyLevelCost({
+      code: technology_code,
+      level,
+      research_lab_level: 3
+    })
+
+    assert.strictEqual(without.resource.plasma, expected)
+    assert.strictEqual(withLab.resource.plasma, expected)
+  })
+
+  it('multiplies troop plasma by count', () => {
+    troop_costs[troop_code].plasma = 7
+
+    const result = PricingService.getTroopCost({
+      code: troop_code,
+      count: 4,
+      cloning_factory_level: 2,
+      replication_catalyst_level: 1
+    })
+
+    assert.strictEqual(result.resource.plasma, 28)
+  })
+
+  it('refunds half of building plasma rounded', () => {
+    building_costs[building_code].plasma = plasma_curve
+
+    const level = 2
+    const cost = PricingService.getBuildingLevelCost({
+      code: building_code,
+      level,
+      architecture_level: 0
+    })
+    const refund = PricingService.getBuildingUpgradeRefund({
+      code: building_code,
+      level
+    })
+
+    assert.strictEqual(cost.resource.plasma, 23)
+    assert.strictEqual(refund.plasma, 12)
+  })
+
+  it('refunds half of technology plasma rounded', () => {
+    technology_costs[technology_code].plasma = plasma_curve
+
+    const level = 2
+    const cost = PricingService.getTechnologyLevelCost({
+      code: technology_code,
+      level,
+      research_lab_level: 1
+    })
+    const refund = PricingService.getTechnologyResearchRefund({
+      code: technology_code,
+      level,
+      research_lab_level: 1
+    })
+
+    assert.strictEqual(cost.resource.plasma, 23)
+    assert.strictEqual(refund.plasma, 12)
+  })
+})

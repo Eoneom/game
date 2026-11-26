@@ -84,6 +84,7 @@ describe('troopGetHandler', () => {
         cost: {
           plastic: 50,
           mushroom: 25,
+          plasma: 0,
           duration: 1800 
         },
         requirement: {

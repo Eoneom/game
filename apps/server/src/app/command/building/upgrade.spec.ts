@@ -14,6 +14,7 @@ import { BuildingError } from '#core/building/error'
 import { BuildingUpgradeQueueEntity } from '#core/building/upgrade-queue-entity'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
+import { PricingService } from '#core/pricing/service'
 import { RequirementError } from '#core/requirement/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
@@ -225,6 +226,61 @@ describe('upgradeBuilding', () => {
     const updated_stock = stockUpdateOne.mock.calls[0][0]
     assert.ok(updated_stock.plastic < stock.plastic)
     assert.ok(updated_stock.mushroom < stock.mushroom)
+  })
+
+  describe('with a plasma-priced level', () => {
+    beforeEach(() => {
+      vi.spyOn(PricingService, 'getBuildingLevelCost').mockReturnValue({
+        code: BuildingCode.CLONING_FACTORY,
+        level: 1,
+        resource: {
+          plastic: 100,
+          mushroom: 100,
+          plasma: 40
+        },
+        duration: 60
+      })
+    })
+
+    it('should reject the upgrade when plasma is short', async () => {
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 30000,
+        mushroom: 30000,
+        plasma: 39
+      }))
+
+      await assert.rejects(
+        () => upgradeBuilding({
+          player_id,
+          city_id: city.id,
+          building_code: BuildingCode.CLONING_FACTORY
+        }),
+        new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+      assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 0)
+    })
+
+    it('should debit plasma with plastic and mushroom', async () => {
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 30000,
+        mushroom: 30000,
+        plasma: 100
+      }))
+
+      await upgradeBuilding({
+        player_id,
+        city_id: city.id,
+        building_code: BuildingCode.CLONING_FACTORY
+      })
+
+      const updated_stock = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated_stock.plastic, 29900)
+      assert.strictEqual(updated_stock.mushroom, 29900)
+      assert.strictEqual(updated_stock.plasma, 60)
+    })
   })
 
   it('should schedule the building upgrade finish job', async () => {

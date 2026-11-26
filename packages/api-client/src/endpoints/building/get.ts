@@ -13,6 +13,7 @@ type BaseBuilding = {
   upgrade_cost: {
     plastic: number
     mushroom: number
+    plasma: number
     duration: number
   }
   requirement: Requirement

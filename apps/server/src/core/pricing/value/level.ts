@@ -11,6 +11,8 @@ export interface LevelCosts {
   plastic: LevelCost
   mushroom: LevelCost
   duration: LevelCost
+  /** Absent means no plasma cost at any level. */
+  plasma?: LevelCost
 }
 
 export interface LevelCostValue {

@@ -18,6 +18,7 @@ export interface TroopGetDataResponse {
   cost: {
     plastic: number
     mushroom: number
+    plasma: number
     duration: number
   }
   requirement: Requirement

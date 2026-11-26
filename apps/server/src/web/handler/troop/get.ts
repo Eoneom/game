@@ -48,6 +48,7 @@ export const troopGetHandler = async (
       cost: {
         plastic: cost.resource.plastic,
         mushroom: cost.resource.mushroom,
+        plasma: cost.resource.plasma,
         duration: cost.duration
       },
       requirement

@@ -8,6 +8,9 @@ import { BuildingCode } from '#core/building/constant/code'
 import { BuildingEntity } from '#core/building/entity'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
+import { AppEventBus } from '#app/event-bus'
+import { AppEvent } from '#core/events'
+import { PricingService } from '#core/pricing/service'
 import { RequirementError } from '#core/requirement/error'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
@@ -264,6 +267,95 @@ describe('researchTechnology', () => {
     const updated_stock = stockUpdateOne.mock.calls[0][0]
     assert.ok(updated_stock.plastic < stock.plastic)
     assert.ok(updated_stock.mushroom < stock.mushroom)
+  })
+
+  describe('with a plasma-priced level', () => {
+    const plasma_cost = {
+      code: TechnologyCode.ARCHITECTURE,
+      level: 1,
+      resource: {
+        plastic: 100,
+        mushroom: 100,
+        plasma: 40
+      },
+      duration: 60
+    }
+
+    function stockWithPlasma(plasma: number): ReturnType<typeof testResourceStock> {
+      return testResourceStock({
+        cell_id: city_cell.id,
+        plastic: 100000,
+        mushroom: 100000,
+        plasma
+      })
+    }
+
+    it('should reject the research when plasma is short', async () => {
+      vi.spyOn(PricingService, 'getTechnologyLevelCost').mockReturnValue(plasma_cost)
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(stockWithPlasma(39))
+
+      await assert.rejects(
+        () => researchTechnology({
+          city_id: city.id,
+          player_id,
+          technology_code: TechnologyCode.ARCHITECTURE
+        }),
+        new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+      assert.strictEqual(scheduleTechnologyResearchFinish.mock.calls.length, 0)
+    })
+
+    it('should debit plasma with plastic and mushroom', async () => {
+      vi.spyOn(PricingService, 'getTechnologyLevelCost').mockReturnValue(plasma_cost)
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(stockWithPlasma(100))
+
+      await researchTechnology({
+        city_id: city.id,
+        player_id,
+        technology_code: TechnologyCode.ARCHITECTURE
+      })
+
+      const updated_stock = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated_stock.plastic, 99900)
+      assert.strictEqual(updated_stock.mushroom, 99900)
+      assert.strictEqual(updated_stock.plasma, 60)
+    })
+
+    it('should drop a queued research when plasma is short at dequeue', async () => {
+      const emit = vi.fn()
+      vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as unknown as AppEventBus)
+      vi.spyOn(PricingService, 'getTechnologyLevelCost').mockReturnValueOnce(plasma_cost)
+      repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(stockWithPlasma(39))
+      const queued = TechnologyResearchQueueEntity.create({
+        id: id(),
+        player_id,
+        city_id: city.id,
+        technology_code: TechnologyCode.ARCHITECTURE,
+        created_at: Date.now()
+      })
+      listByPlayer
+        .mockResolvedValueOnce([ queued ])
+        .mockResolvedValueOnce([])
+
+      await researchTechnology({
+        city_id: city.id,
+        player_id,
+        technology_code: TechnologyCode.ARCHITECTURE
+      })
+
+      assert.deepStrictEqual(emit.mock.calls[0], [
+        AppEvent.TechnologyQueueItemDropped,
+        {
+          player_id,
+          city_id: city.id,
+          technology_code: TechnologyCode.ARCHITECTURE,
+          error_code: CityError.NOT_ENOUGH_RESOURCES
+        }
+      ])
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plasma, 39)
+    })
   })
 
   it('should schedule the technology research finish job', async () => {
