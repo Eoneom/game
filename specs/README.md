@@ -31,6 +31,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 028 | Command center and underground shelter | Planned | [spec](./028-command-center-shelter/spec.md) |
 | 029 | City defenses | Planned | [spec](./029-city-defenses/spec.md) |
 | 030 | Intelligence: espionage and detection | Planned | [spec](./030-intelligence/spec.md) |
+| 031 | Empire overview | **Draft — needs refinement, not implementable** | [spec](./031-empire-overview/spec.md) |
 | 032 | Messaging: mail and chat | Planned | [spec](./032-messaging/spec.md) |
 | 033 | Alliances | Planned | [spec](./033-alliances/spec.md) |
 

@@ -33,6 +33,7 @@ Survey of `Eoneom/game` at `main`. Order follows dependency: shared contracts an
 | 028 | [`specs/028-command-center-shelter/`](../specs/028-command-center-shelter/spec.md) | Command center and underground shelter (planned) |
 | 029 | [`specs/029-city-defenses/`](../specs/029-city-defenses/spec.md) | City defenses (planned) |
 | 030 | [`specs/030-intelligence/`](../specs/030-intelligence/spec.md) | Intelligence: espionage and detection (planned) |
+| 031 | [`specs/031-empire-overview/`](../specs/031-empire-overview/spec.md) | Empire overview (**draft**, needs refinement, not implementable) |
 | 032 | [`specs/032-messaging/`](../specs/032-messaging/spec.md) | Messaging: mail and chat (planned) |
 | 033 | [`specs/033-alliances/`](../specs/033-alliances/spec.md) | Alliances (planned) |
 

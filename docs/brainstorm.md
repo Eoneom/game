@@ -82,6 +82,7 @@ Spec : [`027-military-economy-technologies`](../specs/027-military-economy-techn
 ### Vue globale de l'empire
 
 - Tableau de toutes les villes et avant-postes : stocks, production/min, files, garnisons, mouvements, attaques entrantes.
+- Spec : [`031-empire-overview`](../specs/031-empire-overview/spec.md) — **brouillon**, beaucoup de questions ouvertes (actions rapides notamment) ; à affiner avant toute implémentation.
 
 ### Sécurité (passe dédiée, plus tard)
 
