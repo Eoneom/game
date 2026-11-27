@@ -31,21 +31,23 @@ Flow:
 
 | Area | Example paths |
 | --- | --- |
-| City base | `/city/$cityId/base/`, building, technology, troop child routes |
+| City base | `/city/$cityId/base/`, building, technology, troop, defense child routes; the four catalogues keep the selected entry in `?code=` (unknown values dropped by `validateSearch`, card clicks navigate with `replace`) ([`043`](../043-catalogue-card-grids/spec.md)) |
 | City map/world | `/city/$cityId/map`, `/city/$cityId/world/map`, movement under `world/movement` |
-| Outpost | `/outpost/$outpostId`, map, movement, world variants |
+| Outpost | `/outpost/$outpostId`, map, movement, world variants; read-only troop page `/outpost/$outpostId/troop` (`?code=`, « Unités » in the left column and on the outpost page) ([`043`](../043-catalogue-card-grids/spec.md)) |
 | Inbox | `/inbox/report`, `/inbox/mail` (Courrier, [`032`](../032-messaging/spec.md); search `box`, `mail_id`, `view=compose\|blocked`, `to`, `reply_to`) |
 | Alliance | `/alliance` ([`033`](../033-alliances/spec.md)); the city map accepts `?x=&y=` to center on and select a cell |
 | Shared report | `_shared/report` |
 
 City layout: `routes/city/$cityId/route.tsx` + `modules/city/root.tsx`. Outpost: `routes/outpost/$outpostId/route.tsx`.
 
+List + details pages use `LayoutPage` (`ui/layout/page.tsx`): on `xl` the details panel is a fixed `28rem` column next to the list (`minmax(0,1fr) 28rem`), stacked below `xl` ([`043`](../043-catalogue-card-grids/spec.md)).
+
 ## Global UI
 
 | Module | Role |
 | --- | --- |
 | `ui/header/` | Brand, location title link (+ city coordinates), incoming-attack badge, compact resource button (stock per resource, energy as consumption / production, warehouse fill warnings) toggling the 760 px resource panel (`ui/header/resources/panel.tsx`: stocks and warehouses, per-hour production breakdown, energy); open state in `ResourcePanelProvider` (`ui/header/resources/context.tsx`) so the dashboard can open it ([`041`](../041-app-shell-navigation/spec.md)) |
-| `ui/nav/menu` | Left column (`<nav aria-label="Navigation principale">`, 256 px): current location entries (city: Tableau de bord, Bâtiments, Technologies, Troupes, Défense, Déplacements, Carte; outpost: Tableau de bord, Déplacements, Carte) each with its activity line from the location activity endpoint ([`013`](../013-location-activity/spec.md)), then empire entries (Rapports and Courrier with unread badges, Alliance, Classements, Bourse, Observabilité IA for admins), then « Se déconnecter » ([`041`](../041-app-shell-navigation/spec.md)) |
+| `ui/nav/menu` | Left column (`<nav aria-label="Navigation principale">`, 256 px): current location entries (city: Tableau de bord, Bâtiments, Technologies, Troupes, Défense, Déplacements, Carte; outpost: Tableau de bord, Unités ([`043`](../043-catalogue-card-grids/spec.md)), Déplacements, Carte) each with its activity line from the location activity endpoint ([`013`](../013-location-activity/spec.md)), then empire entries (Rapports and Courrier with unread badges, Alliance, Classements, Bourse, Observabilité IA for admins), then « Se déconnecter » ([`041`](../041-app-shell-navigation/spec.md)) |
 | `modules/communication/chat/panel.tsx` | Chat panel at the bottom of the shell (40 px collapsed, 288 px open): Global / Faction tabs with the WAI-ARIA tabs keyboard pattern, `role="log"` messages, open state and tab in `localStorage` ([`032`](../032-messaging/spec.md), [`041`](../041-app-shell-navigation/spec.md)) |
 | `ui/nav/location` | City/outpost switcher (`<aside aria-label="Emplacements">`, 224 px): current location `aria-current`, incoming-attack dot ([`041`](../041-app-shell-navigation/spec.md)) |
 | `App.tsx` | Skip link to `#workspace`, landmarks (`header`, `nav`, `main#workspace`, `aside`, chat `section`) ([`041`](../041-app-shell-navigation/spec.md)) |

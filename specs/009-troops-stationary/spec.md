@@ -32,6 +32,8 @@
 
 **Recruitment queue** ([`028`](../028-command-center-shelter/spec.md)): a city with `command_center` ≥ 1 keeps up to 3 waiting batches (`troop_recruit_queue`) behind the active one. `recruitTroop` starts a batch when none is pending, otherwise enqueues (ownership + roster only; requirements and resources are checked and paid at start). At level 0 a running batch still fails with `troop:already-in-progress`. When a batch finishes (`progressTroopRecruitment`) or is cancelled, `processTroopRecruitQueue` starts the oldest row; rows that fail their checks are dropped with `troop:queue-item-dropped` (WebSocket + toast). City capture deletes the city's rows. `GET /city/:city_id/troop` returns `recruit_queue` and `recruit_queue_limit`.
 
+**List entries** ([`043`](../043-catalogue-card-grids/spec.md)): each troop of `GET /city/:city_id/troop` and `GET /outpost/:outpost_id/troop` carries its per-unit `cost` (same values as `GET /troop/:troop_id`) and `requirement`.
+
 Recruitment progress emits `troop:recruitment-updated` (WebSocket [`017`](../017-realtime-websocket/spec.md)).
 
 Tests: `apps/server/src/web/handler/troop/{recruit,cancel,get,list/*}.spec.ts`, `apps/server/src/app/command/troop/{recruit,cancel,progress-recruit}.spec.ts`, `apps/server/src/core/troop/service.spec.ts`.
@@ -79,7 +81,7 @@ Tests: `apps/server/src/app/command/{city,outpost}/set-combat-strategy.spec.ts`,
 
 ## Web UI
 
-`apps/web/src/modules/troop/` — details, recruit form, garrison defense strategy panel (not movement list; see movement module).
+`apps/web/src/modules/troop/` — details, recruit form, garrison defense strategy panel (not movement list; see movement module). Since [`043`](../043-catalogue-card-grids/spec.md) the troop list is a card grid grouped by role (`modules/troop/group.ts`) with the selection in `?code=`, and outposts get a read-only troop page `/outpost/$outpostId/troop` (counts only, `TroopDetails` `readOnly`, garrison strategy above the grid).
 
 ## API client
 

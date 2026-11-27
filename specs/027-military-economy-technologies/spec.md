@@ -173,6 +173,8 @@ City `plastic_warehouse` and `mushroom_warehouse` capacity × `1 + 0.10 × stora
 - **Central inductor rank** (`system/storage.ts`): unchanged. It already ranks 2 once core production is satisfied (same tier as warehouses, before core production at 4), and Arsenal requires only inductor 1–2, so system players reach plasma before Arsenal research becomes eligible. Not yet validated on the observability screen.
 - **Admin simulator wire**: `attacker_technology_levels` / `defender_technology_levels` (`{ ballistic_alloys?, organic_plating? }`); invalid level → `technology_level:not-found`.
 
+- **Catalogue grid** ([`043`](../043-catalogue-card-grids/spec.md)): the `List` `groups` prop (`ui/list/`) is replaced by `CatalogueGrid` (`ui/catalogue/grid.tsx`); the branch grouping (`groupByTechnologyBranch`) is unchanged.
+
 ## Follow-ups
 
 - **Artwork**: no dedicated images yet. `technology/image.ts` maps the 7 codes to existing pictures (Arsenal → combat troop portraits, Économie → matching building art) until `/technologies/<code>.png` exists; remove each placeholder entry when its image lands.

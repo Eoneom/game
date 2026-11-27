@@ -12,7 +12,7 @@ Per-player **technologies** (levels per `TechnologyCode`) are researched from a 
 
 | Method | Path | Auth | Handler |
 | --- | --- | --- | --- |
-| `GET` | `/technology` | yes | `technologyListHandler` |
+| `GET` | `/technology[?city_id=]` | yes | `technologyListHandler` |
 | `GET` | `/city/:city_id/technology/:technology_code` | yes | `technologyGetHandler` |
 | `PUT` | `/technology/research` | yes | `technologyResearchHandler` |
 | `PUT` | `/technology/cancel` | yes | `technologyCancelHandler` |
@@ -24,6 +24,8 @@ Per-player **technologies** (levels per `TechnologyCode`) are researched from a 
 | `technology:not-in-progress` | Cancel when idle |
 | `technology:queue-full` | Queue length cap |
 | `technology:queue-item-not-found` | Unknown queue id |
+
+**List entries** ([`043`](../043-catalogue-card-grids/spec.md)): every entry carries `requirement` (level-scaled requirement of level + 1, as the details query); with `?city_id=` entries also carry `research_cost` (level + 1 priced with that city's research lab, same values as `GET /city/:city_id/technology/:technology_code`) and a city of another player answers `city:not-owner`.
 
 Tests: `apps/server/src/web/handler/technology/*.spec.ts`, `apps/server/src/app/command/technology/*.spec.ts`, `apps/server/src/app/query/technology/*.spec.ts`.
 
@@ -39,7 +41,7 @@ Duration/cost: `PricingService.getTechnologyLevelCost` (research lab level reduc
 
 ## Web UI
 
-`apps/web/src/modules/technology/` — page, list items, `ws-listener` for research finish. The list is grouped by branch (**Fondations**, **Arsenal**, **Économie**) via the web constant `technology_branch` (`modules/technology/branch.ts`); plasma costs render through `Cost` ([`026`](../026-plasma-economy/spec.md)).
+`apps/web/src/modules/technology/` — page, list items, `ws-listener` for research finish. The list is grouped by branch (**Fondations**, **Arsenal**, **Économie**) via the web constant `technology_branch` (`modules/technology/branch.ts`); plasma costs render through `Cost` ([`026`](../026-plasma-economy/spec.md)). Since [`043`](../043-catalogue-card-grids/spec.md) the list is a card grid (`ui/catalogue/`) fed by `useListTechnologies({ cityId })` (query key `['technologies', cityId]`), with the selection in `?code=`.
 
 ## API client
 

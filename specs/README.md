@@ -43,7 +43,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 040 | Readability: typography and theme | Implemented | [spec](./040-readability-typography-theme/spec.md) |
 | 041 | App shell and navigation | Implemented | [spec](./041-app-shell-navigation/spec.md) |
 | 042 | City dashboard | Planned | [spec](./042-city-dashboard/spec.md) |
-| 043 | Catalogue card grids | Planned | [spec](./043-catalogue-card-grids/spec.md) |
+| 043 | Catalogue card grids | Implemented | [spec](./043-catalogue-card-grids/spec.md) |
 | 044 | World map revamp | Planned | [spec](./044-world-map-revamp/spec.md) |
 | 045 | Movements revamp | Planned | [spec](./045-movements-revamp/spec.md) |
 | 046 | Bourse quick trade | Planned | [spec](./046-bourse-quick-trade/spec.md) |

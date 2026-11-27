@@ -28,6 +28,8 @@ Missing `city_id` or `building_code` on upgrade → **400** + `RequestError` (`c
 | `building:queue-full` | Queue length cap |
 | `building:queue-item-not-found` | Unknown queue id |
 
+**List entries** ([`043`](../043-catalogue-card-grids/spec.md)): each entry of `GET /city/:city_id/building` carries `upgrade_cost` (`{ plastic, mushroom, plasma, duration }` of level + 1, same inputs and values as `GET /city/:city_id/building/:building_code`) and `requirement`; `upgrade_queue` rows carry `duration_seconds`, `start_at` and `finish_at` (the mapper used to drop them).
+
 Tests: `apps/server/src/web/handler/building/*.spec.ts`, `apps/server/src/app/command/building/*.spec.ts`, `apps/server/src/core/building/service.spec.ts`.
 
 ## Background jobs
@@ -51,7 +53,7 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 
 ## Web UI
 
-`apps/web/src/modules/building/` — list, details, upgrade UI, metadata (production, consumption, warehouse), `ws-listener` on `building:upgrade-finished` and `building:queue-item-dropped` (toast).
+`apps/web/src/modules/building/` — list, details, upgrade UI, metadata (production, consumption, warehouse), `ws-listener` on `building:upgrade-finished` and `building:queue-item-dropped` (toast). Since [`043`](../043-catalogue-card-grids/spec.md) the list is a card grid grouped by **family** (`modules/building/family.ts`: Production, Stockage, Militaire, Spécial) with the next cost and a state badge per card, and the selection lives in `?code=`.
 
 ## API client
 
