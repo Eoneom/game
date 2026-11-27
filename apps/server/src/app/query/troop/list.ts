@@ -13,6 +13,7 @@ import { PricingService } from '#core/pricing/service'
 import { OngoingRecruitment } from '#core/troop/type'
 import { TroopRecruitQueueEntity } from '#core/troop/recruit-queue-entity'
 import { BuildingService } from '#core/building/service'
+import { CarrierReservation } from '#core/exchange/type'
 
 type Location = { type: 'city', city_id: string} | { type: 'outpost', outpost_id: string }
 
@@ -33,6 +34,8 @@ export interface TroopListQueryResponse {
   recruit_queue: TroopRecruitQueueEntity[]
   /** Waiting slots available in the city (0 until its command center is built). */
   recruit_queue_limit: number
+  /** Carriers held by the player's open exchange orders of the city (slice 035); empty for outposts. */
+  exchange_reservations: CarrierReservation[]
 }
 
 export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopListQueryResponse> {
@@ -55,7 +58,8 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
       replication_catalyst_level,
       pending_recruit,
       recruit_queue,
-      command_center_level
+      command_center_level,
+      exchange_reservations
     ] = await Promise.all([
       this.repository.troop.listInCell({
         cell_id: cell.id,
@@ -80,7 +84,13 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
           city_id: location.city_id,
           code: BuildingCode.COMMAND_CENTER
         })
-        : Promise.resolve(0)
+        : Promise.resolve(0),
+      location.type === 'city'
+        ? this.repository.exchange.listReservedInCell({
+          cell_id: cell.id,
+          player_id
+        })
+        : Promise.resolve([])
     ])
 
     const costs = troops.reduce((acc, troop) => {
@@ -110,7 +120,8 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
         }
         : null,
       recruit_queue,
-      recruit_queue_limit: BuildingService.getRecruitQueueLimit({ command_center_level })
+      recruit_queue_limit: BuildingService.getRecruitQueueLimit({ command_center_level }),
+      exchange_reservations
     }
   }
 

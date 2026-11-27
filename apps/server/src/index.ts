@@ -26,6 +26,7 @@ import { now } from '#shared/time'
   await jobQueue.ensureReportCleanupScheduled({ execute_at: now() })
   await jobQueue.ensureChatCleanupScheduled({ execute_at: now() })
   await jobQueue.ensureRankingComputeScheduled({ execute_at: now() })
+  await jobQueue.ensureExchangeOrderExpireScheduled({ execute_at: now() })
 
   try {
     await generateWorld()

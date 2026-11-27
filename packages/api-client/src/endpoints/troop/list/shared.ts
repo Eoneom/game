@@ -12,6 +12,8 @@ export interface TroopListDataResponse {
     id: string
     code: TroopCode
     count: number
+    /** Carriers held by open exchange orders of the city ("réservés pour la bourse", slice 035); 0 elsewhere. */
+    exchange_reserved: number
     ongoing_recruitment?: {
       finish_at: number
       remaining_count: number

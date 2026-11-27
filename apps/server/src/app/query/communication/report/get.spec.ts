@@ -65,6 +65,68 @@ describe('CommunicationGetReportQuery', () => {
     expect(repository.report.getById).toHaveBeenCalledWith(report_id)
   })
 
+  it('returns the trade details with the counterparty display name (slice 035)', async () => {
+    const trade_report = ReportEntity.create({
+      ...report,
+      type: ReportType.TRADE,
+    })
+    const metadata = {
+      order_id: 'order-id',
+      side: 'buy',
+      resource: 'plastic',
+      lots: 2,
+      price: 7,
+      refunded_water: 0,
+      city: {
+        id: 'c1',
+        name: 'Here',
+        coordinates: {
+          x: 0,
+          y: 0
+        }
+      },
+      counterparty_city: {
+        id: 'c2',
+        name: 'There',
+        coordinates: {
+          x: 3,
+          y: 0
+        }
+      },
+      outgoing_arrive_at: 10,
+      incoming_arrive_at: 12,
+    }
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      report: {
+        getById: vi.fn().mockResolvedValue(trade_report),
+        getTradeByReportId: vi.fn().mockResolvedValue({
+          counterparty_player_id: other_player_id,
+          metadata
+        }),
+      },
+      player: {
+        listByIds: vi.fn().mockResolvedValue([
+          {
+            id: other_player_id,
+            name: 'Bob'
+          }
+        ])
+      },
+      alliance: { listTagsByPlayerIds: vi.fn().mockResolvedValue([]) },
+    } as unknown as Repository)
+
+    const result = await new CommunicationGetReportQuery().run({
+      player_id,
+      report_id
+    })
+
+    expect(result.trade).toEqual({
+      ...metadata,
+      counterparty_player_id: other_player_id,
+      counterparty_name: 'Bob',
+    })
+  })
+
   describe('battle reports', () => {
     const battle_metadata = {
       battle_id: 'battle-id',

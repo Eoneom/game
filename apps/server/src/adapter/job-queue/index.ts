@@ -52,6 +52,11 @@ export {
 } from '#adapter/job-queue/ranking/compute'
 
 export {
+  EXCHANGE_ORDER_EXPIRE_QUEUE,
+  type ExchangeOrderExpireJobData
+} from '#adapter/job-queue/exchange/expire'
+
+export {
   SYSTEM_PLAYER_TICK_QUEUE,
   SYSTEM_PLAYER_TICK_SINGLETON_KEY,
   type SystemPlayerTickJobData

@@ -18,6 +18,7 @@ import {
   IntelService,
 } from '#core/intel/service'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { ExchangeService } from '#core/exchange/service'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -61,6 +62,11 @@ export async function createTroopMovement({
   return runCommand('troop:move', async () => {
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
+
+    // Exchange convoys are created by the system on each fill only (slice 035).
+    if (action === MovementAction.EXCHANGE) {
+      throw new Error(TroopError.MOVEMENT_ACTION_NOT_IMPLEMENTED)
+    }
 
     let attack_target: ResolvedAttackTarget | null = null
 
@@ -127,13 +133,26 @@ export async function createTroopMovement({
       })
     }
 
-    const origin_troops = await repository.troop.listInCell({
-      cell_id: origin_cell.id,
-      player_id,
-    })
-
-    const have_enough_troops = TroopService.haveEnoughTroops({
+    const [
       origin_troops,
+      exchange_reservations
+    ] = await Promise.all([
+      repository.troop.listInCell({
+        cell_id: origin_cell.id,
+        player_id,
+      }),
+      repository.exchange.listReservedInCell({
+        cell_id: origin_cell.id,
+        player_id,
+      }),
+    ])
+
+    // Carriers reserved by open exchange orders stay on the cell but cannot leave (slice 035).
+    const have_enough_troops = TroopService.haveEnoughTroops({
+      origin_troops: ExchangeService.availableTroops({
+        troops: origin_troops,
+        reservations: exchange_reservations,
+      }),
       move_troops,
     })
     if (!have_enough_troops) {

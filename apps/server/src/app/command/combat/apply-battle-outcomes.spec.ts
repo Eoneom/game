@@ -35,6 +35,7 @@ describe('applyBattleOutcomes loot', () => {
   const origin_cell = testCityCell({ cell_id: 'origin-cell-id' })
   let stockUpdateOne: MockInstance
   let queueDeleteByCity: MockInstance
+  let exchangeListOpenByCity: MockInstance
   let buildingGetLevel: MockInstance
   let defenseDeleteByCity: MockInstance
   let defenseRemoveCount: MockInstance
@@ -104,6 +105,7 @@ describe('applyBattleOutcomes loot', () => {
 
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
     queueDeleteByCity = vi.fn().mockResolvedValue(undefined)
+    exchangeListOpenByCity = vi.fn().mockResolvedValue([])
     buildingGetLevel = vi.fn().mockResolvedValue(shelter_level)
     defenseDeleteByCity = vi.fn().mockResolvedValue(undefined)
     defenseRemoveCount = vi.fn().mockResolvedValue(undefined)
@@ -154,6 +156,7 @@ describe('applyBattleOutcomes loot', () => {
         removeCount: defenseRemoveCount,
       },
       defense_build_queue: { deleteByCity: defenseQueueDeleteByCity },
+      exchange: { listOpenByCityForUpdate: exchangeListOpenByCity },
       player: {
         listByIds: vi.fn().mockResolvedValue([]),
         addMilitaryValue: vi.fn().mockResolvedValue(undefined),
@@ -410,6 +413,36 @@ describe('applyBattleOutcomes loot', () => {
     })
 
     expect(queueDeleteByCity).toHaveBeenCalledWith({ city_id })
+  })
+
+  it('cancels the open exchange orders of a captured city only (slice 035)', async () => {
+    const empty = () => testResourceStock({
+      cell_id: destination_cell.id,
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    })
+    setup({
+      stock: empty(),
+      transporters: 0,
+    })
+    await applyBattleOutcomes({
+      battle_id: 'battle-id',
+      winner: BattleWinner.ATTACKER,
+      finished_at: 5_000,
+    })
+    expect(exchangeListOpenByCity).toHaveBeenCalledWith(city_id)
+
+    setup({
+      stock: empty(),
+      transporters: 0,
+    })
+    await applyBattleOutcomes({
+      battle_id: 'battle-id',
+      winner: BattleWinner.DEFENDER,
+      finished_at: 5_000,
+    })
+    expect(exchangeListOpenByCity).not.toHaveBeenCalled()
   })
 
   describe('city defenses', () => {

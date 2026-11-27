@@ -40,7 +40,8 @@ describe('createTroopMovement', () => {
   let searchByCell: MockInstance
   let listInCell: MockInstance
   let scheduleTroopMovementFinish: MockInstance
-  let repository: Pick<Repository, 'cell' | 'city' | 'troop' | 'outpost' | 'movement'>
+  let repository: Pick<Repository, 'cell' | 'city' | 'troop' | 'outpost' | 'movement' | 'exchange'>
+  let listReservedInCell: MockInstance
 
   let getMovementCapacity: MockInstance
 
@@ -78,6 +79,7 @@ describe('createTroopMovement', () => {
     searchByCell = vi.fn().mockResolvedValue(null)
     listInCell = vi.fn().mockResolvedValue([ origin_troop ])
     scheduleTroopMovementFinish = vi.fn().mockResolvedValue('job-id')
+    listReservedInCell = vi.fn().mockResolvedValue([])
 
     repository = {
       cell: { getCell: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
@@ -90,7 +92,8 @@ describe('createTroopMovement', () => {
       outpost: {
         searchByCell,
         delete: outpostDelete } as unknown as Repository['outpost'],
-      movement: { create: movementCreate } as unknown as Repository['movement'] }
+      movement: { create: movementCreate } as unknown as Repository['movement'],
+      exchange: { listReservedInCell } as unknown as Repository['exchange'] }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
@@ -175,6 +178,72 @@ describe('createTroopMovement', () => {
 
       assert.strictEqual(movementCreate.mock.calls.length, 1)
       expect(getMovementCapacity).toHaveBeenCalledWith({ player_id })
+    })
+  })
+
+  describe('exchange (slice 035)', () => {
+    it('should not let carriers reserved for the exchange leave the city', async () => {
+      const carriers = TroopEntity.create({
+        id: id(),
+        code: TroopCode.LIGHT_TRANSPORTER,
+        count: 5,
+        player_id,
+        cell_id,
+        movement_id: null
+      })
+      listInCell.mockResolvedValue([ carriers ])
+      listReservedInCell.mockResolvedValue([
+        {
+          troop_code: TroopCode.LIGHT_TRANSPORTER,
+          count: 3
+        }
+      ])
+
+      await assert.rejects(
+        () => callCreate([
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 3
+          }
+        ]),
+        new RegExp(TroopError.NOT_ENOUGH_TROOPS)
+      )
+      expect(listReservedInCell).toHaveBeenCalledWith({
+        cell_id,
+        player_id
+      })
+
+      await callCreate([
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ])
+      expect(movementCreate).toHaveBeenCalledTimes(1)
+      // The whole stack row keeps the reserved carriers on the cell.
+      expect(troopUpdateOne).toHaveBeenCalledWith(expect.objectContaining({
+        id: carriers.id,
+        count: 3
+      }))
+    })
+
+    it('should refuse exchange convoys from players', async () => {
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.EXCHANGE,
+          move_troops: [
+            {
+              code: TroopCode.EXPLORER,
+              count: 1
+            }
+          ],
+        }),
+        new RegExp(TroopError.MOVEMENT_ACTION_NOT_IMPLEMENTED)
+      )
+      expect(movementCreate).not.toHaveBeenCalled()
     })
   })
 

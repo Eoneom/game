@@ -12,6 +12,8 @@ import {
   type ChatCleanupJobData,
   RANKING_COMPUTE_QUEUE,
   type RankingComputeJobData,
+  EXCHANGE_ORDER_EXPIRE_QUEUE,
+  type ExchangeOrderExpireJobData,
   SYSTEM_PLAYER_TICK_QUEUE,
   type SystemPlayerTickJobData,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
@@ -37,6 +39,7 @@ import { cleanupOldReadReports } from '#app/command/communication/report/cleanup
 import { cleanupCommunicationChat } from '#app/command/communication/chat/cleanup'
 import { tickSystemPlayers } from '#app/command/player/system/tick'
 import { computeRankings } from '#app/command/ranking/compute'
+import { expireExchangeOrders } from '#app/command/exchange/expire'
 import { advanceCombatRound } from '#app/command/combat/advance-round'
 import { Factory } from '#adapter/factory'
 
@@ -245,6 +248,17 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
       for (const job of jobs) {
         logger.info('processing ranking compute', { job_id: job.id })
         await computeRankings()
+      }
+    }
+  )
+
+  await queue.work<ExchangeOrderExpireJobData, void, { includeMetadata: true }>(
+    EXCHANGE_ORDER_EXPIRE_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        logger.info('processing exchange order expire', { job_id: job.id })
+        await expireExchangeOrders()
       }
     }
   )

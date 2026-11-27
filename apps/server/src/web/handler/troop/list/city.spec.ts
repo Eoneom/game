@@ -33,7 +33,13 @@ const queryResult = {
       created_at: 1
     }
   ],
-  recruit_queue_limit: 3
+  recruit_queue_limit: 3,
+  exchange_reservations: [
+    {
+      troop_code: 'WARRIOR',
+      count: 2
+    }
+  ]
 }
 
 describe('troopListCityHandler', () => {
@@ -91,6 +97,7 @@ describe('troopListCityHandler', () => {
             id: 't1',
             code: 'WARRIOR',
             count: 5,
+            exchange_reserved: 2,
             ongoing_recruitment: undefined
           }
         ],

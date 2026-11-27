@@ -32,6 +32,40 @@ function sendToGamePlayers(
   })
 }
 
+/** `exchange:book-updated` goes out at most once per 2 s per faction book (slice 035). */
+export const EXCHANGE_BOOK_UPDATE_THROTTLE_MS = 2000
+
+/**
+ * Leading-edge throttle per key: the first call runs at once; calls during the next `interval_ms` collapse into one
+ * trailing run at the end of the window.
+ */
+type ThrottleWindow = { pending: (() => void) | null }
+
+function createKeyedThrottle(interval_ms: number): (key: string, run: () => void) => void {
+  const windows: Map<string, ThrottleWindow> = new Map()
+  const open = (key: string) => {
+    const window: ThrottleWindow = { pending: null }
+    windows.set(key, window)
+    setTimeout(() => {
+      windows.delete(key)
+      if (window.pending) {
+        const pending = window.pending
+        open(key)
+        pending()
+      }
+    }, interval_ms)
+  }
+  return (key, run) => {
+    const window = windows.get(key)
+    if (window) {
+      window.pending = run
+      return
+    }
+    open(key)
+    run()
+  }
+}
+
 async function authorizeWsPlayerId(token: string | null): Promise<string | null> {
   if (!token) {
     return null
@@ -370,6 +404,33 @@ export function setupWebSocketServer(
         movement_id,
       }))
     }
+  })
+
+  eventBus.on(AppEvent.ExchangeFilled, ({
+    player_id, order_id, lots, price
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.ExchangeFilled,
+        order_id,
+        lots,
+        price,
+      }))
+    }
+  })
+
+  const throttleBookUpdate = createKeyedThrottle(EXCHANGE_BOOK_UPDATE_THROTTLE_MS)
+  eventBus.on(AppEvent.ExchangeBookUpdated, ({
+    faction_code, resource
+  }) => {
+    throttleBookUpdate(`${faction_code}:${resource}`, () => sendToGamePlayers(
+      {
+        type: AppEvent.ExchangeBookUpdated,
+        resource,
+      },
+      (player_id) => game_connection_factions.get(player_id) === faction_code
+    ))
   })
 
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({

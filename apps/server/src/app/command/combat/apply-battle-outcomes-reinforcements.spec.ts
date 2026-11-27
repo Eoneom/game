@@ -159,6 +159,7 @@ describe('battle outcomes with reinforcements (slice 033)', () => {
         removeCount: vi.fn().mockResolvedValue(undefined),
       },
       defense_build_queue: { deleteByCity: vi.fn().mockResolvedValue(undefined) },
+      exchange: { listOpenByCityForUpdate: vi.fn().mockResolvedValue([]) },
       player: {
         get: vi.fn(async (id: string) => ({
           id,

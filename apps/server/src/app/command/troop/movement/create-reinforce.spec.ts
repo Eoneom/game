@@ -138,6 +138,7 @@ describe('createTroopMovement reinforce and recall (slice 033)', () => {
         updateOne: vi.fn().mockResolvedValue(undefined),
       },
       movement: { create: movementCreate },
+      exchange: { listReservedInCell: vi.fn().mockResolvedValue([]) },
     } as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish: vi.fn().mockResolvedValue('job') } as unknown as JobQueue)
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)

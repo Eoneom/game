@@ -3,7 +3,9 @@ import {
   BattleReportEntry,
   ReportRepository,
   SpyReportEntry,
+  TradeReportEntry,
 } from '#app/port/repository/report'
+import { ReportTradeMetadata } from '#core/exchange/type'
 import {
   getReportSpyByReportId,
   insertReportSpyRow,
@@ -402,6 +404,41 @@ export class PostgresReportRepository
       ...(row.metadata_json as object),
       target: row.target_json as SpyTarget,
     } as ReportSpyMetadata | ReportSpyDetectedMetadata
+  }
+
+  async createTradeReports(entries: TradeReportEntry[]): Promise<void> {
+    await withTransaction(async () => {
+      for (const entry of entries) {
+        await this.create(entry.report)
+        await this.db
+          .insertInto('report_trade')
+          .values({
+            report_id: entry.report.id,
+            trade_id: entry.trade_id,
+            counterparty_player_id: entry.counterparty_player_id,
+            metadata_json: JSON.stringify(entry.metadata),
+          })
+          .execute()
+      }
+    })
+  }
+
+  async getTradeByReportId(report_id: string): Promise<{ counterparty_player_id: string, metadata: ReportTradeMetadata } | null> {
+    const row = await this.db
+      .selectFrom('report_trade')
+      .select([
+        'counterparty_player_id',
+        'metadata_json'
+      ])
+      .where('report_id', '=', report_id)
+      .executeTakeFirst()
+    if (!row) {
+      return null
+    }
+    return {
+      counterparty_player_id: row.counterparty_player_id,
+      metadata: row.metadata_json as unknown as ReportTradeMetadata,
+    }
   }
 
   private async loadEntity(row: Selectable<DB['report']>): Promise<ReportEntity> {

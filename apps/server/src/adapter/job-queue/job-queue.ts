@@ -12,6 +12,7 @@ import type {
   PendingReportCleanup,
   PendingChatCleanup,
   PendingRankingCompute,
+  PendingExchangeOrderExpire,
   PendingSystemPlayerTick,
   PendingTechnologyResearch,
   PendingTroopMovementFinish,
@@ -86,6 +87,12 @@ import {
   scheduleRankingCompute
 } from '#adapter/job-queue/ranking/compute'
 import {
+  EXCHANGE_ORDER_EXPIRE_QUEUE,
+  ensureExchangeOrderExpireScheduled,
+  getPendingExchangeOrderExpire,
+  scheduleExchangeOrderExpire
+} from '#adapter/job-queue/exchange/expire'
+import {
   SYSTEM_PLAYER_TICK_QUEUE,
   ensureSystemPlayerTickScheduled,
   getPendingSystemPlayerTick,
@@ -135,6 +142,7 @@ export class JobQueue implements JobQueuePort {
     await this.ctx.boss.createQueue(REPORT_CLEANUP_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(CHAT_CLEANUP_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(RANKING_COMPUTE_QUEUE, { policy: 'stately' })
+    await this.ctx.boss.createQueue(EXCHANGE_ORDER_EXPIRE_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(SYSTEM_PLAYER_TICK_QUEUE, { policy: 'stately' })
     this.ctx.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
@@ -315,6 +323,22 @@ export class JobQueue implements JobQueuePort {
     execute_at: number
   }): Promise<string | null> {
     return ensureRankingComputeScheduled(this.ctx, args)
+  }
+
+  async scheduleExchangeOrderExpire(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleExchangeOrderExpire(this.ctx, args)
+  }
+
+  async getPendingExchangeOrderExpire(): Promise<PendingExchangeOrderExpire | null> {
+    return getPendingExchangeOrderExpire(this.ctx)
+  }
+
+  async ensureExchangeOrderExpireScheduled(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return ensureExchangeOrderExpireScheduled(this.ctx, args)
   }
 
   async scheduleSystemPlayerTick(args: {

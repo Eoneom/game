@@ -3,6 +3,7 @@ import { BuildingEndpoint } from './endpoints/building'
 import { CityEndpoint } from './endpoints/city'
 import { CommunicationEndpoint } from './endpoints/communication'
 import { DefenseEndpoint } from './endpoints/defense'
+import { ExchangeEndpoint } from './endpoints/exchange'
 import { LocationEndpoint } from './endpoints/location'
 import { OutpostEndpoint } from './endpoints/outpost'
 import { RankingEndpoint } from './endpoints/ranking'
@@ -34,6 +35,16 @@ export {
   ALLIANCE_NAME_MIN_LENGTH,
 } from '@server-core/alliance/constant/limits'
 export { AllianceError } from '@server-core/alliance/error'
+export { ExchangeSide } from '@server-core/exchange/value/side'
+export { ExchangeResource } from '@server-core/exchange/value/resource'
+export { ExchangeOrderStatus } from '@server-core/exchange/value/order-status'
+export { exchange_lot_size } from '@server-core/exchange/constant/lot'
+export {
+  EXCHANGE_BOOK_DEPTH,
+  EXCHANGE_HISTORY_LIMIT,
+  EXCHANGE_ORDER_LIFETIME_MS,
+} from '@server-core/exchange/constant/limits'
+export { ExchangeError } from '@server-core/exchange/error'
 export { RankingCategory } from '@server-core/ranking/value/category'
 export { RankingKind } from '@server-core/ranking/value/kind'
 export { RANKING_PAGE_SIZE } from '@server-core/ranking/constant/limits'
@@ -53,6 +64,7 @@ export { CombatRole } from '@server-core/troop/constant/combat-role'
 export { CombatError } from '@server-core/combat/error'
 export type { ReportBattleMetadata } from './types/report-battle'
 export type { ReportSpyMetadata, ReportSpyDetectedMetadata, ReportSpyTarget } from './types/report-spy'
+export type { ReportTradeMetadata, ReportTradeCity } from './types/report-trade'
 export { resource_transport_weight } from '@server-core/troop/constant/transport-weight'
 export { AuthError } from '@server-core/auth/error'
 export { BuildingError } from '@server-core/building/error'
@@ -90,6 +102,7 @@ export class Client {
   public city: CityEndpoint
   public communication: CommunicationEndpoint
   public defense: DefenseEndpoint
+  public exchange: ExchangeEndpoint
   public location: LocationEndpoint
   public outpost: OutpostEndpoint
   public player: PlayerEndpoint
@@ -107,6 +120,7 @@ export class Client {
     this.city = new CityEndpoint({ fetcher: this.fetcher })
     this.communication = new CommunicationEndpoint({ fetcher: this.fetcher })
     this.defense = new DefenseEndpoint({ fetcher: this.fetcher })
+    this.exchange = new ExchangeEndpoint({ fetcher: this.fetcher })
     this.location = new LocationEndpoint({ fetcher: this.fetcher })
     this.outpost = new OutpostEndpoint({ fetcher: this.fetcher })
     this.player = new PlayerEndpoint({ fetcher: this.fetcher })

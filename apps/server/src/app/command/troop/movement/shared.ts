@@ -5,6 +5,7 @@ import { TroopEntity } from '#core/troop/entity'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopService } from '#core/troop/service'
 import { CellEntity } from '#core/world/cell/entity'
+import { Coordinates } from '#core/world/value/coordinates'
 import { WorldService } from '#core/world/service'
 import { Resource, WarehouseCapacity } from '#shared/resource'
 import { now } from '#shared/time'
@@ -15,19 +16,23 @@ export async function createReturnBaseTrip({
   arrived_at,
   resources,
   schedule,
+  home,
 }: {
   inbound_movement: MovementEntity
   troops: TroopEntity[]
   arrived_at: number
   resources?: Resource
   schedule: 'if_future' | 'always'
+  /** Where the troops go back to; defaults to the inbound origin (a redirected exchange convoy goes to its order city). */
+  home?: Coordinates
 }): Promise<{ base_movement: MovementEntity; base_arrive_at: number }> {
   const repository = Factory.getRepository()
   const job_queue = Factory.getJobQueue()
 
+  const destination = home ?? inbound_movement.origin
   const distance = WorldService.getDistance({
     origin: inbound_movement.destination,
-    destination: inbound_movement.origin,
+    destination,
   })
 
   const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id: inbound_movement.player_id })
@@ -37,11 +42,13 @@ export async function createReturnBaseTrip({
     start_at: arrived_at,
     distance,
     origin: inbound_movement.destination,
-    destination: inbound_movement.origin,
+    destination,
     player_id: inbound_movement.player_id,
     action: MovementAction.BASE,
     resources,
     propulsion_level,
+    // The carriers' return trip of an exchange convoy stays out of the movement cap (slice 035).
+    exchange_trade_id: inbound_movement.exchange_trade_id,
   })
 
   const base_troops = TroopService.assignToMovement({

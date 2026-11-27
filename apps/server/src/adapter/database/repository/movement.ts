@@ -38,6 +38,8 @@ export class PostgresMovementRepository
       .selectFrom('movement')
       .select(({ fn }) => fn.countAll<number>().as('count'))
       .where('player_id', '=', player_id)
+      // Exchange convoys and their return trips never count toward the cap (slice 035).
+      .where('exchange_trade_id', 'is', null)
       .executeTakeFirstOrThrow()
 
     return Number(result.count)
@@ -96,6 +98,7 @@ export class PostgresMovementRepository
         water: row.water,
       },
       combat_strategy: row.combat_strategy as CombatStrategy | null,
+      exchange_trade_id: row.exchange_trade_id,
     })
   }
 
@@ -113,6 +116,7 @@ export class PostgresMovementRepository
       plasma: entity.resources.plasma,
       water: entity.resources.water,
       combat_strategy: entity.combat_strategy,
+      exchange_trade_id: entity.exchange_trade_id,
     }
   }
 }

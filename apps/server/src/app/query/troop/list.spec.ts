@@ -22,7 +22,7 @@ describe('TroopListQuery', () => {
   let city: CityEntity
   let cell: CellEntity
   let troop: TroopEntity
-  let repository: Pick<Repository, 'city' | 'cell' | 'troop' | 'building' | 'technology' | 'outpost' | 'troop_recruit_queue'>
+  let repository: Pick<Repository, 'city' | 'cell' | 'troop' | 'building' | 'technology' | 'outpost' | 'troop_recruit_queue' | 'exchange'>
 
   beforeEach(() => {
     cell = CellEntity.create({
@@ -61,7 +61,8 @@ describe('TroopListQuery', () => {
       building: { getLevel: vi.fn().mockResolvedValue(1) } as unknown as Repository['building'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
       outpost: {} as unknown as Repository['outpost'],
-      troop_recruit_queue: { listByCity: vi.fn().mockResolvedValue([]) } as unknown as Repository['troop_recruit_queue']
+      troop_recruit_queue: { listByCity: vi.fn().mockResolvedValue([]) } as unknown as Repository['troop_recruit_queue'],
+      exchange: { listReservedInCell: vi.fn().mockResolvedValue([]) } as unknown as Repository['exchange']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({

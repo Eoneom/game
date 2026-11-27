@@ -132,6 +132,7 @@ describe('battle outcomes credit military value (slice 034)', () => {
         removeCount: vi.fn().mockResolvedValue(undefined),
       },
       defense_build_queue: { deleteByCity: vi.fn().mockResolvedValue(undefined) },
+      exchange: { listOpenByCityForUpdate: vi.fn().mockResolvedValue([]) },
       player: {
         listByIds: vi.fn(async (ids: string[]) => ids.map(id => PlayerEntity.create({
           id,

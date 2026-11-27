@@ -249,6 +249,7 @@ export class TroopService {
     },
     combat_strategy = null,
     propulsion_level = 0,
+    exchange_trade_id = null,
   }: {
     troops: TroopCount[]
     start_at: number
@@ -261,6 +262,8 @@ export class TroopService {
     combat_strategy?: CombatStrategy | null
     /** Owner's `tactical_propulsion` level at creation time (slice 027). */
     propulsion_level?: number
+    /** Exchange convoy or its return trip (slice 035). */
+    exchange_trade_id?: string | null
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
@@ -277,6 +280,7 @@ export class TroopService {
       destination,
       resources,
       combat_strategy,
+      exchange_trade_id,
     })
 
     return { movement, arrive_at }

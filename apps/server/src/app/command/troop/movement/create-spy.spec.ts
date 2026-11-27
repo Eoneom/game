@@ -113,6 +113,7 @@ describe('createTroopMovement spy and incoming attacks (slice 030)', () => {
       city: { searchByCell: vi.fn().mockResolvedValue(null) },
       outpost: { searchByCell: vi.fn().mockResolvedValue(null) },
       movement: { create: movementCreate },
+      exchange: { listReservedInCell: vi.fn().mockResolvedValue([]) },
     } as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as never)

@@ -167,6 +167,39 @@ export interface DefenseBuildQueue {
   player_id: string;
 }
 
+export interface ExchangeCarrierReservation {
+  count: number;
+  order_id: string;
+  troop_code: string;
+}
+
+export interface ExchangeOrder {
+  city_id: string;
+  closed_at: Timestamp | null;
+  created_at: Timestamp;
+  faction_code: string;
+  filled_lots: Generated<number>;
+  id: Generated<string>;
+  lots: number;
+  player_id: string;
+  price: number;
+  resource: string;
+  side: string;
+  status: string;
+}
+
+export interface ExchangeTrade {
+  buy_order_id: string;
+  executed_at: Timestamp;
+  faction_code: string;
+  id: Generated<string>;
+  lots: number;
+  price: number;
+  resource: string;
+  sell_order_id: string;
+  seq: Generated<Int8>;
+}
+
 export interface Exploration {
   id: Generated<string>;
   player_id: string;
@@ -196,6 +229,7 @@ export interface Movement {
   combat_strategy: string | null;
   destination_x: number;
   destination_y: number;
+  exchange_trade_id: string | null;
   id: Generated<string>;
   mushroom: Generated<number>;
   origin_x: number;
@@ -437,6 +471,13 @@ export interface ReportSpy {
   target_player_id: string | null;
 }
 
+export interface ReportTrade {
+  counterparty_player_id: string;
+  metadata_json: Json;
+  report_id: string;
+  trade_id: string;
+}
+
 export interface ReportTroop {
   code: string;
   count: number;
@@ -506,6 +547,9 @@ export interface DB {
   city: City;
   defense: Defense;
   defense_build_queue: DefenseBuildQueue;
+  exchange_carrier_reservation: ExchangeCarrierReservation;
+  exchange_order: ExchangeOrder;
+  exchange_trade: ExchangeTrade;
   exploration: Exploration;
   exploration_cell: ExplorationCell;
   mail: Mail;
@@ -529,6 +573,7 @@ export interface DB {
   report_battle: ReportBattle;
   report_reinforcement: ReportReinforcement;
   report_spy: ReportSpy;
+  report_trade: ReportTrade;
   report_troop: ReportTroop;
   resource_stock: ResourceStock;
   technology: Technology;

@@ -53,6 +53,8 @@ import { AllianceRepository } from '#app/port/repository/alliance'
 import { PostgresAllianceRepository } from '#adapter/database/repository/alliance'
 import { RankingRepository } from '#app/port/repository/ranking'
 import { PostgresRankingRepository } from '#adapter/database/repository/ranking'
+import { ExchangeRepository } from '#app/port/repository/exchange'
+import { PostgresExchangeRepository } from '#adapter/database/repository/exchange'
 import {
   Kysely,
   sql
@@ -84,6 +86,7 @@ export class PostgresRepository implements Repository {
   abuse_report: AbuseReportRepository
   alliance: AllianceRepository
   ranking: RankingRepository
+  exchange: ExchangeRepository
 
   private db: Kysely<DB>
 
@@ -117,6 +120,7 @@ export class PostgresRepository implements Repository {
     this.abuse_report = new PostgresAbuseReportRepository()
     this.alliance = new PostgresAllianceRepository()
     this.ranking = new PostgresRankingRepository()
+    this.exchange = new PostgresExchangeRepository()
   }
 
   async connect(): Promise<void> {

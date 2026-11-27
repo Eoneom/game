@@ -3,6 +3,7 @@ import {
   ReportSpyDetectedMetadata,
   ReportSpyMetadata,
 } from '../../../types/report-spy'
+import { ReportTradeMetadata } from '../../../types/report-trade'
 import { ReportType } from '@server-core/communication/value/report-type'
 import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../../response'
@@ -41,6 +42,8 @@ export interface CommunicationGetReportDataResponse {
   spy?: ReportSpyMetadata
   /** `spy_detected` reports (slice 030). */
   spy_detected?: ReportSpyDetectedMetadata
+  /** `trade` reports (slice 035). */
+  trade?: ReportTradeMetadata
 }
 
 export type CommunicationGetReportResponse = GenericResponse<CommunicationGetReportDataResponse>

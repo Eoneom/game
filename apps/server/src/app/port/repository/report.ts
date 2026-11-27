@@ -5,6 +5,7 @@ import {
   ReportSpyDetectedMetadata,
   ReportSpyMetadata,
 } from '#core/intel/type'
+import { ReportTradeMetadata } from '#core/exchange/type'
 
 /** One `spy` or `spy_detected` report with its `report_spy` row (slice 030). */
 export type SpyReportEntry = {
@@ -13,6 +14,14 @@ export type SpyReportEntry = {
   spy_player_id: string
   target_player_id: string | null
   metadata: ReportSpyMetadata | ReportSpyDetectedMetadata
+}
+
+/** One `trade` report with its `report_trade` row (slice 035). */
+export type TradeReportEntry = {
+  report: ReportEntity
+  trade_id: string
+  counterparty_player_id: string
+  metadata: ReportTradeMetadata
 }
 
 /** A `battle` report with its `report_battle` row. */
@@ -39,6 +48,10 @@ export type ReportRepository = GenericRepository<ReportEntity> & {
   getBattleMetadataByReportId(report_id: string): Promise<ReportBattleMetadata | null>
 
   createSpyReports(entries: SpyReportEntry[]): Promise<void>
+
+  createTradeReports(entries: TradeReportEntry[]): Promise<void>
+
+  getTradeByReportId(report_id: string): Promise<{ counterparty_player_id: string, metadata: ReportTradeMetadata } | null>
 
   /** Metadata of a `spy` or `spy_detected` report; the report type tells which shape it is. */
   getSpyMetadataByReportId(report_id: string): Promise<ReportSpyMetadata | ReportSpyDetectedMetadata | null>

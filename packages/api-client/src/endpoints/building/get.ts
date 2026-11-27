@@ -95,6 +95,18 @@ export const isEnergyBuilding = (b: BaseBuilding): b is EnergyBuilding => {
   return b.code === BuildingCode.SOLAR_PANEL
 }
 
-export type BuildingGetDataResponse = WarehouseBuilding | ProductionBuilding | EnergyBuilding | ConsumingBuilding | CommandCenterBuilding | ShelterBuilding | BaseBuilding
+/** Faction exchange (slice 035): open orders per city = level. */
+export type TradingPostBuilding = BaseBuilding & {
+  metadata: {
+    open_order_count: number
+    current_open_order_limit: number
+    next_open_order_limit: number
+  }
+}
+export const isTradingPostBuilding = (b: BaseBuilding): b is TradingPostBuilding => {
+  return b.code === BuildingCode.TRADING_POST
+}
+
+export type BuildingGetDataResponse = WarehouseBuilding | ProductionBuilding | EnergyBuilding | ConsumingBuilding | CommandCenterBuilding | ShelterBuilding | TradingPostBuilding | BaseBuilding
 
 export type BuildingGetResponse = GenericResponse<BuildingGetDataResponse>

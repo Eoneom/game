@@ -11,6 +11,8 @@ type MovementEntityProps = BaseEntity & {
   destination: Coordinates
   resources?: Resource
   combat_strategy?: CombatStrategy | null
+  /** Exchange convoy and its carriers' return trip (slice 035): not counted toward the movement cap. */
+  exchange_trade_id?: string | null
 }
 
 export class MovementEntity extends BaseEntity {
@@ -20,6 +22,7 @@ export class MovementEntity extends BaseEntity {
   readonly destination: Coordinates
   readonly resources: Resource
   readonly combat_strategy: CombatStrategy | null
+  readonly exchange_trade_id: string | null
 
   private constructor({
     id,
@@ -34,6 +37,7 @@ export class MovementEntity extends BaseEntity {
       water: 0,
     },
     combat_strategy = null,
+    exchange_trade_id = null,
   }: MovementEntityProps) {
     super({ id })
 
@@ -43,6 +47,7 @@ export class MovementEntity extends BaseEntity {
     this.destination = destination
     this.resources = resources
     this.combat_strategy = combat_strategy
+    this.exchange_trade_id = exchange_trade_id
   }
 
   static create(props: MovementEntityProps): MovementEntity {

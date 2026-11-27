@@ -10,6 +10,7 @@ import {
   ReportSpyDetectedMetadata,
   ReportSpyMetadata,
 } from '#core/intel/type'
+import { ReportTradeMetadata } from '#core/exchange/type'
 
 export interface CommunicationGetReportQueryRequest {
   player_id: string
@@ -25,6 +26,13 @@ export interface CommunicationGetReportQueryResponse {
   reinforcement?: { owner_player_id: string, owner_name: string }
   spy?: ReportSpyMetadata
   spy_detected?: ReportSpyDetectedMetadata
+  /** `trade` report: one faction exchange fill (slice 035). */
+  trade?: ReportTradeView
+}
+
+export type ReportTradeView = ReportTradeMetadata & {
+  counterparty_player_id: string
+  counterparty_name: string
 }
 
 export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetReportQueryRequest, CommunicationGetReportQueryResponse> {
@@ -55,6 +63,22 @@ export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetRe
           report,
           spy_detected: metadata as ReportSpyDetectedMetadata 
         }
+    }
+
+    if (report.type === ReportType.TRADE) {
+      const trade = await this.repository.report.getTradeByReportId(report_id)
+      if (!trade) {
+        return { report }
+      }
+      const names = await getPlayerDisplayNames([ trade.counterparty_player_id ])
+      return {
+        report,
+        trade: {
+          ...trade.metadata,
+          counterparty_player_id: trade.counterparty_player_id,
+          counterparty_name: names.get(trade.counterparty_player_id) ?? '',
+        },
+      }
     }
 
     if (report.type === ReportType.REINFORCEMENT) {

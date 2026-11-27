@@ -7,6 +7,7 @@ import { TroopMovementGetActionQuery } from '#query/troop/movement/get-action'
 import { sagaFinishBase } from '#app/saga/finish/base'
 import { sagaFinishExplore } from '#app/saga/finish/explore'
 import { sagaFinishSpy } from '#app/saga/finish/spy'
+import { sagaFinishExchange } from '#app/saga/finish/exchange'
 import { Factory } from '#adapter/factory'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
@@ -16,6 +17,7 @@ vi.mock('#query/troop/movement/get-action')
 vi.mock('#app/saga/finish/base')
 vi.mock('#app/saga/finish/explore')
 vi.mock('#app/saga/finish/spy')
+vi.mock('#app/saga/finish/exchange')
 
 describe('sagaFinishOneMovement', () => {
   const player_id = 'player_id'
@@ -95,6 +97,24 @@ describe('sagaFinishOneMovement', () => {
       arrived_at,
     })
     assert.strictEqual(emit.mock.calls[0][0], AppEvent.TroopMovementFinished)
+  })
+
+  it('finishes EXCHANGE convoys (slice 035)', async () => {
+    getActionRun.mockResolvedValue({ action: MovementAction.EXCHANGE })
+    vi.mocked(sagaFinishExchange).mockResolvedValue(undefined)
+
+    await sagaFinishOneMovement({
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+
+    assert.deepStrictEqual(vi.mocked(sagaFinishExchange).mock.calls[0][0], {
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+    expect(emit).toHaveBeenCalledWith(AppEvent.TroopMovementFinished, { player_id })
   })
 
   it('emits OutpostCreated when base finish creates an outpost', async () => {

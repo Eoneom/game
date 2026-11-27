@@ -1,4 +1,5 @@
 import type { ChatChannel } from '@server-core/communication/chat/channel'
+import type { ExchangeResource } from '@server-core/exchange/value/resource'
 import type { CommunicationChatMessage } from './endpoints/communication/chat/shared'
 
 export { AppEvent } from '@server-core/events'
@@ -62,6 +63,18 @@ export type ReinforcementArrivedEventPayload = {
   city_id: string
   owner_player_id: string
   report_id: string
+}
+
+/** Sent to each party of a faction exchange fill (slice 035). */
+export type ExchangeFilledEventPayload = {
+  order_id: string
+  lots: number
+  price: number
+}
+
+/** The faction's book of `resource` changed; at most once per 2 s per book (slice 035). */
+export type ExchangeBookUpdatedEventPayload = {
+  resource: ExchangeResource
 }
 
 /** Sent to the host when stationed troops leave (owner recall or automatic return, slice 033). */

@@ -81,6 +81,11 @@ export type PendingRankingCompute = {
   job_id: string
 }
 
+export type PendingExchangeOrderExpire = {
+  execute_at: number
+  job_id: string
+}
+
 export type SystemPlayerTickJobData = {
   tick_index: number
 }
@@ -191,6 +196,16 @@ export interface JobQueue {
   getPendingRankingCompute(): Promise<PendingRankingCompute | null>
 
   ensureRankingComputeScheduled(args: {
+    execute_at: number
+  }): Promise<string | null>
+
+  scheduleExchangeOrderExpire(args: {
+    execute_at: number
+  }): Promise<string | null>
+
+  getPendingExchangeOrderExpire(): Promise<PendingExchangeOrderExpire | null>
+
+  ensureExchangeOrderExpireScheduled(args: {
     execute_at: number
   }): Promise<string | null>
 

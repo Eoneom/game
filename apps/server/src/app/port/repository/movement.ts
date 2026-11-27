@@ -6,6 +6,7 @@ export type MovementRepository = GenericRepository<MovementEntity> & {
 
   list(query: { player_id: string }): Promise<MovementEntity[]>
 
+  /** Movements counted toward the cap (slice 028): exchange convoys and their return trips excluded (slice 035). */
   countByPlayer(query: { player_id: string }): Promise<number>
 
   /**

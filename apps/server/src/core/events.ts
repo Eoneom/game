@@ -25,4 +25,6 @@ export enum AppEvent {
   AllianceLeft = 'alliance:left',
   ReinforcementArrived = 'reinforcement:arrived',
   ReinforcementRecalled = 'reinforcement:recalled',
+  ExchangeFilled = 'exchange:filled',
+  ExchangeBookUpdated = 'exchange:book-updated',
 }

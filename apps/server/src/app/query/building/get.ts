@@ -176,6 +176,15 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       }
     }
 
+    if (building.code === BuildingCode.TRADING_POST) {
+      // Open orders per city = trading post level (slice 035).
+      return {
+        open_order_count: await this.repository.exchange.countOpenByCity(building.city_id),
+        current_open_order_limit: building.level,
+        next_open_order_limit: building.level + 1,
+      }
+    }
+
     if (building.code === BuildingCode.UNDERGROUND_SHELTER) {
       return {
         current_sheltered: BuildingService.getShelteredResources({ level: building.level }),

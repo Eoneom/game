@@ -24,6 +24,7 @@ import { PlayerBlockRepository } from '#app/port/repository/player-block'
 import { AbuseReportRepository } from '#app/port/repository/abuse-report'
 import { AllianceRepository } from '#app/port/repository/alliance'
 import { RankingRepository } from '#app/port/repository/ranking'
+import { ExchangeRepository } from '#app/port/repository/exchange'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -59,4 +60,5 @@ export interface Repository {
   abuse_report: AbuseReportRepository
   alliance: AllianceRepository
   ranking: RankingRepository
+  exchange: ExchangeRepository
 }

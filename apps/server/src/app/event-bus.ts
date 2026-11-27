@@ -10,6 +10,7 @@ import type { BattleWinner } from '#core/combat/value/battle-winner'
 import type { ReportPerspective } from '#core/combat/value/report-perspective'
 import type { ChatChannel } from '#core/communication/chat/channel'
 import type { FactionCode } from '#core/faction/constant/code'
+import type { ExchangeResource } from '#core/exchange/value/resource'
 import { AppLogger } from '#app/port/logger'
 
 export type CityResourcesGatheredPayload = {
@@ -139,6 +140,20 @@ type ReinforcementRecalledPayload = {
   movement_id: string
 }
 
+/** Sent to each party of a faction exchange fill (slice 035). */
+type ExchangeFilledPayload = {
+  player_id: string
+  order_id: string
+  lots: number
+  price: number
+}
+
+/** The faction's book of `resource` changed; the WS layer throttles it per book (slice 035). */
+type ExchangeBookUpdatedPayload = {
+  faction_code: FactionCode
+  resource: ExchangeResource
+}
+
 export type TroopRecruitmentUpdatedPayload = {
   city_id: string
   player_id: string
@@ -217,6 +232,8 @@ export type AppEventMap = {
   [AppEvent.AllianceLeft]: AllianceLeftPayload
   [AppEvent.ReinforcementArrived]: ReinforcementArrivedPayload
   [AppEvent.ReinforcementRecalled]: ReinforcementRecalledPayload
+  [AppEvent.ExchangeFilled]: ExchangeFilledPayload
+  [AppEvent.ExchangeBookUpdated]: ExchangeBookUpdatedPayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.TroopQueueItemDropped]: TroopQueueItemDroppedPayload
   [AppEvent.DefenseBuildUpdated]: DefenseBuildUpdatedPayload

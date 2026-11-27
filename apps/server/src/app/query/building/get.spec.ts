@@ -21,7 +21,7 @@ describe('BuildingGetQuery', () => {
   let building: BuildingEntity
   let architecture: TechnologyEntity
   let photovoltaic_optimization: TechnologyEntity
-  let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'cell'>
+  let repository: Pick<Repository, 'city' | 'building' | 'technology' | 'cell' | 'exchange'>
 
   beforeEach(() => {
     const city_cell = CellEntity.create({
@@ -77,7 +77,8 @@ describe('BuildingGetQuery', () => {
       } as unknown as Repository['technology'],
       cell: {
         getById: vi.fn().mockResolvedValue(city_cell)
-      } as unknown as Repository['cell']
+      } as unknown as Repository['cell'],
+      exchange: { countOpenByCity: vi.fn().mockResolvedValue(1) } as unknown as Repository['exchange'],
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ getPendingBuildingUpgrade: vi.fn().mockResolvedValue(null) } as unknown as import('#app/port/job-queue').JobQueue)
@@ -224,6 +225,28 @@ describe('BuildingGetQuery', () => {
       buildings: [],
       technologies: []
     })
+  })
+
+  it('returns the open orders and the order limit (its level) for the trading post (slice 035)', async () => {
+    vi.mocked(repository.building.getInCity).mockResolvedValue(BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.TRADING_POST,
+      level: 2
+    }))
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.TRADING_POST,
+      player_id
+    })
+
+    expect(result.metadata).toEqual({
+      open_order_count: 1,
+      current_open_order_limit: 2,
+      next_open_order_limit: 3
+    })
+    expect(repository.exchange.countOpenByCity).toHaveBeenCalledWith(city.id)
   })
 
   it('returns energy upgrade warning when projected consumption exceeds supply', async () => {

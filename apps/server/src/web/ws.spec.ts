@@ -13,7 +13,10 @@ vi.mock('#app/command/auth/authorize', () => ({ authorizeAuth: vi.fn() }))
 vi.mock('#app/query/admin/observability-access', () => ({ isObservabilityAdmin: vi.fn().mockResolvedValue(false) }))
 vi.mock('#app/query/player/faction', () => ({ getPlayerFactionCode: vi.fn() }))
 
-import { setupWebSocketServer } from './ws'
+import {
+  EXCHANGE_BOOK_UPDATE_THROTTLE_MS,
+  setupWebSocketServer
+} from './ws'
 import {
   WebSocketServer, WebSocket 
 } from 'ws'
@@ -600,6 +603,67 @@ describe('setupWebSocketServer', () => {
         message
       })
       expect(mockWs.send).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe('faction exchange (slice 035)', () => {
+    const connect = async (player_id: string, faction_code: string) => {
+      vi.mocked(authorizeAuth).mockResolvedValueOnce({ player_id } as never)
+      vi.mocked(getPlayerFactionCode).mockResolvedValueOnce(faction_code as never)
+      const mockWs = makeMockWs(WebSocket.OPEN)
+      await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+      return mockWs
+    }
+
+    it('sends exchange:filled to the party only', async () => {
+      const party = await connect('exchange-party', 'the_confederation')
+      const other = await connect('exchange-other', 'the_confederation')
+
+      capturedEventListeners.get(AppEvent.ExchangeFilled)?.({
+        player_id: 'exchange-party',
+        order_id: 'order-1',
+        lots: 3,
+        price: 9
+      })
+
+      expect(party.send).toHaveBeenCalledWith(JSON.stringify({
+        type: AppEvent.ExchangeFilled,
+        order_id: 'order-1',
+        lots: 3,
+        price: 9
+      }))
+      expect(other.send).not.toHaveBeenCalled()
+    })
+
+    it('sends exchange:book-updated to the faction, at most once per 2 s per book', async () => {
+      vi.useFakeTimers()
+      try {
+        const member = await connect('exchange-member', 'the_confederation')
+        const foreigner = await connect('exchange-foreigner', 'the_ash_liturgy')
+        const update = (resource: string) => capturedEventListeners.get(AppEvent.ExchangeBookUpdated)?.({
+          faction_code: 'the_confederation',
+          resource
+        })
+
+        update('plastic')
+        update('plastic')
+        update('plastic')
+        update('plasma')
+        expect(member.send).toHaveBeenCalledTimes(2)
+        expect(member.send).toHaveBeenCalledWith(JSON.stringify({
+          type: AppEvent.ExchangeBookUpdated,
+          resource: 'plastic'
+        }))
+        expect(foreigner.send).not.toHaveBeenCalled()
+
+        // The collapsed plastic updates go out once at the end of the window.
+        vi.advanceTimersByTime(EXCHANGE_BOOK_UPDATE_THROTTLE_MS)
+        expect(member.send).toHaveBeenCalledTimes(3)
+        vi.advanceTimersByTime(EXCHANGE_BOOK_UPDATE_THROTTLE_MS)
+        expect(member.send).toHaveBeenCalledTimes(3)
+      } finally {
+        vi.useRealTimers()
+      }
     })
   })
 })

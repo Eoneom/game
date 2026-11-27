@@ -102,6 +102,17 @@ import {
   rankingMeHandler
 } from '#web/handler/ranking/get'
 
+import {
+  exchangeCancelOrderHandler,
+  exchangeEstimateOrderHandler,
+  exchangeMineHandler,
+  exchangePlaceOrderHandler
+} from '#web/handler/exchange/order'
+import {
+  exchangeBookHandler,
+  exchangeTradesHandler
+} from '#web/handler/exchange/book'
+
 const CANONICAL_HEALTH_PATH = '/api/v1/health'
 
 export const router = (): Router => {
@@ -217,6 +228,14 @@ export const router = (): Router => {
   // Rankings (slice 034).
   r.get('/ranking', authMiddleware, rankingListHandler)
   r.get('/ranking/me', authMiddleware, rankingMeHandler)
+
+  // Faction exchange (slice 035): static paths before `/exchange/order/:order_id`.
+  r.post('/exchange/order', authMiddleware, exchangePlaceOrderHandler)
+  r.post('/exchange/order/estimate', authMiddleware, exchangeEstimateOrderHandler)
+  r.get('/exchange/order/mine', authMiddleware, exchangeMineHandler)
+  r.delete('/exchange/order/:order_id', authMiddleware, exchangeCancelOrderHandler)
+  r.get('/exchange/book', authMiddleware, exchangeBookHandler)
+  r.get('/exchange/trades', authMiddleware, exchangeTradesHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)

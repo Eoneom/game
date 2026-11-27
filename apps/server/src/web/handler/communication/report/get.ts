@@ -51,6 +51,7 @@ const response_mapper = ({
   reinforcement,
   spy,
   spy_detected,
+  trade,
 }: CommunicationGetReportQueryResponse): CommunicationGetReportDataResponse => {
   const report_response: CommunicationGetReportDataResponse = {
     id: report.id,
@@ -80,6 +81,7 @@ const response_mapper = ({
     reinforcement,
     spy,
     spy_detected,
+    trade,
   }
 
   return report_response

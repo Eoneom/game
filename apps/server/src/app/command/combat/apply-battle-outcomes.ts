@@ -1,5 +1,9 @@
 import { Factory } from '#adapter/factory'
 import { createBattleReports } from '#app/command/communication/report/create-battle'
+import {
+  cancelCityExchangeOrders,
+  emitExchangeBookUpdated
+} from '#app/command/exchange/shared'
 import { runCommand } from '#command/run'
 import { combat_loot_ratio } from '#core/combat/constant/loot'
 import { combatRoleFor } from '#core/combat/troop-combat'
@@ -339,6 +343,15 @@ export async function applyBattleOutcomes({
       promises.push(repository.resource_stock.updateOne(stock_update))
     }
     await Promise.all(promises)
+
+    if (attacker_wins && battle.target_kind === BattleTargetKind.CITY && battle.target_id) {
+      // After the loot write: the cancelled orders' escrow goes to the captured city's stock, now the new owner's (slice 035).
+      const markets = await cancelCityExchangeOrders({
+        city_id: battle.target_id,
+        closed_at: finished_at,
+      })
+      emitExchangeBookUpdated(markets)
+    }
 
     const {
       attacker_report_id,
