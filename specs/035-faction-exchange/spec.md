@@ -161,7 +161,7 @@ System players never trade, build trading posts or water purifiers in this slice
 
 | Surface | Change |
 | --- | --- |
-| Header resources | Water stock and earnings, new water icon. |
+| Header resources | Water stock and earnings, new water icon. Since [`041`](../041-app-shell-navigation/spec.md): stock only in the compact bar; rate per hour and breakdown in the resource panel. |
 | Buildings | Purificateur d'eau and Comptoir d'échange. |
 | **Bourse** page | Pair selector; order book depth (bids / asks); last trades with a simple price line; order form (side, lots, price, city) showing the reservation it will make (resources + carriers) and the estimated delivery time to a typical city; own open orders with cancel; history. |
 | Movements | Exchange convoys listed (read only). |

@@ -1,6 +1,6 @@
 # Slice 041 — App shell and navigation
 
-**Status**: Planned.
+**Status**: Implemented on `main`.
 
 ## Summary
 
@@ -363,14 +363,37 @@ Tab order runs from the button into the panel (DOM order); there is no focus tra
 | [`035`](../035-faction-exchange/spec.md) | Header water: stock in the bar, rate in the panel. |
 | `README.md` (specs index) | Slice 041 row. |
 
-## Evidence index (expected paths)
+## Implementation notes
+
+- **Shell** (`App.tsx`): `ResourcePanelProvider` wraps the shell; the skip link « Aller au contenu » is the first focusable element and focuses `main#workspace` (`tabIndex={-1}`) on click without touching the router URL (`preventDefault` + `focus()`); `.skip-link` in `index.css` slides in on focus. `<ActivityStrip />` and `ui/activity/` are deleted. `main` keeps the 040 border and `flex flex-col` (the catalogue pages size themselves with `min-h-0 flex-1`), `overflow-hidden` became `overflow-y-auto` so non-flex pages scroll vertically.
+- **Left column** (`ui/nav/menu`): `NavEntry` (`entry.tsx`) names each link with `aria-labelledby` (label + right slot, e.g. « Bâtiments +2 en file », « Rapports 3 non lus ») and links the activity line with `aria-describedby`, so the activity is a description rather than part of the name. Queue depth, movement cap and badges carry visually hidden words (« en file », « déplacements utilisés », « non lus »). The activity lines (`activity.tsx`) render the states of the spec; « Terminé » calls `useInvalidateLocationActivity` from `useCountdownProgress` `onDone` (once per job end). One extra state: a job-less slot with a non-empty queue shows « En attente » (`text-label`), so « Libre » stays reserved for "no job and empty queue". The location name comes from `useGetCity` / `useGetOutpost` (same queries as the header). The section is hidden only when no location was ever selected.
+- **Activity endpoint**: `LocationActivityQuery` fetches the new data in the same `Promise.all` (research queue by player, recruit / defense queues by city, `getPendingDefenseBuildProgress`, Enceinte level) and the research city name with the research lab level; outposts skip every city-only call. `LocationActivityFortification` is added to the query and the api-client; the mapper copies the new fields.
+- **Realtime**: `activityKeys.all` is invalidated by the listeners and the three defense mutations listed in the spec (build, cancel, cancel queued). `useActivityWsBridge` (never mounted) is deleted; `useLocationActivity` now checks the token before calling the client.
+- **Header**: 56 px grid `16rem | 1fr | auto` (brand aligned with the left column); the city coordinates follow the title. `HeaderResources` is one `<button>` (`aria-label` « Ressources — afficher le détail », `aria-describedby` the chips, `aria-expanded`, `aria-controls="resource-panel"`) holding `HeaderResourceChip`s (`item/index.tsx`, spans because a button only takes phrasing content); each chip has a `title` and a visually hidden « Plastique 12 480[, entrepôt presque plein] ». Escape (on the button or inside the panel) and « Fermer » close and refocus the button; a document `mousedown` outside the panel and the button closes; a pathname or location change closes. The header is `z-30` so the panel stays above an open chat panel.
+- **Resource panel** (`panel.tsx`): three sections as specified. The `EnergyReadout` is rendered without `productionEnergyRatio`, since the breakdown footnote already carries the « Production réduite à N % » warning. Fill bars are `role="progressbar"` with « N % » next to them.
+- **Breakdown table** (`ui/production-breakdown-table.tsx`, with `formatTechnologyBonus`, `cityProductionRows`, `outpostProductionRows`) replaces `ui/production-terrain-readout.tsx` everywhere: the resource panel, the city page and the outpost page (the city page's separate plasma / water rate lines are dropped, the table has those rows). Values are hourly amounts without the « ~…/h » decoration; the outpost footnote omits « × énergie ».
+- **Right column**: `NavLocation` derives the threatened ids from `useListIncomingMovements` and passes them to `NavLocationCities` / `NavLocationOutposts` (`threatenedIds` prop). The current item test was tightened to `href` or `href/…` (a city id prefix no longer matches another city). The unused `helpers/classname.ts` (`getActiveClassName`) is deleted.
+- **Chat**: manual-activation tabs (arrows / Home / End move the focus, click / Enter / Space select and open); the message area is a `tabpanel` (`id="chat-messages"`, always in the DOM, `hidden` when collapsed) that holds the `role="log"` list; « Envoyer » uses `Button`.
+- **`transformDecimals`**: 0 → « 0 », `undefined` / `NaN` → « ». Formatting keeps the existing dot decimals (« 12.48k », « ×1.2 ») used across the client; the « 12,4k » / « ×1,2 » of the spec were not applied to avoid mixed separators. The per-minute / per-day helpers (`formatEarningsRates`, `transformMinuteEarnings`, `transformDailyEarnings`) and `ui/tooltip.tsx`, only used by the old header item, are deleted.
+- **Tests**: header and outpost page tests stub `localStorage` (jsdom here has none), which makes the 7 header and 5 outpost page baseline failures pass.
+
+## Follow-ups
+
+- **Visual pass**: not checked in a browser at 1920 × 1080 (running the app needs a signed-in player in the local database); only unit tests and the build were run.
+- **Decimal separator**: switch the client to French number formatting (« 12,4k », « ×1,2 ») in one pass, not per screen.
+- **Building / research queue mutations** (cancel, cancel queued) still refresh the left column through the WebSocket drop events and the 15 s polling only.
+
+## Evidence index
 
 | Area | Paths |
 | --- | --- |
-| Shell | `apps/web/src/App.tsx` (skip link, landmarks, no `ActivityStrip`), `apps/web/src/index.css` (`.skip-link`) |
-| Left column | `apps/web/src/ui/nav/menu/index.tsx`, `ui/nav/menu/entry.tsx`, `ui/nav/menu/activity.tsx`, `ui/nav/menu/index.test.tsx`; deleted `apps/web/src/ui/activity/` |
+| Shell | `apps/web/src/App.tsx` (skip link, landmarks, `ResourcePanelProvider`, no `ActivityStrip`), `apps/web/src/App.test.tsx`, `apps/web/src/index.css` (`.skip-link`) |
+| Left column | `apps/web/src/ui/nav/menu/index.tsx`, `ui/nav/menu/entry.tsx`, `ui/nav/menu/activity.tsx`, `ui/nav/menu/index.test.tsx`; deleted `apps/web/src/ui/activity/`, `apps/web/src/helpers/classname.ts` |
 | Activity | `apps/server/src/app/query/location/activity.ts`, `activity.spec.ts`, `apps/server/src/web/handler/location/activity.mapper.ts`, `packages/api-client/src/endpoints/location/activity.ts`, `apps/web/src/modules/location/activity-hooks.ts` |
 | Realtime | `apps/web/src/modules/{defense,building,technology,troop,exchange}/ws-listener.ts`, `modules/defense/hooks.ts` |
-| Header | `apps/web/src/ui/header/index.tsx`, `ui/header/resources/index.tsx`, `ui/header/resources/item/index.tsx`, `ui/header/resources/panel.tsx`, `ui/header/resources/context.tsx`, tests alongside; `apps/web/src/ui/production-breakdown-table.tsx` (replaces `ui/production-terrain-readout.tsx`); `apps/web/src/helpers/transform.ts` (`transformDecimals(0)`) |
-| Right column | `apps/web/src/ui/nav/location/index.tsx`, `item.tsx`, `city/index.tsx`, `outpost/index.tsx` |
+| Header | `apps/web/src/ui/header/index.tsx`, `ui/header/incoming/index.tsx`, `ui/header/resources/index.tsx`, `ui/header/resources/item/index.tsx`, `ui/header/resources/panel.tsx`, `ui/header/resources/context.tsx`, tests alongside (`index.test.tsx`, `resources/index.test.tsx`, `resources/item/index.test.tsx`, `resources/panel.test.tsx`); deleted `apps/web/src/ui/tooltip.tsx` |
+| Production | `apps/web/src/ui/production-breakdown-table.tsx`, `production-breakdown-table.test.tsx` (replace `ui/production-terrain-readout.tsx` and its test), `apps/web/src/modules/city/page.tsx`, `modules/outpost/page.tsx`, `modules/outpost/page.test.tsx` |
+| Helpers | `apps/web/src/helpers/transform.ts` (`transformDecimals(0)`), `transform.test.ts` |
+| Right column | `apps/web/src/ui/nav/location/index.tsx`, `item.tsx`, `city/index.tsx`, `outpost/index.tsx`, `city/index.test.tsx`, `outpost/index.test.tsx` |
 | Chat | `apps/web/src/modules/communication/chat/panel.tsx`, `panel.test.tsx` |
+| Specs | `specs/019-web-shell-routing/spec.md`, `specs/013-location-activity/spec.md`, `specs/030-intelligence/spec.md`, `specs/032-messaging/spec.md`, `specs/035-faction-exchange/spec.md`, `specs/README.md` |

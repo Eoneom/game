@@ -131,7 +131,7 @@ In-memory sliding window per process (single server today), keyed by player and 
 | --- | --- |
 | Inbox | New **Courrier** tab next to Rapports (`/inbox/mail`): Reçus / Envoyés, read view, **Répondre**, **Supprimer**, **Signaler**, compose form with recipient autocomplete. Unread badge. Toast on `mail:received`. |
 | Blocked players | List with unblock, reachable from the Courrier tab. |
-| Chat panel | Collapsible bottom panel on every authenticated page. Tabs **Global** and **Faction**; history with "charger plus"; input with counter (500). Each message shows author, faction color and time. Author menu: **Écrire** (opens compose), **Bloquer**, **Signaler**. Open state and active tab kept in local storage. |
+| Chat panel | Collapsible bottom panel on every authenticated page. Tabs **Global** and **Faction**; history with "charger plus"; input with counter (500). Each message shows author, faction color and time. Author menu: **Écrire** (opens compose), **Bloquer**, **Signaler**. Open state and active tab kept in local storage. Since [`041`](../041-app-shell-navigation/spec.md): 40 px collapsed / 288 px open, WAI-ARIA tabs (`tablist` « Canaux », arrows / Home / End, roving `tabIndex`), messages in a `role="log"` container inside the tab panel, message lines 14 px. |
 | Errors | French copy for every new error, including rate limit ("Trop de messages, patientez"). |
 
 ## Persistence

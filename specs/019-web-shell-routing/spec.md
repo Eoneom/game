@@ -4,7 +4,7 @@
 
 ## Summary
 
-The web SPA uses **TanStack Router** (file-based routes under `apps/web/src/routes/`). Unauthenticated users see login/signup (`AuthUnauthenticated`). Authenticated users with at least one city get the **app shell**: header, activity strip, nav menu, main workspace `Outlet`, location sidebar, collapsible chat panel ([`032`](../032-messaging/spec.md)), FX layer, and toast notifications.
+The web SPA uses **TanStack Router** (file-based routes under `apps/web/src/routes/`). Unauthenticated users see login/signup (`AuthUnauthenticated`). Authenticated users with at least one city get the **app shell** (reworked by [`041`](../041-app-shell-navigation/spec.md)): skip link « Aller au contenu », header (56 px, compact resources + resource panel), left navigation column (256 px, location entries with their activity lines, then empire entries), main workspace `main#workspace` with the `Outlet`, location column (224 px), collapsible chat panel ([`032`](../032-messaging/spec.md)), FX layer, and toast notifications. There is no activity strip since 041.
 
 **Depends on**: auth ([`002`](../002-player-session-auth/spec.md)), city list bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)).
 
@@ -44,11 +44,11 @@ City layout: `routes/city/$cityId/route.tsx` + `modules/city/root.tsx`. Outpost:
 
 | Module | Role |
 | --- | --- |
-| `ui/header/` | Title links to city/outpost base |
-| `ui/nav/menu` | Section navigation (buildings, tech, troops, map, inbox: Rapport and Courrier with unread counts, Alliance — slice 033) |
-| `modules/communication/chat/panel.tsx` | Chat panel at the bottom of the shell: Global / Faction tabs, open state and tab in `localStorage` ([`032`](../032-messaging/spec.md)) |
-| `ui/nav/location` | City/outpost switcher |
-| `ui/activity` | Polls location activity endpoints |
+| `ui/header/` | Brand, location title link (+ city coordinates), incoming-attack badge, compact resource button (stock per resource, energy as consumption / production, warehouse fill warnings) toggling the 760 px resource panel (`ui/header/resources/panel.tsx`: stocks and warehouses, per-hour production breakdown, energy); open state in `ResourcePanelProvider` (`ui/header/resources/context.tsx`) so the dashboard can open it ([`041`](../041-app-shell-navigation/spec.md)) |
+| `ui/nav/menu` | Left column (`<nav aria-label="Navigation principale">`, 256 px): current location entries (city: Tableau de bord, Bâtiments, Technologies, Troupes, Défense, Déplacements, Carte; outpost: Tableau de bord, Déplacements, Carte) each with its activity line from the location activity endpoint ([`013`](../013-location-activity/spec.md)), then empire entries (Rapports and Courrier with unread badges, Alliance, Classements, Bourse, Observabilité IA for admins), then « Se déconnecter » ([`041`](../041-app-shell-navigation/spec.md)) |
+| `modules/communication/chat/panel.tsx` | Chat panel at the bottom of the shell (40 px collapsed, 288 px open): Global / Faction tabs with the WAI-ARIA tabs keyboard pattern, `role="log"` messages, open state and tab in `localStorage` ([`032`](../032-messaging/spec.md), [`041`](../041-app-shell-navigation/spec.md)) |
+| `ui/nav/location` | City/outpost switcher (`<aside aria-label="Emplacements">`, 224 px): current location `aria-current`, incoming-attack dot ([`041`](../041-app-shell-navigation/spec.md)) |
+| `App.tsx` | Skip link to `#workspace`, landmarks (`header`, `nav`, `main#workspace`, `aside`, chat `section`) ([`041`](../041-app-shell-navigation/spec.md)) |
 | `ui/fx` | Completion bursts (`triggerFxBurst`); no ambient embers since [`040`](../040-readability-typography-theme/spec.md) |
 | `index.css` | Global styles: semantic type tokens (`text-caption` … `text-display`, Tailwind default size scale dropped), palette (`ink`, `label`, `muted`, `edge`), flat surfaces (`surface-frame`, `surface-panel`, `surface-panel-inset`, `surface-raised`), global `:focus-visible` outline, boot animation ([`040`](../040-readability-typography-theme/spec.md)) |
 | `ui/typography-guard.test.ts`, `ui/palette-contrast.test.ts` | Guards for the 12 px floor, the token-only sizes, textures behind text and WCAG AA contrast ([`040`](../040-readability-typography-theme/spec.md)) |
@@ -65,7 +65,9 @@ Marketing site, server-side rendering.
 
 | Area | Paths |
 | --- | --- |
-| Shell | `apps/web/src/App.tsx` (incl. `ChatPanel`), `apps/web/src/index.tsx`, `apps/web/src/index.css` |
+| Shell | `apps/web/src/App.tsx` (incl. `ChatPanel`, skip link, `ResourcePanelProvider`), `apps/web/src/index.tsx`, `apps/web/src/index.css` (`.skip-link`) |
+| Navigation | `apps/web/src/ui/nav/menu/` (`index.tsx`, `entry.tsx`, `activity.tsx`), `apps/web/src/ui/nav/location/` |
+| Header | `apps/web/src/ui/header/` (`resources/index.tsx`, `resources/item/index.tsx`, `resources/panel.tsx`, `resources/context.tsx`) |
 | Routes | `apps/web/src/routes/`, `apps/web/src/routeTree.gen.ts` |
 | Shared | `apps/web/src/modules/shared/root.tsx` |
 | City/Outpost roots | `apps/web/src/modules/city/root.tsx`, outpost pages |

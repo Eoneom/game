@@ -123,6 +123,7 @@ Stored like battle metadata (dedicated `report_spy` table, JSON columns).
 | Surface | Change |
 | --- | --- |
 | Header | Badge with the number of incoming attacks, shown only when `detection` ≥ 1 and the list is non-empty. |
+| Shell columns ([`041`](../041-app-shell-navigation/spec.md)) | Left column: « ⚠ N attaque(s) entrante(s) · mm:ss » under « Déplacements » for the current location (danger left bar). Right column: danger dot on every targeted city / outpost. Same detection-gated list. |
 | Movements page | "Attaques entrantes" section: target, countdown, then attacker, size and composition according to level. Toast on `movement:incoming`. |
 | Movement create | "Espionner" action available when only scouts are selected and the target is an enemy location; shows the success probability preview from the known levels (own espionage only; the target's detection is unknown, so show "≥ 5 %"). |
 | Reports | Details for `spy` (tiers, failure) and `spy_detected`. |
