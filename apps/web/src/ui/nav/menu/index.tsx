@@ -96,6 +96,14 @@ export const NavMenu: React.FC = () => {
             Alliance
           </RouterLink>
         </li>
+        <li>
+          <RouterLink
+            to="/ranking"
+            className={linkClass('/ranking')}
+          >
+            Classements
+          </RouterLink>
+        </li>
         {observabilitySession?.is_admin ? (
           <li>
             <RouterLink

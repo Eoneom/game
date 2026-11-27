@@ -9,13 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AllianceRouteImport } from './routes/alliance'
+import { Route as RankingRouteImport } from './routes/ranking'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as SharedRouteRouteImport } from './routes/_shared/route'
+import { Route as AllianceIndexRouteImport } from './routes/alliance/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SharedIndexRouteImport } from './routes/_shared/index'
 import { Route as InboxReportRouteImport } from './routes/inbox/report'
 import { Route as InboxMailRouteImport } from './routes/inbox/mail'
+import { Route as AllianceAllianceIdRouteImport } from './routes/alliance/$allianceId'
 import { Route as AdminSystemPlayersRouteImport } from './routes/admin/system-players'
 import { Route as AdminCombatSimulatorRouteImport } from './routes/admin/combat-simulator'
 import { Route as SharedReportRouteImport } from './routes/_shared/report'
@@ -45,9 +47,9 @@ import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/
 import { Route as OutpostOutpostIdWorldMovementMovementIdRouteImport } from './routes/outpost/$outpostId/world/movement/$movementId'
 import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/city/$cityId/world/movement/$movementId'
 
-const AllianceRoute = AllianceRouteImport.update({
-  id: '/alliance',
-  path: '/alliance',
+const RankingRoute = RankingRouteImport.update({
+  id: '/ranking',
+  path: '/ranking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -57,6 +59,11 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
 } as any)
 const SharedRouteRoute = SharedRouteRouteImport.update({
   id: '/_shared',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AllianceIndexRoute = AllianceIndexRouteImport.update({
+  id: '/alliance/',
+  path: '/alliance/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -77,6 +84,11 @@ const InboxReportRoute = InboxReportRouteImport.update({
 const InboxMailRoute = InboxMailRouteImport.update({
   id: '/inbox/mail',
   path: '/inbox/mail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AllianceAllianceIdRoute = AllianceAllianceIdRouteImport.update({
+  id: '/alliance/$allianceId',
+  path: '/alliance/$allianceId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSystemPlayersRoute = AdminSystemPlayersRouteImport.update({
@@ -232,15 +244,17 @@ const CityCityIdWorldMovementMovementIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof SharedIndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
-  '/alliance': typeof AllianceRoute
+  '/ranking': typeof RankingRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/alliance/$allianceId': typeof AllianceAllianceIdRoute
   '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/admin/': typeof AdminIndexRoute
+  '/alliance/': typeof AllianceIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -266,14 +280,16 @@ export interface FileRoutesByFullPath {
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRoutesByTo {
-  '/alliance': typeof AllianceRoute
+  '/ranking': typeof RankingRoute
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/alliance/$allianceId': typeof AllianceAllianceIdRoute
   '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/': typeof SharedIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/alliance': typeof AllianceIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -302,16 +318,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shared': typeof SharedRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
-  '/alliance': typeof AllianceRoute
+  '/ranking': typeof RankingRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/_shared/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/alliance/$allianceId': typeof AllianceAllianceIdRoute
   '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/_shared/': typeof SharedIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/alliance/': typeof AllianceIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
   '/outpost/$outpostId/movement': typeof OutpostOutpostIdMovementRouteRouteWithChildren
   '/city/$cityId/building': typeof CityCityIdBuildingRoute
@@ -341,15 +359,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/alliance'
+    | '/ranking'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/alliance/$allianceId'
     | '/inbox/mail'
     | '/inbox/report'
     | '/admin/'
+    | '/alliance/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -375,14 +395,16 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/world/movement/$movementId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/alliance'
+    | '/ranking'
     | '/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/alliance/$allianceId'
     | '/inbox/mail'
     | '/inbox/report'
     | '/'
     | '/admin'
+    | '/alliance'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -410,16 +432,18 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_shared'
     | '/admin'
-    | '/alliance'
+    | '/ranking'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/_shared/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/alliance/$allianceId'
     | '/inbox/mail'
     | '/inbox/report'
     | '/_shared/'
     | '/admin/'
+    | '/alliance/'
     | '/city/$cityId/movement'
     | '/outpost/$outpostId/movement'
     | '/city/$cityId/building'
@@ -448,20 +472,22 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   SharedRouteRoute: typeof SharedRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
-  AllianceRoute: typeof AllianceRoute
+  RankingRoute: typeof RankingRoute
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
+  AllianceAllianceIdRoute: typeof AllianceAllianceIdRoute
   InboxMailRoute: typeof InboxMailRoute
   InboxReportRoute: typeof InboxReportRoute
+  AllianceIndexRoute: typeof AllianceIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/alliance': {
-      id: '/alliance'
-      path: '/alliance'
-      fullPath: '/alliance'
-      preLoaderRoute: typeof AllianceRouteImport
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -476,6 +502,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof SharedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alliance/': {
+      id: '/alliance/'
+      path: '/alliance'
+      fullPath: '/alliance/'
+      preLoaderRoute: typeof AllianceIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -504,6 +537,13 @@ declare module '@tanstack/react-router' {
       path: '/inbox/mail'
       fullPath: '/inbox/mail'
       preLoaderRoute: typeof InboxMailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alliance/$allianceId': {
+      id: '/alliance/$allianceId'
+      path: '/alliance/$allianceId'
+      fullPath: '/alliance/$allianceId'
+      preLoaderRoute: typeof AllianceAllianceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/system-players': {
@@ -859,11 +899,13 @@ const OutpostOutpostIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   SharedRouteRoute: SharedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
-  AllianceRoute: AllianceRoute,
+  RankingRoute: RankingRoute,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,
+  AllianceAllianceIdRoute: AllianceAllianceIdRoute,
   InboxMailRoute: InboxMailRoute,
   InboxReportRoute: InboxReportRoute,
+  AllianceIndexRoute: AllianceIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

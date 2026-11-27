@@ -10,6 +10,7 @@ export const allianceKeys = {
   all: ['alliance'] as const,
   mine: ['alliance', 'mine'] as const,
   search: (q: string) => ['alliance', 'search', q] as const,
+  details: (allianceId: string) => ['alliance', 'details', allianceId] as const,
   invitations: ['alliance', 'invitations'] as const,
   applications: ['alliance', 'applications'] as const,
   reinforcements: (cityId: string) => ['reinforcements', 'city', cityId] as const,
@@ -36,6 +37,23 @@ export const useMyAlliance = () => {
       return data
     },
     enabled: !!token,
+  })
+}
+
+/** Public view of any alliance: name, tag, description, member count, chef. */
+export const useAllianceDetails = (allianceId: string) => {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: allianceKeys.details(allianceId),
+    queryFn: async () => {
+      if (!token) throw new Error('empty token')
+      const data = unwrap(await client.alliance.get(token, { alliance_id: allianceId }))
+      if (!data) throw new Error('no data')
+      return data
+    },
+    enabled: !!token && !!allianceId,
+    retry: false,
   })
 }
 

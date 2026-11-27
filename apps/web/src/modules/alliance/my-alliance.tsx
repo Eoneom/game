@@ -19,6 +19,8 @@ import {
   canManageMembers,
 } from '#alliance/translations'
 import { fieldClass, sectionTitleClass } from '#alliance/no-alliance'
+import { AllianceRanks } from '#ranking/alliance-ranks'
+import { RANKING_ALLIANCE_MIN_MEMBERS } from '#ranking/translations'
 
 type MyAllianceData = NonNullable<AllianceMineDataResponse['alliance']>
 type Member = MyAllianceData['members'][number]
@@ -255,6 +257,8 @@ export const MyAlliance: React.FC<{ alliance: MyAllianceData, viewerId: string |
           : <p className="m-0 text-sm text-label">Pas de description.</p>}
         {isChef && <DescriptionEditor description={alliance.description} />}
       </header>
+
+      {alliance.members.length >= RANKING_ALLIANCE_MIN_MEMBERS && <AllianceRanks allianceId={alliance.id} />}
 
       <section className="space-y-2">
         <h3 className={sectionTitleClass}>Membres ({alliance.members.length})</h3>

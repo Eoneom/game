@@ -58,6 +58,9 @@
       "#outpost/*": [
         "./src/modules/outpost/*"
       ],
+      "#ranking/*": [
+        "./src/modules/ranking/*"
+      ],
       "#requirement/*": [
         "./src/modules/requirement/*"
       ],
