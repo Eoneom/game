@@ -328,6 +328,15 @@ export interface ReportBattle {
   winner: string;
 }
 
+export interface ReportSpy {
+  metadata_json: Json;
+  movement_id: string;
+  report_id: string;
+  spy_player_id: string;
+  target_json: Json;
+  target_player_id: string | null;
+}
+
 export interface ReportTroop {
   code: string;
   count: number;
@@ -406,6 +415,7 @@ export interface DB {
   system_player_memory: SystemPlayerMemory;
   report: Report;
   report_battle: ReportBattle;
+  report_spy: ReportSpy;
   report_troop: ReportTroop;
   resource_stock: ResourceStock;
   technology: Technology;

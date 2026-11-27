@@ -149,5 +149,23 @@ export const TechnologyRequirement: Record<TechnologyCode, RequirementValue> = {
       }
     ],
     technologies: []
+  },
+  [TechnologyCode.ESPIONAGE]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TechnologyCode.DETECTION]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 3
+      }
+    ],
+    technologies: []
   }
 }

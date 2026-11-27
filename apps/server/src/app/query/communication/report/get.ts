@@ -4,6 +4,10 @@ import { ReportBattleMetadata } from '#core/combat/type/report-battle-metadata'
 import { ReportEntity } from '#core/communication/report/entity'
 import { CommunicationError } from '#core/communication/error'
 import { ReportType } from '#core/communication/value/report-type'
+import {
+  ReportSpyDetectedMetadata,
+  ReportSpyMetadata,
+} from '#core/intel/type'
 
 export interface CommunicationGetReportQueryRequest {
   player_id: string
@@ -13,6 +17,8 @@ export interface CommunicationGetReportQueryRequest {
 export interface CommunicationGetReportQueryResponse {
   report: ReportEntity
   battle?: ReportBattleMetadata
+  spy?: ReportSpyMetadata
+  spy_detected?: ReportSpyDetectedMetadata
 }
 
 export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetReportQueryRequest, CommunicationGetReportQueryResponse> {
@@ -27,6 +33,22 @@ export class CommunicationGetReportQuery extends GenericQuery<CommunicationGetRe
     const report = await this.repository.report.getById(report_id)
     if (!report.isOwnedBy(player_id)) {
       throw new Error(CommunicationError.REPORT_NOT_OWNER)
+    }
+
+    if (report.type === ReportType.SPY || report.type === ReportType.SPY_DETECTED) {
+      const metadata = await this.repository.report.getSpyMetadataByReportId(report_id)
+      if (!metadata) {
+        return { report }
+      }
+      return report.type === ReportType.SPY
+        ? {
+          report,
+          spy: metadata as ReportSpyMetadata 
+        }
+        : {
+          report,
+          spy_detected: metadata as ReportSpyDetectedMetadata 
+        }
     }
 
     const battle = report.type === ReportType.BATTLE

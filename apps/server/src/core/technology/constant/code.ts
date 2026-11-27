@@ -11,5 +11,7 @@ export enum TechnologyCode {
   AGRONOMY = 'agronomy',
   STORAGE_COMPRESSION = 'storage_compression',
   PLASMA_CONTAINMENT = 'plasma_containment',
-  FORTIFICATION = 'fortification'
+  FORTIFICATION = 'fortification',
+  ESPIONAGE = 'espionage',
+  DETECTION = 'detection'
 }

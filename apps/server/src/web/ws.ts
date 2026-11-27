@@ -201,6 +201,20 @@ export function setupWebSocketServer(
     }
   })
 
+  eventBus.on(AppEvent.MovementIncoming, ({
+    player_id, movement_id, arrive_at
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.MovementIncoming,
+        player_id,
+        movement_id,
+        arrive_at,
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({
     city_id, player_id
   }) => {

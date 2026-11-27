@@ -6,3 +6,10 @@ export type BattleFinishedEventPayload = {
   perspective: 'attacker' | 'defender'
   winner: 'attacker' | 'defender' | 'draw'
 }
+
+/** Sent to the defender when an attack is launched at them and their `detection` ≥ 1 (slice 030). */
+export type MovementIncomingEventPayload = {
+  player_id: string
+  movement_id: string
+  arrive_at: number
+}

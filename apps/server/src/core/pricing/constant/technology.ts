@@ -201,5 +201,33 @@ export const technology_costs: Record<TechnologyCode, LevelCosts> = {
       base: 180,
       multiplier: 2
     }
+  },
+  [TechnologyCode.ESPIONAGE]: {
+    plastic: {
+      base: 3000,
+      multiplier: 1.7
+    },
+    mushroom: {
+      base: 3000,
+      multiplier: 1.7
+    },
+    duration: {
+      base: 120,
+      multiplier: 2
+    }
+  },
+  [TechnologyCode.DETECTION]: {
+    plastic: {
+      base: 3000,
+      multiplier: 1.7
+    },
+    mushroom: {
+      base: 3000,
+      multiplier: 1.7
+    },
+    duration: {
+      base: 120,
+      multiplier: 2
+    }
   }
 }

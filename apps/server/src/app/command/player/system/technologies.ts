@@ -28,11 +28,18 @@ const SYSTEM_ARSENAL_RESEARCH_PRIORITY: TechnologyCode[] = [
   TechnologyCode.FORTIFICATION,
 ]
 
+/** Renseignement (slice 030): researched last; system players do not spy yet, detection only blunts enemy spies. */
+const SYSTEM_INTEL_RESEARCH_PRIORITY: TechnologyCode[] = [
+  TechnologyCode.DETECTION,
+  TechnologyCode.ESPIONAGE,
+]
+
 /** Highest-priority system AI research order (first entry = tried first). */
 export const SYSTEM_TECHNOLOGY_RESEARCH_PRIORITY: TechnologyCode[] = [
   ...SYSTEM_FOUNDATION_RESEARCH_PRIORITY,
   ...SYSTEM_ECONOMY_RESEARCH_PRIORITY,
   ...SYSTEM_ARSENAL_RESEARCH_PRIORITY,
+  ...SYSTEM_INTEL_RESEARCH_PRIORITY,
 ]
 
 /** Aggressive profiles (Ash Liturgy, slice 025) research Arsenal ahead of Économie. */
@@ -40,6 +47,7 @@ const SYSTEM_ARSENAL_FIRST_RESEARCH_PRIORITY: TechnologyCode[] = [
   ...SYSTEM_FOUNDATION_RESEARCH_PRIORITY,
   ...SYSTEM_ARSENAL_RESEARCH_PRIORITY,
   ...SYSTEM_ECONOMY_RESEARCH_PRIORITY,
+  ...SYSTEM_INTEL_RESEARCH_PRIORITY,
 ]
 
 export function systemTechnologyResearchPriority({ arsenal_first }: {

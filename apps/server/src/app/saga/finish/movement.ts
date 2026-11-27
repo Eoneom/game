@@ -4,6 +4,7 @@ import { sagaFinishBase } from '#app/saga/finish/base'
 import { sagaFinishExplore } from '#app/saga/finish/explore'
 import { sagaFinishTransport } from '#app/saga/finish/transport'
 import { sagaFinishAttack } from '#app/saga/finish/attack'
+import { sagaFinishSpy } from '#app/saga/finish/spy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopError } from '#core/troop/error'
 import { AppEvent } from '#core/events'
@@ -48,6 +49,13 @@ export const sagaFinishOneMovement = async ({
       break
     case MovementAction.ATTACK:
       await sagaFinishAttack({
+        player_id,
+        movement_id,
+        arrived_at,
+      })
+      break
+    case MovementAction.SPY:
+      await sagaFinishSpy({
         player_id,
         movement_id,
         arrived_at,

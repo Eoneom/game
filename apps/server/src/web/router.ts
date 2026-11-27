@@ -36,6 +36,7 @@ import { troopEstimateMovementHandler } from '#web/handler/troop/movement/estima
 import { troopCreateMovementHandler } from '#web/handler/troop/movement/create'
 import { troopGetHandler } from '#web/handler/troop/get'
 import { troopMovementCapacityHandler } from '#web/handler/troop/movement/capacity'
+import { troopListIncomingMovementHandler } from '#web/handler/troop/movement/incoming'
 import { troopCancelQueuedHandler } from '#web/handler/troop/cancel-queued'
 import { citySettleHandler } from '#web/handler/city/settle'
 import { defenseListHandler } from '#web/handler/defense/list'
@@ -90,6 +91,7 @@ export const router = (): Router => {
   r.get('/troop/movement', authMiddleware, troopListMovementHandler)
   r.post('/troop/movement', authMiddleware, troopCreateMovementHandler)
   r.get('/troop/movement/capacity', authMiddleware, troopMovementCapacityHandler)
+  r.get('/troop/movement/incoming', authMiddleware, troopListIncomingMovementHandler)
   r.get('/troop/movement/:movement_id', authMiddleware, troopGetMovementHandler)
   r.post('/troop/movement/estimate', authMiddleware, troopEstimateMovementHandler)
 

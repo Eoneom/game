@@ -4,4 +4,6 @@ export enum ReportType {
   REBASE = 'rebase',
   TRANSPORT = 'transport',
   BATTLE = 'battle',
+  SPY = 'spy',
+  SPY_DETECTED = 'spy_detected',
 }

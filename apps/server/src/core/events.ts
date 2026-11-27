@@ -15,4 +15,5 @@ export enum AppEvent {
   SystemPlayerActionCommitted = 'system-player:action-committed',
   SystemPlayerStatsUpdated = 'system-player:stats-updated',
   BattleFinished = 'battle:finished',
+  MovementIncoming = 'movement:incoming',
 }

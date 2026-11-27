@@ -215,6 +215,28 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
+  it('forwards MovementIncoming event to the defender WebSocket (slice 030)', async () => {
+    const player_id = 'player-defender'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    const eventHandler = capturedEventListeners.get(AppEvent.MovementIncoming)
+    eventHandler?.({
+      player_id,
+      movement_id: 'movement-id',
+      arrive_at: 1000
+    })
+
+    expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.MovementIncoming,
+      player_id,
+      movement_id: 'movement-id',
+      arrive_at: 1000,
+    }))
+  })
+
   it('forwards TroopRecruitmentUpdated event with city_id to the connected player WebSocket', async () => {
     const player_id = 'player-6b'
     const city_id = 'city-recruit'

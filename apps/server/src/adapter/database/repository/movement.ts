@@ -43,6 +43,39 @@ export class PostgresMovementRepository
     return Number(result.count)
   }
 
+  async listIncomingAttacks({ player_id }: { player_id: string }): Promise<MovementEntity[]> {
+    const rows = await this.db
+      .selectFrom('movement')
+      .innerJoin('cell', join => join
+        .onRef('cell.x', '=', 'movement.destination_x')
+        .onRef('cell.y', '=', 'movement.destination_y'))
+      .selectAll('movement')
+      .where('movement.action', '=', MovementAction.ATTACK)
+      .where('movement.player_id', '!=', player_id)
+      .where(eb => eb.or([
+        eb.exists(eb
+          .selectFrom('city')
+          .select('city.id')
+          .whereRef('city.cell_id', '=', 'cell.id')
+          .where('city.player_id', '=', player_id)),
+        eb.exists(eb
+          .selectFrom('outpost')
+          .select('outpost.id')
+          .whereRef('outpost.cell_id', '=', 'cell.id')
+          .where('outpost.player_id', '=', player_id)),
+        eb.exists(eb
+          .selectFrom('troop')
+          .select('troop.id')
+          .whereRef('troop.cell_id', '=', 'cell.id')
+          .where('troop.player_id', '=', player_id)
+          .where('troop.movement_id', 'is', null)
+          .where('troop.count', '>', 0)),
+      ]))
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   protected buildFromRow(row: Selectable<DB['movement']>): MovementEntity {
     return MovementEntity.create({
       id: row.id,

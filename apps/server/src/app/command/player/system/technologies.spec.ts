@@ -83,7 +83,7 @@ describe('sortTechnologiesForSystemResearch', () => {
     assert.deepStrictEqual(sorted.map(t => t.code), [ TechnologyCode.OUTPOST_LOGISTICS ])
   })
 
-  it('appends Économie then Arsenal after the foundation technologies', () => {
+  it('appends Économie, Arsenal then Renseignement after the foundation technologies', () => {
     assert.deepStrictEqual(SYSTEM_TECHNOLOGY_RESEARCH_PRIORITY, [
       TechnologyCode.ARCHITECTURE,
       TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
@@ -98,6 +98,8 @@ describe('sortTechnologiesForSystemResearch', () => {
       TechnologyCode.ORGANIC_PLATING,
       TechnologyCode.TACTICAL_PROPULSION,
       TechnologyCode.FORTIFICATION,
+      TechnologyCode.DETECTION,
+      TechnologyCode.ESPIONAGE,
     ])
     assert.deepStrictEqual(
       [ ...SYSTEM_TECHNOLOGY_RESEARCH_PRIORITY ].sort(),

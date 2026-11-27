@@ -1,5 +1,17 @@
 import { ReportEntity } from '#core/communication/report/entity'
-import { ReportRepository } from '#app/port/repository/report'
+import {
+  ReportRepository,
+  SpyReportEntry,
+} from '#app/port/repository/report'
+import {
+  getReportSpyByReportId,
+  insertReportSpyRow,
+} from '#adapter/database/repository/report-spy'
+import {
+  ReportSpyDetectedMetadata,
+  ReportSpyMetadata,
+  SpyTarget,
+} from '#core/intel/type'
 import { PostgreSQLGenericRepository } from '#adapter/database/repository/generic'
 import { withTransaction } from '#adapter/database/context'
 import { CommunicationError } from '#core/communication/error'
@@ -332,6 +344,36 @@ export class PostgresReportRepository
         plasma: 0,
       },
     }
+  }
+
+  async createSpyReports(entries: SpyReportEntry[]): Promise<void> {
+    await withTransaction(async () => {
+      for (const entry of entries) {
+        await this.create(entry.report)
+        const {
+          target, ...metadata 
+        } = entry.metadata
+        await insertReportSpyRow(this.db, {
+          report_id: entry.report.id,
+          movement_id: entry.movement_id,
+          spy_player_id: entry.spy_player_id,
+          target_player_id: entry.target_player_id,
+          target_json: target,
+          metadata_json: metadata,
+        })
+      }
+    })
+  }
+
+  async getSpyMetadataByReportId(report_id: string): Promise<ReportSpyMetadata | ReportSpyDetectedMetadata | null> {
+    const row = await getReportSpyByReportId(this.db, report_id)
+    if (!row) {
+      return null
+    }
+    return {
+      ...(row.metadata_json as object),
+      target: row.target_json as SpyTarget,
+    } as ReportSpyMetadata | ReportSpyDetectedMetadata
   }
 
   private async loadEntity(row: Selectable<DB['report']>): Promise<ReportEntity> {

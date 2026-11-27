@@ -7,7 +7,16 @@ import { OutpostEntity } from '#core/outpost/entity'
 import { CombatError } from '#core/combat/error'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
-import { resolveAttackTarget } from '#app/command/troop/movement/attack-target'
+import {
+  resolveAttackTarget,
+  ResolvedAttackTarget,
+} from '#app/command/troop/movement/attack-target'
+import { resolveSpyTarget } from '#app/command/troop/movement/spy-target'
+import {
+  DETECTION_LEVEL_ALERT,
+  IntelService,
+} from '#core/intel/service'
+import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -47,15 +56,32 @@ export async function createTroopMovement({
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
+    let attack_target: ResolvedAttackTarget | null = null
+
     if (action === MovementAction.ATTACK) {
       if (!combat_strategy) {
         throw new Error(CombatError.STRATEGY_REQUIRED)
       }
       TroopService.assertAttackArmy({ move_troops })
       const attacker = await repository.player.get(player_id)
-      await resolveAttackTarget({
+      attack_target = await resolveAttackTarget({
         attacker_player_id: player_id,
         attacker_faction_code: attacker.faction_code,
+        destination,
+      })
+    }
+
+    if (action === MovementAction.SPY) {
+      const levels = await AppService.getTechnologyLevels({
+        player_id,
+        codes: [ TechnologyCode.ESPIONAGE ]
+      })
+      IntelService.assertEspionageLevel({ espionage_level: levels[TechnologyCode.ESPIONAGE] })
+      IntelService.assertScoutsOnly({ move_troops })
+      const spy = await repository.player.get(player_id)
+      await resolveSpyTarget({
+        spy_player_id: player_id,
+        spy_faction_code: spy.faction_code,
         destination,
       })
     }
@@ -191,6 +217,39 @@ export async function createTroopMovement({
       })
     }
 
+    if (attack_target) {
+      await notifyIncomingAttack({
+        defender_player_id: attack_target.defender_player_id,
+        movement_id: movement.id,
+        arrive_at,
+      })
+    }
+
     return { deleted_outpost_id }
+  })
+}
+
+/** Warns the defender of a new attack once they have `detection` ≥ 1 (slice 030). */
+async function notifyIncomingAttack({
+  defender_player_id,
+  movement_id,
+  arrive_at,
+}: {
+  defender_player_id: string
+  movement_id: string
+  arrive_at: number
+}): Promise<void> {
+  const levels = await AppService.getTechnologyLevels({
+    player_id: defender_player_id,
+    codes: [ TechnologyCode.DETECTION ]
+  })
+  if (levels[TechnologyCode.DETECTION] < DETECTION_LEVEL_ALERT) {
+    return
+  }
+
+  Factory.getEventBus().emit(AppEvent.MovementIncoming, {
+    player_id: defender_player_id,
+    movement_id,
+    arrive_at,
   })
 }

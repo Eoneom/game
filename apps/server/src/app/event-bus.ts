@@ -49,6 +49,13 @@ export type BattleFinishedPayload = {
   winner: BattleWinner
 }
 
+/** Sent to the defender when an attack is launched at them and their `detection` ≥ 1 (slice 030). */
+type MovementIncomingPayload = {
+  player_id: string
+  movement_id: string
+  arrive_at: number
+}
+
 export type TroopRecruitmentUpdatedPayload = {
   city_id: string
   player_id: string
@@ -117,6 +124,7 @@ export type AppEventMap = {
   [AppEvent.TechnologyQueueItemDropped]: TechnologyQueueItemDroppedPayload
   [AppEvent.TroopMovementFinished]: TroopMovementFinishedPayload
   [AppEvent.BattleFinished]: BattleFinishedPayload
+  [AppEvent.MovementIncoming]: MovementIncomingPayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.TroopQueueItemDropped]: TroopQueueItemDroppedPayload
   [AppEvent.DefenseBuildUpdated]: DefenseBuildUpdatedPayload

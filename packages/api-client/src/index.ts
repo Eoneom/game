@@ -30,6 +30,7 @@ export { CombatTroopClass } from '@server-core/combat/value/combat-troop-class'
 export { CombatRole } from '@server-core/troop/constant/combat-role'
 export { CombatError } from '@server-core/combat/error'
 export type { ReportBattleMetadata } from './types/report-battle'
+export type { ReportSpyMetadata, ReportSpyDetectedMetadata, ReportSpyTarget } from './types/report-spy'
 export { resource_transport_weight } from '@server-core/troop/constant/transport-weight'
 export { AuthError } from '@server-core/auth/error'
 export { BuildingError } from '@server-core/building/error'
@@ -37,6 +38,14 @@ export { CityError } from '@server-core/city/error'
 export { CommunicationError } from '@server-core/communication/error'
 export { DefenseError } from '@server-core/defense/error'
 export { FactionError } from '@server-core/faction/error'
+export { IntelError } from '@server-core/intel/error'
+export {
+  SPY_SUCCESS_BASE,
+  SPY_SUCCESS_MAX,
+  SPY_SUCCESS_MIN,
+  SPY_SUCCESS_PER_EXTRA_SCOUT,
+  SPY_SUCCESS_PER_GAP,
+} from '@server-core/intel/constant/probability'
 export { OutpostError } from '@server-core/outpost/error'
 export { PlayerError } from '@server-core/player/error'
 export { RequirementError } from '@server-core/requirement/error'

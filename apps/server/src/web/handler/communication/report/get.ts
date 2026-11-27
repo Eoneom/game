@@ -47,6 +47,8 @@ export const communicationGetReportHandler = async (
 const response_mapper = ({
   report,
   battle,
+  spy,
+  spy_detected,
 }: CommunicationGetReportQueryResponse): CommunicationGetReportDataResponse => {
   const report_response: CommunicationGetReportDataResponse = {
     id: report.id,
@@ -70,6 +72,8 @@ const response_mapper = ({
       plasma: report.remaining_resources.plasma,
     },
     battle,
+    spy,
+    spy_detected,
   }
 
   return report_response

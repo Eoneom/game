@@ -506,4 +506,33 @@ describe('PricingService city defenses (slice 029)', () => {
       plasma: Math.ceil(400 * 1.7),
     })
   })
+  it('prices the Renseignement technologies without plasma (slice 030)', () => {
+    for (const code of [
+      TechnologyCode.ESPIONAGE,
+      TechnologyCode.DETECTION 
+    ]) {
+      const first = PricingService.getTechnologyLevelCost({
+        code,
+        level: 1,
+        research_lab_level: 0,
+      })
+      assert.deepStrictEqual(first.resource, {
+        plastic: 3000,
+        mushroom: 3000,
+        plasma: 0,
+      })
+      assert.strictEqual(first.duration, scaleGameDurationSeconds(120))
+
+      const second = PricingService.getTechnologyLevelCost({
+        code,
+        level: 2,
+        research_lab_level: 0,
+      })
+      assert.deepStrictEqual(second.resource, {
+        plastic: Math.ceil(3000 * 1.7),
+        mushroom: Math.ceil(3000 * 1.7),
+        plasma: 0,
+      })
+    }
+  })
 })
