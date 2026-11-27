@@ -22,6 +22,7 @@ export const technology_branch: Record<TechnologyCode, TechnologyBranch> = {
   [TechnologyCode.BALLISTIC_ALLOYS]: TechnologyBranch.ARSENAL,
   [TechnologyCode.ORGANIC_PLATING]: TechnologyBranch.ARSENAL,
   [TechnologyCode.TACTICAL_PROPULSION]: TechnologyBranch.ARSENAL,
+  [TechnologyCode.FORTIFICATION]: TechnologyBranch.ARSENAL,
   [TechnologyCode.ADVANCED_RECYCLING]: TechnologyBranch.ECONOMY,
   [TechnologyCode.AGRONOMY]: TechnologyBranch.ECONOMY,
   [TechnologyCode.STORAGE_COMPRESSION]: TechnologyBranch.ECONOMY,

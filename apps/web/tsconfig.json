@@ -40,6 +40,9 @@
       "#cost/*": [
         "./src/modules/cost/*"
       ],
+      "#defense/*": [
+        "./src/modules/defense/*"
+      ],
       "#communication/*": [
         "./src/modules/communication/*"
       ],

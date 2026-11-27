@@ -9,6 +9,7 @@ import {
 } from '#helpers/transform'
 import type {
   AdminSystemPlayerCitySummary,
+  AdminSystemPlayerDefenseCount,
   AdminSystemPlayerPendingRecruitment,
   AdminSystemPlayerStatsSnapshot,
   AdminSystemPlayerTroopCount,
@@ -28,6 +29,7 @@ import {
   translateTroopCode,
 } from './labels'
 import { OngoingMovementItem } from './ongoing-movement-item'
+import { DefenseTranslations } from '#defense/translations'
 
 type Props = {
   snapshots: AdminSystemPlayerStatsSnapshot[]
@@ -82,6 +84,26 @@ function TroopsList({
           <CityPendingRecruitment pending={pending} />
         </div>
       ) : null}
+    </div>
+  )
+}
+
+/** City defense stacks with at least one unit (slice 029). */
+function DefensesList({ defenses }: { defenses: AdminSystemPlayerDefenseCount[] }): React.ReactElement | null {
+  if (defenses.length === 0) {
+    return null
+  }
+  return (
+    <div>
+      <h5 className="field-label m-0 mb-1 text-label">Défenses</h5>
+      <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
+        {defenses.map(defense => (
+          <li key={defense.code}>
+            {DefenseTranslations[defense.code].name}
+            <span className="text-amber-dim"> — ×{defense.count}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -219,6 +241,7 @@ function CityStatsSection({
           </ul>
         </div>
         <TroopsList troops={city.troops} pending={city.pending_recruitment} />
+        <DefensesList defenses={city.defenses ?? []} />
       </div>
     </section>
   )

@@ -57,5 +57,10 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
     name: 'Abri souterrain',
     description: 'Sous les ruines, des caves scellées où l\'on enterre une part des réserves avant que les pillards ne franchissent les murs.',
     effect: 'Protège une quantité fixe de plastique, de champignons et de plasma contre le pillage'
+  },
+  [BuildingCode.CITY_WALL]: {
+    name: 'Enceinte',
+    description: 'Fossés, talus et murs de ferraille soudée : une ville qui veut durer commence par tracer sa limite.',
+    effect: 'Chaque niveau donne 20 points de défense et réduit le temps de fortification de 10%. Hors des 100 niveaux de bâtiments de la ville'
   }
 }

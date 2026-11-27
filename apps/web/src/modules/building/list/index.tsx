@@ -21,6 +21,7 @@ import {
   useCancelQueuedBuildingUpgrade
 } from '#building/hooks'
 import { BuildingItem } from '#types'
+import { isBuildingListed, isLevelCappedBuilding } from '#building/layer'
 
 interface Props {
   cityId: string
@@ -121,7 +122,8 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
     />
   )
 
-  const items = useMemo(() => buildings.map(buildingItem => {
+  // The Enceinte lives in the Défense tab (slice 029); its upgrades still share this queue.
+  const items = useMemo(() => buildings.filter(isBuildingListed).map(buildingItem => {
     const isUpgrading = inProgress?.code === buildingItem.code
     const isQueued = queuedCodes.has(buildingItem.code)
     return (

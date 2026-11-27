@@ -7,9 +7,13 @@ import { LayoutDetailsContent } from '#ui/layout/details/content'
 import { formatCoordinates } from '#helpers/transform'
 import { CombatStrategyLabels } from '#movement/translations'
 import {
+  defenseLosses,
   formatCombatModifiers,
+  formatShieldReduction,
   ReportTypeLabels,
 } from '#communication/report/translations'
+import { DefenseTranslations } from '#defense/translations'
+import { defenseImageSrc } from '#defense/image'
 
 interface Props {
   report?: Report
@@ -42,6 +46,9 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
     const battle = report.battle
     const attacker_modifiers = formatCombatModifiers(battle.attacker_modifiers)
     const defender_modifiers = formatCombatModifiers(battle.defender_modifiers)
+    const destroyed_defenses = defenseLosses(battle.casualties_defender)
+    const has_plasma = battle.round_summaries.some(row => (row.defender_plasma_spent ?? 0) > 0)
+    const has_shield = battle.round_summaries.some(row => (row.shield_reduction ?? 0) > 0)
     return (
       <LayoutDetailsContent>
         <h1>{ReportTypeLabels[report.type]}</h1>
@@ -78,6 +85,23 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
             </li>
           ))}
         </ul>
+        {destroyed_defenses.length > 0 && (
+          <>
+            <h3>{battle.perspective === 'defender' ? 'Défenses détruites' : 'Défenses ennemies détruites'}</h3>
+            <ul>
+              {destroyed_defenses.map(defense => (
+                <li key={defense.code} className="flex items-center gap-2">
+                  <img
+                    src={defenseImageSrc(defense.code)}
+                    alt={DefenseTranslations[defense.code].name}
+                    className="h-8 w-8"
+                  />
+                  {DefenseTranslations[defense.code].name} × {defense.count}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
         <h3>Tours ({battle.rounds_played})</h3>
         <table className="w-full text-sm">
           <thead>
@@ -85,6 +109,8 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
               <th>Tour</th>
               <th>Att. (attaque / vie)</th>
               <th>Déf. (attaque / vie)</th>
+              {has_plasma && <th>Plasma dépensé</th>}
+              {has_shield && <th>Bouclier</th>}
             </tr>
           </thead>
           <tbody>
@@ -93,6 +119,8 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
                 <td>{row.round}</td>
                 <td>{row.attacker_attack_pool} / {row.attacker_life_pool}</td>
                 <td>{row.defender_attack_pool} / {row.defender_life_pool}</td>
+                {has_plasma && <td>{row.defender_plasma_spent ?? 0}</td>}
+                {has_shield && <td>{formatShieldReduction(row.shield_reduction) ?? '—'}</td>}
               </tr>
             ))}
           </tbody>

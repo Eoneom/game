@@ -10,6 +10,7 @@ import { BuildingDetailsMetadata } from '#building/details/metadata'
 import { BuildingDetailsSection } from '#building/details/section'
 import { BuildingDetailsUpgrade } from '#building/details/upgrade'
 import { BuildingDetailsWarning } from '#building/details/warning'
+import { isLevelCappedBuilding } from '#building/layer'
 import { useGetCity } from '#city/hooks'
 import { EntityThumb } from '#ui/entity-thumb'
 import { isCommandCenterBuilding, isConsumingBuilding, isProductionBuilding } from '@eoneom/api-client'
@@ -22,6 +23,7 @@ interface Props {
 export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
   const { data: city } = useGetCity(cityId)
   const { name, description, effect } = BuildingTranslations[building.code]
+  const capped = isLevelCappedBuilding(building.code)
   const energyUpgradeWarning =
     isProductionBuilding(building) || isConsumingBuilding(building) || isCommandCenterBuilding(building)
       ? building.metadata.energy_upgrade_warning
@@ -48,8 +50,8 @@ export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
       <Requirement
         cityId={cityId}
         requirements={building.requirement}
-        building_levels_used={city?.building_levels_used}
-        building_levels_capacity={city?.maximum_building_levels}
+        building_levels_used={capped ? city?.building_levels_used : undefined}
+        building_levels_capacity={capped ? city?.maximum_building_levels : undefined}
       />
       <Cost cityId={cityId} {...building.upgrade_cost} />
     </aside>

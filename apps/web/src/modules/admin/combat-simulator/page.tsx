@@ -2,13 +2,17 @@ import React, { useEffect, useMemo, useState } from 'react'
 
 import {
   AdminCombatSimulatorDataResponse,
+  AdminCombatSimulatorResultStackWire,
   AdminCombatSimulatorRoundSummaryWire,
   AdminCombatSimulatorTechnologyLevelsWire,
   CombatStrategy,
+  DefenseCode,
   FactionCode,
   TechnologyCode,
   TroopCode,
 } from '@eoneom/api-client'
+import { DefenseTranslations } from '#defense/translations'
+import { defenseImageSrc } from '#defense/image'
 import { AdminRouteGate } from '#admin/session'
 import { CombatStrategyLabels } from '#movement/translations'
 import { TechnologyTranslations } from '#technology/translations'
@@ -52,8 +56,21 @@ type StackEditorProps = {
   onChange: (stacks: CombatSimulatorStackRow[]) => void
 }
 
+const lossVisual = (loss: AdminCombatSimulatorResultStackWire): { key: string, src: string, name: string } =>
+  'defense_code' in loss
+    ? {
+      key: loss.defense_code,
+      src: defenseImageSrc(loss.defense_code),
+      name: DefenseTranslations[loss.defense_code].name,
+    }
+    : {
+      key: loss.troop_code,
+      src: troopImageSrc(loss.troop_code),
+      name: TroopTranslations[loss.troop_code].name,
+    }
+
 const TroopLossList: React.FC<{
-  losses: { troop_code: TroopCode; count: number }[]
+  losses: AdminCombatSimulatorResultStackWire[]
   compact?: boolean
 }> = ({ losses, compact = false }) => {
   if (losses.length === 0) {
@@ -68,27 +85,30 @@ const TroopLossList: React.FC<{
           : 'm-0 flex list-none flex-col gap-1 p-0'
       }
     >
-      {losses.map(loss => (
-        <li key={loss.troop_code} className="flex items-center gap-1">
-          <img
-            src={troopImageSrc(loss.troop_code)}
-            alt={TroopTranslations[loss.troop_code].name}
-            className="h-6 w-6 shrink-0 rounded-sm border border-rust/50 object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-          <span className="text-[11px] leading-tight">
-            {compact ? (
-              <span className="text-amber-dim">×{loss.count}</span>
-            ) : (
-              <>
-                {TroopTranslations[loss.troop_code].name}
-                <span className="text-amber-dim"> ×{loss.count}</span>
-              </>
-            )}
-          </span>
-        </li>
-      ))}
+      {losses.map(loss => {
+        const visual = lossVisual(loss)
+        return (
+          <li key={visual.key} className="flex items-center gap-1">
+            <img
+              src={visual.src}
+              alt={visual.name}
+              className="h-6 w-6 shrink-0 rounded-sm border border-rust/50 object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+            <span className="text-[11px] leading-tight">
+              {compact ? (
+                <span className="text-amber-dim">×{loss.count}</span>
+              ) : (
+                <>
+                  {visual.name}
+                  <span className="text-amber-dim"> ×{loss.count}</span>
+                </>
+              )}
+            </span>
+          </li>
+        )
+      })}
     </ul>
   )
 }
@@ -224,12 +244,72 @@ type SimulatorTechnologyLevels = Required<AdminCombatSimulatorTechnologyLevelsWi
 const DEFAULT_TECHNOLOGY_LEVELS: SimulatorTechnologyLevels = {
   ballistic_alloys: 0,
   organic_plating: 0,
+  fortification: 0,
 }
 
-const SIMULATOR_TECHNOLOGY_CODES = [
+type SimulatorTechnologyCode = TechnologyCode.BALLISTIC_ALLOYS | TechnologyCode.ORGANIC_PLATING | TechnologyCode.FORTIFICATION
+
+const ATTACKER_TECHNOLOGY_CODES: SimulatorTechnologyCode[] = [
   TechnologyCode.BALLISTIC_ALLOYS,
   TechnologyCode.ORGANIC_PLATING,
-] as const
+]
+
+/** Fortification only scales the defender's city defenses (slice 029). */
+const DEFENDER_TECHNOLOGY_CODES: SimulatorTechnologyCode[] = [
+  ...ATTACKER_TECHNOLOGY_CODES,
+  TechnologyCode.FORTIFICATION,
+]
+
+type DefenseCounts = Record<DefenseCode, number>
+
+const DEFAULT_DEFENSE_COUNTS = Object.fromEntries(
+  Object.values(DefenseCode).map(code => [ code, 0 ])
+) as DefenseCounts
+
+/** Defender city defenses: a count per type, 0 = none. */
+const DefenseStackEditor: React.FC<{
+  counts: DefenseCounts
+  onChange: (counts: DefenseCounts) => void
+  city_plasma: string
+  onCityPlasmaChange: (value: string) => void
+}> = ({ counts, onChange, city_plasma, onCityPlasmaChange }) => (
+  <section className="admin-surface-panel mt-3 flex flex-col gap-2 rounded-sm p-3">
+    <h2 className="m-0 text-sm font-normal text-amber">Défenses du défenseur (ville)</h2>
+    <div className="flex flex-wrap items-end gap-3">
+      {Object.values(DefenseCode).map(code => (
+        <label key={code} className="flex items-center gap-2 text-sm">
+          <img
+            src={defenseImageSrc(code)}
+            alt=""
+            className="h-8 w-8 shrink-0 rounded-sm border border-rust/50 object-cover"
+          />
+          <span className="flex flex-col gap-1">
+            <span className="field-label text-label">{DefenseTranslations[code].name}</span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              className="field-input w-24 py-1 text-sm"
+              value={counts[code]}
+              onChange={e => onChange({ ...counts, [code]: parseTechnologyLevel(e.target.value) })}
+            />
+          </span>
+        </label>
+      ))}
+      <label className="flex flex-col gap-1 text-sm">
+        <span className="field-label text-label">Plasma de la ville (vide = illimité)</span>
+        <input
+          type="number"
+          min={0}
+          step={1}
+          className="field-input w-32 py-1 text-sm"
+          value={city_plasma}
+          onChange={e => onCityPlasmaChange(e.target.value)}
+        />
+      </label>
+    </div>
+  </section>
+)
 
 const parseTechnologyLevel = (raw: string): number => {
   const value = Number.parseInt(raw, 10)
@@ -238,11 +318,12 @@ const parseTechnologyLevel = (raw: string): number => {
 
 const TechnologyLevelInputs: React.FC<{
   side: string
+  codes: SimulatorTechnologyCode[]
   levels: SimulatorTechnologyLevels
   onChange: (levels: SimulatorTechnologyLevels) => void
-}> = ({ side, levels, onChange }) => (
+}> = ({ side, codes, levels, onChange }) => (
   <>
-    {SIMULATOR_TECHNOLOGY_CODES.map(code => (
+    {codes.map(code => (
       <label key={code} className="flex flex-col gap-1 text-sm">
         <span className="field-label text-label">
           {TechnologyTranslations[code].name} ({side})
@@ -269,6 +350,11 @@ const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> =
     <p className="m-0 leading-tight">
       Déf. ATK {row.defender_attack_pool} / VIE {row.defender_life_pool}
     </p>
+    {(row.defender_plasma_spent ?? 0) > 0 || (row.shield_reduction ?? 0) > 0 ? (
+      <p className="m-0 leading-tight">
+        Plasma {row.defender_plasma_spent ?? 0} · Bouclier -{Math.round((row.shield_reduction ?? 0) * 100)} %
+      </p>
+    ) : null}
     <div>
       <p className="m-0 mb-0.5 text-[10px] uppercase tracking-wide text-amber-dim">Pertes att.</p>
       <TroopLossList losses={row.attacker_losses} compact />
@@ -305,6 +391,9 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
     useState<SimulatorTechnologyLevels>(DEFAULT_TECHNOLOGY_LEVELS)
   const [ defender_technology_levels, setDefenderTechnologyLevels ] =
     useState<SimulatorTechnologyLevels>(DEFAULT_TECHNOLOGY_LEVELS)
+  const [ defender_defense_counts, setDefenderDefenseCounts ] =
+    useState<DefenseCounts>(DEFAULT_DEFENSE_COUNTS)
+  const [ defender_city_plasma, setDefenderCityPlasma ] = useState('')
   const [ show_json, setShowJson ] = useState(false)
 
   const can_submit = useMemo(
@@ -317,14 +406,22 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
       return
     }
 
+    const city_plasma = Number.parseInt(defender_city_plasma, 10)
     const timer = window.setTimeout(() => {
       runSimulation({
         attacker_stacks,
         defender_stacks,
+        defender_defense_stacks: Object.values(DefenseCode)
+          .filter(code => defender_defense_counts[code] > 0)
+          .map(code => ({ defense_code: code, count: defender_defense_counts[code] })),
         attacker_strategy,
         defender_strategy,
-        attacker_technology_levels,
+        attacker_technology_levels: {
+          ballistic_alloys: attacker_technology_levels.ballistic_alloys,
+          organic_plating: attacker_technology_levels.organic_plating,
+        },
         defender_technology_levels,
+        ...(Number.isNaN(city_plasma) || city_plasma < 0 ? {} : { defender_city_plasma: city_plasma }),
       })
     }, SIMULATION_DEBOUNCE_MS)
 
@@ -338,6 +435,8 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
     defender_strategy,
     attacker_technology_levels,
     defender_technology_levels,
+    defender_defense_counts,
+    defender_city_plasma,
     runSimulation,
   ])
 
@@ -411,15 +510,24 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
         <div className="admin-surface-toolbar mt-3 flex flex-wrap items-end gap-4">
           <TechnologyLevelInputs
             side="att."
+            codes={ATTACKER_TECHNOLOGY_CODES}
             levels={attacker_technology_levels}
             onChange={setAttackerTechnologyLevels}
           />
           <TechnologyLevelInputs
             side="déf."
+            codes={DEFENDER_TECHNOLOGY_CODES}
             levels={defender_technology_levels}
             onChange={setDefenderTechnologyLevels}
           />
         </div>
+
+        <DefenseStackEditor
+          counts={defender_defense_counts}
+          onChange={setDefenderDefenseCounts}
+          city_plasma={defender_city_plasma}
+          onCityPlasmaChange={setDefenderCityPlasma}
+        />
       </div>
 
       <div

@@ -68,6 +68,11 @@ export const TechnologyTranslations: Record<TechnologyCode, TechnologyTranslatio
     name: 'Confinement plasma',
     description: 'De meilleurs champs de confinement limitent les pertes de l\'inducteur central',
     effect: 'Augmente la production de plasma de 5% par niveau'
+  },
+  [TechnologyCode.FORTIFICATION]: {
+    name: 'Fortification',
+    description: 'Béton armé de rebuts, blindages superposés et circuits de tir redondants rendent les défenses de ville plus coriaces',
+    effect: 'Augmente l\'attaque et la vie des défenses de 3% par niveau. Débloque la tourelle, le générateur de bouclier et la batterie plasma'
   }
 }
 

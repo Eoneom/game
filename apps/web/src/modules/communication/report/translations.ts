@@ -1,4 +1,4 @@
-import { ReportType } from '@eoneom/api-client'
+import { DefenseCode, ReportBattleMetadata, ReportType } from '@eoneom/api-client'
 
 export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.EXPLORATION]: 'Exploration',
@@ -33,6 +33,7 @@ export const battleResultLabel = (args: Parameters<typeof battleResultKind>[0]):
 type CombatModifiers = {
   attack: number
   life: number
+  fortification?: number
 }
 
 const formatModifierPercent = (multiplier: number): string => {
@@ -40,12 +41,25 @@ const formatModifierPercent = (multiplier: number): string => {
   return `${percent > 0 ? '+' : ''}${percent} %`
 }
 
+type LossLine = ReportBattleMetadata['casualties_defender'][number]
+
+/** City defense loss lines (slice 029): lines without `kind` are troops. */
+export const defenseLosses = (lines: LossLine[]): { code: DefenseCode, count: number }[] =>
+  lines.flatMap(line => (line.kind === 'defense' ? [ { code: line.code, count: line.count } ] : []))
+
+/** Shield share of the attacker's attack pool, e.g. "-12 %"; null when no shield absorbed anything. */
+export const formatShieldReduction = (reduction?: number): string | null =>
+  reduction && reduction > 0 ? `-${Math.round(reduction * 100)} %` : null
+
 /** Arsenal technology bonus for one side, e.g. "+9 % attaque, +6 % vie"; null when neutral. */
 export const formatCombatModifiers = (modifiers?: CombatModifiers): string | null => {
   if (!modifiers) return null
   const parts = [
     modifiers.attack !== 1 ? `${formatModifierPercent(modifiers.attack)} attaque` : null,
     modifiers.life !== 1 ? `${formatModifierPercent(modifiers.life)} vie` : null,
+    modifiers.fortification !== undefined && modifiers.fortification !== 1
+      ? `${formatModifierPercent(modifiers.fortification)} fortification`
+      : null,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(', ') : null
 }

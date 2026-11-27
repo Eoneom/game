@@ -8,6 +8,8 @@ import { useCountdownProgress } from '#hook/countdown-progress'
 import { BuildingTranslations } from '#building/translations'
 import { TechnologyTranslations } from '#technology/translations'
 import { TroopTranslations } from '#troop/translations'
+import { DefenseTranslations } from '#defense/translations'
+import { useCityDefenses } from '#defense/hooks'
 import { formatDurationMmSs } from '#helpers/transform'
 
 const Chip: React.FC<{
@@ -148,6 +150,38 @@ const RecruitChip: React.FC<{ cityId: string }> = ({ cityId }) => {
   )
 }
 
+/** Défense tab entry (slice 029): fortification batch of the city, if any. */
+const DefenseChip: React.FC<{ cityId: string }> = ({ cityId }) => {
+  const { data } = useCityDefenses(cityId)
+  const ongoing = data?.ongoing_build ?? null
+  const routeActive = useRouteActive(`/city/${cityId}/base/defense`)
+  const { remainingSeconds, elapsedProgress } = useCountdownProgress({
+    endAt: ongoing?.finish_at,
+    startAt: ongoing?.started_at,
+  })
+  if (!ongoing) {
+    return (
+      <Chip
+        to="/city/$cityId/base/defense"
+        params={{ cityId }}
+        label="Défense"
+        detail="Libre"
+        active={routeActive}
+      />
+    )
+  }
+  return (
+    <Chip
+      to="/city/$cityId/base/defense"
+      params={{ cityId }}
+      label="Défense"
+      detail={`${ongoing.remaining_count} ${DefenseTranslations[ongoing.defense_code].name} · ${formatDurationMmSs(remainingSeconds)}`}
+      active={routeActive || Boolean(ongoing)}
+      urgent={elapsedProgress > 0.9}
+    />
+  )
+}
+
 const MovementChip: React.FC = () => {
   const { cityId, outpostId } = useLocation()
   const { data } = useLocationActivity()
@@ -196,6 +230,7 @@ export const ActivityStrip: React.FC = () => {
           <BuildingChip cityId={cityId} />
           <ResearchChip cityId={cityId} />
           <RecruitChip cityId={cityId} />
+          <DefenseChip cityId={cityId} />
         </>
       ) : null}
       <MovementChip />

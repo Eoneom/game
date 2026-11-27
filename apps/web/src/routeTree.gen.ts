@@ -36,6 +36,7 @@ import { Route as CityCityIdWorldMapRouteImport } from './routes/city/$cityId/wo
 import { Route as CityCityIdMovementMovementIdRouteImport } from './routes/city/$cityId/movement/$movementId'
 import { Route as CityCityIdBaseTroopRouteImport } from './routes/city/$cityId/base/troop'
 import { Route as CityCityIdBaseTechnologyRouteImport } from './routes/city/$cityId/base/technology'
+import { Route as CityCityIdBaseDefenseRouteImport } from './routes/city/$cityId/base/defense'
 import { Route as CityCityIdBaseBuildingRouteImport } from './routes/city/$cityId/base/building'
 import { Route as OutpostOutpostIdWorldMovementRouteRouteImport } from './routes/outpost/$outpostId/world/movement/route'
 import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/$cityId/world/movement/route'
@@ -181,6 +182,11 @@ const CityCityIdBaseTechnologyRoute =
     path: '/base/technology',
     getParentRoute: () => CityCityIdRouteRoute,
   } as any)
+const CityCityIdBaseDefenseRoute = CityCityIdBaseDefenseRouteImport.update({
+  id: '/base/defense',
+  path: '/base/defense',
+  getParentRoute: () => CityCityIdRouteRoute,
+} as any)
 const CityCityIdBaseBuildingRoute = CityCityIdBaseBuildingRouteImport.update({
   id: '/base/building',
   path: '/base/building',
@@ -233,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
   '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
   '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/defense': typeof CityCityIdBaseDefenseRoute
   '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
   '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
   '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
   '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/defense': typeof CityCityIdBaseDefenseRoute
   '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
   '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
   '/outpost/$outpostId/world/movement': typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
   '/city/$cityId/base/building': typeof CityCityIdBaseBuildingRoute
+  '/city/$cityId/base/defense': typeof CityCityIdBaseDefenseRoute
   '/city/$cityId/base/technology': typeof CityCityIdBaseTechnologyRoute
   '/city/$cityId/base/troop': typeof CityCityIdBaseTroopRoute
   '/city/$cityId/movement/$movementId': typeof CityCityIdMovementMovementIdRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/world/movement'
     | '/outpost/$outpostId/world/movement'
     | '/city/$cityId/base/building'
+    | '/city/$cityId/base/defense'
     | '/city/$cityId/base/technology'
     | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/world/movement'
     | '/outpost/$outpostId/world/movement'
     | '/city/$cityId/base/building'
+    | '/city/$cityId/base/defense'
     | '/city/$cityId/base/technology'
     | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/world/movement'
     | '/outpost/$outpostId/world/movement'
     | '/city/$cityId/base/building'
+    | '/city/$cityId/base/defense'
     | '/city/$cityId/base/technology'
     | '/city/$cityId/base/troop'
     | '/city/$cityId/movement/$movementId'
@@ -608,6 +620,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CityCityIdBaseTechnologyRouteImport
       parentRoute: typeof CityCityIdRouteRoute
     }
+    '/city/$cityId/base/defense': {
+      id: '/city/$cityId/base/defense'
+      path: '/base/defense'
+      fullPath: '/city/$cityId/base/defense'
+      preLoaderRoute: typeof CityCityIdBaseDefenseRouteImport
+      parentRoute: typeof CityCityIdRouteRoute
+    }
     '/city/$cityId/base/building': {
       id: '/city/$cityId/base/building'
       path: '/base/building'
@@ -714,6 +733,7 @@ interface CityCityIdRouteRouteChildren {
   CityCityIdIndexRoute: typeof CityCityIdIndexRoute
   CityCityIdWorldMovementRouteRoute: typeof CityCityIdWorldMovementRouteRouteWithChildren
   CityCityIdBaseBuildingRoute: typeof CityCityIdBaseBuildingRoute
+  CityCityIdBaseDefenseRoute: typeof CityCityIdBaseDefenseRoute
   CityCityIdBaseTechnologyRoute: typeof CityCityIdBaseTechnologyRoute
   CityCityIdBaseTroopRoute: typeof CityCityIdBaseTroopRoute
   CityCityIdWorldMapRoute: typeof CityCityIdWorldMapRoute
@@ -731,6 +751,7 @@ const CityCityIdRouteRouteChildren: CityCityIdRouteRouteChildren = {
   CityCityIdWorldMovementRouteRoute:
     CityCityIdWorldMovementRouteRouteWithChildren,
   CityCityIdBaseBuildingRoute: CityCityIdBaseBuildingRoute,
+  CityCityIdBaseDefenseRoute: CityCityIdBaseDefenseRoute,
   CityCityIdBaseTechnologyRoute: CityCityIdBaseTechnologyRoute,
   CityCityIdBaseTroopRoute: CityCityIdBaseTroopRoute,
   CityCityIdWorldMapRoute: CityCityIdWorldMapRoute,

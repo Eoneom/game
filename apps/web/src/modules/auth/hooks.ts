@@ -12,6 +12,7 @@ import { registerCityWsListeners } from '#city/ws-listener'
 import { registerBuildingWsListeners } from '#building/ws-listener'
 import { registerTechnologyWsListeners } from '#technology/ws-listener'
 import { registerTroopWsListeners } from '#troop/ws-listener'
+import { registerDefenseWsListeners } from '#defense/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
 import { registerCommunicationWsListeners } from '#communication/ws-listener'
 import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
@@ -62,6 +63,7 @@ const startSession = async ({
   registerBuildingWsListeners()
   registerTechnologyWsListeners()
   registerTroopWsListeners()
+  registerDefenseWsListeners()
   registerOutpostWsListeners()
   registerCommunicationWsListeners()
   wsClient.connect(token)
@@ -152,6 +154,7 @@ export const useInitStoredToken = () => {
       registerBuildingWsListeners()
       registerTechnologyWsListeners()
       registerTroopWsListeners()
+      registerDefenseWsListeners()
       registerOutpostWsListeners()
       registerCommunicationWsListeners()
       wsClient.connect(token)

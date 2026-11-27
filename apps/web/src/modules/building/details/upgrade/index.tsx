@@ -7,6 +7,7 @@ import { hasEnoughResources } from '#city/helper'
 import { useRequirement } from '#requirement/hook'
 import { useGetCity } from '#city/hooks'
 import { useListBuildings, useUpgradeBuilding } from '#building/hooks'
+import { isLevelCappedBuilding } from '#building/layer'
 
 interface Props {
   cityId: string
@@ -27,7 +28,7 @@ export const BuildingDetailsUpgrade: React.FC<Props> = ({ cityId, building }) =>
 
   const canStart = !inProgress &&
     city != null &&
-    city.building_levels_used < city.maximum_building_levels &&
+    (!isLevelCappedBuilding(building.code) || city.building_levels_used < city.maximum_building_levels) &&
     hasEnoughResources({ city, cost: building.upgrade_cost }) &&
     isRequirementMet
 
