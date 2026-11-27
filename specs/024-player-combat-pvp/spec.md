@@ -351,6 +351,8 @@ All defender stacks on cell with `movement_id` null; no building HP in v1.
 
 City buildings are **not** deleted on capture.
 
+**Military value** ([`034`](../034-rankings/spec.md)): `applyBattleOutcomes` credits `player.military_value` in the same transaction. The attacker gains the resource value of every defender loss (cumulative loss lines, troops and defenses, consumed minefields included) plus, on an attacker win, the defender stacks still standing that are destroyed with the capture. The defender side gains the value of the attacker's losses, split between the host and reinforcement owners by raw attack at battle start (`attack_capacity × count` for troops, `attack × count` for the host's defenses, survivors + losses, before modifiers); each reinforcement owner gets the floored share and the host the remainder. System players are never credited, and counters never decrease.
+
 ## Outcomes vs army composition
 
 | Outcome | Winning attacker requirement |

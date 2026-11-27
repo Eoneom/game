@@ -12,7 +12,7 @@ The server process is composed in `apps/server/src/index.ts`: load env, connect 
 2. `migrateToLatest()` — `adapter/database/migrate`
 3. `jobQueue.start()` — creates queues (see below)
 4. `registerJobWorkers(jobQueue)` — `adapter/job-queue/register-workers.ts`
-5. Schedule: city gather, outpost gather, report cleanup (immediate `execute_at: now()`)
+5. Schedule: city gather, outpost gather, report cleanup, chat cleanup, ranking compute (immediate `execute_at: now()`; each `ensure*Scheduled` keeps an already pending job)
 6. `generateWorld()` — ignore `world:already-exists`
 7. `ensureSystemPlayer()` — log errors
 8. `ensureSystemPlayerTickScheduled({ tick_index: 0 })`
@@ -43,6 +43,8 @@ The server process is composed in `apps/server/src/index.ts`: load env, connect 
 | `city.resources.gather` | stately | `progressGatherAllCities` |
 | `outpost.resources.gather` | stately | `progressGatherAllPermanentOutposts` |
 | `communication.report.cleanup-old-read` | stately | `cleanupOldReadReports` |
+| `communication.chat.cleanup` | stately | `cleanupCommunicationChat` ([`032`](../032-messaging/spec.md)) |
+| `ranking.compute` | stately | `computeRankings` ([`034`](../034-rankings/spec.md)): self-rescheduling every 60 minutes (`RANKING_COMPUTE_INTERVAL_MS`), `singletonKey` `global` |
 | `system.player.tick` | stately | `tickSystemPlayers` |
 
 Port interface: `apps/server/src/app/port/job-queue.ts`; adapter: `adapter/job-queue/job-queue.ts`.
