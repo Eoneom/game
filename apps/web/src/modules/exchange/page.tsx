@@ -1,62 +1,47 @@
-import React from 'react'
-import classNames from 'classnames'
-import { ExchangeResource } from '@eoneom/api-client'
+import React, { useState } from 'react'
+import { ExchangeResource, ExchangeSide } from '@eoneom/api-client'
 
-import { LayoutPage } from '#ui/layout/page'
-import { ExchangeBook } from '#exchange/book'
-import { ExchangeTrades } from '#exchange/trades'
-import { ExchangeOrderForm } from '#exchange/order-form'
+import { QUICK_TRADE_ID, QuickTrade } from '#exchange/quick-trade'
 import { ExchangeMyOrders } from '#exchange/my-orders'
-import { ExchangeResourceLabels, formatLotSize } from '#exchange/translations'
+import { ExchangeMarket } from '#exchange/market'
 
 export interface ExchangePageSearch {
   resource?: ExchangeResource
+  side?: ExchangeSide
 }
 
-const tabClass = (active: boolean) => classNames(
-  'rounded-sm border px-3 py-1 text-caption uppercase tracking-wider transition',
-  active
-    ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
-    : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
-)
-
-/** Bourse de faction (slice 035): one book per pair against water, players of the faction only. */
+/**
+ * Bourse de faction (slices 035, 046): « Échange rapide » first, « Mes ordres » second, the « Marché » last and
+ * folded. Resource and side live in the URL; quantity and price are local state.
+ */
 export const ExchangePage: React.FC<{
   search: ExchangePageSearch
   onNavigate: (search: ExchangePageSearch) => void
 }> = ({ search, onNavigate }) => {
   const resource = search.resource ?? ExchangeResource.PLASTIC
+  const side = search.side ?? ExchangeSide.SELL
+  const [ priceText, setPriceText ] = useState('')
 
   return (
-    <LayoutPage details={<ExchangeOrderForm resource={resource} />}>
-      <div className="space-y-4">
-        <header className="space-y-2">
-          <h2 className="m-0 text-heading text-amber">Bourse de faction</h2>
-          <p className="m-0 text-meta text-label">
-            Ordres à cours limité contre de l&apos;eau pure, entre joueurs de votre faction. Priorité au meilleur prix
-            puis au plus ancien ; exécution au prix de l&apos;ordre en attente. Pas de frais.
-          </p>
-          <nav aria-label="Marché" className="flex flex-wrap gap-1">
-            {Object.values(ExchangeResource).map(value => (
-              <button
-                key={value}
-                type="button"
-                className={tabClass(value === resource)}
-                aria-pressed={value === resource}
-                onClick={() => onNavigate({ resource: value })}
-              >
-                {ExchangeResourceLabels[value]} / eau pure
-              </button>
-            ))}
-          </nav>
-          <p className="m-0 text-meta text-label">{formatLotSize(resource)}</p>
-        </header>
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <ExchangeBook resource={resource} />
-          <ExchangeTrades resource={resource} />
-        </div>
-        <ExchangeMyOrders />
-      </div>
-    </LayoutPage>
+    <div className="space-y-4">
+      <h1 className="m-0 text-page text-amber">Bourse de faction</h1>
+      <QuickTrade
+        resource={resource}
+        side={side}
+        onResourceChange={next => onNavigate({ resource: next, side })}
+        onSideChange={next => onNavigate({ resource, side: next })}
+        priceText={priceText}
+        onPriceTextChange={setPriceText}
+      />
+      <ExchangeMyOrders resource={resource} />
+      <ExchangeMarket
+        resource={resource}
+        onPick={(nextSide, price) => {
+          onNavigate({ resource, side: nextSide })
+          setPriceText(String(price))
+          document.getElementById(QUICK_TRADE_ID)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+        }}
+      />
+    </div>
   )
 }

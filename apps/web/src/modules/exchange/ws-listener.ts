@@ -21,11 +21,14 @@ export function registerExchangeWsListeners(): void {
   wsClient.on<ExchangeBookUpdatedEventPayload>(AppEvent.ExchangeBookUpdated, ({ resource }) => {
     queryClient.invalidateQueries({ queryKey: exchangeKeys.book(resource) })
     queryClient.invalidateQueries({ queryKey: exchangeKeys.trades(resource) })
+    // Best bid / ask of the quick trade (slice 046).
+    queryClient.invalidateQueries({ queryKey: exchangeKeys.summary })
   })
 
   wsClient.on<ExchangeFilledEventPayload>(AppEvent.ExchangeFilled, ({ lots, price }) => {
     toast.info(`Bourse : ${lots} lot${lots > 1 ? 's' : ''} échangé${lots > 1 ? 's' : ''} à ${price} eau pure`)
     queryClient.invalidateQueries({ queryKey: exchangeKeys.mine })
+    queryClient.invalidateQueries({ queryKey: exchangeKeys.summary })
     queryClient.invalidateQueries({ queryKey: ['movements'] })
     queryClient.invalidateQueries({ queryKey: ['troops'] })
     queryClient.invalidateQueries({ queryKey: ['city'] })
