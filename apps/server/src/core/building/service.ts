@@ -36,6 +36,7 @@ export class BuildingService {
     level,
     coefficients,
     technology_multiplier = 1,
+    faction_multiplier = 1,
   }: {
     code: ProductionBuildingCode
     level: number
@@ -45,6 +46,8 @@ export class BuildingService {
      * Water (slice 035) has none: callers pass 1.
      */
     technology_multiplier?: number
+    /** Faction production modifier (slice 036): `rate × faction × (1 + tech)`. */
+    faction_multiplier?: number
   }): number {
     if (level === 0) {
       return 0
@@ -65,7 +68,7 @@ export class BuildingService {
     const coefficient_value = base_value * coefficient
 
     const per_game_second = Math.round(coefficient_value * 100) / 100
-    return Math.round(per_game_second * gameTimeScale * technology_multiplier * 100) / 100
+    return Math.round(per_game_second * gameTimeScale * faction_multiplier * technology_multiplier * 100) / 100
   }
 
   static getEnergyConsumption({

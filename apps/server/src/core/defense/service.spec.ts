@@ -3,6 +3,7 @@ import { DEFENSE_BUILD_QUEUE_LIMIT } from '#core/defense/constant/build-queue'
 import { DefenseCode } from '#core/defense/constant/code'
 import { DefenseError } from '#core/defense/error'
 import { DefenseService } from '#core/defense/service'
+import { FactionCode } from '#core/faction/constant/code'
 
 describe('DefenseService', () => {
   it('gives 20 defense points per Enceinte level', () => {
@@ -72,13 +73,77 @@ describe('DefenseService', () => {
     assert.ok(defenses.every(defense => defense.count === 0 && defense.city_id === 'c' && defense.player_id === 'p'))
   })
 
-  it('arms only turrets and plasma batteries', () => {
+  it('arms only turrets, plasma batteries and spore clouds', () => {
     assert.deepStrictEqual(
       Object.values(DefenseCode).filter(code => DefenseService.isArmed(code)).sort(),
       [
         DefenseCode.PLASMA_BATTERY,
+        DefenseCode.SPORE_CLOUD,
         DefenseCode.TURRET 
       ]
     )
+  })
+
+  describe('faction defenses (slice 036)', () => {
+    it('keeps the five common defenses for every faction and adds the Symbiose ones to the Symbiose only', () => {
+      const common = [
+        DefenseCode.RAMPART,
+        DefenseCode.TURRET,
+        DefenseCode.MINEFIELD,
+        DefenseCode.PLASMA_BATTERY,
+        DefenseCode.SHIELD_GENERATOR,
+      ]
+      for (const faction_code of Object.values(FactionCode).filter(code => code !== FactionCode.THE_SYMBIOSIS)) {
+        assert.deepStrictEqual(DefenseService.codesForFaction(faction_code).sort(), [ ...common ].sort())
+      }
+      assert.deepStrictEqual(DefenseService.codesForFaction(FactionCode.THE_SYMBIOSIS).sort(), [
+        ...common,
+        DefenseCode.MYCELIUM_WALL,
+        DefenseCode.SPORE_CLOUD,
+      ].sort())
+    })
+
+    it('rejects a faction defense outside its faction', () => {
+      assert.throws(() => DefenseService.assertInRoster({
+        faction_code: FactionCode.THE_CONFEDERATION,
+        defense_code: DefenseCode.SPORE_CLOUD
+      }), new RegExp(DefenseError.NOT_IN_FACTION_ROSTER))
+      assert.doesNotThrow(() => DefenseService.assertInRoster({
+        faction_code: FactionCode.THE_SYMBIOSIS,
+        defense_code: DefenseCode.SPORE_CLOUD
+      }))
+      assert.doesNotThrow(() => DefenseService.assertInRoster({
+        faction_code: FactionCode.THE_CONFEDERATION,
+        defense_code: DefenseCode.RAMPART
+      }))
+    })
+
+    it('regrows floor(30 %) of the destroyed mycelium walls only when the defender holds', () => {
+      assert.strictEqual(DefenseService.getRegrowth({
+        code: DefenseCode.MYCELIUM_WALL,
+        destroyed: 10,
+        defender_held: true
+      }), 3)
+      assert.strictEqual(DefenseService.getRegrowth({
+        code: DefenseCode.MYCELIUM_WALL,
+        destroyed: 7,
+        defender_held: true
+      }), 2)
+      assert.strictEqual(DefenseService.getRegrowth({
+        code: DefenseCode.MYCELIUM_WALL,
+        destroyed: 3,
+        defender_held: true
+      }), 0)
+      assert.strictEqual(DefenseService.getRegrowth({
+        code: DefenseCode.MYCELIUM_WALL,
+        destroyed: 10,
+        defender_held: false
+      }), 0)
+      assert.strictEqual(DefenseService.getRegrowth({
+        code: DefenseCode.RAMPART,
+        destroyed: 10,
+        defender_held: true
+      }), 0)
+    })
   })
 })

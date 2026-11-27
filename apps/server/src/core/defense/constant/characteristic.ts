@@ -42,6 +42,19 @@ export const defense_characteristics: Record<DefenseCode, DefenseCharacteristic>
     life: 40,
     armed: false,
   },
+  // La Symbiose (slice 036).
+  [DefenseCode.MYCELIUM_WALL]: {
+    points: 1,
+    attack: 0,
+    life: 50,
+    armed: false,
+  },
+  [DefenseCode.SPORE_CLOUD]: {
+    points: 2,
+    attack: 12,
+    life: 10,
+    armed: true,
+  },
 }
 
 /** Plasma each firing `plasma_battery` unit spends per round from the city stock. */
@@ -51,6 +64,17 @@ export const PLASMA_BATTERY_PLASMA_PER_ROUND = 5
 export const SHIELD_REDUCTION_PER_UNIT = 0.02
 /** ...up to this cap. */
 export const SHIELD_REDUCTION_CAP = 0.3
+
+/** Each surviving `spore_cloud` lowers the attacker's attack pool by this share (slice 036)... */
+export const SPORE_REDUCTION_PER_UNIT = 0.01
+/** ...up to this cap. */
+export const SPORE_REDUCTION_CAP = 0.15
+
+/** Shield generators and spore clouds add up, capped at this total share of the attacker's attack pool. */
+export const ATTACK_REDUCTION_CAP = 0.4
+
+/** Share of the `mycelium_wall` units destroyed in a battle that grow back when the defender wins or draws. */
+export const MYCELIUM_WALL_REGROWTH_RATIO = 0.3
 
 /** Share of defense life counted in the defender life pool when the attacker uses `siege_assault`. */
 export const SIEGE_DEFENSE_LIFE_MULTIPLIER = 0.75

@@ -41,6 +41,11 @@ export interface CityGetDataResponse {
     plasma: number
     water: number
   }
+  /** Faction production modifier (slice 036), stacked as `rate × faction × (1 + tech)`; 1 = neutral. */
+  faction_production_multiplier: {
+    plastic: number
+    mushroom: number
+  }
   warehouses_capacity: {
     plastic: number
     mushroom: number

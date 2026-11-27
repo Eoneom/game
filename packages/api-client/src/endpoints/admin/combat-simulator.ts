@@ -29,6 +29,8 @@ export type AdminCombatSimulatorRoundSummaryWire = {
   defender_losses: AdminCombatSimulatorResultStackWire[]
   defender_plasma_spent?: number
   shield_reduction?: number
+  /** Spore clouds (slice 036), 0–0.15; never above 0.40 with `shield_reduction`. */
+  spore_reduction?: number
 }
 
 /** Arsenal levels applied to one side's `combat`-role stacks (slice 027); omitted = 0. */

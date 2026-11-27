@@ -9,6 +9,7 @@ import { BuildingEntity } from '#core/building/entity'
 import { BuildingService } from '#core/building/service'
 import { CityEntity } from '#core/city/entity'
 import { CityService } from '#core/city/service'
+import { FactionCode } from '#core/faction/constant/code'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostService } from '#core/outpost/service'
@@ -40,6 +41,9 @@ describe('AppService', () => {
       code,
       level: levels[code] ?? 0
     }))))
+
+  /** `repository.player.get` stub: the faction drives the production modifier (slice 036). */
+  const playerRepository = (faction_code: FactionCode = FactionCode.THE_CONFEDERATION) => ({ get: vi.fn().mockResolvedValue({ faction_code }) })
 
   beforeEach(() => {
     setRepositoryMock({} as Repository)
@@ -97,6 +101,7 @@ describe('AppService', () => {
         },
         city: { get: vi.fn().mockResolvedValue(city) },
         cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        player: playerRepository(),
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -182,6 +187,7 @@ describe('AppService', () => {
         },
         city: { get: vi.fn().mockResolvedValue(city) },
         cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        player: playerRepository(),
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -237,6 +243,7 @@ describe('AppService', () => {
         },
         city: { get: vi.fn().mockResolvedValue(city) },
         cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        player: playerRepository(),
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -288,6 +295,90 @@ describe('AppService', () => {
       }))
     })
 
+    it('applies the Symbiose faction modifier on top of Économie technologies (slice 036)', async () => {
+      const player_id = id()
+      setRepositoryMock({
+        building: {
+          getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
+            if (code === BuildingCode.MUSHROOM_FARM) {
+              return Promise.resolve(4)
+            }
+            if (code === BuildingCode.RECYCLING_PLANT) {
+              return Promise.resolve(4)
+            }
+            if (code === BuildingCode.CENTRAL_INDUCTOR) {
+              return Promise.resolve(2)
+            }
+            if (code === BuildingCode.SOLAR_PANEL) {
+              return Promise.resolve(20)
+            }
+            return Promise.resolve(0)
+          })
+        },
+        city: { get: vi.fn().mockResolvedValue(city) },
+        cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        player: playerRepository(FactionCode.THE_SYMBIOSIS),
+        technology: {
+          get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+            id: id(),
+            player_id,
+            code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+            level: 0
+          })),
+          list: technologyList({
+            [TechnologyCode.ADVANCED_RECYCLING]: 2,
+            [TechnologyCode.AGRONOMY]: 4
+          })
+        }
+      } as unknown as Repository)
+
+      const breakdown = await AppService.getCityProductionBreakdown({
+        city_id,
+        player_id
+      })
+
+      expect(breakdown.faction_production_multiplier).toEqual({
+        plastic: 0.9,
+        mushroom: 1.1,
+        plasma: 1,
+        water: 1
+      })
+      // rate × faction × (1 + tech)
+      expect(breakdown.earnings_per_second.mushroom).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.MUSHROOM_FARM,
+        level: 4,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.2,
+        faction_multiplier: 1.1
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.RECYCLING_PLANT,
+        level: 4,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.1,
+        faction_multiplier: 0.9
+      }))
+      const confederation_mushroom = BuildingService.getEarningsBySecond({
+        code: BuildingCode.MUSHROOM_FARM,
+        level: 4,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.2
+      })
+      const confederation_plastic = BuildingService.getEarningsBySecond({
+        code: BuildingCode.RECYCLING_PLANT,
+        level: 4,
+        coefficients: resource_coefficient,
+        technology_multiplier: 1.1
+      })
+      expect(breakdown.earnings_per_second.mushroom).toBeGreaterThan(confederation_mushroom)
+      expect(breakdown.earnings_per_second.plastic).toBeLessThan(confederation_plastic)
+      expect(breakdown.earnings_per_second.plasma).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 2,
+        coefficients: resource_coefficient
+      }))
+    })
+
     it('produces water from the water purifier, unaffected by Économie technologies (slice 035)', async () => {
       const player_id = id()
       const repository = {
@@ -304,6 +395,7 @@ describe('AppService', () => {
         },
         city: { get: vi.fn().mockResolvedValue(city) },
         cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        player: playerRepository(),
         technology: {
           get: vi.fn().mockResolvedValue(TechnologyEntity.create({
             id: id(),
@@ -379,6 +471,7 @@ describe('AppService', () => {
       const repository = {
         outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
         cell: { getById: vi.fn().mockResolvedValue(cell) },
+        player: playerRepository(),
         technology: { list: technologyList() },
         troop: {
           listInCell: vi.fn().mockResolvedValue([
@@ -474,6 +567,7 @@ describe('AppService', () => {
       const repository = {
         outpost: { getById: vi.fn().mockResolvedValue(permanentOutpost) },
         cell: { getById: vi.fn().mockResolvedValue(cell) },
+        player: playerRepository(),
         technology: { list: technologyList() },
         troop: {
           listInCell: vi.fn().mockResolvedValue([
@@ -536,6 +630,7 @@ describe('AppService', () => {
       setRepositoryMock({
         outpost: { getById: vi.fn().mockResolvedValue(outpost) },
         cell: { getById: vi.fn().mockResolvedValue(cell) },
+        player: playerRepository(),
         technology: { list: technology_list },
         troop: {
           listInCell: vi.fn().mockResolvedValue([
@@ -572,6 +667,63 @@ describe('AppService', () => {
         code: TroopCode.RECYCLER,
         count: 30,
         coefficients: cell.resource_coefficient
+      }))
+    })
+
+    it('stacks the Symbiose faction modifier with technologies on troop earnings (slice 036)', async () => {
+      setRepositoryMock({
+        outpost: { getById: vi.fn().mockResolvedValue(outpost) },
+        cell: { getById: vi.fn().mockResolvedValue(cell) },
+        player: playerRepository(FactionCode.THE_SYMBIOSIS),
+        technology: {
+          list: technologyList({
+            [TechnologyCode.ADVANCED_RECYCLING]: 3,
+            [TechnologyCode.AGRONOMY]: 1
+          })
+        },
+        troop: {
+          listInCell: vi.fn().mockResolvedValue([
+            {
+              code: TroopCode.SYMBIONT_GROWER,
+              count: 40
+            },
+            {
+              code: TroopCode.DECOMPOSER,
+              count: 30
+            }
+          ])
+        }
+      } as unknown as Repository)
+
+      const breakdown = await AppService.getOutpostProductionBreakdown({ outpost_id: outpost.id })
+
+      expect(breakdown.faction_production_multiplier.mushroom).toBe(1.1)
+      expect(breakdown.faction_production_multiplier.plastic).toBe(0.9)
+      expect(breakdown.earnings_per_second.mushroom).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.SYMBIONT_GROWER,
+        count: 40,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.05,
+        faction_multiplier: 1.1
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBe(TroopService.getEarningsBySecond({
+        code: TroopCode.DECOMPOSER,
+        count: 30,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.15,
+        faction_multiplier: 0.9
+      }))
+      expect(breakdown.earnings_per_second.mushroom).toBeGreaterThan(TroopService.getEarningsBySecond({
+        code: TroopCode.FARMER,
+        count: 40,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.05
+      }))
+      expect(breakdown.earnings_per_second.plastic).toBeLessThan(TroopService.getEarningsBySecond({
+        code: TroopCode.RECYCLER,
+        count: 30,
+        coefficients: cell.resource_coefficient,
+        technology_multiplier: 1.15
       }))
     })
   })

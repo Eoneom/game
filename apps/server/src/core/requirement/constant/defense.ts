@@ -68,4 +68,27 @@ export const DefenseRequirement: Record<DefenseCode, RequirementValue> = {
       }
     ]
   },
+  [DefenseCode.MYCELIUM_WALL]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [DefenseCode.SPORE_CLOUD]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 2
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.FORTIFICATION,
+        level: 1
+      }
+    ]
+  },
 }

@@ -88,7 +88,7 @@ export function countCombatStacks(stacks: BattleStack[]): number {
   }, 0)
 }
 
-/** Units that keep a side in the fight: combat troops plus armed defenses (turret, plasma battery), slice 029. */
+/** Units that keep a side in the fight: combat troops plus armed defenses (turret, plasma battery, spore cloud), slices 029 / 036. */
 export function countBattlePresence(stacks: BattleStack[]): number {
   const armed_defenses = stacks.reduce((sum, s) => {
     if (s.count <= 0 || !isDefenseStack(s) || !defense_characteristics[s.code].armed) {

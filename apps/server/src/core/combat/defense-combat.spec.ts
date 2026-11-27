@@ -398,3 +398,119 @@ describe('CombatService city defenses (slice 029)', () => {
     ])
   })
 })
+
+describe('CombatService Symbiose faction defenses (slice 036)', () => {
+  it('mycelium walls add life only and take losses first, with the ramparts', () => {
+    const result = round({
+      attacker_stacks: [ legionnaires(10_000) ],
+      defender_stacks: [
+        defense(DefenseCode.SPORE_CLOUD, 2),
+        legionnaires(5),
+        defense(DefenseCode.MYCELIUM_WALL, 3),
+      ],
+    })
+    assert.deepStrictEqual(codesOf(result.round_summary.defender_losses), [
+      DefenseCode.MYCELIUM_WALL,
+      TroopCode.LEGIONNAIRE,
+      DefenseCode.SPORE_CLOUD,
+    ])
+
+    const walls = round({
+      attacker_stacks: [ legionnaires(10) ],
+      defender_stacks: [ defense(DefenseCode.MYCELIUM_WALL, 10) ],
+    })
+    assert.equal(walls.round_summary.defender_attack_pool, 0)
+    assert.equal(walls.round_summary.defender_life_pool, 500)
+  })
+
+  it('places mycelium walls with ramparts and spore clouds with turrets under siege_assault', () => {
+    const result = round({
+      attacker_strategy: CombatStrategy.SIEGE_ASSAULT,
+      attacker_stacks: [ legionnaires(10_000) ],
+      defender_stacks: [
+        legionnaires(5),
+        defense(DefenseCode.SPORE_CLOUD, 2),
+        defense(DefenseCode.SHIELD_GENERATOR, 3),
+        defense(DefenseCode.MYCELIUM_WALL, 2),
+      ],
+    })
+    assert.deepStrictEqual(codesOf(result.round_summary.defender_losses), [
+      DefenseCode.MYCELIUM_WALL,
+      DefenseCode.SHIELD_GENERATOR,
+      DefenseCode.SPORE_CLOUD,
+      TroopCode.LEGIONNAIRE,
+    ])
+  })
+
+  it('spore clouds attack and reduce the attacker attack pool by 1 % each, capped at 15 %', () => {
+    const neutral = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [ legionnaires(5) ],
+    })
+    const five = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [
+        legionnaires(5),
+        defense(DefenseCode.SPORE_CLOUD, 5),
+      ],
+    })
+    const thirty = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [
+        legionnaires(5),
+        defense(DefenseCode.SPORE_CLOUD, 30),
+      ],
+    })
+
+    assert.equal(neutral.round_summary.spore_reduction, 0)
+    assert.ok(Math.abs((five.round_summary.spore_reduction ?? 0) - 0.05) < 1e-9)
+    assert.ok(Math.abs(five.round_summary.attacker_attack_pool - neutral.round_summary.attacker_attack_pool * 0.95) < 1e-6)
+    assert.equal(five.round_summary.defender_attack_pool, neutral.round_summary.defender_attack_pool + 5 * 12)
+    assert.ok(Math.abs((thirty.round_summary.spore_reduction ?? 0) - 0.15) < 1e-9)
+    assert.ok(Math.abs(thirty.round_summary.attacker_attack_pool - neutral.round_summary.attacker_attack_pool * 0.85) < 1e-6)
+  })
+
+  it('caps shield generators and spore clouds at 40 % together', () => {
+    const neutral = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [ legionnaires(5) ],
+    })
+    const both = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [
+        legionnaires(5),
+        defense(DefenseCode.SHIELD_GENERATOR, 20),
+        defense(DefenseCode.SPORE_CLOUD, 20),
+      ],
+    })
+    const under_cap = round({
+      attacker_stacks: [ legionnaires(100) ],
+      defender_stacks: [
+        legionnaires(5),
+        defense(DefenseCode.SHIELD_GENERATOR, 10),
+        defense(DefenseCode.SPORE_CLOUD, 10),
+      ],
+    })
+
+    assert.equal(both.round_summary.shield_reduction, 0.3)
+    assert.ok(Math.abs((both.round_summary.spore_reduction ?? 0) - 0.1) < 1e-9)
+    assert.ok(Math.abs(both.round_summary.attacker_attack_pool - neutral.round_summary.attacker_attack_pool * 0.6) < 1e-6)
+    assert.ok(Math.abs((under_cap.round_summary.shield_reduction ?? 0) - 0.2) < 1e-9)
+    assert.ok(Math.abs((under_cap.round_summary.spore_reduction ?? 0) - 0.1) < 1e-9)
+    assert.ok(Math.abs(under_cap.round_summary.attacker_attack_pool - neutral.round_summary.attacker_attack_pool * 0.7) < 1e-6)
+  })
+
+  it('spore clouds keep the defender in the fight; mycelium walls alone do not', () => {
+    const clouds = round({
+      attacker_stacks: [ legionnaires(10) ],
+      defender_stacks: [ defense(DefenseCode.SPORE_CLOUD, 10) ],
+    })
+    assert.equal(clouds.winner, null)
+
+    const walls = round({
+      attacker_stacks: [ legionnaires(10) ],
+      defender_stacks: [ defense(DefenseCode.MYCELIUM_WALL, 10) ],
+    })
+    assert.equal(walls.winner, BattleWinner.ATTACKER)
+  })
+})

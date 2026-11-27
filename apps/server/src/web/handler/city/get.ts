@@ -55,6 +55,7 @@ const response_mapper = ({
   pre_cell_earnings_per_second,
   cell_resource_coefficient,
   technology_production_multiplier,
+  faction_production_multiplier,
   cell,
   resource_stock,
   warehouses_capacity,
@@ -105,6 +106,10 @@ const response_mapper = ({
       mushroom: technology_production_multiplier.mushroom,
       plasma: technology_production_multiplier.plasma,
       water: technology_production_multiplier.water
+    },
+    faction_production_multiplier: {
+      plastic: faction_production_multiplier.plastic,
+      mushroom: faction_production_multiplier.mushroom
     },
     warehouses_capacity: {
       plastic: warehouses_capacity.plastic,

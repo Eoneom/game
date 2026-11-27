@@ -22,7 +22,8 @@ interface BuildDefenseParams {
 
 /**
  * Starts a fortification batch, or queues it behind the running one (slice 029).
- * Loose validation at enqueue: ownership and capacity; requirements and resources wait for the start.
+ * Loose validation at enqueue: ownership, faction roster (slice 036) and capacity; requirements and resources
+ * wait for the start.
  */
 export async function buildDefense({
   city_id,
@@ -34,10 +35,20 @@ export async function buildDefense({
     const repository = Factory.getRepository()
     const job_queue = Factory.getJobQueue()
 
-    const city = await repository.city.get(city_id)
+    const [
+      city,
+      player
+    ] = await Promise.all([
+      repository.city.get(city_id),
+      repository.player.get(player_id),
+    ])
     if (!city.isOwnedBy(player_id)) {
       throw new Error(CityError.NOT_OWNER)
     }
+    DefenseService.assertInRoster({
+      faction_code: player.faction_code,
+      defense_code,
+    })
 
     const [
       city_wall_level,

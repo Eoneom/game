@@ -241,6 +241,7 @@ export const adminCombatSimulatorPostHandler = async (
         defender_losses: toWireStacks(summary.defender_losses),
         ...(summary.defender_plasma_spent !== undefined ? { defender_plasma_spent: summary.defender_plasma_spent } : {}),
         ...(summary.shield_reduction !== undefined ? { shield_reduction: summary.shield_reduction } : {}),
+        ...(summary.spore_reduction !== undefined ? { spore_reduction: summary.spore_reduction } : {}),
       })),
       final_attacker_stacks: toWireStacks(result.final_attacker_stacks),
       final_defender_stacks: toWireStacks(result.final_defender_stacks),

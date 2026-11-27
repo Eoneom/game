@@ -569,5 +569,77 @@ describe('applyBattleOutcomes loot', () => {
       })
       expect(defenseDeleteByCity).not.toHaveBeenCalled()
     })
+
+    describe('mycelium wall regrowth (slice 036)', () => {
+      const setupWalls = () => setup({
+        stock: empty_stock(),
+        transporters: 0,
+        defender_stacks: [
+          {
+            kind: 'defense',
+            code: DefenseCode.SPORE_CLOUD,
+            count: 4
+          },
+        ],
+        cumulative_defender_losses: [
+          {
+            kind: 'defense',
+            code: DefenseCode.MYCELIUM_WALL,
+            count: 10
+          },
+          {
+            kind: 'defense',
+            code: DefenseCode.SPORE_CLOUD,
+            count: 2
+          },
+        ],
+      })
+
+      for (const winner of [
+        BattleWinner.DEFENDER,
+        BattleWinner.DRAW
+      ]) {
+        it(`regrows floor(30 %) of the destroyed walls on a ${winner} result and reports them to the defender`, async () => {
+          setupWalls()
+
+          await applyBattleOutcomes({
+            battle_id: 'battle-id',
+            winner,
+            finished_at: 5_000,
+          })
+
+          expect(defenseRemoveCount).toHaveBeenCalledWith({
+            city_id,
+            code: DefenseCode.MYCELIUM_WALL,
+            count: 7
+          })
+          expect(defenseRemoveCount).toHaveBeenCalledWith({
+            city_id,
+            code: DefenseCode.SPORE_CLOUD,
+            count: 2
+          })
+          expect(vi.mocked(createBattleReports).mock.calls[0][0].regrown_defenses).toEqual([
+            {
+              code: DefenseCode.MYCELIUM_WALL,
+              count: 3
+            },
+          ])
+        })
+      }
+
+      it('regrows nothing when the attacker wins', async () => {
+        setupWalls()
+
+        await applyBattleOutcomes({
+          battle_id: 'battle-id',
+          winner: BattleWinner.ATTACKER,
+          finished_at: 5_000,
+        })
+
+        expect(defenseDeleteByCity).toHaveBeenCalledWith({ city_id })
+        expect(defenseRemoveCount).not.toHaveBeenCalled()
+        expect(vi.mocked(createBattleReports).mock.calls[0][0].regrown_defenses).toEqual([])
+      })
+    })
   })
 })

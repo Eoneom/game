@@ -71,6 +71,7 @@ export class PostgresBattleRepository implements BattleRepository {
       defender_losses: row.defender_losses as BattleCasualtyLine[],
       defender_plasma_spent: row.defender_plasma_spent,
       shield_reduction: row.shield_reduction,
+      spore_reduction: row.spore_reduction,
     }))
   }
 
@@ -87,6 +88,7 @@ export class PostgresBattleRepository implements BattleRepository {
       defender_losses: JSON.stringify(summary.defender_losses),
       defender_plasma_spent: summary.defender_plasma_spent ?? 0,
       shield_reduction: summary.shield_reduction ?? 0,
+      spore_reduction: summary.spore_reduction ?? 0,
     }
   }
 

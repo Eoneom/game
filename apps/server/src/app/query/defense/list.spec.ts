@@ -8,6 +8,7 @@ import { CityError } from '#core/city/error'
 import { DefenseBuildQueueEntity } from '#core/defense/build-queue-entity'
 import { DefenseCode } from '#core/defense/constant/code'
 import { DefenseEntity } from '#core/defense/entity'
+import { FactionCode } from '#core/faction/constant/code'
 import { id } from '#shared/identification'
 
 describe('DefenseListQuery', () => {
@@ -17,10 +18,13 @@ describe('DefenseListQuery', () => {
     player_id,
     cell_id: id()
   })
+  let faction_code: FactionCode
 
   beforeEach(() => {
+    faction_code = FactionCode.THE_CONFEDERATION
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       city: { get: vi.fn().mockResolvedValue(city) },
+      player: { get: vi.fn().mockImplementation(async () => ({ faction_code })) },
       building: { getLevel: vi.fn().mockResolvedValue(2) },
       defense: {
         listByCity: vi.fn().mockResolvedValue([
@@ -111,6 +115,25 @@ describe('DefenseListQuery', () => {
     assert.strictEqual(result.pending_build?.defense_code, DefenseCode.TURRET)
     assert.strictEqual(result.build_queue_limit, 3)
     assert.strictEqual(result.costs[DefenseCode.PLASMA_BATTERY].resource.plasma, 300)
+  })
+
+  it('adds the Symbiose defenses for a Symbiose player only (slice 036)', async () => {
+    faction_code = FactionCode.THE_SYMBIOSIS
+    const result = await new DefenseListQuery().run({
+      player_id,
+      city_id: city.id
+    })
+
+    assert.deepStrictEqual(result.defenses.map(defense => defense.code), [
+      DefenseCode.RAMPART,
+      DefenseCode.TURRET,
+      DefenseCode.MINEFIELD,
+      DefenseCode.SHIELD_GENERATOR,
+      DefenseCode.PLASMA_BATTERY,
+      DefenseCode.MYCELIUM_WALL,
+      DefenseCode.SPORE_CLOUD,
+    ])
+    assert.strictEqual(result.costs[DefenseCode.MYCELIUM_WALL].resource.mushroom, 700)
   })
 
   it('rejects another player', async () => {

@@ -29,4 +29,13 @@ export const troop_faction: Record<TroopCode, FactionCode> = {
   [TroopCode.WRAITH_LANCER]: FactionCode.THE_ASH_LITURGY,
   [TroopCode.HEMORRHAGE_CULTIST]: FactionCode.THE_ASH_LITURGY,
   [TroopCode.CINDER_TITAN]: FactionCode.THE_ASH_LITURGY,
+  [TroopCode.DRIFTING_SPORE]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.SEED_BEARER]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.MYCELIAL_PORTER]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.SYMBIONT_GROWER]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.DECOMPOSER]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.ROOT_WARDEN]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.SPORE_SWARM]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.FUNGAL_COLOSSUS]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.TOXIC_HOWLER]: FactionCode.THE_SYMBIOSIS,
 }

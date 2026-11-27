@@ -19,6 +19,8 @@ import {
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CityEntity } from '#core/city/entity'
+import { DefenseCode } from '#core/defense/constant/code'
+import { DefenseService } from '#core/defense/service'
 import { militaryCredits } from '#core/ranking/military'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
@@ -311,15 +313,31 @@ export async function applyBattleOutcomes({
       }))
     }
 
+    const regrown_defenses: { code: DefenseCode; count: number }[] = []
     if (!attacker_wins && battle.target_kind === BattleTargetKind.CITY && battle.target_id) {
       // Defender win or draw: surviving defenses stay, lost units are removed (units built meanwhile are kept).
+      // Mycelium walls grow back: only the destroyed units that do not regrow are removed (slice 036).
       const city_id = battle.target_id
+      const defender_held = winner === BattleWinner.DEFENDER || winner === BattleWinner.DRAW
       const defense_losses = battle.state_json.cumulative_defender_losses.filter(isDefenseStack)
-      await Promise.all(defense_losses.map(line => repository.defense.removeCount({
-        city_id,
-        code: line.code,
-        count: line.count,
-      })))
+      await Promise.all(defense_losses.map(line => {
+        const regrown = DefenseService.getRegrowth({
+          code: line.code,
+          destroyed: line.count,
+          defender_held,
+        })
+        if (regrown > 0) {
+          regrown_defenses.push({
+            code: line.code,
+            count: regrown,
+          })
+        }
+        return repository.defense.removeCount({
+          city_id,
+          code: line.code,
+          count: line.count - regrown,
+        })
+      }))
     }
 
     const finished_battle = battle.finish({
@@ -363,6 +381,7 @@ export async function applyBattleOutcomes({
       outcome,
       loot,
       sheltered,
+      regrown_defenses,
       finished_at,
     })
 

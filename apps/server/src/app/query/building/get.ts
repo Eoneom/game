@@ -127,33 +127,39 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       const coefficients = city_cell.resource_coefficient
       const [
         { production_energy_ratio },
-        technology_production_multiplier
+        technology_production_multiplier,
+        faction_production_multiplier
       ] = await Promise.all([
         AppService.getCityEnergyConsumptionBreakdown({
           city_id: building.city_id,
           player_id
         }),
-        AppService.getProductionTechnologyMultipliers({ player_id })
+        AppService.getProductionTechnologyMultipliers({ player_id }),
+        AppService.getProductionFactionMultipliers({ player_id })
       ])
-      const technology_multiplier = building.code === BuildingCode.RECYCLING_PLANT
-        ? technology_production_multiplier.plastic
+      const resource = building.code === BuildingCode.RECYCLING_PLANT
+        ? 'plastic'
         : building.code === BuildingCode.MUSHROOM_FARM
-          ? technology_production_multiplier.mushroom
+          ? 'mushroom'
           : building.code === BuildingCode.WATER_PURIFIER
-            ? technology_production_multiplier.water
-            : technology_production_multiplier.plasma
+            ? 'water'
+            : 'plasma'
+      const technology_multiplier = technology_production_multiplier[resource]
+      const faction_multiplier = faction_production_multiplier[resource]
 
       const base_current_production = BuildingService.getEarningsBySecond({
         level: building.level,
         code: building.code,
         coefficients,
-        technology_multiplier
+        technology_multiplier,
+        faction_multiplier
       })
       const base_next_production = BuildingService.getEarningsBySecond({
         level: building.level + 1,
         code: building.code,
         coefficients,
-        technology_multiplier
+        technology_multiplier,
+        faction_multiplier
       })
 
       const energy_upgrade_warning = await this.getEnergyUpgradeWarning({

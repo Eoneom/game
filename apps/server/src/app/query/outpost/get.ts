@@ -22,6 +22,7 @@ export interface OutpostGetQueryResponse {
   pre_cell_earnings_per_second: Resource
   cell_resource_coefficient: Resource
   technology_production_multiplier: Resource
+  faction_production_multiplier: Resource
   warehouses_capacity: WarehouseCapacity
   warehouse_full_in_seconds: WarehouseCapacity
 }
@@ -81,6 +82,7 @@ export class OutpostGetQuery extends GenericQuery<OutpostGetQueryRequest, Outpos
       pre_cell_earnings_per_second: production.pre_cell_earnings_per_second,
       cell_resource_coefficient: production.cell_resource_coefficient,
       technology_production_multiplier: production.technology_production_multiplier,
+      faction_production_multiplier: production.faction_production_multiplier,
       warehouses_capacity,
       warehouse_full_in_seconds
     }

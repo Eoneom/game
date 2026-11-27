@@ -41,6 +41,11 @@ export type BattleRoundSummary = {
   defender_plasma_spent?: number
   /** Share of the attacker's attack pool removed by the defender's shield generators, 0–0.30 (slice 029). */
   shield_reduction?: number
+  /**
+   * Share removed by the defender's spore clouds, 0–0.15 (slice 036); with `shield_reduction` it never exceeds 0.40.
+   * Absent on older rounds (= 0).
+   */
+  spore_reduction?: number
 }
 
 /** Technology multipliers snapshotted for one side (slice 027 / 029). */

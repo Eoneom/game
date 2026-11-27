@@ -485,12 +485,15 @@ export class TroopService {
     count,
     coefficients,
     technology_multiplier = 1,
+    faction_multiplier = 1,
   }: {
     code: TroopCode
     count: number
     coefficients: Resource
     /** Économie technology bonus (slice 027), applied after cell coefficient and game time scale. */
     technology_multiplier?: number
+    /** Faction production modifier (slice 036): `rate × faction × (1 + tech)`. */
+    faction_multiplier?: number
   }): number {
     if (count <= 0) {
       return 0
@@ -506,6 +509,6 @@ export class TroopService {
       ? coefficients.mushroom
       : coefficients.plastic
     const per_game_second = Math.round(base * count * coefficient * 100) / 100
-    return Math.round(per_game_second * gameTimeScale * technology_multiplier * 100) / 100
+    return Math.round(per_game_second * gameTimeScale * faction_multiplier * technology_multiplier * 100) / 100
   }
 }

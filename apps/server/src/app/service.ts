@@ -14,6 +14,7 @@ import {
 } from '#core/requirement/service'
 import { RequirementValue } from '#core/requirement/value/requirement'
 import { CombatModifiers } from '#core/combat/type/battle-stack'
+import { FactionService } from '#core/faction/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyService } from '#core/technology/service'
 import { TroopCode } from '#core/troop/constant/code'
@@ -38,6 +39,13 @@ export const NEUTRAL_CELL_COEFFICIENTS: Resource = {
 export const NEUTRAL_SOLAR_COEFFICIENT = 1
 
 const NEUTRAL_TECHNOLOGY_PRODUCTION_MULTIPLIER: Resource = {
+  plastic: 1,
+  mushroom: 1,
+  plasma: 1,
+  water: 1
+}
+
+const NEUTRAL_FACTION_PRODUCTION_MULTIPLIER: Resource = {
   plastic: 1,
   mushroom: 1,
   plasma: 1,
@@ -75,14 +83,16 @@ export class AppService {
     const [
       coefficients,
       { production_energy_ratio },
-      technology_multiplier
+      technology_multiplier,
+      faction_multiplier
     ] = await Promise.all([
       Promise.resolve(city_cell.resource_coefficient),
       this.getCityEnergyConsumptionBreakdown({
         city_id,
         player_id
       }),
-      this.getProductionTechnologyMultipliers({ player_id })
+      this.getProductionTechnologyMultipliers({ player_id }),
+      this.getProductionFactionMultipliers({ player_id })
     ])
 
     const plastic = BuildingService.getEarningsBySecond({
@@ -90,6 +100,7 @@ export class AppService {
       level: recycling_plant_level,
       coefficients,
       technology_multiplier: technology_multiplier.plastic,
+      faction_multiplier: faction_multiplier.plastic,
     }) * production_energy_ratio
 
     const mushroom = BuildingService.getEarningsBySecond({
@@ -97,6 +108,7 @@ export class AppService {
       code: BuildingCode.MUSHROOM_FARM,
       coefficients,
       technology_multiplier: technology_multiplier.mushroom,
+      faction_multiplier: faction_multiplier.mushroom,
     }) * production_energy_ratio
 
     const plasma = BuildingService.getEarningsBySecond({
@@ -104,12 +116,14 @@ export class AppService {
       level: central_inductor_level,
       coefficients,
       technology_multiplier: technology_multiplier.plasma,
+      faction_multiplier: faction_multiplier.plasma,
     }) * production_energy_ratio
 
     const water = BuildingService.getEarningsBySecond({
       code: BuildingCode.WATER_PURIFIER,
       level: water_purifier_level,
       coefficients,
+      faction_multiplier: faction_multiplier.water,
     }) * production_energy_ratio
 
     return {
@@ -131,6 +145,8 @@ export class AppService {
     pre_cell_earnings_per_second: Resource
     cell_resource_coefficient: Resource
     technology_production_multiplier: Resource
+    /** Faction production modifier (slice 036); neutral (1) for most factions. */
+    faction_production_multiplier: Resource
     production_energy_ratio: number
   }> {
     const {
@@ -145,13 +161,15 @@ export class AppService {
 
     const [
       { production_energy_ratio },
-      technology_production_multiplier
+      technology_production_multiplier,
+      faction_production_multiplier
     ] = await Promise.all([
       this.getCityEnergyConsumptionBreakdown({
         city_id,
         player_id
       }),
-      this.getProductionTechnologyMultipliers({ player_id })
+      this.getProductionTechnologyMultipliers({ player_id }),
+      this.getProductionFactionMultipliers({ player_id })
     ])
 
     const plastic = BuildingService.getEarningsBySecond({
@@ -159,6 +177,7 @@ export class AppService {
       level: recycling_plant_level,
       coefficients: cell_resource_coefficient,
       technology_multiplier: technology_production_multiplier.plastic,
+      faction_multiplier: faction_production_multiplier.plastic,
     }) * production_energy_ratio
 
     const mushroom = BuildingService.getEarningsBySecond({
@@ -166,6 +185,7 @@ export class AppService {
       code: BuildingCode.MUSHROOM_FARM,
       coefficients: cell_resource_coefficient,
       technology_multiplier: technology_production_multiplier.mushroom,
+      faction_multiplier: faction_production_multiplier.mushroom,
     }) * production_energy_ratio
 
     const plasma = BuildingService.getEarningsBySecond({
@@ -173,12 +193,14 @@ export class AppService {
       level: central_inductor_level,
       coefficients: cell_resource_coefficient,
       technology_multiplier: technology_production_multiplier.plasma,
+      faction_multiplier: faction_production_multiplier.plasma,
     }) * production_energy_ratio
 
     const water = BuildingService.getEarningsBySecond({
       code: BuildingCode.WATER_PURIFIER,
       level: water_purifier_level,
       coefficients: cell_resource_coefficient,
+      faction_multiplier: faction_production_multiplier.water,
     }) * production_energy_ratio
 
     const pre_cell_plastic = BuildingService.getEarningsBySecond({
@@ -220,6 +242,7 @@ export class AppService {
       },
       cell_resource_coefficient,
       technology_production_multiplier,
+      faction_production_multiplier,
       production_energy_ratio
     }
   }
@@ -391,6 +414,12 @@ export class AppService {
     })
   }
 
+  /** The player's faction production modifier (slice 036), applied on top of the Économie multipliers. */
+  static async getProductionFactionMultipliers({ player_id }: { player_id: string }): Promise<Resource> {
+    const player = await Factory.getRepository().player.get(player_id)
+    return FactionService.getProductionMultipliers(player.faction_code)
+  }
+
   /** Arsenal attack / life multipliers for `combat`-role stacks (slice 027). */
   static async getCombatModifiers({ player_id }: { player_id: string }): Promise<CombatModifiers> {
     const levels = await this.getTechnologyLevels({
@@ -494,6 +523,7 @@ export class AppService {
     pre_cell_earnings_per_second: Resource
     cell_resource_coefficient: Resource
     technology_production_multiplier: Resource
+    faction_production_multiplier: Resource
   }> {
     const {
       outpost,
@@ -517,12 +547,19 @@ export class AppService {
           water: 0
         },
         cell_resource_coefficient: cell.resource_coefficient,
-        technology_production_multiplier: NEUTRAL_TECHNOLOGY_PRODUCTION_MULTIPLIER
+        technology_production_multiplier: NEUTRAL_TECHNOLOGY_PRODUCTION_MULTIPLIER,
+        faction_production_multiplier: NEUTRAL_FACTION_PRODUCTION_MULTIPLIER
       }
     }
 
     const cell_resource_coefficient = cell.resource_coefficient
-    const technology_production_multiplier = await this.getProductionTechnologyMultipliers({ player_id: outpost.player_id })
+    const [
+      technology_production_multiplier,
+      faction_production_multiplier
+    ] = await Promise.all([
+      this.getProductionTechnologyMultipliers({ player_id: outpost.player_id }),
+      this.getProductionFactionMultipliers({ player_id: outpost.player_id })
+    ])
 
     const plastic = salvager
       ? TroopService.getEarningsBySecond({
@@ -530,6 +567,7 @@ export class AppService {
         count: salvager.count,
         coefficients: cell_resource_coefficient,
         technology_multiplier: technology_production_multiplier.plastic,
+        faction_multiplier: faction_production_multiplier.plastic,
       })
       : 0
 
@@ -539,6 +577,7 @@ export class AppService {
         count: cultivator.count,
         coefficients: cell_resource_coefficient,
         technology_multiplier: technology_production_multiplier.mushroom,
+        faction_multiplier: faction_production_multiplier.mushroom,
       })
       : 0
 
@@ -572,7 +611,8 @@ export class AppService {
         water: 0
       },
       cell_resource_coefficient,
-      technology_production_multiplier
+      technology_production_multiplier,
+      faction_production_multiplier
     }
   }
 

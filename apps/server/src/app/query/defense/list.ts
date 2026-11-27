@@ -22,7 +22,7 @@ export interface DefenseListPendingBuild extends OngoingRecruitment {
 }
 
 export interface DefenseListQueryResponse {
-  /** One entry per defense type (count 0 when the city has none), catalogue order. */
+  /** One entry per defense type the player's faction can build (count 0 when the city has none), catalogue order. */
   defenses: DefenseEntity[]
   /** Per-unit cost with the city's Enceinte duration reduction. */
   costs: Record<DefenseCode, CountCostValue<DefenseCode>>
@@ -53,11 +53,13 @@ export class DefenseListQuery extends GenericQuery<DefenseListQueryRequest, Defe
     }
 
     const [
+      player,
       rows,
       city_wall_level,
       pending,
       build_queue,
     ] = await Promise.all([
+      this.repository.player.get(player_id),
       this.repository.defense.listByCity({ city_id }),
       this.repository.building.getLevel({
         city_id,
@@ -68,7 +70,8 @@ export class DefenseListQuery extends GenericQuery<DefenseListQueryRequest, Defe
     ])
 
     const defenses = DefenseService.sortDefenses({
-      defenses: Object.values(DefenseCode).map(code => rows.find(row => row.code === code)
+      // Faction defenses of another faction are hidden (slice 036); costs and requirements stay complete.
+      defenses: DefenseService.codesForFaction(player.faction_code).map(code => rows.find(row => row.code === code)
         ?? DefenseEntity.init({
           player_id,
           city_id,

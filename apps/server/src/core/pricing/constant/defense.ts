@@ -33,4 +33,14 @@ export const defense_costs: Record<DefenseCode, CountCosts> = {
     plasma: 300,
     duration: 180
   },
+  [DefenseCode.MYCELIUM_WALL]: {
+    plastic: 400,
+    mushroom: 700,
+    duration: 60
+  },
+  [DefenseCode.SPORE_CLOUD]: {
+    plastic: 500,
+    mushroom: 700,
+    duration: 60
+  },
 }

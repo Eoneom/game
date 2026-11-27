@@ -356,6 +356,12 @@ describe('BuildingGetQuery', () => {
       mushroom: 1,
       plasma: 1.5
     })
+    vi.spyOn(AppService, 'getProductionFactionMultipliers').mockResolvedValue({
+      plastic: 1,
+      mushroom: 1,
+      plasma: 1,
+      water: 1
+    })
 
     const result = await new BuildingGetQuery().run({
       city_id: city.id,
@@ -364,5 +370,54 @@ describe('BuildingGetQuery', () => {
     })
 
     expect(result.metadata.current_production).toBe(0.15)
+  })
+
+  it('applies the faction modifier to mushroom farm production metadata (slice 036)', async () => {
+    const farm = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.MUSHROOM_FARM,
+      level: 3
+    })
+    vi.mocked(repository.building.getInCity).mockResolvedValue(farm)
+    vi.spyOn(AppService, 'getProductionTechnologyMultipliers').mockResolvedValue({
+      plastic: 1,
+      mushroom: 1.2,
+      plasma: 1,
+      water: 1
+    })
+    vi.spyOn(AppService, 'getProductionFactionMultipliers').mockResolvedValue({
+      plastic: 0.9,
+      mushroom: 1.1,
+      plasma: 1,
+      water: 1
+    })
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.MUSHROOM_FARM,
+      player_id
+    })
+
+    const coefficients = {
+      plastic: 1,
+      mushroom: 1,
+      plasma: 0,
+      water: 1
+    }
+    expect(result.metadata.current_production).toBe(BuildingService.getEarningsBySecond({
+      code: BuildingCode.MUSHROOM_FARM,
+      level: 3,
+      coefficients,
+      technology_multiplier: 1.2,
+      faction_multiplier: 1.1
+    }))
+    expect(result.metadata.next_production).toBe(BuildingService.getEarningsBySecond({
+      code: BuildingCode.MUSHROOM_FARM,
+      level: 4,
+      coefficients,
+      technology_multiplier: 1.2,
+      faction_multiplier: 1.1
+    }))
   })
 })

@@ -8,6 +8,8 @@ export type ReportBattleOutcome = {
   destroyed_temp_outpost: boolean
   loot_applied: boolean
   attacker_retreated: boolean
+  /** Defender perspective: defense units that grew back after the battle (mycelium walls, slice 036). */
+  regrown_defenses?: { code: DefenseCode; count: number }[]
 }
 
 type ReportBattleModifiers = {
@@ -55,6 +57,8 @@ export type ReportBattleMetadata = {
     defender_plasma_spent?: number
     /** Share of the attacker's attack pool absorbed by shield generators, 0–0.30 (slice 029). */
     shield_reduction?: number
+    /** Share absorbed by spore clouds, 0–0.15; never above 0.40 with `shield_reduction` (slice 036). */
+    spore_reduction?: number
   }[]
   /** Defender perspective: resources the underground shelter kept out of loot (slice 028); zero otherwise. */
   sheltered: {

@@ -1394,7 +1394,7 @@ async function tryAttack(
     attacker_faction_code: attacker.faction_code,
     army_counts,
     blocked_targets,
-    confederation_target_score_bonus: snapshot.ai_profile.confederation_target_score_bonus,
+    human_target_score_bonus: snapshot.ai_profile.human_target_score_bonus,
     tick_context,
   })
   if (!attack) {

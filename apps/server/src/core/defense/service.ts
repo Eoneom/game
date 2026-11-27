@@ -1,10 +1,15 @@
 import { DEFENSE_BUILD_QUEUE_LIMIT } from '#core/defense/constant/build-queue'
 import { DEFENSE_CAPACITY_PER_CITY_WALL_LEVEL } from '#core/defense/constant/capacity'
-import { defense_characteristics } from '#core/defense/constant/characteristic'
+import {
+  defense_characteristics,
+  MYCELIUM_WALL_REGROWTH_RATIO
+} from '#core/defense/constant/characteristic'
 import { DefenseCode } from '#core/defense/constant/code'
+import { defense_faction } from '#core/defense/constant/faction'
 import { defense_order } from '#core/defense/constant/order'
 import { DefenseEntity } from '#core/defense/entity'
 import { DefenseError } from '#core/defense/error'
+import { FactionCode } from '#core/faction/constant/code'
 
 type DefenseCount = {
   code: DefenseCode
@@ -71,6 +76,61 @@ export class DefenseService {
   /** Waiting fortification slots in a city: none until its Enceinte is built. */
   static getBuildQueueLimit({ city_wall_level }: { city_wall_level: number }): number {
     return city_wall_level >= 1 ? DEFENSE_BUILD_QUEUE_LIMIT : 0
+  }
+
+  /** Common defenses (no `defense_faction` entry) plus the faction's own (slice 036). */
+  static isAvailableTo({
+    faction_code,
+    defense_code
+  }: {
+    faction_code: FactionCode
+    defense_code: DefenseCode
+  }): boolean {
+    const owner = defense_faction[defense_code]
+    return owner === undefined || owner === faction_code
+  }
+
+  static codesForFaction(faction_code: FactionCode): DefenseCode[] {
+    return Object.values(DefenseCode).filter(defense_code => this.isAvailableTo({
+      faction_code,
+      defense_code
+    }))
+  }
+
+  static assertInRoster({
+    faction_code,
+    defense_code
+  }: {
+    faction_code: FactionCode
+    defense_code: DefenseCode
+  }): void {
+    if (!this.isAvailableTo({
+      faction_code,
+      defense_code
+    })) {
+      throw new Error(DefenseError.NOT_IN_FACTION_ROSTER)
+    }
+  }
+
+  /**
+   * Units that grow back after a battle (slice 036): `floor(30 % × destroyed)` mycelium walls when the defender
+   * wins or draws, nothing otherwise.
+   */
+  static getRegrowth({
+    code,
+    destroyed,
+    defender_held
+  }: {
+    code: DefenseCode
+    destroyed: number
+    /** The defender won or drew. */
+    defender_held: boolean
+  }): number {
+    if (!defender_held || code !== DefenseCode.MYCELIUM_WALL || destroyed <= 0) {
+      return 0
+    }
+    // The epsilon keeps float products such as 0.3 × 10 from landing just under a whole unit.
+    return Math.floor(destroyed * MYCELIUM_WALL_REGROWTH_RATIO + 1e-9)
   }
 
   static isArmed(code: DefenseCode): boolean {

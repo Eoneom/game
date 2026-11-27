@@ -145,4 +145,103 @@ describe('createBattleReports city defenses (slice 029)', () => {
       assert.equal(metadata.round_summaries[0].shield_reduction, 0.3)
     }
   })
+
+  it('shows mycelium regrowth and spore reduction to the defender only (slice 036)', async () => {
+    const battle = BattleEntity.create({
+      id: 'battle-id',
+      movement_id: 'movement-id',
+      attacker_player_id: 'attacker-id',
+      defender_player_id: 'defender-id',
+      cell_id: 'cell-id',
+      target_kind: BattleTargetKind.CITY,
+      target_id: 'city-id',
+      attacker_strategy: CombatStrategy.BALANCED,
+      defender_strategy: CombatStrategy.BALANCED,
+      current_round: 1,
+      status: 'finished',
+      winner: BattleWinner.DEFENDER,
+      state_json: {
+        attacker_stacks: [],
+        defender_stacks: [],
+        attacker_origin: {
+          x: 1,
+          y: 1
+        },
+        cumulative_attacker_losses: [],
+        cumulative_defender_losses: [
+          {
+            kind: 'defense',
+            code: DefenseCode.MYCELIUM_WALL,
+            count: 10
+          },
+        ],
+      },
+      round_summaries: [
+        {
+          round: 1,
+          attacker_attack_pool: 600,
+          defender_attack_pool: 120,
+          attacker_life_pool: 150,
+          defender_life_pool: 500,
+          attacker_losses: [],
+          defender_losses: [],
+          shield_reduction: 0.3,
+          spore_reduction: 0.1,
+        },
+      ],
+      started_at: 1_000,
+      finished_at: 2_000,
+    })
+    const outcome = {
+      occupied: false,
+      destroyed_temp_outpost: false,
+      loot_applied: false,
+      attacker_retreated: true,
+    }
+
+    await createBattleReports({
+      battle,
+      movement: MovementEntity.create({
+        id: 'movement-id',
+        player_id: 'attacker-id',
+        action: MovementAction.ATTACK,
+        origin: {
+          x: 1,
+          y: 1
+        },
+        destination: {
+          x: 2,
+          y: 2
+        },
+        combat_strategy: CombatStrategy.BALANCED,
+      }),
+      outcome,
+      loot: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water: 0
+      },
+      regrown_defenses: [
+        {
+          code: DefenseCode.MYCELIUM_WALL,
+          count: 3
+        },
+      ],
+      finished_at: 2_000,
+    })
+
+    const call = createBattleReportsRepo.mock.calls[0][0]
+    assert.deepEqual(call.defender_metadata.outcome, {
+      ...outcome,
+      regrown_defenses: [
+        {
+          code: DefenseCode.MYCELIUM_WALL,
+          count: 3
+        },
+      ],
+    })
+    assert.deepEqual(call.attacker_metadata.outcome, outcome)
+    assert.equal(call.defender_metadata.round_summaries[0].spore_reduction, 0.1)
+  })
 })

@@ -7,6 +7,7 @@ import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { ReportPerspective } from '#core/combat/value/report-perspective'
+import { DefenseCode } from '#core/defense/constant/code'
 import { FactionCode } from '#core/faction/constant/code'
 import { Resource } from '#shared/resource'
 
@@ -15,6 +16,8 @@ export type ReportBattleOutcome = {
   destroyed_temp_outpost: boolean
   loot_applied: boolean
   attacker_retreated: boolean
+  /** Defender perspective only: defense units that grew back after the battle (mycelium walls, slice 036). */
+  regrown_defenses?: { code: DefenseCode; count: number }[]
 }
 
 export type ReportBattleMetadata = {

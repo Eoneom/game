@@ -15,6 +15,7 @@ import { DEFENSE_BUILD_QUEUE_LIMIT } from '#core/defense/constant/build-queue'
 import { DefenseCode } from '#core/defense/constant/code'
 import { DefenseEntity } from '#core/defense/entity'
 import { DefenseError } from '#core/defense/error'
+import { FactionCode } from '#core/faction/constant/code'
 import { TechnologyCode } from '#core/technology/constant/code'
 import {
   testCityCell, testResourceStock
@@ -29,6 +30,7 @@ describe('buildDefense', () => {
   let defenses: DefenseEntity[]
   let queue_rows: DefenseBuildQueueEntity[]
   let pending: PendingDefenseBuildProgress | null
+  let faction_code: FactionCode
   let stockUpdateOne: MockInstance
   let scheduleDefenseBuildProgress: MockInstance
   let queueCreate: MockInstance
@@ -58,6 +60,7 @@ describe('buildDefense', () => {
     defenses = []
     queue_rows = []
     pending = null
+    faction_code = FactionCode.THE_CONFEDERATION
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
     scheduleDefenseBuildProgress = vi.fn().mockImplementation(async (data: PendingDefenseBuildProgress) => {
       pending = {
@@ -73,6 +76,7 @@ describe('buildDefense', () => {
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       city: { get: vi.fn().mockResolvedValue(city) },
+      player: { get: vi.fn().mockImplementation(async () => ({ faction_code })) },
       cell: { getById: vi.fn().mockResolvedValue(city_cell) },
       building: { getLevel: vi.fn().mockImplementation(async ({ code }: { code: BuildingCode }) => code === BuildingCode.CITY_WALL ? city_wall_level : 0) },
       defense: { listByCity: vi.fn().mockImplementation(async () => defenses) },
@@ -118,6 +122,45 @@ describe('buildDefense', () => {
       defense_code: DefenseCode.RAMPART,
       count: 1
     }), new Error(CityError.NOT_OWNER))
+  })
+
+  describe('faction defenses (slice 036)', () => {
+    it('rejects a Symbiose defense for a Confederation player', async () => {
+      for (const defense_code of [
+        DefenseCode.MYCELIUM_WALL,
+        DefenseCode.SPORE_CLOUD
+      ]) {
+        await assert.rejects(buildDefense({
+          player_id,
+          city_id: city.id,
+          defense_code,
+          count: 1
+        }), new Error(DefenseError.NOT_IN_FACTION_ROSTER))
+      }
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls.length, 0)
+    })
+
+    it('lets a Symbiose player build mycelium walls and common defenses', async () => {
+      faction_code = FactionCode.THE_SYMBIOSIS
+      await buildDefense({
+        player_id,
+        city_id: city.id,
+        defense_code: DefenseCode.MYCELIUM_WALL,
+        count: 2
+      })
+
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls[0][0].defense_code, DefenseCode.MYCELIUM_WALL)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plastic, 100_000 - 2 * 400)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].mushroom, 100_000 - 2 * 700)
+
+      await buildDefense({
+        player_id,
+        city_id: city.id,
+        defense_code: DefenseCode.RAMPART,
+        count: 1
+      })
+      assert.strictEqual(queue_rows.length, 1)
+    })
   })
 
   it('starts the batch and pays for it when nothing is being built', async () => {

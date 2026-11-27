@@ -140,4 +140,49 @@ export const troop_costs: Record<TroopCode, CountCosts> = {
     mushroom: 1100,
     duration: 110
   },
+  [TroopCode.DRIFTING_SPORE]: {
+    plastic: 5,
+    mushroom: 8,
+    duration: 30
+  },
+  [TroopCode.SEED_BEARER]: {
+    plastic: 10000,
+    mushroom: 20000,
+    duration: 1800
+  },
+  [TroopCode.MYCELIAL_PORTER]: {
+    plastic: 1500,
+    mushroom: 1000,
+    duration: 120
+  },
+  [TroopCode.SYMBIONT_GROWER]: {
+    plastic: 500,
+    mushroom: 1000,
+    duration: 50
+  },
+  [TroopCode.DECOMPOSER]: {
+    plastic: 1000,
+    mushroom: 500,
+    duration: 50
+  },
+  [TroopCode.ROOT_WARDEN]: {
+    plastic: 940,
+    mushroom: 940,
+    duration: 75
+  },
+  [TroopCode.SPORE_SWARM]: {
+    plastic: 1310,
+    mushroom: 750,
+    duration: 105
+  },
+  [TroopCode.FUNGAL_COLOSSUS]: {
+    plastic: 1050,
+    mushroom: 825,
+    duration: 83
+  },
+  [TroopCode.TOXIC_HOWLER]: {
+    plastic: 1200,
+    mushroom: 675,
+    duration: 100
+  },
 }

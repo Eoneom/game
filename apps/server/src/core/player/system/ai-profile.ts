@@ -13,7 +13,7 @@ export type SystemAiProfile = {
   attack_utility_ready: number
   attack_utility_under_threat: number
   ignore_empire_under_threat_for_attack: boolean
-  confederation_target_score_bonus: number
+  human_target_score_bonus: number
   use_failed_attack_memory: boolean
   max_scout_troops: number
   max_founder_troops: number
@@ -29,7 +29,7 @@ const SINGULARITY_DEFAULT_PROFILE: SystemAiProfile = {
   attack_utility_ready: 55,
   attack_utility_under_threat: 0,
   ignore_empire_under_threat_for_attack: false,
-  confederation_target_score_bonus: 0,
+  human_target_score_bonus: 0,
   use_failed_attack_memory: true,
   max_scout_troops: 2,
   max_founder_troops: 1,
@@ -43,7 +43,7 @@ const ASH_LITURGY_AGGRESSIVE_PROFILE: SystemAiProfile = {
   attack_utility_ready: 120,
   attack_utility_under_threat: 110,
   ignore_empire_under_threat_for_attack: true,
-  confederation_target_score_bonus: 500,
+  human_target_score_bonus: 500,
   use_failed_attack_memory: false,
   max_scout_troops: 4,
   max_founder_troops: 2,

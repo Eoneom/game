@@ -23,6 +23,8 @@ import {
 } from './combat-policy'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { BattleWinner } from '#core/combat/value/battle-winner'
+import { FactionCode } from '#core/faction/constant/code'
+import { resolveSystemAiProfile } from '#core/player/system/ai-profile'
 
 describe('system combat army readiness', () => {
   it('requires all four combat classes, war_machine target, and disruptor ratio', () => {
@@ -91,6 +93,47 @@ describe('scoreAttackTarget', () => {
       defender_combat_count: 5,
     })
     assert.ok(city_score > field_score)
+  })
+
+  it('gives the human target bonus to players of any playable faction, Symbiose included (slice 036)', () => {
+    const { human_target_score_bonus } = resolveSystemAiProfile({
+      player_name: 'Harrow',
+      faction_code: FactionCode.THE_ASH_LITURGY,
+    })
+    const score = (defender_faction_code: FactionCode, bonus: number) => scoreAttackTarget({
+      target_kind: BattleTargetKind.CITY,
+      cell,
+      defender_combat_count: 5,
+      defender_faction_code,
+      human_target_score_bonus: bonus,
+    })
+
+    const machine = score(FactionCode.THE_TECHNOLOGICAL_SINGULARITY, human_target_score_bonus)
+    assert.strictEqual(score(FactionCode.THE_CONFEDERATION, human_target_score_bonus), machine + human_target_score_bonus)
+    assert.strictEqual(score(FactionCode.THE_SYMBIOSIS, human_target_score_bonus), machine + human_target_score_bonus)
+    assert.ok(human_target_score_bonus > 0)
+  })
+
+  it('lets Alpha score Symbiose targets like any other human target (slice 036)', () => {
+    const { human_target_score_bonus } = resolveSystemAiProfile({
+      player_name: 'Alpha',
+      faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+    })
+    const symbiosis = scoreAttackTarget({
+      target_kind: BattleTargetKind.CITY,
+      cell,
+      defender_combat_count: 5,
+      defender_faction_code: FactionCode.THE_SYMBIOSIS,
+      human_target_score_bonus,
+    })
+    const confederation = scoreAttackTarget({
+      target_kind: BattleTargetKind.CITY,
+      cell,
+      defender_combat_count: 5,
+      defender_faction_code: FactionCode.THE_CONFEDERATION,
+      human_target_score_bonus,
+    })
+    assert.strictEqual(symbiosis, confederation)
   })
 })
 

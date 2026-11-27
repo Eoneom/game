@@ -49,6 +49,12 @@ const queryResult = {
     mushroom: 1.05,
     plasma: 1.15
   },
+  faction_production_multiplier: {
+    plastic: 0.9,
+    mushroom: 1.1,
+    plasma: 1,
+    water: 1
+  },
   warehouses_capacity: {
     plastic: 2000,
     mushroom: 1500
@@ -129,6 +135,10 @@ describe('outpostGetHandler', () => {
           plastic: 1.1,
           mushroom: 1.05,
           plasma: 1.15
+        },
+        faction_production_multiplier: {
+          plastic: 0.9,
+          mushroom: 1.1
         },
         warehouses_capacity: {
           plastic: 2000,

@@ -26,4 +26,13 @@ export enum TroopCode {
   WRAITH_LANCER = 'wraith_lancer',
   HEMORRHAGE_CULTIST = 'hemorrhage_cultist',
   CINDER_TITAN = 'cinder_titan',
+  DRIFTING_SPORE = 'drifting_spore',
+  SEED_BEARER = 'seed_bearer',
+  MYCELIAL_PORTER = 'mycelial_porter',
+  SYMBIONT_GROWER = 'symbiont_grower',
+  DECOMPOSER = 'decomposer',
+  ROOT_WARDEN = 'root_warden',
+  SPORE_SWARM = 'spore_swarm',
+  FUNGAL_COLOSSUS = 'fungal_colossus',
+  TOXIC_HOWLER = 'toxic_howler',
 }

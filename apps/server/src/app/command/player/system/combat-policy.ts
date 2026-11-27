@@ -28,6 +28,7 @@ import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { FactionCode } from '#core/faction/constant/code'
+import { FactionService } from '#core/faction/service'
 import { TroopEntity } from '#core/troop/entity'
 import { CellEntity } from '#core/world/cell/entity'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -95,21 +96,22 @@ export function scoreAttackTarget({
   cell,
   defender_combat_count,
   defender_faction_code,
-  confederation_target_score_bonus = 0,
+  human_target_score_bonus = 0,
 }: {
   target_kind: BattleTargetKind
   cell: CellEntity
   defender_combat_count: number
   defender_faction_code?: FactionCode
-  confederation_target_score_bonus?: number
+  human_target_score_bonus?: number
 }): number {
   const kind_bonus = target_kind === BattleTargetKind.CITY
     ? 1000
     : target_kind === BattleTargetKind.OUTPOST
       ? 650
       : 200
-  const faction_bonus = defender_faction_code === FactionCode.THE_CONFEDERATION
-    ? confederation_target_score_bonus
+  // Human targets first (slice 036): players of any playable faction, whatever it is.
+  const faction_bonus = defender_faction_code !== undefined && FactionService.isPlayable(defender_faction_code)
+    ? human_target_score_bonus
     : 0
   return kind_bonus + faction_bonus + cellResourceScore(cell) * 12 - defender_combat_count * 8
 }
@@ -250,14 +252,14 @@ export async function pickSystemAttack({
   attacker_faction_code,
   army_counts,
   blocked_targets = [],
-  confederation_target_score_bonus = 0,
+  human_target_score_bonus = 0,
   tick_context,
 }: {
   player_id: string
   attacker_faction_code: FactionCode
   army_counts: SystemCombatArmyCounts
   blocked_targets?: readonly SystemPlayerMemoryCoordinates[]
-  confederation_target_score_bonus?: number
+  human_target_score_bonus?: number
   tick_context?: SystemTickContext
 }): Promise<AttackCandidate | null> {
   if (!isSystemCombatArmyReady(army_counts)) {
@@ -351,7 +353,7 @@ export async function pickSystemAttack({
           cell,
           defender_combat_count,
           defender_faction_code: target.defender_faction_code,
-          confederation_target_score_bonus,
+          human_target_score_bonus,
         })
         if (!best || score > best.score) {
           best = {

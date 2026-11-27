@@ -23,11 +23,14 @@ import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
 import {
+  ATTACK_REDUCTION_CAP,
   defense_characteristics,
   PLASMA_BATTERY_PLASMA_PER_ROUND,
   SHIELD_REDUCTION_CAP,
   SHIELD_REDUCTION_PER_UNIT,
   SIEGE_DEFENSE_LIFE_MULTIPLIER,
+  SPORE_REDUCTION_CAP,
+  SPORE_REDUCTION_PER_UNIT,
 } from '#core/defense/constant/characteristic'
 import { DefenseCode } from '#core/defense/constant/code'
 import { CombatRole } from '#core/troop/constant/combat-role'
@@ -194,13 +197,26 @@ function computePools({
   }
 }
 
-/** `1 − min(0.30, 0.02 × surviving shield generators)` multiplier lost by the opposing attack pool. */
-function shieldReduction(stacks: BattleStack[]): number {
-  const shields = stacks.reduce(
-    (sum, s) => sum + (isDefenseStack(s) && s.code === DefenseCode.SHIELD_GENERATOR ? Math.max(0, s.count) : 0),
+function countDefense(stacks: BattleStack[], code: DefenseCode): number {
+  return stacks.reduce(
+    (sum, s) => sum + (isDefenseStack(s) && s.code === code ? Math.max(0, s.count) : 0),
     0
   )
-  return Math.min(SHIELD_REDUCTION_CAP, SHIELD_REDUCTION_PER_UNIT * shields)
+}
+
+/**
+ * Shares of the opposing attack pool removed by surviving defenses: shield generators `min(0.30, 0.02 × n)`
+ * (slice 029) and spore clouds `min(0.15, 0.01 × n)` (slice 036), capped at 0.40 together. The spore share is
+ * what is left under the combined cap once the shield share is counted.
+ */
+function attackReductions(stacks: BattleStack[]): { shield: number; spore: number } {
+  const shield = Math.min(SHIELD_REDUCTION_CAP, SHIELD_REDUCTION_PER_UNIT * countDefense(stacks, DefenseCode.SHIELD_GENERATOR))
+  const spore_raw = Math.min(SPORE_REDUCTION_CAP, SPORE_REDUCTION_PER_UNIT * countDefense(stacks, DefenseCode.SPORE_CLOUD))
+  const spore = Math.max(0, Math.min(spore_raw, ATTACK_REDUCTION_CAP - shield))
+  return {
+    shield,
+    spore,
+  }
 }
 
 function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroopClass | null {
@@ -221,25 +237,43 @@ function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroop
   return best
 }
 
+type CasualtyTiers = {
+  rampart: number
+  combat: number
+  turret: number
+  plasma_battery: number
+  shield_generator: number
+}
+
 /**
  * Casualty tiers (slice 029). Without defenses this is the former order:
  * combat → carrier → civilian → scout.
  */
-const NORMAL_TIER = {
+const NORMAL_TIER: CasualtyTiers = {
   rampart: 0,
   combat: 1,
-  [DefenseCode.TURRET]: 2,
-  [DefenseCode.PLASMA_BATTERY]: 3,
-  [DefenseCode.SHIELD_GENERATOR]: 4,
-} as const
+  turret: 2,
+  plasma_battery: 3,
+  shield_generator: 4,
+}
 
-const SIEGE_TIER = {
+const SIEGE_TIER: CasualtyTiers = {
   rampart: 0,
-  [DefenseCode.SHIELD_GENERATOR]: 1,
-  [DefenseCode.PLASMA_BATTERY]: 2,
-  [DefenseCode.TURRET]: 3,
+  shield_generator: 1,
+  plasma_battery: 2,
+  turret: 3,
   combat: 4,
-} as const
+}
+
+/** Tier group of each targetable defense: faction defenses share a common one (slice 036). */
+const DEFENSE_TIER_GROUP: Record<Exclude<DefenseCode, DefenseCode.MINEFIELD>, Exclude<keyof CasualtyTiers, 'combat'>> = {
+  [DefenseCode.RAMPART]: 'rampart',
+  [DefenseCode.MYCELIUM_WALL]: 'rampart',
+  [DefenseCode.TURRET]: 'turret',
+  [DefenseCode.SPORE_CLOUD]: 'turret',
+  [DefenseCode.PLASMA_BATTERY]: 'plasma_battery',
+  [DefenseCode.SHIELD_GENERATOR]: 'shield_generator',
+}
 
 const NON_COMBAT_TIER: Record<Exclude<CombatRole, CombatRole.COMBAT>, number> = {
   [CombatRole.CARRIER]: 5,
@@ -258,9 +292,8 @@ function casualtySortKey({
 }): number {
   const tiers = siege ? SIEGE_TIER : NORMAL_TIER
   if (isDefenseStack(stack)) {
-    const tier = stack.code === DefenseCode.RAMPART
-      ? tiers.rampart
-      : tiers[stack.code as DefenseCode.TURRET | DefenseCode.PLASMA_BATTERY | DefenseCode.SHIELD_GENERATOR]
+    // Minefields are never casualty candidates (filtered out in `applyLosses`).
+    const tier = tiers[DEFENSE_TIER_GROUP[stack.code as Exclude<DefenseCode, DefenseCode.MINEFIELD>]]
     return tier * 1_000_000
   }
   const role = combatRoleFor(stack.code)
@@ -430,8 +463,11 @@ export class CombatService {
       plasma_available: defender_plasma,
     })
 
-    const shield_reduction = shieldReduction(defender_stacks)
-    const attacker_attack_pool = att_pools.attack_pool * (1 - shield_reduction)
+    const {
+      shield: shield_reduction,
+      spore: spore_reduction,
+    } = attackReductions(defender_stacks)
+    const attacker_attack_pool = att_pools.attack_pool * (1 - shield_reduction - spore_reduction)
 
     const att_dominant = dominantClass(att_pools.class_attack)
     const def_dominant = dominantClass(def_pools.class_attack)
@@ -470,6 +506,7 @@ export class CombatService {
       defender_losses: def_result.losses,
       defender_plasma_spent: def_pools.plasma_spent,
       shield_reduction,
+      spore_reduction,
     }
 
     const winner = resolveBattleWinner({

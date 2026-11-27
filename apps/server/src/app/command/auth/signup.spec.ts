@@ -183,6 +183,37 @@ describe('signupAuth', () => {
     assert.strictEqual(playerCreate.mock.calls.length, 0)
   })
 
+  it('should prevent user from signup with the ash liturgy (system-only faction)', async () => {
+    await assert.rejects(
+      () => signupAuth({
+        player_name,
+        city_name,
+        faction_code: FactionCode.THE_ASH_LITURGY
+      }),
+      new RegExp(FactionError.NOT_PLAYABLE)
+    )
+
+    assert.strictEqual(playerCreate.mock.calls.length, 0)
+  })
+
+  it('should accept la Symbiose and bootstrap its own roster (slice 036)', async () => {
+    await signupAuth({
+      player_name,
+      city_name,
+      faction_code: FactionCode.THE_SYMBIOSIS
+    })
+
+    const created_player = playerCreate.mock.calls[0][0]
+    assert.strictEqual(created_player.faction_code, FactionCode.THE_SYMBIOSIS)
+    const symbiosis_codes = TroopService.codesForFaction(FactionCode.THE_SYMBIOSIS)
+    assert.strictEqual(symbiosis_codes.length, 9)
+    assert.deepStrictEqual(
+      troopCreate.mock.calls.map(([ troop ]) => troop.code).sort(),
+      [ ...symbiosis_codes ].sort()
+    )
+    assert.strictEqual(defenseCreate.mock.calls.length, Object.keys(DefenseCode).length)
+  })
+
   it('should prevent user from settling a city with an existing name', async () => {
     cityExist.mockResolvedValue(true)
 

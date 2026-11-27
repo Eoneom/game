@@ -10,6 +10,7 @@ import {
 import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
+import { DefenseCode } from '#core/defense/constant/code'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
@@ -58,6 +59,7 @@ export async function createBattleReports({
   outcome,
   loot,
   sheltered = NOTHING,
+  regrown_defenses = [],
   finished_at,
 }: {
   battle: BattleEntity
@@ -66,6 +68,8 @@ export async function createBattleReports({
   loot: Resource
   /** Resources the defender's shelter kept out of loot (slice 028). */
   sheltered?: Resource
+  /** Mycelium walls that grew back (slice 036): shown in the defender's report only. */
+  regrown_defenses?: { code: DefenseCode; count: number }[]
   finished_at: number
 }): Promise<CreatedBattleReports> {
   const repository = Factory.getRepository()
@@ -156,6 +160,14 @@ export async function createBattleReports({
     },
     defender_metadata: {
       ...shared,
+      ...(regrown_defenses.length > 0
+        ? {
+          outcome: {
+            ...outcome,
+            regrown_defenses,
+          },
+        }
+        : {}),
       perspective: ReportPerspective.DEFENDER,
       sheltered,
     },

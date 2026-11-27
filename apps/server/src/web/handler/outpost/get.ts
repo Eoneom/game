@@ -54,6 +54,7 @@ const response_mapper = ({
   pre_cell_earnings_per_second,
   cell_resource_coefficient,
   technology_production_multiplier,
+  faction_production_multiplier,
   warehouses_capacity,
   warehouse_full_in_seconds
 }: OutpostGetQueryResponse): OutpostGetDataResponse => {
@@ -83,6 +84,10 @@ const response_mapper = ({
       plastic: technology_production_multiplier.plastic,
       mushroom: technology_production_multiplier.mushroom,
       plasma: technology_production_multiplier.plasma
+    },
+    faction_production_multiplier: {
+      plastic: faction_production_multiplier.plastic,
+      mushroom: faction_production_multiplier.mushroom
     },
     warehouses_capacity: {
       plastic: warehouses_capacity.plastic,

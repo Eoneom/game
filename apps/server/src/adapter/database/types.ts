@@ -132,6 +132,7 @@ export interface BattleRound {
   defender_plasma_spent: Generated<number>;
   round: number;
   shield_reduction: Generated<number>;
+  spore_reduction: Generated<number>;
 }
 
 export interface ChatMessage {

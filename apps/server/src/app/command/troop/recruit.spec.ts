@@ -305,6 +305,62 @@ describe('recruitTroop', () => {
     )
   })
 
+  describe('Symbiose roster (slice 036)', () => {
+    const symbiosis_codes = [
+      TroopCode.DRIFTING_SPORE,
+      TroopCode.SEED_BEARER,
+      TroopCode.MYCELIAL_PORTER,
+      TroopCode.SYMBIONT_GROWER,
+      TroopCode.DECOMPOSER,
+      TroopCode.ROOT_WARDEN,
+      TroopCode.SPORE_SWARM,
+      TroopCode.FUNGAL_COLOSSUS,
+      TroopCode.TOXIC_HOWLER,
+    ]
+
+    it('should reject every Symbiose code for a Confederation player', async () => {
+      for (const troop_code of symbiosis_codes) {
+        await assert.rejects(
+          () => recruitTroop({
+            city_id: city.id,
+            player_id,
+            troop_code,
+            count: 1,
+          }),
+          new RegExp(TroopError.NOT_IN_FACTION_ROSTER)
+        )
+      }
+      assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 0)
+    })
+
+    it('should let a Symbiose player recruit its own codes only', async () => {
+      repository.player.get = vi.fn().mockResolvedValue(PlayerEntity.create({
+        id: player_id,
+        name: 'dummy',
+        faction_code: FactionCode.THE_SYMBIOSIS,
+        system_controlled: false
+      }))
+
+      await assert.rejects(
+        () => recruitTroop({
+          city_id: city.id,
+          player_id,
+          troop_code: TroopCode.EXPLORER,
+          count: 1,
+        }),
+        new RegExp(TroopError.NOT_IN_FACTION_ROSTER)
+      )
+
+      await recruitTroop({
+        city_id: city.id,
+        player_id,
+        troop_code: TroopCode.DRIFTING_SPORE,
+        count: requested_troop_count,
+      })
+      assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 1)
+    })
+  })
+
   it('should purchase the troops in the city', async () => {
     await recruitTroop({
       city_id: city.id,

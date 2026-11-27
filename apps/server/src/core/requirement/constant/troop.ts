@@ -307,4 +307,105 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       }
     ]
   },
+  [TroopCode.DRIFTING_SPORE]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.SEED_BEARER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 9
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.MYCELIAL_PORTER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.SYMBIONT_GROWER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.DECOMPOSER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.ROOT_WARDEN]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 4
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 1
+      }
+    ]
+  },
+  [TroopCode.SPORE_SWARM]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 6
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 3
+      }
+    ]
+  },
+  [TroopCode.FUNGAL_COLOSSUS]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 2
+      }
+    ]
+  },
+  [TroopCode.TOXIC_HOWLER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 7
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 4
+      }
+    ]
+  },
 }

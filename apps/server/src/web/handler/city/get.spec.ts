@@ -43,6 +43,12 @@ const queryResult = {
     plasma: 1.15,
     water: 1
   },
+  faction_production_multiplier: {
+    plastic: 0.9,
+    mushroom: 1.1,
+    plasma: 1,
+    water: 1
+  },
   cell: {
     coordinates: {
       x: 1,
@@ -148,6 +154,10 @@ describe('cityGetHandler', () => {
           mushroom: 1.05,
           plasma: 1.15,
           water: 1
+        },
+        faction_production_multiplier: {
+          plastic: 0.9,
+          mushroom: 1.1
         },
         warehouses_capacity: {
           plastic: 2000,
