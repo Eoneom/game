@@ -12,6 +12,8 @@ const placeholder_image_src: Record<DefenseCode, string> = {
   [DefenseCode.SHIELD_GENERATOR]: '/buildings/solar_panel.png',
   [DefenseCode.MYCELIUM_WALL]: '/buildings/mushroom_farm.png',
   [DefenseCode.SPORE_CLOUD]: '/troops/spore_acolyte.png',
+  [DefenseCode.FIELD_ARTILLERY]: '/troops/assault_behemoth.png',
+  [DefenseCode.BARBED_WIRE]: '/buildings/plastic_warehouse.png',
 }
 
 export const defenseImageSrc = (code: DefenseCode): string => placeholder_image_src[code]

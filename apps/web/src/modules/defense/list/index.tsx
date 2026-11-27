@@ -34,7 +34,7 @@ export const DefenseList: React.FC<Props> = ({ cityId, selectedCode, onSelect, i
     >
       <p className="m-0 text-xs text-amber-dim">× {defense.count}</p>
       <p className="m-0 text-[11px] text-label">
-        ATK {defense.attack} / VIE {defense.life} · {defense.points} pt{defense.points > 1 ? 's' : ''}
+        ATK {defense.attack_by_round?.join('-') ?? defense.attack} / VIE {defense.life} · {defense.points} pt{defense.points > 1 ? 's' : ''}
       </p>
     </ListItem>
   )), [defenses, selectedCode, onSelect, building])

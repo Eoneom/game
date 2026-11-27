@@ -26,6 +26,8 @@ describe('AuthSignupForm', () => {
     expect(screen.getByRole('radio', { name: 'La confédération' })).toBeChecked()
     expect(screen.getByRole('radio', { name: 'La Symbiose' })).not.toBeChecked()
     expect(screen.getByText('Armées nombreuses, +10 % champignons, −10 % plastique')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'L\'Ordre du Bastion' })).not.toBeChecked()
+    expect(screen.getByText('Troupes lourdes, +15 % de vie en défense de ses villes')).toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: 'Singularité technologique' })).not.toBeInTheDocument()
     expect(screen.queryByRole('radio', { name: 'Liturgie des cendres' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'S\'inscrire' })).toBeInTheDocument()

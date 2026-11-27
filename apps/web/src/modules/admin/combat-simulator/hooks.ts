@@ -22,6 +22,7 @@ export type CombatSimulatorFaction =
   | FactionCode.THE_TECHNOLOGICAL_SINGULARITY
   | FactionCode.THE_ASH_LITURGY
   | FactionCode.THE_SYMBIOSIS
+  | FactionCode.THE_BASTION_ORDER
 
 export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   code: CombatSimulatorFaction
@@ -42,6 +43,10 @@ export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   {
     code: FactionCode.THE_SYMBIOSIS,
     label: 'Symbiose',
+  },
+  {
+    code: FactionCode.THE_BASTION_ORDER,
+    label: 'Ordre du Bastion',
   },
 ]
 
@@ -72,6 +77,12 @@ export const PVP_COMBAT_TROOP_CODES_BY_FACTION: Record<
     TroopCode.SPORE_SWARM,
     TroopCode.FUNGAL_COLOSSUS,
     TroopCode.TOXIC_HOWLER,
+  ],
+  [FactionCode.THE_BASTION_ORDER]: [
+    TroopCode.GRENADIER,
+    TroopCode.DRAGOON,
+    TroopCode.SIEGE_TANK,
+    TroopCode.MOBILE_MORTAR,
   ],
 }
 

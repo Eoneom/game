@@ -36,4 +36,18 @@ export const DefenseTranslations: Record<DefenseCode, { name: string, descriptio
     description: 'Des spores toxiques en suspension, qui brûlent les poumons et voilent la vue des assaillants.',
     effect: 'Défense armée. Chaque nuage réduit l\'attaque ennemie de 1 %, jusqu\'à 15 % (40 % au total avec les boucliers).',
   },
+  [DefenseCode.FIELD_ARTILLERY]: {
+    name: 'Artillerie de position',
+    description: 'Des pièces lourdes d\'avant l\'effondrement, retranchées derrière les murs et réglées sur chaque approche.',
+    effect: 'Défense armée. Brise les assauts : l\'essentiel de ses dégâts tombe aux tours 1 et 2.',
+  },
+  [DefenseCode.BARBED_WIRE]: {
+    name: 'Barbelés',
+    description: 'Des rouleaux de fil barbelé tendus devant les murs, qui ralentissent et désorganisent l\'assaut.',
+    effect: 'Aucune attaque. Tombe en premier. Chaque rouleau réduit l\'attaque ennemie de 1 % au tour 1 (jusqu\'à 10 %) et de 0,5 % au tour 2 (jusqu\'à 5 %), dans la limite de 40 % au total avec boucliers et spores.',
+  },
 }
+
+/** Per-round attack profile of a defense (slice 037), e.g. "60 / 50 / 25 / 20 / 20"; null for a flat attack. */
+export const formatAttackByRound = (attack_by_round?: number[]): string | null =>
+  attack_by_round && attack_by_round.length > 0 ? attack_by_round.join(' / ') : null

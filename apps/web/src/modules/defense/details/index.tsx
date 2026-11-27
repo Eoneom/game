@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { DefenseListEntry } from '@eoneom/api-client'
 
-import { DefenseTranslations } from '#defense/translations'
+import { DefenseTranslations, formatAttackByRound } from '#defense/translations'
 import { defenseImageSrc } from '#defense/image'
 import { maxBuildableCount } from '#defense/capacity'
 import { useBuildDefense, useCityDefenses } from '#defense/hooks'
@@ -27,6 +27,7 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
   const { isRequirementMet } = useRequirement({ cityId, requirement: defense.requirement })
 
   const { name, description, effect } = DefenseTranslations[defense.code]
+  const attackByRound = formatAttackByRound(defense.attack_by_round)
   const capacity = data?.capacity ?? { total: 0, used: 0, queued: 0 }
   const maxCount = maxBuildableCount({ capacity, points: defense.points })
   const ongoing = data?.ongoing_build ?? null
@@ -57,6 +58,11 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
         <li>Points <span className="font-mono text-amber">{defense.points}</span></li>
         <li>{defense.armed ? 'Armée' : 'Non armée'}</li>
       </ul>
+      {attackByRound && (
+        <p className="m-0 text-sm text-amber-dim">
+          Attaque par tour (1 → 5) : <span className="font-mono text-amber">{attackByRound}</span>
+        </p>
+      )}
       <p className="m-0 text-sm text-amber-dim">
         Dans la ville : <span className="font-mono text-amber">{defense.count}</span>
       </p>

@@ -187,4 +187,49 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     description: 'Crache des toxines paralysantes.',
     effect: 'ATK 11 · DEF 5 · VIE 5',
   },
+  [TroopCode.SENTINEL]: {
+    name: 'Vigie',
+    description: 'Guetteur de l\'Ordre, posté sur les hauteurs, qui relève chaque mouvement.',
+    effect: 'Éclaireur de l\'Ordre du Bastion.',
+  },
+  [TroopCode.FIELD_ENGINEER]: {
+    name: 'Ingénieur de campagne',
+    description: 'Arpente le terrain et trace les fondations d\'un nouveau bastion.',
+    effect: 'Permet de coloniser un emplacement en créant une nouvelle ville.',
+  },
+  [TroopCode.SUPPLY_TRUCK]: {
+    name: 'Camion de ravitaillement',
+    description: 'Vieux camion militaire blindé, rafistolé pour suivre les colonnes.',
+    effect: '',
+  },
+  [TroopCode.QUARTERMASTER]: {
+    name: 'Intendant',
+    description: 'Tient les rations de la garnison et fait tourner les champignonnières.',
+    effect: 'Récolte des champignons.',
+  },
+  [TroopCode.SCRAPPER]: {
+    name: 'Ferrailleur',
+    description: 'Démonte les carcasses d\'avant l\'effondrement pour en tirer le plastique.',
+    effect: 'Récolte du plastique.',
+  },
+  [TroopCode.GRENADIER]: {
+    name: 'Grenadier',
+    description: 'Infanterie de ligne cuirassée, lente et inébranlable.',
+    effect: 'ATK 13 · DEF 16 · VIE 18',
+  },
+  [TroopCode.DRAGOON]: {
+    name: 'Dragon mécanisé',
+    description: 'Unité de choc à moto blindée.',
+    effect: 'ATK 22 · DEF 5 · VIE 6',
+  },
+  [TroopCode.SIEGE_TANK]: {
+    name: 'Char de siège',
+    description: 'Char d\'avant l\'effondrement, restauré pièce par pièce.',
+    effect: 'ATK 14 · DEF 18 · VIE 19',
+  },
+  [TroopCode.MOBILE_MORTAR]: {
+    name: 'Mortier mobile',
+    description: 'Équipe de mortier tractée, dévastatrice mais fragile.',
+    effect: 'ATK 17 · DEF 7 · VIE 7',
+  },
 }

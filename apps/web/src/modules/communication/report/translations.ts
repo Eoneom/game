@@ -41,6 +41,8 @@ type CombatModifiers = {
   attack: number
   life: number
   fortification?: number
+  /** Garrison life bonus of the city owner's own troops (slice 037). */
+  garrison?: number
 }
 
 const formatModifierPercent = (multiplier: number): string => {
@@ -64,7 +66,10 @@ export const regrowthLines = (regrown?: { code: DefenseCode, count: number }[]):
     .filter(line => line.count > 0)
     .map(line => `${DefenseTranslations[line.code].name} : +${line.count} repoussé${line.count > 1 ? 's' : ''}`)
 
-/** Arsenal technology bonus for one side, e.g. "+9 % attaque, +6 % vie"; null when neutral. */
+/**
+ * Combat modifiers of one side, e.g. "+9 % attaque, +6 % vie" (Arsenal), "+9 % fortification" or
+ * "Garnison +15 % vie" (slice 037); null when neutral.
+ */
 export const formatCombatModifiers = (modifiers?: CombatModifiers): string | null => {
   if (!modifiers) return null
   const parts = [
@@ -72,6 +77,9 @@ export const formatCombatModifiers = (modifiers?: CombatModifiers): string | nul
     modifiers.life !== 1 ? `${formatModifierPercent(modifiers.life)} vie` : null,
     modifiers.fortification !== undefined && modifiers.fortification !== 1
       ? `${formatModifierPercent(modifiers.fortification)} fortification`
+      : null,
+    modifiers.garrison !== undefined && modifiers.garrison !== 1
+      ? `Garnison ${formatModifierPercent(modifiers.garrison)} vie`
       : null,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(', ') : null

@@ -143,6 +143,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
     const has_plasma = battle.round_summaries.some(row => (row.defender_plasma_spent ?? 0) > 0)
     const has_shield = battle.round_summaries.some(row => (row.shield_reduction ?? 0) > 0)
     const has_spores = battle.round_summaries.some(row => (row.spore_reduction ?? 0) > 0)
+    const has_barbed_wire = battle.round_summaries.some(row => (row.barbed_wire_reduction ?? 0) > 0)
     const regrowth = battle.perspective === 'defender' ? regrowthLines(battle.outcome.regrown_defenses) : []
     return (
       <LayoutDetailsContent>
@@ -165,8 +166,8 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
         </p>
         {(attacker_modifiers || defender_modifiers) && (
           <p className="details-meta">
-            Technologies — attaquant : {attacker_modifiers ?? 'aucune'} ;
-            {battle.perspective === 'reinforcement' ? 'vos renforts' : 'défenseur'} : {defender_modifiers ?? 'aucune'}
+            Modificateurs — attaquant : {attacker_modifiers ?? 'aucun'} ;
+            {battle.perspective === 'reinforcement' ? 'vos renforts' : 'défenseur'} : {defender_modifiers ?? 'aucun'}
           </p>
         )}
         {hasResources(report.resources) && (
@@ -219,6 +220,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
               {has_plasma && <th>Plasma dépensé</th>}
               {has_shield && <th>Bouclier</th>}
               {has_spores && <th>Spores</th>}
+              {has_barbed_wire && <th>Barbelés</th>}
             </tr>
           </thead>
           <tbody>
@@ -230,6 +232,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
                 {has_plasma && <td>{row.defender_plasma_spent ?? 0}</td>}
                 {has_shield && <td>{formatShieldReduction(row.shield_reduction) ?? '—'}</td>}
                 {has_spores && <td>{formatShieldReduction(row.spore_reduction) ?? '—'}</td>}
+                {has_barbed_wire && <td>{formatShieldReduction(row.barbed_wire_reduction) ?? '—'}</td>}
               </tr>
             ))}
           </tbody>

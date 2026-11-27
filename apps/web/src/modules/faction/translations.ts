@@ -2,7 +2,7 @@ import { FactionCode } from '@eoneom/api-client'
 
 interface FactionTranslation {
   name: string
-  /** Signup card copy (slice 036), for playable factions. */
+  /** Signup card copy (slices 036 / 037), for playable factions. */
   lore?: string
   playstyle?: string
 }
@@ -23,5 +23,10 @@ export const FactionTranslations: Record<FactionCode, FactionTranslation> = {
     name: 'La Symbiose',
     lore: 'Fusionnés au mycélium qui ronge les ruines, les colons de la Symbiose ne meurent jamais tout à fait : ils repoussent. Armées nombreuses, champignons abondants, plastique rare.',
     playstyle: 'Armées nombreuses, +10 % champignons, −10 % plastique',
+  },
+  [FactionCode.THE_BASTION_ORDER]: {
+    name: 'L\'Ordre du Bastion',
+    lore: 'Derniers héritiers d\'une armée d\'avant l\'effondrement, les soldats de l\'Ordre ne cèdent jamais un mur. Troupes lourdes et lentes, garnisons inébranlables, artillerie redoutée.',
+    playstyle: 'Troupes lourdes, +15 % de vie en défense de ses villes',
   },
 }
