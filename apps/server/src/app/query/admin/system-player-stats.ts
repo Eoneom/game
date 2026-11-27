@@ -305,6 +305,7 @@ export async function collectSystemPlayerStatsSnapshot({
     outpost_summaries,
     ongoing_movements,
     buildings_by_city,
+    movement_capacity,
   ] = await Promise.all([
     Promise.all(cities.map(city => citySummary({ city, player_id }))),
     Promise.all(outposts.map(outpost => outpostSummary({ outpost, player_id }))),
@@ -321,6 +322,7 @@ export async function collectSystemPlayerStatsSnapshot({
         })),
       }
     })),
+    AppService.getMovementCapacity({ player_id }),
   ])
 
   const outposts_sorted_by_coordinates = [ ...outpost_summaries ].sort((left, right) => {
@@ -341,6 +343,8 @@ export async function collectSystemPlayerStatsSnapshot({
     })),
     ongoing_movements,
     buildings_by_city,
+    movement_used: movement_capacity.used,
+    movement_limit: movement_capacity.limit,
     updated_at: now(),
   }
 }

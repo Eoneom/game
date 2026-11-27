@@ -66,6 +66,8 @@ export async function createTroopMovement({
       move_troops,
     })
 
+    await AppService.assertMovementCapacity({ player_id })
+
     const origin_cell = await repository.cell.getCell({ coordinates: origin })
 
     const origin_troops = await repository.troop.listInCell({

@@ -10,5 +10,8 @@ export enum TroopError {
   TRANSPORT_CAPACITY_EXCEEDED = 'troop:movement:transport-capacity-exceeded',
   TRANSPORT_RESOURCES_REQUIRED = 'troop:movement:transport-resources-required',
   TRANSPORT_RESOURCES_NOT_ALLOWED = 'troop:movement:transport-resources-not-allowed',
-  NOT_IN_FACTION_ROSTER = 'troop:not-in-faction-roster'
+  NOT_IN_FACTION_ROSTER = 'troop:not-in-faction-roster',
+  MOVEMENT_LIMIT_REACHED = 'troop:movement:limit-reached',
+  QUEUE_FULL = 'troop:queue-full',
+  QUEUE_ITEM_NOT_FOUND = 'troop:queue-item-not-found'
 }

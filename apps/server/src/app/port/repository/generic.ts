@@ -15,6 +15,7 @@ import { OutpostRepository } from '#app/port/repository/outpost'
 import { ResourceStockRepository } from '#app/port/repository/resource-stock'
 import { BattleRepository } from '#app/port/battle-repository'
 import { SystemPlayerMemoryRepository } from '#app/port/repository/system-player-memory'
+import { TroopRecruitQueueRepository } from '#app/port/repository/troop-recruit-queue'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -39,6 +40,7 @@ export interface Repository {
   report: ReportRepository
   technology: TechnologyRepository
   troop: TroopRepository
+  troop_recruit_queue: TroopRecruitQueueRepository
   battle: BattleRepository
   system_player_memory: SystemPlayerMemoryRepository
 }

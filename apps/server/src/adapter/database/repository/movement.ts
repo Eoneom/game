@@ -33,6 +33,16 @@ export class PostgresMovementRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async countByPlayer({ player_id }: { player_id: string }): Promise<number> {
+    const result = await this.db
+      .selectFrom('movement')
+      .select(({ fn }) => fn.countAll<number>().as('count'))
+      .where('player_id', '=', player_id)
+      .executeTakeFirstOrThrow()
+
+    return Number(result.count)
+  }
+
   protected buildFromRow(row: Selectable<DB['movement']>): MovementEntity {
     return MovementEntity.create({
       id: row.id,

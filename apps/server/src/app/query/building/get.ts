@@ -174,6 +174,13 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
       }
     }
 
+    if (building.code === BuildingCode.UNDERGROUND_SHELTER) {
+      return {
+        current_sheltered: BuildingService.getShelteredResources({ level: building.level }),
+        next_sheltered: BuildingService.getShelteredResources({ level: building.level + 1 })
+      }
+    }
+
     if (isNonProductionConsumingBuildingCode(building.code)) {
       const current_consumption = BuildingService.getEnergyConsumption({
         code: building.code,
@@ -187,6 +194,19 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
         building,
         player_id
       })
+
+      if (building.code === BuildingCode.COMMAND_CENTER) {
+        const { limit } = await AppService.getMovementCapacity({ player_id })
+        return {
+          current_consumption,
+          next_consumption,
+          energy_upgrade_warning,
+          current_movement_bonus: building.level,
+          next_movement_bonus: building.level + 1,
+          movement_limit: limit,
+          recruit_queue_limit: BuildingService.getRecruitQueueLimit({ command_center_level: building.level })
+        }
+      }
 
       return {
         current_consumption,

@@ -27,6 +27,11 @@ import {
   TroopGetRequest,
   TroopGetResponse
 } from './get'
+import { TroopMovementCapacityResponse } from './movement/capacity'
+import {
+  TroopCancelQueuedRequest,
+  TroopCancelQueuedResponse
+} from './cancel-queued'
 
 export class TroopEndpoint {
   private fetcher: Fetcher
@@ -65,6 +70,10 @@ export class TroopEndpoint {
     return this.fetcher.get('/troop/movement', { token })
   }
 
+  public async getMovementCapacity(token: string): Promise<TroopMovementCapacityResponse> {
+    return this.fetcher.get('/troop/movement/capacity', { token })
+  }
+
   public async getMovement(token: string, { movement_id }: TroopGetMovementRequest): Promise<TroopGetMovementResponse> {
     return this.fetcher.get(`/troop/movement/${movement_id}`, { token })
   }
@@ -78,6 +87,13 @@ export class TroopEndpoint {
 
   public async cancel(token: string, body: TroopCancelRequest): Promise<TroopCancelResponse> {
     return this.fetcher.put('/troop/cancel', {
+      body,
+      token
+    })
+  }
+
+  public async cancelQueued(token: string, body: TroopCancelQueuedRequest): Promise<TroopCancelQueuedResponse> {
+    return this.fetcher.put('/troop/queue/cancel', {
       body,
       token
     })

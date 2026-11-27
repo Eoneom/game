@@ -3,6 +3,9 @@ import { createBattleReports } from '#app/command/communication/report/create-ba
 import { runCommand } from '#command/run'
 import { combat_loot_ratio } from '#core/combat/constant/loot'
 import { combatRoleFor } from '#core/combat/troop-combat'
+import { BuildingCode } from '#core/building/constant/code'
+import { BuildingService } from '#core/building/service'
+import { BattleEntity } from '#core/combat/entity/battle'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CityEntity } from '#core/city/entity'
@@ -48,7 +51,17 @@ function toEntities({
     }))
 }
 
-function lootFromStock(stock: ResourceStockEntity, capacity: number): {
+const NO_SHELTER: Resource = {
+  plastic: 0,
+  mushroom: 0,
+  plasma: 0,
+}
+
+/**
+ * Carriers take `floor(max(0, stock − sheltered) × ratio)` of each resource, plastic → mushroom → plasma,
+ * until their capacity runs out. Only city targets have a shelter (slice 028).
+ */
+function lootFromStock(stock: ResourceStockEntity, capacity: number, sheltered: Resource = NO_SHELTER): {
   loot: Resource
   stock: ResourceStockEntity
 } {
@@ -58,7 +71,8 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number): {
   const next = { plastic: stock.plastic, mushroom: stock.mushroom, plasma: stock.plasma }
 
   for (const key of keys) {
-    const lootable = Math.floor(next[key] * combat_loot_ratio[key])
+    const unsheltered = Math.max(0, next[key] - sheltered[key])
+    const lootable = Math.floor(unsheltered * combat_loot_ratio[key])
     const transfer = Math.min(lootable, remaining)
     loot[key] = transfer
     next[key] -= transfer
@@ -78,6 +92,18 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number): {
       last_plasma_gather: stock.last_plasma_gather,
     }),
   }
+}
+
+/** What the target city's `underground_shelter` protects; outposts and field stacks have none. */
+async function shelterCapacityOfTarget(battle: BattleEntity): Promise<Resource> {
+  if (battle.target_kind !== BattleTargetKind.CITY || !battle.target_id) {
+    return NO_SHELTER
+  }
+  const level = await Factory.getRepository().building.getLevel({
+    city_id: battle.target_id,
+    code: BuildingCode.UNDERGROUND_SHELTER,
+  })
+  return BuildingService.getShelteredResources({ level })
 }
 
 export type ApplyBattleOutcomesResult = {
@@ -110,6 +136,11 @@ export async function applyBattleOutcomes({
       attacker_retreated: false,
     }
     let loot: Resource = { plastic: 0, mushroom: 0, plasma: 0 }
+    let sheltered: Resource = {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    }
 
     const troop_deletes: string[] = []
     const troop_updates: TroopEntity[] = []
@@ -145,7 +176,13 @@ export async function applyBattleOutcomes({
       if (capacity > 0) {
         try {
           const stock = await repository.resource_stock.getByCellId({ cell_id: destination_cell.id })
-          const result = lootFromStock(stock, capacity)
+          const city_sheltered = await shelterCapacityOfTarget(battle)
+          sheltered = {
+            plastic: Math.min(stock.plastic, city_sheltered.plastic),
+            mushroom: Math.min(stock.mushroom, city_sheltered.mushroom),
+            plasma: Math.min(stock.plasma, city_sheltered.plasma),
+          }
+          const result = lootFromStock(stock, capacity, city_sheltered)
           if (result.loot.plastic + result.loot.mushroom + result.loot.plasma > 0) {
             loot = result.loot
             stock_update = result.stock
@@ -162,6 +199,8 @@ export async function applyBattleOutcomes({
           ...city,
           player_id: battle.attacker_player_id,
         }))
+        // Waiting recruitment batches belonged to the previous owner.
+        await repository.troop_recruit_queue.deleteByCity({ city_id: city.id })
       }
 
       if (battle.target_kind === BattleTargetKind.OUTPOST && battle.target_id) {
@@ -219,6 +258,7 @@ export async function applyBattleOutcomes({
       movement,
       outcome,
       loot,
+      sheltered,
       finished_at,
     })
 

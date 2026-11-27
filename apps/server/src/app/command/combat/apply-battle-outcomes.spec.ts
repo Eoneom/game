@@ -13,6 +13,7 @@ import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { TroopCode } from '#core/troop/constant/code'
+import { BuildingCode } from '#core/building/constant/code'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 
 vi.mock('#app/command/communication/report/create-battle', () => ({
@@ -28,27 +29,35 @@ describe('applyBattleOutcomes loot', () => {
   const destination_cell = testCityCell({ cell_id: 'destination-cell-id' })
   const origin_cell = testCityCell({ cell_id: 'origin-cell-id' })
   let stockUpdateOne: MockInstance
+  let queueDeleteByCity: MockInstance
+  let buildingGetLevel: MockInstance
+  let city_id: string
 
   function setup({
     stock,
     transporters,
+    shelter_level = 0,
+    target_kind = BattleTargetKind.CITY,
   }: {
     stock: ResourceStockEntity
     transporters: number
+    shelter_level?: number
+    target_kind?: BattleTargetKind
   }): void {
     const city = CityEntity.initCity({
       name: 'defender city',
       player_id: defender_player_id,
       cell_id: destination_cell.id,
     })
+    city_id = city.id
     const battle = BattleEntity.create({
       id: 'battle-id',
       movement_id: 'movement-id',
       attacker_player_id,
       defender_player_id,
       cell_id: destination_cell.id,
-      target_kind: BattleTargetKind.CITY,
-      target_id: city.id,
+      target_kind,
+      target_id: target_kind === BattleTargetKind.FIELD ? null : city.id,
       attacker_strategy: CombatStrategy.BALANCED,
       defender_strategy: CombatStrategy.BALANCED,
       current_round: 1,
@@ -79,6 +88,8 @@ describe('applyBattleOutcomes loot', () => {
     })
 
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
+    queueDeleteByCity = vi.fn().mockResolvedValue(undefined)
+    buildingGetLevel = vi.fn().mockResolvedValue(shelter_level)
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       battle: {
@@ -113,6 +124,8 @@ describe('applyBattleOutcomes loot', () => {
         get: vi.fn().mockResolvedValue(city),
         updateOne: vi.fn().mockResolvedValue(undefined),
       },
+      building: { getLevel: buildingGetLevel },
+      troop_recruit_queue: { deleteByCity: queueDeleteByCity },
     } as unknown as Repository)
   }
 
@@ -180,5 +193,146 @@ describe('applyBattleOutcomes loot', () => {
       plasma: 0,
     })
     assert.strictEqual(stockUpdateOne.mock.calls[0][0].plasma, 1000)
+  })
+
+  describe('underground shelter', () => {
+    it('loots the same as before at shelter level 0', async () => {
+      setup({
+        stock: testResourceStock({
+          cell_id: destination_cell.id,
+          plastic: 1000,
+          mushroom: 1000,
+          plasma: 1000,
+        }),
+        transporters: 1,
+        shelter_level: 0,
+      })
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.ATTACKER,
+        finished_at: 5_000,
+      })
+
+      const {
+        loot,
+        sheltered,
+      } = vi.mocked(createBattleReports).mock.calls[0][0]
+      assert.deepStrictEqual(loot, {
+        plastic: 500,
+        mushroom: 500,
+        plasma: 250,
+      })
+      assert.deepStrictEqual(sheltered, {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      })
+    })
+
+    it('loses at most half of the unsheltered part at level 1 (3000 plastic → 500)', async () => {
+      setup({
+        stock: testResourceStock({
+          cell_id: destination_cell.id,
+          plastic: 3000,
+          mushroom: 1000,
+          plasma: 1000,
+        }),
+        transporters: 1,
+        shelter_level: 1,
+      })
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.ATTACKER,
+        finished_at: 5_000,
+      })
+
+      const {
+        loot,
+        sheltered,
+      } = vi.mocked(createBattleReports).mock.calls[0][0]
+      // plastic: (3000 − 2000) × 50 %, mushroom fully sheltered (1500), plasma: (1000 − 200) × 25 %.
+      assert.deepStrictEqual(loot, {
+        plastic: 500,
+        mushroom: 0,
+        plasma: 200,
+      })
+      assert.deepStrictEqual(sheltered, {
+        plastic: 2000,
+        mushroom: 1000,
+        plasma: 200,
+      })
+      expect(buildingGetLevel).toHaveBeenCalledWith({
+        city_id,
+        code: BuildingCode.UNDERGROUND_SHELTER,
+      })
+      const updated_stock = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated_stock.plastic, 2500)
+      assert.strictEqual(updated_stock.mushroom, 1000)
+      assert.strictEqual(updated_stock.plasma, 800)
+    })
+
+    it('does not shelter outposts', async () => {
+      setup({
+        stock: testResourceStock({
+          cell_id: destination_cell.id,
+          plastic: 3000,
+          mushroom: 0,
+          plasma: 0,
+        }),
+        transporters: 1,
+        shelter_level: 5,
+        target_kind: BattleTargetKind.OUTPOST,
+      })
+      vi.mocked(Factory.getRepository)().outpost = {
+        getById: vi.fn().mockResolvedValue({
+          id: 'outpost-id',
+          type: 'permanent',
+          player_id: defender_player_id,
+          cell_id: destination_cell.id,
+        }),
+        updateOne: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      } as unknown as Repository['outpost']
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.ATTACKER,
+        finished_at: 5_000,
+      })
+
+      const {
+        loot,
+        sheltered,
+      } = vi.mocked(createBattleReports).mock.calls[0][0]
+      assert.strictEqual(loot.plastic, 1500)
+      assert.deepStrictEqual(sheltered, {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      })
+      expect(buildingGetLevel).not.toHaveBeenCalled()
+    })
+  })
+
+  it('clears the waiting recruitment queue of a captured city', async () => {
+    setup({
+      stock: testResourceStock({
+        cell_id: destination_cell.id,
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      }),
+      transporters: 0,
+    })
+
+    await applyBattleOutcomes({
+      battle_id: 'battle-id',
+      winner: BattleWinner.ATTACKER,
+      finished_at: 5_000,
+    })
+
+    expect(queueDeleteByCity).toHaveBeenCalledWith({ city_id })
   })
 })

@@ -14,6 +14,7 @@ import {
 } from '#core/player/system/tick-category'
 import type { SystemEmpireSnapshot } from '#core/player/system/empire-snapshot'
 import { rerankIntentsByUtility } from '#core/player/system/intent-utility'
+import { prioritizeScarceMovementIntents } from '#core/player/system/movement-budget'
 
 export type SystemPlayerActionIntent = {
   category: SystemTickCategory
@@ -279,5 +280,5 @@ export function planSystemPlayerActions(
     })
   }
 
-  return rerankIntentsByUtility(intents, snapshot)
+  return prioritizeScarceMovementIntents(rerankIntentsByUtility(intents, snapshot), snapshot)
 }

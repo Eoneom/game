@@ -13,6 +13,8 @@ import { CellType } from '#core/world/value/cell-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { id } from '#shared/identification'
+import { TroopRecruitQueueEntity } from '#core/troop/recruit-queue-entity'
+import { TROOP_RECRUIT_QUEUE_LIMIT } from '#core/troop/constant/recruit-queue'
 
 describe('TroopListQuery', () => {
   const player_id = id()
@@ -20,7 +22,7 @@ describe('TroopListQuery', () => {
   let city: CityEntity
   let cell: CellEntity
   let troop: TroopEntity
-  let repository: Pick<Repository, 'city' | 'cell' | 'troop' | 'building' | 'technology' | 'outpost'>
+  let repository: Pick<Repository, 'city' | 'cell' | 'troop' | 'building' | 'technology' | 'outpost' | 'troop_recruit_queue'>
 
   beforeEach(() => {
     cell = CellEntity.create({
@@ -58,7 +60,8 @@ describe('TroopListQuery', () => {
       troop: { listInCell: vi.fn().mockResolvedValue([ troop ]) } as unknown as Repository['troop'],
       building: { getLevel: vi.fn().mockResolvedValue(1) } as unknown as Repository['building'],
       technology: { getLevel: vi.fn().mockResolvedValue(0) } as unknown as Repository['technology'],
-      outpost: {} as unknown as Repository['outpost']
+      outpost: {} as unknown as Repository['outpost'],
+      troop_recruit_queue: { listByCity: vi.fn().mockResolvedValue([]) } as unknown as Repository['troop_recruit_queue']
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({
@@ -141,6 +144,47 @@ describe('TroopListQuery', () => {
     })
   })
 
+  it('returns the city recruitment queue and its limit from the command center level', async () => {
+    const queued = TroopRecruitQueueEntity.create({
+      id: id(),
+      player_id,
+      city_id: city.id,
+      troop_code: TroopCode.EXPLORER,
+      count: 4,
+      created_at: 1
+    })
+    repository.troop_recruit_queue.listByCity = vi.fn().mockResolvedValue([ queued ])
+
+    const result = await new TroopListQuery().run({
+      location: {
+        type: 'city',
+        city_id: city.id
+      },
+      player_id
+    })
+
+    expect(result.recruit_queue).toEqual([ queued ])
+    expect(result.recruit_queue_limit).toBe(TROOP_RECRUIT_QUEUE_LIMIT)
+    expect(repository.building.getLevel).toHaveBeenCalledWith({
+      city_id: city.id,
+      code: BuildingCode.COMMAND_CENTER
+    })
+  })
+
+  it('reports no recruitment queue slots without a command center', async () => {
+    repository.building.getLevel = vi.fn().mockResolvedValue(0)
+
+    const result = await new TroopListQuery().run({
+      location: {
+        type: 'city',
+        city_id: city.id
+      },
+      player_id
+    })
+
+    expect(result.recruit_queue_limit).toBe(0)
+  })
+
   it('throws when outpost is not owned by player', async () => {
     const outpost = OutpostEntity.create({
       id: id(),
@@ -179,5 +223,7 @@ describe('TroopListQuery', () => {
 
     expect(result.troops.map(t => t.id)).toContain(troop.id)
     expect(repository.cell.getById).toHaveBeenCalledWith(outpost.cell_id)
+    expect(result.recruit_queue).toEqual([])
+    expect(result.recruit_queue_limit).toBe(0)
   })
 })

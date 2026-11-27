@@ -19,6 +19,7 @@ export type ConsumingBuildingCode =
   | BuildingCode.CENTRAL_INDUCTOR
   | BuildingCode.RESEARCH_LAB
   | BuildingCode.CLONING_FACTORY
+  | BuildingCode.COMMAND_CENTER
 
 export const building_energy_consumption: Record<ConsumingBuildingCode, Energy> = {
   [BuildingCode.RECYCLING_PLANT]: {
@@ -40,6 +41,10 @@ export const building_energy_consumption: Record<ConsumingBuildingCode, Energy> 
   [BuildingCode.CLONING_FACTORY]: {
     base: 100,
     multiplier: 1.25
+  },
+  [BuildingCode.COMMAND_CENTER]: {
+    base: 30,
+    multiplier: 1.2
   }
 }
 

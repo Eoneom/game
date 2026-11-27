@@ -213,6 +213,23 @@ export function setupWebSocketServer(
     }
   })
 
+  eventBus.on(AppEvent.TroopQueueItemDropped, ({
+    player_id,
+    city_id,
+    troop_code,
+    error_code
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.TroopQueueItemDropped,
+        city_id,
+        troop_code,
+        error_code
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.OutpostCreated, ({ player_id }) => {
     const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {

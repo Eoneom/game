@@ -248,3 +248,62 @@ describe('BuildingService.wouldUpgradeExceedEnergySupply', () => {
     }), true)
   })
 })
+
+describe('BuildingService.getShelteredResources', () => {
+  it('shelters nothing at level 0', () => {
+    assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 0 }), {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0
+    })
+  })
+
+  it('shelters the base amounts at level 1', () => {
+    assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 1 }), {
+      plastic: 2000,
+      mushroom: 1500,
+      plasma: 200
+    })
+  })
+
+  it('grows by 1.6 per level and rounds up without float noise', () => {
+    assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 3 }), {
+      plastic: 5120,
+      mushroom: 3840,
+      plasma: 512
+    })
+    assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 4 }), {
+      plastic: 8192,
+      mushroom: 6144,
+      plasma: 820
+    })
+  })
+})
+
+describe('BuildingService.getRecruitQueueLimit', () => {
+  it('has no waiting slot without a command center', () => {
+    assert.strictEqual(BuildingService.getRecruitQueueLimit({ command_center_level: 0 }), 0)
+  })
+
+  it('has three waiting slots from level 1, whatever the level', () => {
+    assert.strictEqual(BuildingService.getRecruitQueueLimit({ command_center_level: 1 }), 3)
+    assert.strictEqual(BuildingService.getRecruitQueueLimit({ command_center_level: 7 }), 3)
+  })
+})
+
+describe('BuildingService.getEnergyConsumption for the command center', () => {
+  it('consumes 30 at level 1 and grows by 1.2', () => {
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.COMMAND_CENTER,
+      level: 0
+    }), 0)
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.COMMAND_CENTER,
+      level: 1
+    }), 30)
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.COMMAND_CENTER,
+      level: 2
+    }), 36)
+  })
+})

@@ -13,11 +13,14 @@ export type SystemPlayerFailedAttackMemory = SystemPlayerMemoryCoordinates & {
 export type SystemPlayerMemory = {
   failed_base_cells: SystemPlayerMemoryCoordinates[]
   failed_attack_targets: SystemPlayerFailedAttackMemory[]
+  /** Consecutive ticks with `movement_used ≥ movement_limit − 1` (slice 028). */
+  movement_saturated_ticks: number
 }
 
 export const EMPTY_SYSTEM_PLAYER_MEMORY: SystemPlayerMemory = {
   failed_base_cells: [],
   failed_attack_targets: [],
+  movement_saturated_ticks: 0,
 }
 
 export function coordinatesKey(coords: SystemPlayerMemoryCoordinates): string {

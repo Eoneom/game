@@ -77,6 +77,11 @@ describe('createBattleReports', () => {
         attacker_retreated: false,
       },
       loot: { plastic: 0, mushroom: 0, plasma: 0 },
+      sheltered: {
+        plastic: 2000,
+        mushroom: 400,
+        plasma: 200,
+      },
       finished_at: 2_000,
     })
 
@@ -85,6 +90,17 @@ describe('createBattleReports', () => {
     assert.deepStrictEqual(result, {
       attacker_report_id: call.attacker_report.id,
       defender_report_id: call.defender_report.id,
+    })
+    // Only the defender learns what its shelter protected.
+    assert.deepStrictEqual(call.defender_metadata.sheltered, {
+      plastic: 2000,
+      mushroom: 400,
+      plasma: 200,
+    })
+    assert.deepStrictEqual(call.attacker_metadata.sheltered, {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
     })
   })
 })

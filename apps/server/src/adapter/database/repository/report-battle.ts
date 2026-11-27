@@ -20,6 +20,7 @@ export type ReportBattleMetadataRow = {
   casualties_attacker_json: unknown
   casualties_defender_json: unknown
   round_summaries_json: unknown
+  sheltered_json: unknown
 }
 
 /**
@@ -52,6 +53,7 @@ export async function insertReportBattleRow(
     casualties_attacker_json: toJsonb(row.casualties_attacker_json),
     casualties_defender_json: toJsonb(row.casualties_defender_json),
     round_summaries_json: toJsonb(row.round_summaries_json),
+    sheltered_json: toJsonb(row.sheltered_json),
   }).execute()
 }
 

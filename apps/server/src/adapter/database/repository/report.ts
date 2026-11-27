@@ -277,6 +277,7 @@ export class PostgresReportRepository
         casualties_attacker_json: attacker_metadata.casualties_attacker,
         casualties_defender_json: attacker_metadata.casualties_defender,
         round_summaries_json: attacker_metadata.round_summaries,
+        sheltered_json: attacker_metadata.sheltered,
       })
       await insertReportBattleRow(this.db, {
         report_id: defender_report.id,
@@ -297,6 +298,7 @@ export class PostgresReportRepository
         casualties_attacker_json: defender_metadata.casualties_attacker,
         casualties_defender_json: defender_metadata.casualties_defender,
         round_summaries_json: defender_metadata.round_summaries,
+        sheltered_json: defender_metadata.sheltered,
       })
     })
   }
@@ -324,6 +326,11 @@ export class PostgresReportRepository
       casualties_attacker: row.casualties_attacker_json as ReportBattleMetadata['casualties_attacker'],
       casualties_defender: row.casualties_defender_json as ReportBattleMetadata['casualties_defender'],
       round_summaries: row.round_summaries_json as ReportBattleMetadata['round_summaries'],
+      sheltered: (row.sheltered_json as ReportBattleMetadata['sheltered'] | null) ?? {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+      },
     }
   }
 

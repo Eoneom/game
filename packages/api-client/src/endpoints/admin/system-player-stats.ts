@@ -78,6 +78,9 @@ export type AdminSystemPlayerStatsSnapshot = {
   technologies: AdminSystemPlayerTechnologyLevel[]
   ongoing_movements: AdminSystemPlayerOngoingMovement[]
   buildings_by_city: AdminSystemPlayerCityBuildings[]
+  /** Movements owned by the player against the command-center cap (slice 028). */
+  movement_used: number
+  movement_limit: number
   updated_at: number
 }
 

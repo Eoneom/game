@@ -57,9 +57,12 @@ import {
 } from '#command/player/system/pending-upgrades'
 import {
   resourcesForTransportToDestination,
+  shouldSystemBuildShelter,
   shouldSystemUpgradeSolarPanel,
   sortBuildingsForSystemUpgrade,
 } from '#command/player/system/storage'
+import { shouldPrioritizeSystemCommandCenter } from '#core/player/system/movement-budget'
+import { TroopError } from '#core/troop/error'
 import {
   loadEmpireCombatArmyCounts,
   pickSystemAttack,
@@ -132,7 +135,34 @@ function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
   return left.x === right.x && left.y === right.y
 }
 
-async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | null> {
+/**
+ * Movement-creating categories consume one slot of the cap each (slice 028).
+ * Throws the skippable `troop:movement:limit-reached` when the tick has no slot left.
+ */
+function assertSystemMovementSlot(tick_context?: SystemTickContext): void {
+  const snapshot = tick_context?.snapshot
+  if (!tick_context || !snapshot) {
+    return
+  }
+  TroopService.assertMovementCapacity({
+    used: snapshot.movement_used + tick_context.movements_created,
+    limit: snapshot.movement_limit,
+  })
+}
+
+function consumeSystemMovementSlot(tick_context?: SystemTickContext): void {
+  if (tick_context) {
+    tick_context.movements_created += 1
+  }
+}
+
+async function tryUpgrade(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
+  const prioritize_command_center = tick_context?.snapshot
+    ? shouldPrioritizeSystemCommandCenter(tick_context.snapshot)
+    : false
   const { cities } = await new CityListQuery().run({ player_id })
   const { technologies, research_queue } = await new TechnologyListQuery().run({ player_id })
   const storage_compression_level = technologies
@@ -227,6 +257,7 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
       production_energy_ratio: city_details.production_energy_ratio,
       energy_supply: city_details.energy,
       energy_consumption: city_details.energy_consumption,
+      prioritize_command_center,
     })
 
     for (const projected_building of buildings_to_try) {
@@ -265,6 +296,11 @@ async function tryUpgrade(player_id: string): Promise<Record<string, unknown> | 
           energy_consumption: city_details.energy_consumption,
           production_energy_ratio: city_details.production_energy_ratio,
         })) {
+        continue
+      }
+
+      if (building.code === BuildingCode.UNDERGROUND_SHELTER
+        && !shouldSystemBuildShelter(building_list.buildings)) {
         continue
       }
 
@@ -652,6 +688,7 @@ async function tryExplore(
   player_id: string,
   tick_context?: SystemTickContext,
 ): Promise<Record<string, unknown> | null> {
+  assertSystemMovementSlot(tick_context)
   const frontier_queue_length = tick_context?.snapshot?.frontier_queue_length
     ?? (await summarizeSystemFrontierQueue(player_id, tick_context)).frontier_queue_length
   if (frontier_queue_length > 0) {
@@ -729,6 +766,7 @@ async function tryExplore(
         }
       ]
     })
+    consumeSystemMovementSlot(tick_context)
     return {
       action: MovementAction.EXPLORE,
       origin: origin.coordinates,
@@ -871,6 +909,7 @@ async function tryBase(
   player_id: string,
   tick_context?: SystemTickContext,
 ): Promise<Record<string, unknown> | null> {
+  assertSystemMovementSlot(tick_context)
   const [
     { cities, count_limit: city_count_limit },
     { outposts, count_limit: outpost_count_limit },
@@ -939,6 +978,7 @@ async function tryBase(
       destination: destination.coordinates,
       move_troops,
     })
+    consumeSystemMovementSlot(tick_context)
     return {
       action: MovementAction.BASE,
       origin: origin.coordinates,
@@ -1054,7 +1094,11 @@ async function findCityTroopForRole({
   return null
 }
 
-async function tryDeployOutpostTroops(player_id: string): Promise<Record<string, unknown> | null> {
+async function tryDeployOutpostTroops(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
+  assertSystemMovementSlot(tick_context)
   const [
     {
       outposts,
@@ -1125,6 +1169,7 @@ async function tryDeployOutpostTroops(player_id: string): Promise<Record<string,
           },
         ],
       })
+      consumeSystemMovementSlot(tick_context)
       return {
         action: MovementAction.BASE,
         role,
@@ -1145,7 +1190,11 @@ async function tryDeployOutpostTroops(player_id: string): Promise<Record<string,
   return null
 }
 
-async function tryTransport(player_id: string): Promise<Record<string, unknown> | null> {
+async function tryTransport(
+  player_id: string,
+  tick_context?: SystemTickContext,
+): Promise<Record<string, unknown> | null> {
+  assertSystemMovementSlot(tick_context)
   const { cities } = await new CityListQuery().run({ player_id })
   if (cities.length === 0) {
     return null
@@ -1250,6 +1299,7 @@ async function tryTransport(player_id: string): Promise<Record<string, unknown> 
       move_troops,
       resources
     })
+    consumeSystemMovementSlot(tick_context)
     return {
       action: MovementAction.TRANSPORT,
       origin: cell.coordinates,
@@ -1269,6 +1319,7 @@ async function tryAttack(
   player_id: string,
   tick_context?: SystemTickContext,
 ): Promise<Record<string, unknown> | null> {
+  assertSystemMovementSlot(tick_context)
   const [
     army_counts,
     snapshot,
@@ -1312,12 +1363,17 @@ async function tryAttack(
       combat_strategy: attack.combat_strategy,
     })
   } catch (err) {
+    if (err instanceof Error && err.message === TroopError.MOVEMENT_LIMIT_REACHED) {
+      // Out of movements, not a bad target.
+      throw err
+    }
     await recordFailedSystemAttackTarget({
       player_id,
       coordinates: attack.destination,
     })
     throw err
   }
+  consumeSystemMovementSlot(tick_context)
   return {
     action: MovementAction.ATTACK,
     origin: attack.origin,

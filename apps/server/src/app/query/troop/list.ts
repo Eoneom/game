@@ -11,6 +11,8 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { BuildingCode } from '#core/building/constant/code'
 import { PricingService } from '#core/pricing/service'
 import { OngoingRecruitment } from '#core/troop/type'
+import { TroopRecruitQueueEntity } from '#core/troop/recruit-queue-entity'
+import { BuildingService } from '#core/building/service'
 
 type Location = { type: 'city', city_id: string} | { type: 'outpost', outpost_id: string }
 
@@ -27,6 +29,10 @@ export interface TroopListQueryResponse {
   troops: TroopEntity[]
   costs: Record<TroopCode, CountCostValue>
   pending_recruitment: TroopListPendingRecruitment | null
+  /** Waiting batches of the city (oldest first); always empty for outposts. */
+  recruit_queue: TroopRecruitQueueEntity[]
+  /** Waiting slots available in the city (0 until its command center is built). */
+  recruit_queue_limit: number
 }
 
 export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopListQueryResponse> {
@@ -47,7 +53,9 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
       troops,
       cloning_factory_level,
       replication_catalyst_level,
-      pending_recruit
+      pending_recruit,
+      recruit_queue,
+      command_center_level
     ] = await Promise.all([
       this.repository.troop.listInCell({
         cell_id: cell.id,
@@ -63,7 +71,16 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
       }),
       location.type === 'city'
         ? Factory.getJobQueue().getPendingTroopRecruitProgress({ city_id: location.city_id })
-        : Promise.resolve(null)
+        : Promise.resolve(null),
+      location.type === 'city'
+        ? this.repository.troop_recruit_queue.listByCity({ city_id: location.city_id })
+        : Promise.resolve([]),
+      location.type === 'city'
+        ? this.repository.building.getLevel({
+          city_id: location.city_id,
+          code: BuildingCode.COMMAND_CENTER
+        })
+        : Promise.resolve(0)
     ])
 
     const costs = troops.reduce((acc, troop) => {
@@ -91,7 +108,9 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
           last_progress: pending_recruit.last_progress,
           started_at: pending_recruit.started_at
         }
-        : null
+        : null,
+      recruit_queue,
+      recruit_queue_limit: BuildingService.getRecruitQueueLimit({ command_center_level })
     }
   }
 

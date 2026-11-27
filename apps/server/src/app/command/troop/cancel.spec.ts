@@ -20,6 +20,9 @@ import {
   testResourceStock, testCityCell
 } from '../../test-support/resource-stock'
 import { id } from '#shared/identification'
+import { processTroopRecruitQueue } from '#app/command/troop/start-recruit'
+
+vi.mock('#app/command/troop/start-recruit', () => ({ processTroopRecruitQueue: vi.fn().mockResolvedValue(undefined) }))
 
 describe('cancelTroop', () => {
   const player_id = id()
@@ -177,5 +180,19 @@ describe('cancelTroop', () => {
 
     assert.strictEqual(cancelTroopRecruitProgress.mock.calls.length, 1)
     assert.deepStrictEqual(cancelTroopRecruitProgress.mock.calls[0][0], { city_id: city.id })
+  })
+
+  it('should start the next queued batch after cancelling the active one', async () => {
+    vi.mocked(processTroopRecruitQueue).mockClear()
+
+    await cancelTroop({
+      city_id: city.id,
+      player_id,
+    })
+
+    expect(processTroopRecruitQueue).toHaveBeenCalledWith({
+      player_id,
+      city_id: city.id,
+    })
   })
 })

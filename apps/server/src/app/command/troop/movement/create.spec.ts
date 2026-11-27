@@ -42,8 +42,14 @@ describe('createTroopMovement', () => {
   let scheduleTroopMovementFinish: MockInstance
   let repository: Pick<Repository, 'cell' | 'troop' | 'outpost' | 'movement'>
 
+  let getMovementCapacity: MockInstance
+
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 0,
+      limit: 5
+    })
     origin_troop = TroopEntity.create({
       id: id(),
       code: TroopCode.EXPLORER,
@@ -102,6 +108,74 @@ describe('createTroopMovement', () => {
       action: MovementAction.EXPLORE,
       move_troops })
   }
+
+  describe('movement cap', () => {
+    it('should reject explore and base when the player is at the movement limit', async () => {
+      getMovementCapacity.mockResolvedValue({
+        used: 5,
+        limit: 5
+      })
+
+      for (const action of [
+        MovementAction.EXPLORE,
+        MovementAction.BASE,
+      ]) {
+        await assert.rejects(
+          () => createTroopMovement({
+            player_id,
+            origin,
+            destination,
+            action,
+            move_troops: [
+              {
+                code: TroopCode.EXPLORER,
+                count: 1
+              }
+            ],
+          }),
+          new RegExp(TroopError.MOVEMENT_LIMIT_REACHED)
+        )
+      }
+
+      assert.strictEqual(movementCreate.mock.calls.length, 0)
+      assert.strictEqual(scheduleTroopMovementFinish.mock.calls.length, 0)
+    })
+
+    it('should reject when the player is over the limit after losing a city', async () => {
+      getMovementCapacity.mockResolvedValue({
+        used: 6,
+        limit: 5
+      })
+
+      await assert.rejects(
+        () => callCreate([
+          {
+            code: TroopCode.EXPLORER,
+            count: 1
+          }
+        ]),
+        new RegExp(TroopError.MOVEMENT_LIMIT_REACHED)
+      )
+      assert.strictEqual(movementCreate.mock.calls.length, 0)
+    })
+
+    it('should create the movement while a slot is left', async () => {
+      getMovementCapacity.mockResolvedValue({
+        used: 5,
+        limit: 6
+      })
+
+      await callCreate([
+        {
+          code: TroopCode.EXPLORER,
+          count: 1
+        }
+      ])
+
+      assert.strictEqual(movementCreate.mock.calls.length, 1)
+      expect(getMovementCapacity).toHaveBeenCalledWith({ player_id })
+    })
+  })
 
   it('should reject when origin does not have enough troops', async () => {
     listInCell = vi.fn().mockResolvedValue([
@@ -424,6 +498,46 @@ describe('createTroopMovement', () => {
       )
     })
 
+    it('should reject transport when the player is at the movement limit', async () => {
+      getMovementCapacity.mockResolvedValue({
+        used: 5,
+        limit: 5
+      })
+      origin_troop = TroopEntity.create({
+        ...origin_troop,
+        code: TroopCode.LIGHT_TRANSPORTER,
+        count: 1
+      })
+      listInCell = vi.fn().mockResolvedValue([ origin_troop ])
+      repository.troop = {
+        ...repository.troop,
+        listInCell
+      } as unknown as Repository['troop']
+
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.LIGHT_TRANSPORTER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 100,
+            mushroom: 0,
+            plasma: 0
+          }
+        }),
+        new RegExp(TroopError.MOVEMENT_LIMIT_REACHED)
+      )
+      assert.strictEqual(movementCreate.mock.calls.length, 0)
+      assert.strictEqual(stockUpdateOne.mock.calls.length, 0)
+    })
+
     it('should deduct stock and store cargo on transport create', async () => {
       origin_troop = TroopEntity.create({
         ...origin_troop,
@@ -551,6 +665,38 @@ describe('createTroopMovement', () => {
         }),
       ])
       vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
+    })
+
+    it('rejects attack when the player is at the movement limit', async () => {
+      getMovementCapacity.mockResolvedValue({
+        used: 5,
+        limit: 5
+      })
+      ;(repository as Repository).player = {
+        get: vi.fn().mockImplementation(async (requested_id: string) => ({
+          faction_code: requested_id === player_id
+            ? FactionCode.THE_CONFEDERATION
+            : FactionCode.THE_ASH_LITURGY,
+        })),
+      } as unknown as Repository['player']
+
+      await assert.rejects(
+        () => createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.ATTACK,
+          combat_strategy: CombatStrategy.BALANCED,
+          move_troops: [
+            {
+              code: TroopCode.LEGIONNAIRE,
+              count: 1
+            }
+          ],
+        }),
+        new RegExp(TroopError.MOVEMENT_LIMIT_REACHED),
+      )
+      assert.strictEqual(movementCreate.mock.calls.length, 0)
     })
 
     it('rejects attack without combat_strategy', async () => {

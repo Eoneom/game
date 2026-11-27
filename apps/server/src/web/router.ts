@@ -35,6 +35,8 @@ import { troopGetMovementHandler } from '#web/handler/troop/movement/get'
 import { troopEstimateMovementHandler } from '#web/handler/troop/movement/estimate'
 import { troopCreateMovementHandler } from '#web/handler/troop/movement/create'
 import { troopGetHandler } from '#web/handler/troop/get'
+import { troopMovementCapacityHandler } from '#web/handler/troop/movement/capacity'
+import { troopCancelQueuedHandler } from '#web/handler/troop/cancel-queued'
 import { citySettleHandler } from '#web/handler/city/settle'
 import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
 import { healthGetHandler } from '#web/handler/health/get'
@@ -83,11 +85,13 @@ export const router = (): Router => {
 
   r.get('/troop/movement', authMiddleware, troopListMovementHandler)
   r.post('/troop/movement', authMiddleware, troopCreateMovementHandler)
+  r.get('/troop/movement/capacity', authMiddleware, troopMovementCapacityHandler)
   r.get('/troop/movement/:movement_id', authMiddleware, troopGetMovementHandler)
   r.post('/troop/movement/estimate', authMiddleware, troopEstimateMovementHandler)
 
   r.get('/troop/:troop_id', authMiddleware, troopGetHandler)
   r.put('/troop/cancel', authMiddleware, troopCancelHandler)
+  r.put('/troop/queue/cancel', authMiddleware, troopCancelQueuedHandler)
   r.put('/troop/recruit', authMiddleware, troopRecruitHandler)
   r.get('/city/:city_id/troop', authMiddleware, troopListCityHandler)
   r.get('/outpost/:outpost_id/troop', authMiddleware, troopListOutpostHandler)

@@ -4,7 +4,9 @@ import { TroopListDataResponse } from '@eoneom/api-client/src/endpoints/troop/li
 export const troopListResponseMapper = ({
   troops,
   costs,
-  pending_recruitment
+  pending_recruitment,
+  recruit_queue,
+  recruit_queue_limit
 }: TroopListQueryResponse): TroopListDataResponse => {
   const response_troops: TroopListDataResponse['troops'] = troops.map(troop => {
     const cost = costs[troop.code]
@@ -22,5 +24,13 @@ export const troopListResponseMapper = ({
     }
   })
 
-  return { troops: response_troops }
+  return {
+    troops: response_troops,
+    recruit_queue: recruit_queue.map(item => ({
+      id: item.id,
+      troop_code: item.troop_code,
+      count: item.count
+    })),
+    recruit_queue_limit
+  }
 }

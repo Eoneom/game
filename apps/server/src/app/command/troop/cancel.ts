@@ -1,5 +1,6 @@
 import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
+import { processTroopRecruitQueue } from '#app/command/troop/start-recruit'
 import { AppService } from '#app/service'
 import { TroopError } from '#core/troop/error'
 import { PricingService } from '#core/pricing/service'
@@ -70,5 +71,10 @@ export async function cancelTroop({
       repository.resource_stock.updateOne(updated_stock),
       job_queue.cancelTroopRecruitProgress({ city_id })
     ])
+
+    await processTroopRecruitQueue({
+      player_id,
+      city_id
+    })
   })
 }

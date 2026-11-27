@@ -1,4 +1,5 @@
 import { Factory } from '#adapter/factory'
+import { AppService } from '#app/service'
 import { createReturnBaseTrip } from '#app/command/troop/movement/shared'
 import { runCommand } from '#command/run'
 import { ReportFactory } from '#core/communication/report/factory'
@@ -24,6 +25,12 @@ export async function rebaseTroopMovement({
     if (!movement.isOwnedBy(player_id)) {
       throw new Error(TroopError.MOVEMENT_NOT_OWNER)
     }
+
+    // The return trip replaces the inbound movement, so it does not count against the cap.
+    await AppService.assertMovementCapacity({
+      player_id,
+      replaced_movement_count: 1,
+    })
 
     const troops = await repository.troop.listByMovement({ movement_id })
 

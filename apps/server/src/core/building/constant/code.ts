@@ -7,4 +7,6 @@ export enum BuildingCode {
   CLONING_FACTORY = 'cloning_factory',
   SOLAR_PANEL = 'solar_panel',
   CENTRAL_INDUCTOR = 'central_inductor',
+  COMMAND_CENTER = 'command_center',
+  UNDERGROUND_SHELTER = 'underground_shelter',
 }

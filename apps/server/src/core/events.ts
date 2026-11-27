@@ -6,6 +6,7 @@ export enum AppEvent {
   TechnologyQueueItemDropped = 'technology:queue-item-dropped',
   TroopMovementFinished = 'troop:movement-finished',
   TroopRecruitmentUpdated = 'troop:recruitment-updated',
+  TroopQueueItemDropped = 'troop:queue-item-dropped',
   OutpostCreated = 'outpost:created',
   OutpostDeleted = 'outpost:deleted',
   OutpostResourcesGathered = 'outpost:resources-gathered',

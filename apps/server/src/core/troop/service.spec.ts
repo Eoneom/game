@@ -436,4 +436,29 @@ describe('TroopService', () => {
       }))
     })
   })
+
+  describe('movement cap', () => {
+    it('allows 5 movements without a command center', () => {
+      assert.strictEqual(TroopService.getMovementLimit({ command_center_levels: 0 }), 5)
+    })
+
+    it('adds every command center level', () => {
+      assert.strictEqual(TroopService.getMovementLimit({ command_center_levels: 2 + 3 }), 10)
+    })
+
+    it('rejects a new movement at or over the limit', () => {
+      assert.doesNotThrow(() => TroopService.assertMovementCapacity({
+        used: 4,
+        limit: 5,
+      }))
+      assert.throws(() => TroopService.assertMovementCapacity({
+        used: 5,
+        limit: 5,
+      }), new RegExp(TroopError.MOVEMENT_LIMIT_REACHED))
+      assert.throws(() => TroopService.assertMovementCapacity({
+        used: 6,
+        limit: 5,
+      }), new RegExp(TroopError.MOVEMENT_LIMIT_REACHED))
+    })
+  })
 })

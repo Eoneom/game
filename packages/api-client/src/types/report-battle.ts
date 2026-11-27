@@ -40,6 +40,12 @@ export type ReportBattleMetadata = {
     attacker_losses: { code: TroopCode; count: number }[]
     defender_losses: { code: TroopCode; count: number }[]
   }[]
+  /** Defender perspective: resources the underground shelter kept out of loot (slice 028); zero otherwise. */
+  sheltered: {
+    plastic: number
+    mushroom: number
+    plasma: number
+  }
   /** Arsenal technology multipliers for each side's `combat`-role stacks (1 = no bonus). */
   attacker_modifiers?: ReportBattleModifiers
   defender_modifiers?: ReportBattleModifiers

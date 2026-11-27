@@ -303,6 +303,7 @@ export interface ReportBattle {
   report_id: string;
   round_summaries_json: Json;
   rounds_played: number;
+  sheltered_json: Generated<Json>;
   target_id: string | null;
   target_kind: string;
   winner: string;
@@ -350,6 +351,15 @@ export interface Troop {
   player_id: string;
 }
 
+export interface TroopRecruitQueue {
+  city_id: string;
+  count: number;
+  created_at: Generated<Timestamp>;
+  id: Generated<string>;
+  player_id: string;
+  troop_code: string;
+}
+
 export interface DB {
   auth: Auth;
   battle: Battle;
@@ -380,4 +390,5 @@ export interface DB {
   technology: Technology;
   technology_research_queue: TechnologyResearchQueue;
   troop: Troop;
+  troop_recruit_queue: TroopRecruitQueue;
 }

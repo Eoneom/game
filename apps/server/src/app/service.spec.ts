@@ -16,6 +16,7 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopService } from '#core/troop/service'
+import { TroopError } from '#core/troop/error'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -620,6 +621,52 @@ describe('AppService', () => {
         code: BuildingCode.PLASTIC_WAREHOUSE,
         level: 2
       }) * 1.3)
+    })
+  })
+
+  describe('getMovementCapacity', () => {
+    const player_id = id()
+
+    it('allows 5 movements with no command center', async () => {
+      setRepositoryMock({
+        movement: { countByPlayer: vi.fn().mockResolvedValue(2) },
+        building: { getTotalLevelForPlayer: vi.fn().mockResolvedValue(0) },
+      } as unknown as Repository)
+
+      expect(await AppService.getMovementCapacity({ player_id })).toEqual({
+        used: 2,
+        limit: 5
+      })
+    })
+
+    it('adds the command center levels summed over the player cities', async () => {
+      const get_total_level = vi.fn().mockResolvedValue(2 + 1)
+      setRepositoryMock({
+        movement: { countByPlayer: vi.fn().mockResolvedValue(0) },
+        building: { getTotalLevelForPlayer: get_total_level },
+      } as unknown as Repository)
+
+      expect(await AppService.getMovementCapacity({ player_id })).toEqual({
+        used: 0,
+        limit: 8
+      })
+      expect(get_total_level).toHaveBeenCalledWith({
+        player_id,
+        code: BuildingCode.COMMAND_CENTER
+      })
+    })
+
+    it('ignores the movement a command replaces when asserting capacity', async () => {
+      setRepositoryMock({
+        movement: { countByPlayer: vi.fn().mockResolvedValue(5) },
+        building: { getTotalLevelForPlayer: vi.fn().mockResolvedValue(0) },
+      } as unknown as Repository)
+
+      await expect(AppService.assertMovementCapacity({ player_id })).rejects.toThrow(TroopError.MOVEMENT_LIMIT_REACHED)
+      await expect(AppService.assertMovementCapacity({
+        player_id,
+        replaced_movement_count: 1
+      })).resolves.toBeUndefined()
     })
   })
 

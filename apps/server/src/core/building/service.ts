@@ -9,6 +9,8 @@ import {
 import { getBuildingInitialLevel } from '#core/building/constant/initial-level'
 import { building_order } from '#core/building/constant/order'
 import { warehouses_capacity } from '#core/building/constant/warehouse-capacity'
+import { underground_shelter_capacity } from '#core/building/constant/shelter-capacity'
+import { TROOP_RECRUIT_QUEUE_LIMIT } from '#core/troop/constant/recruit-queue'
 import { BuildingEntity } from '#core/building/entity'
 import { id } from '#shared/identification'
 import { Resource } from '#shared/resource'
@@ -151,6 +153,37 @@ export class BuildingService {
     } = warehouses_capacity[code]
 
     return Math.pow(multiplier, level)*base
+  }
+
+  /** Resources an `underground_shelter` of this level keeps out of loot; nothing at level 0. */
+  static getShelteredResources({ level }: { level: number }): Resource {
+    if (level <= 0) {
+      return {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0
+      }
+    }
+
+    const sheltered = (resource: keyof Resource): number => {
+      const {
+        base,
+        multiplier
+      } = underground_shelter_capacity[resource]
+      // Trim float noise (2000 × 1.6² = 5120.000…01) before rounding up.
+      return Math.ceil(Number((base * Math.pow(multiplier, level - 1)).toFixed(6)))
+    }
+
+    return {
+      plastic: sheltered('plastic'),
+      mushroom: sheltered('mushroom'),
+      plasma: sheltered('plasma')
+    }
+  }
+
+  /** Waiting recruitment slots in a city: none until its command center is built. */
+  static getRecruitQueueLimit({ command_center_level }: { command_center_level: number }): number {
+    return command_center_level >= 1 ? TROOP_RECRUIT_QUEUE_LIMIT : 0
   }
 
   static sortBuildings({ buildings }: { buildings: BuildingEntity[] }): BuildingEntity[] {

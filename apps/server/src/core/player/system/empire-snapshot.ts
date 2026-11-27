@@ -9,6 +9,7 @@ import {
   type SystemAiProfile,
 } from '#core/player/system/ai-profile'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
+import { MOVEMENT_BASE_LIMIT } from '#core/troop/constant/movement-limit'
 
 /** Read-only empire view for one system-player tick (no writes). */
 export type SystemEmpireSnapshot = {
@@ -48,6 +49,9 @@ export type SystemEmpireSnapshot = {
   /** Cross-tick memory loaded for action handlers (failed bases / attacks). */
   memory: SystemPlayerMemory
   ai_profile: SystemAiProfile
+  /** Movements the player owns and the command-center cap (slice 028). */
+  movement_used: number
+  movement_limit: number
 }
 
 export function defaultSystemEmpireSnapshotFields(): Pick<
@@ -62,6 +66,8 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
   | 'memory'
   | 'outpost_limit_reached'
   | 'ai_profile'
+  | 'movement_used'
+  | 'movement_limit'
 > {
   return {
     frontier_queue_length: 0,
@@ -74,6 +80,8 @@ export function defaultSystemEmpireSnapshotFields(): Pick<
     memory: EMPTY_SYSTEM_PLAYER_MEMORY,
     outpost_limit_reached: false,
     ai_profile: getSystemAiProfile(SystemAiProfileId.SINGULARITY_DEFAULT),
+    movement_used: 0,
+    movement_limit: MOVEMENT_BASE_LIMIT,
   }
 }
 

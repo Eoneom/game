@@ -8,5 +8,7 @@ export const building_order: Record<BuildingCode, number> = {
   [BuildingCode.RESEARCH_LAB]: 5,
   [BuildingCode.CLONING_FACTORY]: 6,
   [BuildingCode.SOLAR_PANEL]: 7,
-  [BuildingCode.CENTRAL_INDUCTOR]: 8
+  [BuildingCode.CENTRAL_INDUCTOR]: 8,
+  [BuildingCode.COMMAND_CENTER]: 9,
+  [BuildingCode.UNDERGROUND_SHELTER]: 10
 }

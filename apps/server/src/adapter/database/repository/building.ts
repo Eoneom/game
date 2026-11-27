@@ -28,6 +28,21 @@ export class PostgresBuildingRepository
     return Number(result.total ?? 0)
   }
 
+  async getTotalLevelForPlayer({
+    player_id,
+    code
+  }: { player_id: string, code: BuildingCode }): Promise<number> {
+    const result = await this.db
+      .selectFrom('building')
+      .innerJoin('city', 'city.id', 'building.city_id')
+      .select(({ fn }) => fn.sum<number>('building.level').as('total'))
+      .where('city.player_id', '=', player_id)
+      .where('building.code', '=', code)
+      .executeTakeFirstOrThrow()
+
+    return Number(result.total ?? 0)
+  }
+
   async list({
     city_id,
     codes

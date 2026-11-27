@@ -2,6 +2,7 @@ import { EventEmitter } from 'events'
 import { AppEvent } from '#core/events'
 import type { BuildingCode } from '#core/building/constant/code'
 import type { TechnologyCode } from '#core/technology/constant/code'
+import type { TroopCode } from '#core/troop/constant/code'
 import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import type { BattleWinner } from '#core/combat/value/battle-winner'
@@ -52,6 +53,13 @@ export type TroopRecruitmentUpdatedPayload = {
   player_id: string
 }
 
+type TroopQueueItemDroppedPayload = {
+  player_id: string
+  city_id: string
+  troop_code: TroopCode
+  error_code: string
+}
+
 export type OutpostCreatedPayload = {
   player_id: string
 }
@@ -97,6 +105,7 @@ export type AppEventMap = {
   [AppEvent.TroopMovementFinished]: TroopMovementFinishedPayload
   [AppEvent.BattleFinished]: BattleFinishedPayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
+  [AppEvent.TroopQueueItemDropped]: TroopQueueItemDroppedPayload
   [AppEvent.OutpostCreated]: OutpostCreatedPayload
   [AppEvent.OutpostDeleted]: OutpostDeletedPayload
   [AppEvent.OutpostResourcesGathered]: OutpostResourcesGatheredPayload

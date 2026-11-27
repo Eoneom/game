@@ -51,6 +51,20 @@ export function isStorageResourcePressured({
   return stock >= capacity * pressure_fill_ratio
 }
 
+/** Rank of `underground_shelter` once it may be built: after core production (4). */
+const SYSTEM_SHELTER_UPGRADE_RANK = 5
+
+/** Rank of `command_center` after several ticks at the movement cap (ties go to `building_order`). */
+const SYSTEM_COMMAND_CENTER_PRIORITY_RANK = 0
+
+/** Build the shelter only once the city produces plasma worth protecting (slice 028). */
+export function shouldSystemBuildShelter<
+  T extends { code: BuildingCode, level: number }
+>(buildings: T[]): boolean {
+  const central_inductor = buildings.find(building => building.code === BuildingCode.CENTRAL_INDUCTOR)
+  return (central_inductor?.level ?? 0) >= 1
+}
+
 const CORE_PRODUCTION_BUILDING_CODES = [
   BuildingCode.RECYCLING_PLANT,
   BuildingCode.MUSHROOM_FARM,
@@ -203,6 +217,8 @@ function systemUpgradeRank({
   core_production_satisfied,
   mushroom_farm_level,
   recycling_plant_level,
+  prioritize_command_center,
+  shelter_allowed,
 }: {
   building_code: BuildingCode
   resource_stock: Resource
@@ -214,7 +230,15 @@ function systemUpgradeRank({
   core_production_satisfied: boolean
   mushroom_farm_level: number
   recycling_plant_level: number
+  prioritize_command_center: boolean
+  shelter_allowed: boolean
 }): number {
+  if (building_code === BuildingCode.UNDERGROUND_SHELTER) {
+    return shelter_allowed ? SYSTEM_SHELTER_UPGRADE_RANK : 99
+  }
+  if (building_code === BuildingCode.COMMAND_CENTER && prioritize_command_center) {
+    return SYSTEM_COMMAND_CENTER_PRIORITY_RANK
+  }
   const energy_starved = production_energy_ratio < 1
   if (energy_starved && isEnergyBuildingCode(building_code)) {
     return -1
@@ -354,6 +378,7 @@ export function sortBuildingsForSystemUpgrade<
   production_energy_ratio = 1,
   energy_supply,
   energy_consumption,
+  prioritize_command_center = false,
 }: {
   buildings: T[]
   resource_stock: Resource
@@ -361,8 +386,11 @@ export function sortBuildingsForSystemUpgrade<
   production_energy_ratio?: number
   energy_supply?: number
   energy_consumption?: number
+  /** The empire has been at the movement cap for several ticks (slice 028). */
+  prioritize_command_center?: boolean
 }): T[] {
   const production_bootstrap = needsCoreProductionBootstrap(buildings)
+  const shelter_allowed = shouldSystemBuildShelter(buildings)
   const core_production_satisfied = isCoreProductionSatisfied(buildings)
   const {
     mushroom_farm_level,
@@ -381,6 +409,8 @@ export function sortBuildingsForSystemUpgrade<
       core_production_satisfied,
       mushroom_farm_level,
       recycling_plant_level,
+      prioritize_command_center,
+      shelter_allowed,
     }) - systemUpgradeRank({
       building_code: right.code,
       resource_stock,
@@ -392,6 +422,8 @@ export function sortBuildingsForSystemUpgrade<
       core_production_satisfied,
       mushroom_farm_level,
       recycling_plant_level,
+      prioritize_command_center,
+      shelter_allowed,
     })
     if (rank_difference !== 0) {
       return rank_difference

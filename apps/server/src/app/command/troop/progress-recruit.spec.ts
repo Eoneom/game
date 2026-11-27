@@ -12,6 +12,9 @@ import { TroopEntity } from '#core/troop/entity'
 import { now } from '#shared/time'
 import assert from 'assert'
 import { id } from '#shared/identification'
+import { processTroopRecruitQueue } from '#app/command/troop/start-recruit'
+
+vi.mock('#app/command/troop/start-recruit', () => ({ processTroopRecruitQueue: vi.fn().mockResolvedValue(undefined) }))
 
 describe('progressTroopRecruitment', () => {
   const player_id = id()
@@ -28,6 +31,7 @@ describe('progressTroopRecruitment', () => {
   let recruitment_time: number
 
   beforeEach(() => {
+    vi.mocked(processTroopRecruitQueue).mockClear()
     recruitment_time = now()
     troop = TroopEntity.create({
       ...TroopEntity.init({
@@ -126,6 +130,28 @@ describe('progressTroopRecruitment', () => {
     assert.strictEqual(updated_troop.count, 5)
     assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 0)
     assert.strictEqual(emit.mock.calls[0][0], AppEvent.TroopRecruitmentUpdated)
+  })
+
+  it('should start the next queued batch when the batch completes', async () => {
+    await progressTroopRecruitment({
+      ...baseParams(),
+      remaining_count: 5,
+      last_progress: recruitment_time - 10000,
+      finish_at: recruitment_time - 1,
+      started_at: recruitment_time - 10000,
+    })
+
+    expect(processTroopRecruitQueue).toHaveBeenCalledTimes(1)
+    expect(processTroopRecruitQueue).toHaveBeenCalledWith(expect.objectContaining({
+      player_id,
+      city_id,
+    }))
+  })
+
+  it('should not touch the queue while the batch is still running', async () => {
+    await progressTroopRecruitment(baseParams())
+
+    expect(processTroopRecruitQueue).not.toHaveBeenCalled()
   })
 
   it('should recompute finish_at from current levels when units are delivered', async () => {

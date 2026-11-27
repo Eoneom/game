@@ -27,9 +27,14 @@ describe('rebaseTroopMovement', () => {
   let reportCreate: MockInstance
   let scheduleTroopMovementFinish: MockInstance
   let repository: Pick<Repository, 'troop' | 'movement' | 'report'>
+  let getMovementCapacity: MockInstance
 
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 1,
+      limit: 5
+    })
     initial_base_movement = MovementEntity.create({
       id: id(),
       action: MovementAction.BASE,
@@ -86,6 +91,40 @@ describe('rebaseTroopMovement', () => {
         arrived_at }),
       new RegExp(TroopError.MOVEMENT_NOT_OWNER)
     )
+  })
+
+  it('should rebase at the movement limit since the return trip replaces the inbound movement', async () => {
+    getMovementCapacity.mockResolvedValue({
+      used: 5,
+      limit: 5
+    })
+
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+
+    assert.strictEqual(movementCreate.mock.calls.length, 1)
+    assert.strictEqual(movementDelete.mock.calls[0][0], initial_base_movement.id)
+  })
+
+  it('should reject the rebase when the player is over the movement limit', async () => {
+    getMovementCapacity.mockResolvedValue({
+      used: 6,
+      limit: 5
+    })
+
+    await assert.rejects(
+      () => rebaseTroopMovement({
+        player_id,
+        movement_id: initial_base_movement.id,
+        arrived_at
+      }),
+      new RegExp(TroopError.MOVEMENT_LIMIT_REACHED)
+    )
+    assert.strictEqual(movementCreate.mock.calls.length, 0)
+    assert.strictEqual(movementDelete.mock.calls.length, 0)
   })
 
   it('should remove old movement', async () => {

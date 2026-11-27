@@ -8,6 +8,7 @@ import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { FactionCode } from '#core/faction/constant/code'
+import { Resource } from '#shared/resource'
 
 export type ReportBattleOutcome = {
   occupied: boolean
@@ -34,6 +35,8 @@ export type ReportBattleMetadata = {
   casualties_attacker: BattleCasualtyLine[]
   casualties_defender: BattleCasualtyLine[]
   round_summaries: BattleRoundSummary[]
+  /** Defender perspective: resources the target city's underground shelter kept out of loot (zero otherwise). */
+  sheltered: Resource
   /** Technology modifiers snapshotted at battle start (slice 027); read from `battle.state_json`. */
   attacker_modifiers?: CombatModifiers
   defender_modifiers?: CombatModifiers

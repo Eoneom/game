@@ -97,6 +97,11 @@ describe('collectSystemEmpireSnapshot viewport cache', () => {
     vi.spyOn(memory, 'loadSystemPlayerMemory').mockResolvedValue({
       failed_base_cells: [],
       failed_attack_targets: [],
+      movement_saturated_ticks: 0,
+    })
+    vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 2,
+      limit: 6,
     })
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       player: {
@@ -126,5 +131,13 @@ describe('collectSystemEmpireSnapshot viewport cache', () => {
 
     expect(worldGetCellsRun).toHaveBeenCalledTimes(1)
     expect(tick_context.getWorldGetCellsQueryCount()).toBe(1)
+  })
+
+  it('includes the movement budget in the snapshot', async () => {
+    const snapshot = await collectSystemEmpireSnapshot(player_id, createSystemTickContext(player_id))
+
+    expect(snapshot.movement_used).toBe(2)
+    expect(snapshot.movement_limit).toBe(6)
+    expect(AppService.getMovementCapacity).toHaveBeenCalledWith({ player_id })
   })
 })

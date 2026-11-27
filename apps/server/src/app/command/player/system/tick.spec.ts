@@ -69,7 +69,10 @@ describe('tickSystemPlayers', () => {
     memory: {
       failed_base_cells: [],
       failed_attack_targets: [],
+      movement_saturated_ticks: 0,
     },
+    movement_used: 0,
+    movement_limit: 5,
   }
 
   let listSystemControlled: MockInstance
@@ -123,6 +126,8 @@ describe('tickSystemPlayers', () => {
       technologies: [],
       buildings_by_city: [],
       ongoing_movements: [],
+      movement_used: 0,
+      movement_limit: 5,
       updated_at: tick_at,
     })
     const stats_emit = vi.spyOn(statsEmit, 'emitSystemPlayerStatsUpdated').mockImplementation(() => {})
@@ -210,6 +215,36 @@ describe('tickSystemPlayers', () => {
       execute_at: tick_at + SYSTEM_PLAYER_TICK_INTERVAL_MS,
       tick_index: 5
     })
+  })
+
+  it('counts consecutive ticks at the movement cap in memory and passes them to the planner', async () => {
+    const upsert = vi.fn().mockResolvedValue(undefined)
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      player: { listSystemControlled },
+      system_player_memory: { upsert },
+    } as unknown as Repository)
+    vi.spyOn(empireSnapshot, 'collectSystemEmpireSnapshot').mockResolvedValue({
+      ...default_snapshot,
+      movement_used: 4,
+      movement_limit: 5,
+      memory: {
+        ...default_snapshot.memory,
+        movement_saturated_ticks: 2,
+      },
+    })
+    vi.mocked(actForSystemPlayer).mockResolvedValue({
+      outcome: 'idle',
+      attempts: [],
+    })
+    vi.spyOn(observabilityEmit, 'emitSystemPlayerTickObservability').mockReturnValue(undefined)
+
+    await tickSystemPlayers({ tick_index: 4 })
+
+    assert.strictEqual(upsert.mock.calls.length, 1)
+    assert.strictEqual(upsert.mock.calls[0][0], player.id)
+    assert.strictEqual(upsert.mock.calls[0][1].movement_saturated_ticks, 3)
+    const { snapshot } = vi.mocked(actForSystemPlayer).mock.calls[0][0]
+    assert.strictEqual(snapshot?.memory.movement_saturated_ticks, 3)
   })
 
   it('emits error observability and reschedules when a player command fails', async () => {

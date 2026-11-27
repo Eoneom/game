@@ -115,5 +115,33 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
       base: 10,
       multiplier: 1.95
     }
+  },
+  [BuildingCode.COMMAND_CENTER]: {
+    plastic: {
+      base: 2000,
+      multiplier: 1.8
+    },
+    mushroom: {
+      base: 1500,
+      multiplier: 1.8
+    },
+    duration: {
+      base: 180,
+      multiplier: 1.7
+    }
+  },
+  [BuildingCode.UNDERGROUND_SHELTER]: {
+    plastic: {
+      base: 600,
+      multiplier: 1.7
+    },
+    mushroom: {
+      base: 600,
+      multiplier: 1.7
+    },
+    duration: {
+      base: 60,
+      multiplier: 1.6
+    }
   }
 }

@@ -130,6 +130,100 @@ describe('BuildingGetQuery', () => {
     })
   })
 
+  it('returns movement bonus, player cap and recruitment queue size for the command center', async () => {
+    const command_center = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.COMMAND_CENTER,
+      level: 2
+    })
+    ;(repository.building.getInCity as MockInstance).mockResolvedValue(command_center)
+    vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 3,
+      limit: 9
+    })
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.COMMAND_CENTER,
+      player_id
+    })
+
+    expect(result.metadata).toEqual({
+      current_consumption: 36,
+      next_consumption: 43,
+      energy_upgrade_warning: false,
+      current_movement_bonus: 2,
+      next_movement_bonus: 3,
+      movement_limit: 9,
+      recruit_queue_limit: 3
+    })
+    expect(result.requirement.technologies).toEqual([
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 2
+      }
+    ])
+  })
+
+  it('returns no recruitment queue for a command center still at level 0', async () => {
+    vi.mocked(repository.building.getInCity).mockResolvedValue(BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.COMMAND_CENTER,
+      level: 0
+    }))
+    vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 0,
+      limit: 5
+    })
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.COMMAND_CENTER,
+      player_id
+    })
+
+    expect(result.metadata).toMatchObject({
+      current_movement_bonus: 0,
+      next_movement_bonus: 1,
+      movement_limit: 5,
+      recruit_queue_limit: 0
+    })
+  })
+
+  it('returns sheltered resources at the current and next level for the underground shelter', async () => {
+    vi.mocked(repository.building.getInCity).mockResolvedValue(BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.UNDERGROUND_SHELTER,
+      level: 1
+    }))
+
+    const result = await new BuildingGetQuery().run({
+      city_id: city.id,
+      building_code: BuildingCode.UNDERGROUND_SHELTER,
+      player_id
+    })
+
+    expect(result.metadata).toEqual({
+      current_sheltered: {
+        plastic: 2000,
+        mushroom: 1500,
+        plasma: 200
+      },
+      next_sheltered: {
+        plastic: 3200,
+        mushroom: 2400,
+        plasma: 320
+      }
+    })
+    expect(result.requirement).toEqual({
+      buildings: [],
+      technologies: []
+    })
+  })
+
   it('returns energy upgrade warning when projected consumption exceeds supply', async () => {
     vi.spyOn(AppService, 'getCityEnergyConsumptionBreakdown').mockResolvedValue({
       energy_consumption: 60,

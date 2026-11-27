@@ -44,10 +44,14 @@ import * as frontierQueue from '#app/query/player/system/frontier-queue'
 import { defaultSystemEmpireSnapshotFields } from '#core/player/system/empire-snapshot'
 import { now } from '#shared/time'
 import assert from 'assert'
+import { createSystemTickContext } from '#app/query/player/system/system-tick-context'
+import { TroopError } from '#core/troop/error'
+import { isSystemTickSkippableError } from './skippable-error'
 
 const empty_system_memory = {
   failed_base_cells: [],
   failed_attack_targets: [],
+  movement_saturated_ticks: 0,
 }
 
 function defaultAttackEmpireSnapshot(for_player_id: string) {
@@ -2033,6 +2037,46 @@ describe('systemTickActions', () => {
         },
       ],
       combat_strategy: CombatStrategy.OPENING_STRIKE,
+    })
+  })
+
+  describe('movement budget', () => {
+    const movement_categories = [
+      'explore',
+      'base',
+      'deploy-outpost',
+      'transport',
+      'attack',
+    ] as const
+
+    it.each(movement_categories)('skips %s when no movement slot is left', async (category) => {
+      const tick_context = createSystemTickContext(player_id)
+      tick_context.snapshot = {
+        ...defaultAttackEmpireSnapshot(player_id),
+        movement_used: 5,
+        movement_limit: 5,
+      }
+
+      await assert.rejects(
+        () => systemTickActions[category](player_id, tick_context),
+        (err: Error) => err.message === TroopError.MOVEMENT_LIMIT_REACHED && isSystemTickSkippableError(err),
+      )
+      assert.strictEqual(vi.mocked(createTroopMovement).mock.calls.length, 0)
+    })
+
+    it('counts movements already created during the tick', async () => {
+      const tick_context = createSystemTickContext(player_id)
+      tick_context.snapshot = {
+        ...defaultAttackEmpireSnapshot(player_id),
+        movement_used: 4,
+        movement_limit: 5,
+      }
+      tick_context.movements_created = 1
+
+      await assert.rejects(
+        () => systemTickActions.explore(player_id, tick_context),
+        new RegExp(TroopError.MOVEMENT_LIMIT_REACHED),
+      )
     })
   })
 })

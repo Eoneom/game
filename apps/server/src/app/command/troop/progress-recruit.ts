@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { nextTroopRecruitProgressAt } from '#app/scheduling/troop-recruit'
 import { runCommand } from '#command/run'
+import { processTroopRecruitQueue } from '#app/command/troop/start-recruit'
 import { BuildingCode } from '#core/building/constant/code'
 import { AppEvent } from '#core/events'
 import { PricingService } from '#core/pricing/service'
@@ -106,6 +107,12 @@ export async function progressTroopRecruitment({
           remaining_count: progressed.recruitment.remaining_count,
           now: progress_time
         })
+      })
+    } else {
+      await processTroopRecruitQueue({
+        player_id,
+        city_id,
+        started_at: progress_time
       })
     }
 

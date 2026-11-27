@@ -44,5 +44,18 @@ export const BuildingRequirement: Record<BuildingCode, RequirementValue> = {
         level: 5
       }
     ]
+  },
+  [BuildingCode.COMMAND_CENTER]: {
+    buildings: [],
+    technologies: [
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 2
+      }
+    ]
+  },
+  [BuildingCode.UNDERGROUND_SHELTER]: {
+    buildings: [],
+    technologies: []
   }
 }

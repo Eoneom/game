@@ -360,6 +360,7 @@ export async function collectSystemEmpireSnapshot(
     { frontier_queue_length, frontier_top_score },
     intel,
     memory,
+    movement_capacity,
   ] = await Promise.all([
     summarizeSystemFrontierQueue(player_id, tick_context),
     collectSystemEmpireIntel({
@@ -368,6 +369,7 @@ export async function collectSystemEmpireSnapshot(
       tick_context,
     }),
     loadSystemPlayerMemory(player_id),
+    AppService.getMovementCapacity({ player_id }),
   ])
 
   const effective_defer_explore = defer_explore || frontier_queue_length > 0
@@ -404,5 +406,7 @@ export async function collectSystemEmpireSnapshot(
     outpost_logistics_needs_haul_count,
     memory,
     ai_profile,
+    movement_used: movement_capacity.used,
+    movement_limit: movement_capacity.limit,
   }
 }

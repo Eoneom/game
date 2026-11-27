@@ -390,6 +390,47 @@ export class AppService {
     return levels[TechnologyCode.TACTICAL_PROPULSION]
   }
 
+  /** Movements the player owns (`used`) against the command-center cap (`limit`), slice 028. */
+  static async getMovementCapacity({ player_id }: { player_id: string }): Promise<{ used: number, limit: number }> {
+    const repository = Factory.getRepository()
+    const [
+      used,
+      command_center_levels
+    ] = await Promise.all([
+      repository.movement.countByPlayer({ player_id }),
+      repository.building.getTotalLevelForPlayer({
+        player_id,
+        code: BuildingCode.COMMAND_CENTER
+      })
+    ])
+
+    return {
+      used,
+      limit: TroopService.getMovementLimit({ command_center_levels })
+    }
+  }
+
+  /**
+   * Rejects a new movement once the player is at the cap.
+   * `replaced_movement_count` excludes movements deleted by the same command (a rebase replaces its inbound movement).
+   */
+  static async assertMovementCapacity({
+    player_id,
+    replaced_movement_count = 0
+  }: {
+    player_id: string
+    replaced_movement_count?: number
+  }): Promise<void> {
+    const {
+      used,
+      limit
+    } = await this.getMovementCapacity({ player_id })
+    TroopService.assertMovementCapacity({
+      used: used - replaced_movement_count,
+      limit
+    })
+  }
+
   static async getOutpostWarehousesCapacity({ player_id }: { player_id: string }): Promise<WarehouseCapacity> {
     const repository = Factory.getRepository()
     const logistics_level = await repository.technology.getLevel({
@@ -703,13 +744,15 @@ export class AppService {
     mushroom_farm_level,
     central_inductor_level,
     research_lab_level,
-    cloning_factory_level
+    cloning_factory_level,
+    command_center_level
   }: {
     recycling_plant_level: number
     mushroom_farm_level: number
     central_inductor_level: number
     research_lab_level: number
     cloning_factory_level: number
+    command_center_level: number
   }): {
     energy_consumption: number
     non_production_consumption: number
@@ -735,9 +778,13 @@ export class AppService {
       code: BuildingCode.CLONING_FACTORY,
       level: cloning_factory_level
     })
+    const command_center = BuildingService.getEnergyConsumption({
+      code: BuildingCode.COMMAND_CENTER,
+      level: command_center_level
+    })
 
     const production_consumption = recycling_plant + mushroom_farm + central_inductor
-    const non_production_consumption = research_lab + cloning_factory
+    const non_production_consumption = research_lab + cloning_factory + command_center
 
     return {
       energy_consumption: production_consumption + non_production_consumption,
@@ -752,6 +799,7 @@ export class AppService {
     central_inductor_level: number
     research_lab_level: number
     cloning_factory_level: number
+    command_center_level: number
     solar_panel_level: number
     city_cell: CellEntity
   }> {
@@ -763,6 +811,7 @@ export class AppService {
       central_inductor_level,
       research_lab_level,
       cloning_factory_level,
+      command_center_level,
       solar_panel_level,
       city_cell
     ] = await Promise.all([
@@ -788,6 +837,10 @@ export class AppService {
       }),
       repository.building.getLevel({
         city_id,
+        code: BuildingCode.COMMAND_CENTER
+      }),
+      repository.building.getLevel({
+        city_id,
         code: BuildingCode.SOLAR_PANEL
       }),
       repository.cell.getById(city.cell_id)
@@ -799,6 +852,7 @@ export class AppService {
       central_inductor_level,
       research_lab_level,
       cloning_factory_level,
+      command_center_level,
       solar_panel_level,
       city_cell
     }

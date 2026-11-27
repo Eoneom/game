@@ -134,6 +134,22 @@ describe('finishTroopExploreMovement', () => {
     assert.ok(scheduled.execute_at > arrived_at)
   })
 
+  it('should send the troop back even when the player is at the movement limit', async () => {
+    const getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
+      used: 5,
+      limit: 5
+    })
+
+    await finishTroopExploreMovement({
+      player_id,
+      movement_id,
+      arrived_at
+    })
+
+    assert.strictEqual(movementCreate.mock.calls.length, 1)
+    assert.strictEqual(getMovementCapacity.mock.calls.length, 0)
+  })
+
   it('should create a report describing the explored cell', async () => {
     await finishTroopExploreMovement({
       player_id,

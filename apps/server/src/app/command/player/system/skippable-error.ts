@@ -8,6 +8,7 @@ const SKIPPABLE_ERROR_CODES = new Set<string>([
   CityError.NOT_ENOUGH_RESOURCES,
   CityError.NOT_ENOUGH_SPACE,
   TroopError.NOT_ENOUGH_TROOPS,
+  TroopError.MOVEMENT_LIMIT_REACHED,
   BuildingError.ALREADY_IN_PROGRESS,
   BuildingError.QUEUE_FULL,
   TechnologyError.QUEUE_FULL,

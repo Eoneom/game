@@ -22,7 +22,18 @@ const queryResult = {
     }
   ],
   costs: { WARRIOR: { duration: 120 } },
-  pending_recruitment: null
+  pending_recruitment: null,
+  recruit_queue: [
+    {
+      id: 'q1',
+      player_id: 'p1',
+      city_id: 'c1',
+      troop_code: 'WARRIOR',
+      count: 7,
+      created_at: 1
+    }
+  ],
+  recruit_queue_limit: 3
 }
 
 describe('troopListCityHandler', () => {
@@ -82,7 +93,15 @@ describe('troopListCityHandler', () => {
             count: 5,
             ongoing_recruitment: undefined
           }
-        ]
+        ],
+        recruit_queue: [
+          {
+            id: 'q1',
+            troop_code: 'WARRIOR',
+            count: 7
+          }
+        ],
+        recruit_queue_limit: 3
       }
     })
   })

@@ -8,6 +8,12 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
 
+const NOTHING_SHELTERED: Resource = {
+  plastic: 0,
+  mushroom: 0,
+  plasma: 0,
+}
+
 export type CreatedBattleReports = {
   attacker_report_id: string
   defender_report_id: string
@@ -18,12 +24,15 @@ export async function createBattleReports({
   movement,
   outcome,
   loot,
+  sheltered = NOTHING_SHELTERED,
   finished_at,
 }: {
   battle: BattleEntity
   movement: MovementEntity
   outcome: BattleOutcomeFlags
   loot: Resource
+  /** Resources the defender's shelter kept out of loot (slice 028). */
+  sheltered?: Resource
   finished_at: number
 }): Promise<CreatedBattleReports> {
   const repository = Factory.getRepository()
@@ -84,10 +93,12 @@ export async function createBattleReports({
     attacker_metadata: {
       ...shared,
       perspective: ReportPerspective.ATTACKER,
+      sheltered: NOTHING_SHELTERED,
     },
     defender_metadata: {
       ...shared,
       perspective: ReportPerspective.DEFENDER,
+      sheltered,
     },
   })
 

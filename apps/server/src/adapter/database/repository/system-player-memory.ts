@@ -27,9 +27,13 @@ function parseMemoryJson(value: unknown): SystemPlayerMemory {
         && typeof (entry as { y?: unknown }).y === 'number',
     )
     : []
+  const movement_saturated_ticks = typeof record.movement_saturated_ticks === 'number'
+    ? record.movement_saturated_ticks
+    : 0
   return {
     failed_base_cells,
     failed_attack_targets,
+    movement_saturated_ticks,
   }
 }
 

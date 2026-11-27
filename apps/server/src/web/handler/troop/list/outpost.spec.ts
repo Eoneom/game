@@ -22,7 +22,9 @@ const queryResult = {
     }
   ],
   costs: { ARCHER: { duration: 90 } },
-  pending_recruitment: null
+  pending_recruitment: null,
+  recruit_queue: [],
+  recruit_queue_limit: 0
 }
 
 describe('troopListOutpostHandler', () => {
@@ -82,7 +84,9 @@ describe('troopListOutpostHandler', () => {
             count: 3,
             ongoing_recruitment: undefined
           }
-        ]
+        ],
+        recruit_queue: [],
+        recruit_queue_limit: 0
       }
     })
   })

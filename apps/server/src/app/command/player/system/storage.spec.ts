@@ -3,6 +3,7 @@ import {
   isCityWarehouseUnderPressure,
   resourcesForTransportToDestination,
   shouldPrioritizeEconomyForSystemPlayer,
+  shouldSystemBuildShelter,
   shouldSystemUpgradeSolarPanel,
   sortBuildingsForSystemUpgrade,
   SYSTEM_SOLAR_UPGRADE_MAX_SURPLUS_RATIO,
@@ -502,6 +503,69 @@ describe('system player storage policy', () => {
     })
 
     assert.strictEqual(sorted[0].code, BuildingCode.PLASTIC_WAREHOUSE)
+  })
+
+  describe('command center and shelter (slice 028)', () => {
+    const balanced_buildings = (central_inductor_level: number) => [
+      {
+        code: BuildingCode.RECYCLING_PLANT,
+        level: 3,
+      },
+      {
+        code: BuildingCode.MUSHROOM_FARM,
+        level: 3,
+      },
+      {
+        code: BuildingCode.PLASTIC_WAREHOUSE,
+        level: 1,
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: central_inductor_level,
+      },
+      {
+        code: BuildingCode.COMMAND_CENTER,
+        level: 0,
+      },
+      {
+        code: BuildingCode.UNDERGROUND_SHELTER,
+        level: 0,
+      },
+    ]
+    const sort = (central_inductor_level: number, prioritize_command_center: boolean) => sortBuildingsForSystemUpgrade({
+      buildings: balanced_buildings(central_inductor_level),
+      resource_stock: {
+        plastic: 100,
+        mushroom: 100,
+        plasma: 0,
+      },
+      warehouses_capacity: {
+        plastic: 10000,
+        mushroom: 10000,
+      },
+      prioritize_command_center,
+    }).map(building => building.code)
+
+    it('raises the command center ahead of warehouses under movement saturation', () => {
+      const normal = sort(1, false)
+      const saturated = sort(1, true)
+
+      assert.ok(normal.indexOf(BuildingCode.COMMAND_CENTER) > normal.indexOf(BuildingCode.PLASTIC_WAREHOUSE))
+      assert.strictEqual(saturated[0], BuildingCode.COMMAND_CENTER)
+    })
+
+    it('ranks the shelter after core production once the central inductor exists', () => {
+      const order = sort(1, false)
+
+      assert.ok(order.indexOf(BuildingCode.UNDERGROUND_SHELTER) > order.indexOf(BuildingCode.RECYCLING_PLANT))
+      assert.ok(order.indexOf(BuildingCode.UNDERGROUND_SHELTER) > order.indexOf(BuildingCode.MUSHROOM_FARM))
+    })
+
+    it('builds the shelter only once the central inductor exists', () => {
+      assert.strictEqual(shouldSystemBuildShelter(balanced_buildings(0)), false)
+      assert.strictEqual(shouldSystemBuildShelter(balanced_buildings(1)), true)
+      assert.strictEqual(sort(0, false).at(-1), BuildingCode.UNDERGROUND_SHELTER)
+    })
   })
 
   it('clamps transported plastic and mushroom to destination free space', () => {

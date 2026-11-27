@@ -5,6 +5,7 @@ import { FactionCode } from '#core/faction/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import { troop_faction } from '#core/troop/constant/faction'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MOVEMENT_BASE_LIMIT } from '#core/troop/constant/movement-limit'
 import { troop_order } from '#core/troop/constant/order'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyService } from '#core/technology/service'
@@ -277,6 +278,23 @@ export class TroopService {
 
   static combatRoleFor(code: TroopCode): CombatRole {
     return troop_characteristics[code].combat_role
+  }
+
+  /** Movement cap (slice 028): base limit plus the `command_center` levels of every city the player owns. */
+  static getMovementLimit({ command_center_levels }: { command_center_levels: number }): number {
+    return MOVEMENT_BASE_LIMIT + command_center_levels
+  }
+
+  static assertMovementCapacity({
+    used,
+    limit,
+  }: {
+    used: number
+    limit: number
+  }): void {
+    if (used >= limit) {
+      throw new Error(TroopError.MOVEMENT_LIMIT_REACHED)
+    }
   }
 
   static assertAttackArmy({ move_troops }: { move_troops: TroopCount[] }): void {

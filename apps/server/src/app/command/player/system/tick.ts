@@ -9,6 +9,7 @@ import {
 import { systemTickActions } from '#command/player/system/actions'
 import { emitSystemPlayerTickObservability } from '#command/player/system/emit-observability'
 import { emitSystemPlayerStatsUpdated } from '#command/player/system/emit-stats'
+import { recordSystemMovementSaturation } from '#command/player/system/memory'
 import { collectSystemPlayerStatsSnapshot } from '#app/query/admin/system-player-stats'
 import { now } from '#shared/time'
 
@@ -22,7 +23,14 @@ export async function tickSystemPlayers({ tick_index }: { tick_index: number }):
   for (const player of players) {
     try {
       const tick_context = createSystemTickContext(player.id)
-      const snapshot = await collectSystemEmpireSnapshot(player.id, tick_context)
+      const collected_snapshot = await collectSystemEmpireSnapshot(player.id, tick_context)
+      const snapshot = {
+        ...collected_snapshot,
+        memory: await recordSystemMovementSaturation({
+          player_id: player.id,
+          snapshot: collected_snapshot,
+        }),
+      }
       tick_context.snapshot = snapshot
       const result = await actForSystemPlayer({
         player_id: player.id,

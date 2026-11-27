@@ -43,6 +43,8 @@ export class SystemTickContext {
   private world_get_cells_query_count = 0
   /** Latest empire snapshot for this replan iteration (set by tick / policy). */
   snapshot?: SystemEmpireSnapshot
+  /** Movements created by actions since `snapshot` was collected; each consumes one slot of the cap. */
+  movements_created = 0
 
   constructor(player_id: string) {
     this.player_id = player_id
