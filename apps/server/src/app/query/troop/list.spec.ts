@@ -1,5 +1,7 @@
 import type { MockInstance } from 'vitest'
 import { TroopListQuery } from '#app/query/troop/list'
+import { TroopGetQuery } from '#app/query/troop/get'
+import { troopListResponseMapper } from '#web/handler/troop/list/mapper'
 import { Factory } from '#adapter/factory'
 import { Repository } from '#app/port/repository/generic'
 import { CityEntity } from '#core/city/entity'
@@ -226,5 +228,36 @@ describe('TroopListQuery', () => {
     expect(repository.cell.getById).toHaveBeenCalledWith(outpost.cell_id)
     expect(result.recruit_queue).toEqual([])
     expect(result.recruit_queue_limit).toBe(0)
+  })
+
+  it('carries the per-unit cost and requirement of each troop like the details query (slice 043)', async () => {
+    vi.mocked(repository.building.getLevel).mockResolvedValue(3)
+    vi.mocked(repository.technology.getLevel).mockResolvedValue(2)
+    Object.assign(repository.city, { searchByCell: vi.fn().mockResolvedValue(city) })
+    Object.assign(repository.troop, { getById: vi.fn().mockResolvedValue(troop) })
+
+    const list = await new TroopListQuery().run({
+      location: {
+        type: 'city',
+        city_id: city.id
+      },
+      player_id
+    })
+    const details = await new TroopGetQuery().run({
+      troop_id: troop.id,
+      player_id
+    })
+
+    expect(list.costs[TroopCode.EXPLORER]).toEqual(details.cost)
+    expect(list.requirements[TroopCode.EXPLORER]).toEqual(details.requirement)
+
+    const [ mapped ] = troopListResponseMapper(list).troops
+    expect(mapped.cost).toEqual({
+      plastic: details.cost.resource.plastic,
+      mushroom: details.cost.resource.mushroom,
+      plasma: details.cost.resource.plasma,
+      duration: details.cost.duration
+    })
+    expect(mapped.requirement).toEqual(details.requirement)
   })
 })

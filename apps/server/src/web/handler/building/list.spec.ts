@@ -13,14 +13,64 @@ type MockRes = {
   locals: Record<string, unknown>
 }
 
+const requirement = {
+  buildings: [
+    {
+      code: 'research_lab',
+      level: 2
+    }
+  ],
+  technologies: []
+}
+
 const queryData = {
   buildings: [
     {
+      id: 'b1',
       code: 'SAWMILL',
-      level: 1
+      level: 1,
+      upgrade_cost: {
+        code: 'SAWMILL',
+        level: 2,
+        resource: {
+          plastic: 10,
+          mushroom: 20,
+          plasma: 3,
+          water: 0
+        },
+        duration: 60
+      },
+      requirement
+    },
+    {
+      id: 'b2',
+      code: 'MINE',
+      level: 4,
+      upgrade_cost: {
+        code: 'MINE',
+        level: 5,
+        resource: {
+          plastic: 1,
+          mushroom: 2,
+          plasma: 0,
+          water: 0
+        },
+        duration: 30
+      },
+      requirement,
+      upgrade_at: 2_000,
+      upgrade_started_at: 1_000
     }
   ],
-  upgrade_queue: []
+  upgrade_queue: [
+    {
+      id: 'q1',
+      building_code: 'MINE',
+      duration_seconds: 40,
+      start_at: 2_000,
+      finish_at: 42_000
+    }
+  ]
 }
 
 describe('buildingListHandler', () => {
@@ -61,11 +111,51 @@ describe('buildingListHandler', () => {
     expect(next).toHaveBeenCalledWith(error)
   })
 
-  it('returns building list on success', async () => {
+  it('returns building list on success with cost, requirement and queue timing', async () => {
     await buildingListHandler(req as Request, res as unknown as Response, next as NextFunction)
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
-      data: queryData 
+      data: {
+        buildings: [
+          {
+            id: 'b1',
+            code: 'SAWMILL',
+            level: 1,
+            upgrade_cost: {
+              plastic: 10,
+              mushroom: 20,
+              plasma: 3,
+              duration: 60
+            },
+            requirement
+          },
+          {
+            id: 'b2',
+            code: 'MINE',
+            level: 4,
+            upgrade_cost: {
+              plastic: 1,
+              mushroom: 2,
+              plasma: 0,
+              duration: 30
+            },
+            requirement,
+            upgrade_at: 2_000,
+            upgrade_started_at: 1_000
+          }
+        ],
+        upgrade_queue: [
+          {
+            id: 'q1',
+            building_code: 'MINE',
+            duration_seconds: 40,
+            start_at: 2_000,
+            finish_at: 42_000
+          }
+        ]
+      }
     })
+    const [ [ body ] ] = res.json.mock.calls
+    expect(body.data.buildings[0]).not.toHaveProperty('upgrade_at')
   })
 })

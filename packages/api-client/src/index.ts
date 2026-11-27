@@ -20,6 +20,7 @@ export { RESEARCH_QUEUE_LIMIT } from '@server-core/technology/constant/research-
 export { TROOP_RECRUIT_QUEUE_LIMIT } from '@server-core/troop/constant/recruit-queue'
 export { DEFENSE_BUILD_QUEUE_LIMIT } from '@server-core/defense/constant/build-queue'
 export { DefenseCode } from '@server-core/defense/constant/code'
+export { defense_faction } from '@server-core/defense/constant/faction'
 export { CellType } from '@server-core/world/value/cell-type'
 export { FactionCode } from '@server-core/faction/constant/code'
 export { playableFactionCodes } from '@server-core/faction/constant/playable'

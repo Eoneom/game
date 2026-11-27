@@ -5,25 +5,30 @@ import { CityError } from '#core/city/error'
 import { BuildingService } from '#core/building/service'
 import { PricingService } from '#core/pricing/service'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { LevelCostValue } from '#core/pricing/value/level'
+import { RequirementService } from '#core/requirement/service'
+import { RequirementValue } from '#core/requirement/value/requirement'
 
 export interface ListBuildingRequest {
   city_id: string
   player_id: string
 }
 
+interface BuildingListEntryBase {
+  id: string
+  code: BuildingCode
+  level: number
+  /** Cost of level + 1, same inputs as `BuildingGetQuery` (slice 043). */
+  upgrade_cost: LevelCostValue
+  requirement: RequirementValue
+}
+
 export type BuildingListEntry =
-  | {
-      id: string
-      code: BuildingCode
-      level: number
+  | (BuildingListEntryBase & {
       upgrade_at: number
       upgrade_started_at: number
-    }
-  | {
-      id: string
-      code: BuildingCode
-      level: number
-    }
+    })
+  | BuildingListEntryBase
 
 export interface BuildingUpgradeQueueEntry {
   id: string
@@ -69,25 +74,26 @@ export class BuildingListQuery extends GenericQuery<ListBuildingRequest, ListBui
 
     const sorted = BuildingService.sortBuildings({ buildings })
     const response_buildings: BuildingListEntry[] = sorted.map(building => {
-      if (!pending_upgrade || pending_upgrade.building_id !== building.id) {
-        return {
-          id: building.id,
-          code: building.code,
-          level: building.level,
-        }
-      }
-      const { duration } = PricingService.getBuildingLevelCost({
+      const upgrade_cost = PricingService.getBuildingLevelCost({
         level: building.level + 1,
         code: building.code,
         architecture_level: architecture.level
       })
-      const upgrade_at = pending_upgrade.execute_at
-      return {
+      const base: BuildingListEntryBase = {
         id: building.id,
         code: building.code,
         level: building.level,
+        upgrade_cost,
+        requirement: RequirementService.getBuildingRequirement({ building_code: building.code }),
+      }
+      if (!pending_upgrade || pending_upgrade.building_id !== building.id) {
+        return base
+      }
+      const upgrade_at = pending_upgrade.execute_at
+      return {
+        ...base,
         upgrade_at,
-        upgrade_started_at: upgrade_at - duration * 1000
+        upgrade_started_at: upgrade_at - upgrade_cost.duration * 1000
       }
     })
 

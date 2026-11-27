@@ -8,7 +8,7 @@ import {
   TechnologyGetRequest,
   TechnologyGetResponse
 } from './get'
-import { TechnologyListResponse } from './list'
+import { TechnologyListRequest, TechnologyListResponse } from './list'
 import {
   TechnologyResearchRequest, TechnologyResearchResponse
 } from './research'
@@ -27,8 +27,11 @@ export class TechnologyEndpoint {
     })
   }
 
-  public async list(token: string): Promise<TechnologyListResponse> {
-    return this.fetcher.get('/technology', { token })
+  public async list(token: string, { city_id }: TechnologyListRequest = {}): Promise<TechnologyListResponse> {
+    return this.fetcher.get('/technology', {
+      token,
+      searchParams: city_id ? { city_id } : undefined
+    })
   }
 
   public async get(token: string, body: TechnologyGetRequest): Promise<TechnologyGetResponse> {

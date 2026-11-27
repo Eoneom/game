@@ -1,5 +1,9 @@
 import type { MockInstance } from 'vitest'
 import { TechnologyListQuery } from '#app/query/technology/list'
+import { TechnologyGetQuery } from '#app/query/technology/get'
+import { CityEntity } from '#core/city/entity'
+import { CityError } from '#core/city/error'
+import { RequirementService } from '#core/requirement/service'
 import type { TechnologyListEntry } from '#app/query/technology/list'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
@@ -96,5 +100,75 @@ describe('TechnologyListQuery', () => {
     const result = await new TechnologyListQuery().run({ player_id })
 
     expect(result.technologies.every(t => !('research_at' in t))).toBe(true)
+  })
+
+  describe('requirement and research cost (slice 043)', () => {
+    let owned_city: CityEntity
+
+    beforeEach(() => {
+      owned_city = CityEntity.initCity({
+        name: 'Lab Town',
+        player_id,
+        cell_id: id()
+      })
+      ;(repository.city.get as unknown as MockInstance).mockResolvedValue(owned_city)
+      ;(repository.building.getLevel as unknown as MockInstance).mockResolvedValue(4)
+    })
+
+    it('carries the level-scaled requirement without research_cost when no city is given', async () => {
+      getPendingTechnologyResearch.mockResolvedValue(null)
+
+      const result = await new TechnologyListQuery().run({ player_id })
+
+      for (const entry of result.technologies) {
+        expect(entry.requirement).toEqual(RequirementService.getTechnologyRequirement({
+          technology_code: entry.code,
+          technology_level: entry.level
+        }))
+        expect(entry.research_cost).toBeUndefined()
+      }
+      expect(repository.building.getLevel).not.toHaveBeenCalled()
+    })
+
+    it('prices every entry with the research lab of the given city, like the details query', async () => {
+      const result = await new TechnologyListQuery().run({
+        player_id,
+        city_id: owned_city.id
+      })
+
+      expect(repository.building.getLevel).toHaveBeenCalledWith({
+        city_id: owned_city.id,
+        code: BuildingCode.RESEARCH_LAB
+      })
+      const listed = [
+        t_idle,
+        t_research
+      ]
+      for (const technology of listed) {
+        Object.assign(repository.technology, { get: vi.fn().mockResolvedValue(technology) })
+        const details = await new TechnologyGetQuery().run({
+          player_id,
+          city_id: owned_city.id,
+          technology_code: technology.code
+        })
+        const entry = result.technologies.find(t => t.id === technology.id)
+        expect(entry?.research_cost).toEqual(details.cost)
+        expect(entry?.requirement).toEqual(details.requirement)
+      }
+    })
+
+    it('refuses a city of another player', async () => {
+      const other = CityEntity.initCity({
+        name: 'x',
+        player_id: id(),
+        cell_id: id()
+      })
+      ;(repository.city.get as unknown as MockInstance).mockResolvedValue(other)
+
+      await expect(new TechnologyListQuery().run({
+        player_id,
+        city_id: other.id
+      })).rejects.toThrow(CityError.NOT_OWNER)
+    })
   })
 })

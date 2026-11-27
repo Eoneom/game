@@ -21,7 +21,29 @@ const queryResult = {
       count: 5,
     }
   ],
-  costs: { WARRIOR: { duration: 120 } },
+  costs: {
+    WARRIOR: {
+      code: 'WARRIOR',
+      resource: {
+        plastic: 30,
+        mushroom: 20,
+        plasma: 1,
+        water: 0
+      },
+      duration: 120
+    }
+  },
+  requirements: {
+    WARRIOR: {
+      buildings: [
+        {
+          code: 'cloning_factory',
+          level: 1
+        }
+      ],
+      technologies: []
+    }
+  },
   pending_recruitment: null,
   recruit_queue: [
     {
@@ -98,7 +120,22 @@ describe('troopListCityHandler', () => {
             code: 'WARRIOR',
             count: 5,
             exchange_reserved: 2,
-            ongoing_recruitment: undefined
+            ongoing_recruitment: undefined,
+            cost: {
+              plastic: 30,
+              mushroom: 20,
+              plasma: 1,
+              duration: 120
+            },
+            requirement: {
+              buildings: [
+                {
+                  code: 'cloning_factory',
+                  level: 1
+                }
+              ],
+              technologies: []
+            }
           }
         ],
         recruit_queue: [

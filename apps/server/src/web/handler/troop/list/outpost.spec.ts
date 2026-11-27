@@ -21,7 +21,29 @@ const queryResult = {
       count: 3,
     }
   ],
-  costs: { ARCHER: { duration: 90 } },
+  costs: {
+    ARCHER: {
+      code: 'ARCHER',
+      resource: {
+        plastic: 30,
+        mushroom: 20,
+        plasma: 1,
+        water: 0
+      },
+      duration: 90
+    }
+  },
+  requirements: {
+    ARCHER: {
+      buildings: [
+        {
+          code: 'cloning_factory',
+          level: 1
+        }
+      ],
+      technologies: []
+    }
+  },
   pending_recruitment: null,
   recruit_queue: [],
   recruit_queue_limit: 0,
@@ -84,7 +106,22 @@ describe('troopListOutpostHandler', () => {
             code: 'ARCHER',
             count: 3,
             exchange_reserved: 0,
-            ongoing_recruitment: undefined
+            ongoing_recruitment: undefined,
+            cost: {
+              plastic: 30,
+              mushroom: 20,
+              plasma: 1,
+              duration: 90
+            },
+            requirement: {
+              buildings: [
+                {
+                  code: 'cloning_factory',
+                  level: 1
+                }
+              ],
+              technologies: []
+            }
           }
         ],
         recruit_queue: [],

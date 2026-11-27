@@ -14,6 +14,8 @@ import { OngoingRecruitment } from '#core/troop/type'
 import { TroopRecruitQueueEntity } from '#core/troop/recruit-queue-entity'
 import { BuildingService } from '#core/building/service'
 import { CarrierReservation } from '#core/exchange/type'
+import { RequirementService } from '#core/requirement/service'
+import { RequirementValue } from '#core/requirement/value/requirement'
 
 type Location = { type: 'city', city_id: string} | { type: 'outpost', outpost_id: string }
 
@@ -28,7 +30,10 @@ export interface TroopListPendingRecruitment extends OngoingRecruitment {
 
 export interface TroopListQueryResponse {
   troops: TroopEntity[]
+  /** Per-unit cost of each listed troop code, same inputs as `TroopGetQuery`. */
   costs: Record<TroopCode, CountCostValue>
+  /** Recruitment requirement of each listed troop code (slice 043). */
+  requirements: Record<TroopCode, RequirementValue>
   pending_recruitment: TroopListPendingRecruitment | null
   /** Waiting batches of the city (oldest first); always empty for outposts. */
   recruit_queue: TroopRecruitQueueEntity[]
@@ -107,9 +112,15 @@ export class TroopListQuery extends GenericQuery<TroopListQueryRequest, TroopLis
       }
     }, {} as Record<TroopCode, CountCostValue>)
 
+    const requirements = troops.reduce((acc, troop) => ({
+      ...acc,
+      [troop.code]: RequirementService.getTroopRequirement({ troop_code: troop.code })
+    }), {} as Record<TroopCode, RequirementValue>)
+
     return {
       troops: TroopService.sortTroops({ troops }),
       costs,
+      requirements,
       pending_recruitment: pending_recruit
         ? {
           troop_id: pending_recruit.troop_id,

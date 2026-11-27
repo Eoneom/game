@@ -1,5 +1,6 @@
 import { TroopCode } from '@server-core/troop/constant/code'
 import { GenericResponse } from '../../../response'
+import { Requirement } from '../../shared/requirement'
 
 export interface TroopRecruitQueueEntry {
   id: string
@@ -20,6 +21,14 @@ export interface TroopListDataResponse {
       duration_per_unit: number
       started_at: number
     }
+    /** Per-unit cost (same as `GET /troop/:troop_id`). */
+    cost: {
+      plastic: number
+      mushroom: number
+      plasma: number
+      duration: number
+    }
+    requirement: Requirement
   }[]
   /** Waiting recruitment batches of the city, oldest first (empty for outposts). */
   recruit_queue: TroopRecruitQueueEntry[]

@@ -1,5 +1,8 @@
 import type { MockInstance } from 'vitest'
 import { BuildingListQuery } from '#app/query/building/list'
+import { BuildingGetQuery } from '#app/query/building/get'
+import { PricingService } from '#core/pricing/service'
+import { RequirementService } from '#core/requirement/service'
 import type { BuildingListEntry } from '#app/query/building/list'
 import { Factory } from '#adapter/factory'
 import { JobQueue } from '#app/port/job-queue'
@@ -134,5 +137,48 @@ describe('BuildingListQuery', () => {
       finish_at: expect.any(Number),
     })
     expect(result.upgrade_queue[0].finish_at).toBeGreaterThan(result.upgrade_queue[0].start_at)
+  })
+
+  it('carries the upgrade cost and requirement of level + 1 on every entry (slice 043)', async () => {
+    const result = await new BuildingListQuery().run({
+      city_id: city.id,
+      player_id
+    })
+
+    for (const entry of result.buildings) {
+      expect(entry.upgrade_cost).toEqual(PricingService.getBuildingLevelCost({
+        code: entry.code,
+        level: entry.level + 1,
+        architecture_level: architecture.level
+      }))
+      expect(entry.requirement).toEqual(RequirementService.getBuildingRequirement({ building_code: entry.code }))
+    }
+    const upgrading = result.buildings.find(b => b.id === b_upgrade.id)
+    expect(upgrading && 'upgrade_at' in upgrading && upgrading.upgrade_started_at)
+      .toBe(10_000 - upgrading!.upgrade_cost.duration * 1000)
+  })
+
+  it('prices entries like the details query', async () => {
+    const wall = BuildingEntity.create({
+      id: id(),
+      city_id: city.id,
+      code: BuildingCode.CITY_WALL,
+      level: 3
+    })
+    ;(repository.building.list as unknown as MockInstance).mockResolvedValue([ wall ])
+    ;(repository.building as unknown as { getInCity: MockInstance }).getInCity = vi.fn().mockResolvedValue(wall)
+
+    const list = await new BuildingListQuery().run({
+      city_id: city.id,
+      player_id
+    })
+    const details = await new BuildingGetQuery().run({
+      city_id: city.id,
+      player_id,
+      building_code: BuildingCode.CITY_WALL
+    })
+
+    expect(list.buildings[0].upgrade_cost).toEqual(details.cost)
+    expect(list.buildings[0].requirement).toEqual(details.requirement)
   })
 })
