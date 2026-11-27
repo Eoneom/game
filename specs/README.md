@@ -46,7 +46,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 043 | Catalogue card grids | Implemented | [spec](./043-catalogue-card-grids/spec.md) |
 | 044 | World map revamp | Implemented | [spec](./044-world-map-revamp/spec.md) |
 | 045 | Movements revamp | Implemented | [spec](./045-movements-revamp/spec.md) |
-| 046 | Bourse quick trade | Planned | [spec](./046-bourse-quick-trade/spec.md) |
+| 046 | Bourse quick trade | Implemented | [spec](./046-bourse-quick-trade/spec.md) |
 | 047 | Original artwork | Planned | [spec](./047-original-artwork/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).

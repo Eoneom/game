@@ -68,7 +68,7 @@ Registered in `startSession` (`apps/web/src/modules/auth/hooks.ts`):
 - `troop/ws-listener.ts` (incl. the « Attaque entrante » toast on `movement:incoming`, slice 030)
 - `outpost/ws-listener.ts`
 - `alliance/ws-listener.ts` (alliance data refresh and toasts, reinforcement lists, slice 033)
-- `exchange/ws-listener.ts` (book and trades refresh on `exchange:book-updated`; fill toast and own orders, movements, troops and reports refresh on `exchange:filled`, slice 035)
+- `exchange/ws-listener.ts` (book and trades refresh on `exchange:book-updated`; fill toast and own orders, movements, troops and reports refresh on `exchange:filled`, slice 035; both events also refresh the `GET /exchange/summary` query of the quick trade, client only, slice [`046`](../046-bourse-quick-trade/spec.md))
 - `communication/ws-listener.ts` (battle report toast, « Nouvelle lettre » toast on `mail:received`, chat history cache on `chat:message` via `communication/chat/ws-listener.ts`; registers once per page load)
 
 `wsClient.on` returns an unsubscribe function, used by the chat panel for its activity dot.

@@ -138,8 +138,10 @@ Unused carriers stay reserved for the rest of the order. When an order is filled
 | --- | --- | --- |
 | `POST` | `/exchange/order` | Place an order |
 | `DELETE` | `/exchange/order/:order_id` | Cancel |
-| `GET` | `/exchange/order/mine` | Own open orders (filled lots, reservations) and last 50 closed orders |
-| `GET` | `/exchange/book?resource=` | Faction book for a pair: top 10 price levels per side (price, total lots), anonymous |
+| `GET` | `/exchange/order/mine` | Own open orders (filled lots, reservations) and last 50 closed orders; since [`046`](../046-bourse-quick-trade/spec.md) also `trading_posts` (cities with a trading post, level, open order count) |
+| `POST` | `/exchange/order/estimate` | Order form preview (see part 2 notes); since [`046`](../046-bourse-quick-trade/spec.md) also `carrier_load`, `available_carrier_capacity` and an `immediate_fill` dry run (no lock) |
+| `GET` | `/exchange/book?resource=` | Faction book for a pair: top 10 price levels per side (price, total lots), anonymous; since [`046`](../046-bourse-quick-trade/spec.md) each level has `own_lots` (the caller's share) |
+| `GET` | `/exchange/summary` | Since [`046`](../046-bourse-quick-trade/spec.md): best bid / ask among other players' open orders and last trade of every pair of the faction |
 | `GET` | `/exchange/trades?resource=` | Last 50 trades of the faction for a pair (price, lots, time), anonymous |
 
 ## Events
@@ -163,7 +165,7 @@ System players never trade, build trading posts or water purifiers in this slice
 | --- | --- |
 | Header resources | Water stock and earnings, new water icon. Since [`041`](../041-app-shell-navigation/spec.md): stock only in the compact bar; rate per hour and breakdown in the resource panel. |
 | Buildings | Purificateur d'eau and Comptoir d'échange. |
-| **Bourse** page | Pair selector; order book depth (bids / asks); last trades with a simple price line; order form (side, lots, price, city) showing the reservation it will make (resources + carriers) and the estimated delivery time to a typical city; own open orders with cancel; history. |
+| **Bourse** page | Pair selector; order book depth (bids / asks); last trades with a simple price line; order form (side, lots, price, city) showing the reservation it will make (resources + carriers) and the estimated delivery time to a typical city; own open orders with cancel; history. Since [`046`](../046-bourse-quick-trade/spec.md): « Échange rapide » card first (resource, « Vendre \| Acheter », lots, price with best bid / ask and « Prix du marché », total, carriers, delivery, immediate fill, validation), « Mes ordres » with progress and folded history, and a collapsible « Marché » (depth with clickable levels, last trades, price line). |
 | Movements | Exchange convoys listed (read only). |
 | Reports | `trade` report details. |
 | Troops | Reserved carriers shown as "réservés pour la bourse". |
@@ -265,7 +267,7 @@ Part 2 delivers the order book, escrow of resources and carriers, matching, exch
 - **Cargo turned back** to a sender (recipient without cities) is deposited up to warehouse capacity like any return trip; the excess is lost.
 - **Anti-abuse** (fees, price bounds, feeding between accounts) stays with the security pass [`038`](../038-security-pass/spec.md).
 - **Admin observability** does not show orders or convoys.
-- **Web**: no click-to-prefill from a book level; the price line has no axis or time scale.
+- **Web**: ~~no click-to-prefill from a book level~~ (done in [`046`](../046-bourse-quick-trade/spec.md): a level fills the quick trade's side and price); the price line has no axis or time scale (046 adds a time-span caption only).
 
 ## Evidence index — part 1 (water)
 
