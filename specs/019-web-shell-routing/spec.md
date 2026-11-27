@@ -32,8 +32,8 @@ Flow:
 | Area | Example paths |
 | --- | --- |
 | City base | `/city/$cityId/base/`, building, technology, troop, defense child routes; the four catalogues keep the selected entry in `?code=` (unknown values dropped by `validateSearch`, card clicks navigate with `replace`) ([`043`](../043-catalogue-card-grids/spec.md)) |
-| City map/world | `/city/$cityId/map`, `/city/$cityId/world/map`, movement under `world/movement` |
-| Outpost | `/outpost/$outpostId`, map, movement, world variants; read-only troop page `/outpost/$outpostId/troop` (`?code=`, « Unités » in the left column and on the outpost page) ([`043`](../043-catalogue-card-grids/spec.md)) |
+| City map/world | `/city/$cityId/map`, `/city/$cityId/world/map`, movement under `world/movement` (list search `tab` / `sort` / `incoming`, details `world/movement/$movementId`, send wizard `world/movement/send` with its state in the search params) ([`045`](../045-movements-revamp/spec.md)) |
+| Outpost | `/outpost/$outpostId`, map, movement, world variants (same movement list, details and `send` routes as cities, [`045`](../045-movements-revamp/spec.md)); read-only troop page `/outpost/$outpostId/troop` (`?code=`, « Unités » in the left column and on the outpost page) ([`043`](../043-catalogue-card-grids/spec.md)) |
 | Inbox | `/inbox/report`, `/inbox/mail` (Courrier, [`032`](../032-messaging/spec.md); search `box`, `mail_id`, `view=compose\|blocked`, `to`, `reply_to`) |
 | Alliance | `/alliance` ([`033`](../033-alliances/spec.md)); the city map accepts `?x=&y=` to center on and select a cell |
 | Shared report | `_shared/report` |

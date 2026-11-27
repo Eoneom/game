@@ -45,7 +45,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 042 | City dashboard | Planned | [spec](./042-city-dashboard/spec.md) |
 | 043 | Catalogue card grids | Implemented | [spec](./043-catalogue-card-grids/spec.md) |
 | 044 | World map revamp | Planned | [spec](./044-world-map-revamp/spec.md) |
-| 045 | Movements revamp | Planned | [spec](./045-movements-revamp/spec.md) |
+| 045 | Movements revamp | Implemented | [spec](./045-movements-revamp/spec.md) |
 | 046 | Bourse quick trade | Planned | [spec](./046-bourse-quick-trade/spec.md) |
 | 047 | Original artwork | Planned | [spec](./047-original-artwork/spec.md) |
 

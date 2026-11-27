@@ -225,6 +225,7 @@ Choosing an action opens the **send wizard (045)** with:
 - The wizard opens **inside the map drawer**, at its step 2 (action + troops) since the destination is known; « Retour » goes to step 1 with the destination filled. After « Envoyer », the drawer shows the new movement and its arrow appears.
 - The wizard component, its route and its search params belong to slice 045. This slice only requires that the wizard can be mounted in a container (drawer) and accepts the prefill above. If 045 ships a route only, the map navigates to it with the same values as search params.
 - The compact `MovementCreate` embedded in `map/details/index.tsx` today is removed.
+- **Contract shipped by [`045`](../045-movements-revamp/spec.md)**: mount `MovementSendWizard` (`modules/movement/send/index.tsx`) with `origin`, `state = parseMovementSendSearch({ step: 'ordre', x, y, action })` (`send/search.ts`) held in a `useState`, `onStateChange={setState}`, `onSent(movement_id)`, `onCancel` and `layout="drawer"` (recap below the steps; no origin select without `onOriginChange`). Route fallback: `…/world/movement/send?x=&y=&action=`. Movement arrows and toasts link to `…/world/movement/$movementId`; the drawer reuses `MovementDetails` (`modules/movement/details/index.tsx`, optional `mapPath`) and `IncomingMovementDetails` (`modules/movement/incoming/details.tsx`). `WORLD_SIZE` and `GET /city` coordinates already ship with 045; 045 added no `started_at` column, so 044 adds its migration next to `00022_movement_return`.
 
 ## 5. Terrain bonus overlay
 

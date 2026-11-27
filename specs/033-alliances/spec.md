@@ -178,7 +178,7 @@ System players never join or create alliances and cannot receive reinforcements.
 | Without alliance | Create form; search alliances of the faction with "Postuler"; pending invitations (accept / refuse); own applications (withdraw); cooldown notice. |
 | With alliance | Header (name, tag, description); member list with role and cities (coordinates, link to the map); invite form; applications to handle; role actions per member; leave / transfer / dissolve. |
 | Chat panel | **Alliance** tab when the player is a member. |
-| Movement create | "Renforcer" when the destination is an allied city and only combat troops are selected. |
+| Movement create | "Renforcer" when the destination is an allied city and only combat troops are selected. Since [`045`](../045-movements-revamp/spec.md): the only action the send wizard offers on an allied city (step 2), with combat-only troop rows; the owner recall and automatic returns are listed under « Retours » (`movement.is_return`). |
 | City troops page | "Renforts stationnés" section (owner, troops) — read only for the host. |
 | Troops abroad | List of own reinforcements with "Rappeler". |
 | Names | `[TAG]` prefix on map markers, reports and chat. |

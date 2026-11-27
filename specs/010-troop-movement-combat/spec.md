@@ -23,7 +23,9 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `GET` | `/troop/movement/:movement_id` | yes | `troopGetMovementHandler` |
 | `POST` | `/troop/movement/estimate` | yes | `troopEstimateMovementHandler` |
 
-**Movement visibility**: a movement is listed while its `troop.movement.finish` job is pending. An arrived **attack** keeps its movement row until the battle ends but is hidden from `GET /troop/movement`. `GET /troop/movement/:movement_id` still returns it while the battle is `in_progress`, with `battle_id` set and `arrive_at` = battle start; otherwise `battle_id` is `null`. After the battle finishes the movement is deleted (`troop:movement:not-found`).
+**Movement visibility**: a movement is listed while its `troop.movement.finish` job is pending. An arrived **attack** keeps its movement row until the battle ends; `GET /troop/movement` and `GET /troop/movement/:movement_id` both return it while the battle is `in_progress`, with `battle_id` set and `arrive_at` = battle start (the list hid it before [`045`](../045-movements-revamp/spec.md)); otherwise `battle_id` is `null`. After the battle finishes the movement is deleted (`troop:movement:not-found`).
+
+**Movements page fields** ([`045`](../045-movements-revamp/spec.md)): `movement.is_return` (migration `00022_movement_return`, default `false`) is set by `createReturnBaseTrip`, the automatic reinforcement return and the owner recall; `kind` on `GET /troop/movement` and `GET /troop/movement/:movement_id` is `convoy` when `exchange_trade_id` is set, else `return` when `is_return`, else `outgoing`. List entries also carry `battle_id` and `troops` (one `troop.listByMovementIds` read); the detail carries `combat_strategy`. `POST /troop/movement` answers `{ movement_id, deleted_outpost_id? }`; `POST /troop/movement/estimate` adds `modifiers: { propulsion_level, non_combat_speed_multiplier, carrier_capacity_multiplier }` (`duration` stays in seconds).
 
 | `TroopError` (movement-related) | Meaning |
 | --- | --- |
@@ -91,11 +93,11 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 
 ## Web UI
 
-`apps/web/src/modules/movement/` — list, item links to movement detail routes under city/outpost ([`019`](../019-web-shell-routing/spec.md)). Create form supports `attack` with a combat strategy picker (`create/strategy`). Movement details show « Bataille en cours » when `battle_id` is set. Slice [`030`](../030-intelligence/spec.md): « Espionner » action (scouts only, destination not same-faction) with an odds preview, and an « Attaques entrantes » section (`movement/incoming/`) fed by `GET /troop/movement/incoming`. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail).
+`apps/web/src/modules/movement/` — since [`045`](../045-movements-revamp/spec.md): tabbed list « Sortants / Entrants / Retours / Convois » (compact tables, shared 1 s ticker, sort in the URL), details at `…/world/movement/$movementId` (« En bataille depuis HH:mm » when `battle_id` is set, strategy, troops, cargo), and the 3-step send wizard `MovementSendWizard` at `…/world/movement/send` (destination → action and troops → summary) whose state lives in the URL; attack strategy picker in `send/strategy`. Slice [`030`](../030-intelligence/spec.md): « Espionner » (scouts only, Espionnage ≥ 1) with an odds preview in the summary, and incoming attacks in the « Entrants » tab fed by `GET /troop/movement/incoming`. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail).
 
 ## API client
 
-`packages/api-client/src/endpoints/troop/movement/` (`TroopGetMovementDataResponse.battle_id`).
+`packages/api-client/src/endpoints/troop/movement/` (`TroopGetMovementDataResponse.battle_id`; `kind`, `battle_id`, `troops`, `combat_strategy`, `movement_id`, estimate `modifiers` and the `MovementKind` export since [`045`](../045-movements-revamp/spec.md)).
 
 ## Evidence index
 

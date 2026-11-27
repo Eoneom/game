@@ -139,7 +139,7 @@ The planner ([`016`](../016-system-controlled-players/spec.md)) must respect the
 | Surface | Change |
 | --- | --- |
 | Building list / details | Two new buildings. Command center details: "+N mouvements" (this city), total cap, "File de recrutement : 3" when ≥ 1. Shelter details: sheltered plastic / mushroom / plasma at current and next level. |
-| Movements | Show "Mouvements X / Y" (from `/troop/movement/capacity`) on the movement list and create screens. Disable send with a message when full. Map `troop:movement:limit-reached` to French copy. |
+| Movements | Show "Mouvements X / Y" (from `/troop/movement/capacity`) on the movement list and create screens. Disable send with a message when full. Map `troop:movement:limit-reached` to French copy. Since [`045`](../045-movements-revamp/spec.md) the readout is a meter in the movements page header (danger + « Limite atteinte » hint when full; tooltip: convoys never count) and in the send wizard recap; the summary step disables « Envoyer » with the blocking warning. |
 | Recruitment | Show the city's queue (waiting rows, cancel button) under the active batch; recruit button enqueues when a batch is running and the queue has room. Toast on `troop:queue-item-dropped`. |
 | Battle report | Defender: sheltered amounts. |
 

@@ -124,8 +124,8 @@ Stored like battle metadata (dedicated `report_spy` table, JSON columns).
 | --- | --- |
 | Header | Badge with the number of incoming attacks, shown only when `detection` ≥ 1 and the list is non-empty. |
 | Shell columns ([`041`](../041-app-shell-navigation/spec.md)) | Left column: « ⚠ N attaque(s) entrante(s) · mm:ss » under « Déplacements » for the current location (danger left bar). Right column: danger dot on every targeted city / outpost. Same detection-gated list. |
-| Movements page | "Attaques entrantes" section: target, countdown, then attacker, size and composition according to level. Toast on `movement:incoming`. |
-| Movement create | "Espionner" action available when only scouts are selected and the target is an enemy location; shows the success probability preview from the known levels (own espionage only; the target's detection is unknown, so show "≥ 5 %"). |
+| Movements page | "Attaques entrantes" section: target, countdown, then attacker, size and composition according to level. Toast on `movement:incoming`. Since [`045`](../045-movements-revamp/spec.md): the « Entrants » tab (red with its count when non-empty; empty states « Recherchez la Détection… » at level 0, « Aucune attaque détectée. » from 1) and `IncomingMovementDetails` in the details panel (`?incoming=`). |
+| Movement create | "Espionner" action available when only scouts are selected and the target is an enemy location; shows the success probability preview from the known levels (own espionage only; the target's detection is unknown, so show "≥ 5 %"). Since [`045`](../045-movements-revamp/spec.md): offered at wizard step 2 on enemy settlements and empty explored cells (field stacks), disabled (not hidden) without Espionnage, scouts-only troop rows; odds and failure warning in the summary. |
 | Reports | Details for `spy` (tiers, failure) and `spy_detected`. |
 | Technology list | **Renseignement** branch. |
 
