@@ -55,7 +55,7 @@ Boot: `index.ts` calls `ensureCityResourcesGatherScheduled`. Worker registration
 
 ## Web UI
 
-`apps/web/src/modules/city/` — city page, hooks, `ws-listener` for gather events; `city/root.tsx` for city-scoped layout. World map (`apps/web/src/modules/map/`) lists every city in the viewport via `GET /world/cells` `settlements.cities` (name label; faction-colored marker).
+`apps/web/src/modules/city/` — city dashboard, hooks, `ws-listener` for gather events; `city/root.tsx` for city-scoped layout. Since [`042`](../042-city-dashboard/spec.md) the city home `/city/$cityId/base/` is a dashboard of cards (`city/dashboard/`): production and warehouses, energy, the four queues, defense, exchange orders, movements and an incoming-attack alert. World map (`apps/web/src/modules/map/`) lists every city in the viewport via `GET /world/cells` `settlements.cities` (name label; faction-colored marker).
 
 ## API client
 

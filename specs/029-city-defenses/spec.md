@@ -200,6 +200,7 @@ Accepts defender defense stacks and a Fortification level; strategy list include
 | Attack form / garrison strategy | `siege_assault` in strategy pickers. |
 | Battle report | Defense losses, plasma spent, shield reduction. |
 | Building list | `city_wall` hidden. |
+| City dashboard ([`042`](../042-city-dashboard/spec.md)) | « Fortification » card (running batch, waiting rows, « File N / 3 », « Enceinte requise » without the Enceinte) and « Défense » card (points used (+queued) / total, free points, Enceinte level, defenses and armed defenses, garrison strategy), both from `GET /city/:city_id/defense`. |
 
 ## Persistence
 

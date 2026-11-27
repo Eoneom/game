@@ -43,7 +43,7 @@ Boot: `ensureOutpostResourcesGatherScheduled` in `index.ts`. Gather success emit
 
 ## Web UI
 
-`apps/web/src/modules/outpost/` — page, hooks, `ws-listener` for created/deleted/gather events. World map (`apps/web/src/modules/map/`) shows every outpost in the viewport via `GET /world/cells` `settlements.outposts` (temporary vs permanent label; faction-colored marker).
+`apps/web/src/modules/outpost/` — dashboard, hooks, `ws-listener` for created/deleted/gather events. Since [`042`](../042-city-dashboard/spec.md) the outpost home `/outpost/$outpostId` is a reduced dashboard (`outpost/dashboard/`): incoming-attack alert, « Stocks et production », « Statut » (« Rendre permanent », settle form), « Garnison » (strategy, stationed units) and « Mouvements ». World map (`apps/web/src/modules/map/`) shows every outpost in the viewport via `GET /world/cells` `settlements.outposts` (temporary vs permanent label; faction-colored marker).
 
 ## API client
 

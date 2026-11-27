@@ -13,6 +13,8 @@ A single page that shows the player's whole empire at a glance: every city and o
 
 Planning context: [`docs/brainstorm.md`](../../docs/brainstorm.md).
 
+> Since [`042`](../042-city-dashboard/spec.md), each city and outpost home is a per-location dashboard (queues, production, defense, movements, threats). The empire overview stays a separate draft: it would aggregate every location on one page.
+
 **Likely depends on**: [`006`](../006-city-lifecycle-gathering/spec.md), [`011`](../011-outposts/spec.md), [`013`](../013-location-activity/spec.md) (per-location activity, probably reusable), [`019`](../019-web-shell-routing/spec.md), [`028`](../028-command-center-shelter/spec.md) (movement cap), [`030`](../030-intelligence/spec.md) (incoming attacks), and possibly [`029`](../029-city-defenses/spec.md) (defenses).
 
 ## Tentative decisions (from the brainstorm, may still change)

@@ -167,6 +167,7 @@ System players never trade, build trading posts or water purifiers in this slice
 | Movements | Exchange convoys listed (read only). |
 | Reports | `trade` report details. |
 | Troops | Reserved carriers shown as "réservés pour la bourse". |
+| City dashboard ([`042`](../042-city-dashboard/spec.md)) | « Bourse » card: open orders placed from this city (newest 3, filled / lots bar, price) against its limit (trading post level), « Construisez un Comptoir d'échange… » without one; exchange convoys counted under « Convois » in the « Mouvements » card. |
 
 ## Persistence
 
