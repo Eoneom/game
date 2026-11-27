@@ -48,7 +48,12 @@ describe('troopEstimateMovementHandler', () => {
       speed: 2,
       duration: 150,
       transport_capacity: 200,
-      destination_capacity_exceeded: false } as any)
+      destination_capacity_exceeded: false,
+      modifiers: {
+        propulsion_level: 2,
+        non_combat_speed_multiplier: 1.05,
+        carrier_capacity_multiplier: 1.1,
+      } } as any)
   })
 
   afterEach(() => {
@@ -145,7 +150,12 @@ describe('troopEstimateMovementHandler', () => {
         speed: 2,
         duration: 150,
         transport_capacity: 200,
-        destination_capacity_exceeded: false }
+        destination_capacity_exceeded: false,
+        modifiers: {
+          propulsion_level: 2,
+          non_combat_speed_multiplier: 1.05,
+          carrier_capacity_multiplier: 1.1,
+        } }
     })
   })
 })

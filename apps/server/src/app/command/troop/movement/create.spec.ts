@@ -10,6 +10,7 @@ import { OutpostEntity } from '#core/outpost/entity'
 import { AppEvent } from '#core/events'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopEntity } from '#core/troop/entity'
 import { CombatError } from '#core/combat/error'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -288,6 +289,10 @@ describe('createTroopMovement', () => {
     assert.strictEqual(movementCreate.mock.calls.length, 1)
 
     const movement = movementCreate.mock.calls[0][0]
+    assert.strictEqual(result.movement_id, movement.id)
+    // A player order is an outgoing movement (slice 045).
+    assert.strictEqual(movement.is_return, false)
+    assert.strictEqual(movement.getKind(), MovementKind.OUTGOING)
     assert.strictEqual(movement.player_id, player_id)
     assert.strictEqual(movement.action, MovementAction.EXPLORE)
     assert.deepStrictEqual(movement.origin, origin)

@@ -51,6 +51,7 @@ export const troopEstimateMovementHandler = async (
       duration,
       transport_capacity,
       destination_capacity_exceeded,
+      modifiers,
     } = await new TroopMovementEstimateQuery().run({
       origin,
       destination,
@@ -68,6 +69,11 @@ export const troopEstimateMovementHandler = async (
         duration,
         transport_capacity,
         destination_capacity_exceeded,
+        modifiers: {
+          propulsion_level: modifiers.propulsion_level,
+          non_combat_speed_multiplier: modifiers.non_combat_speed_multiplier,
+          carrier_capacity_multiplier: modifiers.carrier_capacity_multiplier,
+        },
       }
     }
 

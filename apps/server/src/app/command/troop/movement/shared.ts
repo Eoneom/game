@@ -57,6 +57,8 @@ export async function createReturnBaseTrip({
     non_combat_speed_multiplier: logistics.non_combat_speed,
     // The carriers' return trip of an exchange convoy stays out of the movement cap (slice 035).
     exchange_trade_id: inbound_movement.exchange_trade_id,
+    // Listed under « Retours » (or « Convois » for exchange carriers) on the movements page (slice 045).
+    is_return: true,
   })
 
   const base_troops = TroopService.assignToMovement({

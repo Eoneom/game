@@ -32,6 +32,20 @@ export class PostgresTroopRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async listByMovementIds({ movement_ids }: { movement_ids: string[] }): Promise<TroopEntity[]> {
+    if (movement_ids.length === 0) {
+      return []
+    }
+
+    const rows = await this.db
+      .selectFrom('troop')
+      .selectAll()
+      .where('movement_id', 'in', movement_ids)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   async listAllInCell({ cell_id }: { cell_id: string }): Promise<TroopEntity[]> {
     const rows = await this.db
       .selectFrom('troop')

@@ -251,6 +251,7 @@ export class TroopService {
     propulsion_level = 0,
     non_combat_speed_multiplier = 1,
     exchange_trade_id = null,
+    is_return = false,
   }: {
     troops: TroopCount[]
     start_at: number
@@ -267,6 +268,8 @@ export class TroopService {
     non_combat_speed_multiplier?: number
     /** Exchange convoy or its return trip (slice 035). */
     exchange_trade_id?: string | null
+    /** Return trip, automatic reinforcement return or owner recall (slice 045). */
+    is_return?: boolean
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
@@ -285,6 +288,7 @@ export class TroopService {
       resources,
       combat_strategy,
       exchange_trade_id,
+      is_return,
     })
 
     return { movement, arrive_at }

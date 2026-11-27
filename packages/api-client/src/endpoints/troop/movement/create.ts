@@ -18,6 +18,8 @@ export interface TroopMovementCreateRequest {
 }
 
 interface TroopMovementCreateDataResponse {
+  /** The created movement (slice 045: the wizard opens it in the details panel). */
+  movement_id: string
   deleted_outpost_id?: string
 }
 

@@ -18,12 +18,21 @@ export interface TroopMovementEstimateQueryRequest {
   resources?: Resource
 }
 
+/** Bonuses the estimate applied (slice 045 summary « Bonus appliqués »). */
+interface TroopMovementEstimateModifiers {
+  propulsion_level: number
+  non_combat_speed_multiplier: number
+  carrier_capacity_multiplier: number
+}
+
 export interface TroopMovementEstimateQueryResponse {
   distance: number
+  /** Seconds. */
   duration: number
   speed: number
   transport_capacity: number
   destination_capacity_exceeded: boolean
+  modifiers: TroopMovementEstimateModifiers
 }
 
 export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstimateQueryRequest, TroopMovementEstimateQueryResponse> {
@@ -90,6 +99,11 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
       duration: duration / 1000,
       transport_capacity,
       destination_capacity_exceeded,
+      modifiers: {
+        propulsion_level,
+        non_combat_speed_multiplier: logistics.non_combat_speed,
+        carrier_capacity_multiplier: logistics.transport_capacity,
+      },
     }
   }
 

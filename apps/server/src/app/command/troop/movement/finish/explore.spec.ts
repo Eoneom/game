@@ -7,6 +7,7 @@ import { JobQueue } from '#app/port/job-queue'
 import { Repository } from '#app/port/repository/generic'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { now } from '#shared/time'
@@ -128,6 +129,7 @@ describe('finishTroopExploreMovement', () => {
     const movement_to_create = movementCreate.mock.calls[0][0]
     assert.strictEqual(movementDelete.mock.calls[0][0], movement.id)
     assert.strictEqual(movement_to_create.action, MovementAction.BASE)
+    assert.strictEqual(movement_to_create.getKind(), MovementKind.RETURN)
     const troops_updated = troopUpdateOne.mock.calls.map(([ t ]) => t)
     assert.strictEqual(troops_updated.length, 1)
     assert.strictEqual(troops_updated[0].movement_id, movement_to_create.id)

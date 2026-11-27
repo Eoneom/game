@@ -40,6 +40,7 @@ export interface CreateTroopMovementParams {
 }
 
 export interface CreateTroopMovementResult {
+  movement_id: string
   deleted_outpost_id?: string
 }
 
@@ -196,6 +197,8 @@ export async function createTroopMovement({
       combat_strategy: action === MovementAction.ATTACK ? combat_strategy ?? null : null,
       propulsion_level,
       non_combat_speed_multiplier: logistics.non_combat_speed,
+      // The owner recall of a reinforcement is a trip home (« Retours », slice 045).
+      is_return: is_foreign_city,
     })
 
     const movement_troops = TroopService.assignToMovement({
@@ -292,7 +295,10 @@ export async function createTroopMovement({
       })
     }
 
-    return { deleted_outpost_id }
+    return {
+      movement_id: movement.id,
+      deleted_outpost_id,
+    }
   })
 }
 

@@ -87,6 +87,7 @@ async function sendHome({
     player_id: owner_player_id,
     action: MovementAction.BASE,
     propulsion_level,
+    is_return: true,
   })
 
   await repository.movement.create(movement)

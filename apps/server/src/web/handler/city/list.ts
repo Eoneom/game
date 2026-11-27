@@ -33,12 +33,19 @@ export const cityListHandler = async (
 }
 
 const response_mapper = ({
-  cities, count_limit 
+  cities,
+  cells,
+  count_limit
 }: CityListQueryResponse): CityListDataResponse => {
-  const cities_response: CityListDataResponse['cities'] = cities.map(city => {
+  const cities_response: CityListDataResponse['cities'] = cities.map((city, index) => {
+    const { coordinates } = cells[index]
     return {
       id: city.id,
       name: city.name,
+      coordinates: {
+        x: coordinates.x,
+        y: coordinates.y
+      },
     }
   })
 

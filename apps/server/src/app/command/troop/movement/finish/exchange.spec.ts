@@ -7,6 +7,7 @@ import { CityEntity } from '#core/city/entity'
 import { ExchangeResource } from '#core/exchange/value/resource'
 import { ExchangeSide } from '#core/exchange/value/side'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { MovementEntity } from '#core/troop/movement/entity'
 
 describe('finishExchangeMovement (slice 035)', () => {
@@ -91,6 +92,8 @@ describe('finishExchangeMovement (slice 035)', () => {
       destination: goods.origin,
       exchange_trade_id: goods.exchange_trade_id,
     })
+    // The carriers' trip home stays under « Convois » (slice 045).
+    expect(result.base_movement.getKind()).toBe(MovementKind.CONVOY)
     expect(result.base_movement.hasResources()).toBe(false)
     expect(world.movements.has(goods.id)).toBe(false)
     expect(world.movementTroops(result.base_movement.id).map(troop => troop.count)).toEqual([ 1 ])

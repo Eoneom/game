@@ -46,7 +46,10 @@ describe('troopCreateMovementHandler', () => {
       locals: { player_id: 'p1' }
     }
     next = vi.fn()
-    vi.mocked(createTroopMovement).mockResolvedValue({ deleted_outpost_id: undefined })
+    vi.mocked(createTroopMovement).mockResolvedValue({
+      movement_id: 'm1',
+      deleted_outpost_id: undefined
+    })
   })
 
   afterEach(() => {
@@ -128,7 +131,10 @@ describe('troopCreateMovementHandler', () => {
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalledWith({
       status: 'ok',
-      data: { deleted_outpost_id: undefined } 
+      data: {
+        movement_id: 'm1',
+        deleted_outpost_id: undefined
+      }
     })
   })
 })

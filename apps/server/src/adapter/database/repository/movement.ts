@@ -99,6 +99,7 @@ export class PostgresMovementRepository
       },
       combat_strategy: row.combat_strategy as CombatStrategy | null,
       exchange_trade_id: row.exchange_trade_id,
+      is_return: row.is_return,
     })
   }
 
@@ -117,6 +118,7 @@ export class PostgresMovementRepository
       water: entity.resources.water,
       combat_strategy: entity.combat_strategy,
       exchange_trade_id: entity.exchange_trade_id,
+      is_return: entity.is_return,
     }
   }
 }

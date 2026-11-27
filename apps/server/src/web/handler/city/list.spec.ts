@@ -23,6 +23,20 @@ const queryResult = {
       name: 'Bobburg' 
     }
   ],
+  cells: [
+    {
+      coordinates: {
+        x: 3,
+        y: 4
+      }
+    },
+    {
+      coordinates: {
+        x: 10,
+        y: 12
+      }
+    }
+  ],
   count_limit: 5
 }
 
@@ -68,11 +82,19 @@ describe('cityListHandler', () => {
         cities: [
           {
             id: 'c1',
-            name: 'Aliceton' 
+            name: 'Aliceton',
+            coordinates: {
+              x: 3,
+              y: 4
+            }
           },
           {
             id: 'c2',
-            name: 'Bobburg' 
+            name: 'Bobburg',
+            coordinates: {
+              x: 10,
+              y: 12
+            }
           }
         ],
         count_limit: 5

@@ -92,6 +92,12 @@ describe('TroopMovementEstimateQuery', () => {
     expect(result.duration).toBe(duration_ms / 1000)
     expect(result.transport_capacity).toBe(TroopService.getTransportCapacity(TroopCode.EXPLORER))
     expect(result.destination_capacity_exceeded).toBe(false)
+    // Neutral faction, no Propulsion tactique (slice 045 summary).
+    expect(result.modifiers).toEqual({
+      propulsion_level: 0,
+      non_combat_speed_multiplier: 1,
+      carrier_capacity_multiplier: 1,
+    })
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: origin })
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: destination })
   })
@@ -139,6 +145,11 @@ describe('TroopMovementEstimateQuery', () => {
     })
     expect(attack.speed).toBe(TroopService.getSpeed(TroopCode.LIGHT_TRANSPORTER))
     expect(attack.transport_capacity).toBe(11000)
+    expect(attack.modifiers).toEqual({
+      propulsion_level: 0,
+      non_combat_speed_multiplier: 1.05,
+      carrier_capacity_multiplier: 1.1,
+    })
   })
 
   it('applies the player tactical_propulsion level to combat troops', async () => {
@@ -157,6 +168,7 @@ describe('TroopMovementEstimateQuery', () => {
     })
 
     expect(AppService.getTacticalPropulsionLevel).toHaveBeenCalledWith({ player_id })
+    expect(result.modifiers.propulsion_level).toBe(5)
     expect(result.speed).toBe(TroopService.getSpeed(TroopCode.LEGIONNAIRE) * 1.2)
     expect(result.duration).toBe(TroopService.getMovementDuration({
       distance,

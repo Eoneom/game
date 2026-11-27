@@ -59,6 +59,8 @@ export {
 } from '@server-core/communication/constant/limits'
 export { OutpostType } from '@server-core/outpost/constant/type'
 export { MovementAction } from '@server-core/troop/constant/movement-action'
+export { MovementKind } from '@server-core/troop/constant/movement-kind'
+export { WORLD_SIZE } from '@server-core/world/constant/size'
 export { CombatStrategy } from '@server-core/combat/value/combat-strategy'
 export { CombatTroopClass } from '@server-core/combat/value/combat-troop-class'
 export { CombatRole } from '@server-core/troop/constant/combat-role'

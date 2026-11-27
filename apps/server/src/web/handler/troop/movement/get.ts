@@ -49,7 +49,9 @@ const response_mapper = ({
   battle_id }: TroopMovementGetQueryResponse): TroopGetMovementDataResponse => {
   const response_movements: TroopGetMovementDataResponse = {
     action: movement.action,
+    kind: movement.getKind(),
     battle_id,
+    combat_strategy: movement.combat_strategy,
     origin: {
       x: movement.origin.x,
       y: movement.origin.y

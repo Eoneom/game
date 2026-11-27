@@ -25,6 +25,7 @@ import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyEntity } from '#core/technology/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -290,6 +291,7 @@ describe('finishTroopSpyMovement', () => {
 
       const base_movement = movementCreate.mock.calls[0][0] as MovementEntity
       assert.strictEqual(base_movement.action, MovementAction.BASE)
+      assert.strictEqual(base_movement.getKind(), MovementKind.RETURN)
       assert.deepStrictEqual(base_movement.destination, {
         x: 1,
         y: 1 

@@ -18,4 +18,6 @@ export type TroopRepository = GenericRepository<TroopEntity> & {
   listStationedAbroad(query: { player_id: string }): Promise<TroopEntity[]>
 
   listByMovement(query: { movement_id: string }): Promise<TroopEntity[]>
+  /** Troops of several movements in one request (movements list, slice 045). */
+  listByMovementIds(query: { movement_ids: string[] }): Promise<TroopEntity[]>
 }

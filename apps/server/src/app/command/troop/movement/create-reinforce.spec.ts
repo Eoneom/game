@@ -12,6 +12,7 @@ import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -175,6 +176,7 @@ describe('createTroopMovement reinforce and recall (slice 033)', () => {
         player_id: owner_id,
         action: MovementAction.REINFORCE,
         destination: at('host-cell'),
+        is_return: false,
       })
     })
 
@@ -255,7 +257,10 @@ describe('createTroopMovement reinforce and recall (slice 033)', () => {
         player_id: owner_id,
         action: MovementAction.BASE,
         origin: at('host-cell'),
+        // The owner recall is listed under « Retours » (slice 045).
+        is_return: true,
       })
+      expect(movement.getKind()).toBe(MovementKind.RETURN)
       expect(emit).toHaveBeenCalledWith(AppEvent.ReinforcementRecalled, {
         player_id: host_id,
         city_id: 'host-city',

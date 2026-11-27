@@ -235,6 +235,7 @@ export interface Movement {
   destination_y: number;
   exchange_trade_id: string | null;
   id: Generated<string>;
+  is_return: Generated<boolean>;
   mushroom: Generated<number>;
   origin_x: number;
   origin_y: number;

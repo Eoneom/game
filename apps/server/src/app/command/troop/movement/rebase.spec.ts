@@ -7,6 +7,7 @@ import { Repository } from '#app/port/repository/generic'
 import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
@@ -149,6 +150,7 @@ describe('rebaseTroopMovement', () => {
     const movement_to_create = movementCreate.mock.calls[0][0]
     assert.deepStrictEqual(movement_to_create.origin, initial_base_movement.destination)
     assert.deepStrictEqual(movement_to_create.destination, initial_base_movement.origin)
+    assert.strictEqual(movement_to_create.getKind(), MovementKind.RETURN)
 
     const troops_to_update = troopUpdateOne.mock.calls.map(([ t ]) => t)
     troops_to_update.forEach(troop_to_update => {

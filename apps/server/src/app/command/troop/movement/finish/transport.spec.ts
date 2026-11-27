@@ -8,6 +8,7 @@ import { Repository } from '#app/port/repository/generic'
 import { CityEntity } from '#core/city/entity'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
+import { MovementKind } from '#core/troop/constant/movement-kind'
 import { TroopError } from '#core/troop/error'
 import { MovementEntity } from '#core/troop/movement/entity'
 import { TroopEntity } from '#core/troop/entity'
@@ -157,6 +158,7 @@ describe('finishTroopTransportMovement', () => {
     assert.strictEqual(movementCreate.mock.calls.length, 1)
     const base_movement = movementCreate.mock.calls[0][0]
     assert.strictEqual(base_movement.action, MovementAction.BASE)
+    assert.strictEqual(base_movement.getKind(), MovementKind.RETURN)
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 900,
       mushroom: 0,

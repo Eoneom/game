@@ -215,6 +215,8 @@ describe('finishTroopReinforceMovement (slice 033)', () => {
       action: MovementAction.BASE,
       origin: destination,
       destination: origin,
+      // A reinforcement turned back is a trip home (« Retours », slice 045).
+      is_return: true,
     })
     expect(createReinforcementReport).not.toHaveBeenCalled()
     expect(capacity).not.toHaveBeenCalled()

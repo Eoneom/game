@@ -53,7 +53,10 @@ export const troopCreateMovementHandler = async (
 
   try {
     const player_id = getPlayerIdFromContext(res)
-    const { deleted_outpost_id } = await createTroopMovement({
+    const {
+      movement_id,
+      deleted_outpost_id
+    } = await createTroopMovement({
       player_id,
       action,
       origin,
@@ -64,7 +67,10 @@ export const troopCreateMovementHandler = async (
     })
     const response: TroopMovementCreateResponse = {
       status: 'ok',
-      data: { deleted_outpost_id }
+      data: {
+        movement_id,
+        deleted_outpost_id
+      }
     }
 
     return res.status(200).json(response)
