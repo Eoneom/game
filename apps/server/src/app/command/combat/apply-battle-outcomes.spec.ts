@@ -154,6 +154,10 @@ describe('applyBattleOutcomes loot', () => {
         removeCount: defenseRemoveCount,
       },
       defense_build_queue: { deleteByCity: defenseQueueDeleteByCity },
+      player: {
+        listByIds: vi.fn().mockResolvedValue([]),
+        addMilitaryValue: vi.fn().mockResolvedValue(undefined),
+      },
     } as unknown as Repository)
   }
 

@@ -11,7 +11,8 @@ import {
 import {
   Insertable,
   Kysely,
-  Selectable
+  Selectable,
+  sql
 } from 'kysely'
 
 export class PostgresPlayerRepository
@@ -103,6 +104,24 @@ export class PostgresPlayerRepository
     await this.db
       .updateTable('player')
       .set({ alliance_left_at: toTimestamp(left_at) })
+      .where('id', '=', player_id)
+      .execute()
+  }
+
+  async addMilitaryValue({
+    player_id,
+    value
+  }: {
+    player_id: string
+    value: number
+  }): Promise<void> {
+    const amount = Math.floor(value)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return
+    }
+    await this.db
+      .updateTable('player')
+      .set({ military_value: sql<string>`military_value + ${String(amount)}::bigint` })
       .where('id', '=', player_id)
       .execute()
   }

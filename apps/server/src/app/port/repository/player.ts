@@ -11,4 +11,6 @@ export type PlayerRepository = GenericRepository<PlayerEntity> & {
   searchHumansByNamePrefix(args: { prefix: string, limit: number }): Promise<PlayerEntity[]>
   /** Voluntary alliance departure time (slice 033 cooldown). */
   setAllianceLeftAt(args: { player_id: string, left_at: number | null }): Promise<void>
+  /** Adds `value` (≥ 0) to the cumulative `military_value` counter (slice 034); it never decreases. */
+  addMilitaryValue(args: { player_id: string, value: number }): Promise<void>
 }

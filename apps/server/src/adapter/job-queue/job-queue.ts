@@ -11,6 +11,7 @@ import type {
   PendingOutpostResourcesGather,
   PendingReportCleanup,
   PendingChatCleanup,
+  PendingRankingCompute,
   PendingSystemPlayerTick,
   PendingTechnologyResearch,
   PendingTroopMovementFinish,
@@ -79,6 +80,12 @@ import {
   scheduleChatCleanup
 } from '#adapter/job-queue/communication/cleanup-chat'
 import {
+  RANKING_COMPUTE_QUEUE,
+  ensureRankingComputeScheduled,
+  getPendingRankingCompute,
+  scheduleRankingCompute
+} from '#adapter/job-queue/ranking/compute'
+import {
   SYSTEM_PLAYER_TICK_QUEUE,
   ensureSystemPlayerTickScheduled,
   getPendingSystemPlayerTick,
@@ -127,6 +134,7 @@ export class JobQueue implements JobQueuePort {
     await this.ctx.boss.createQueue(OUTPOST_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(REPORT_CLEANUP_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(CHAT_CLEANUP_QUEUE, { policy: 'stately' })
+    await this.ctx.boss.createQueue(RANKING_COMPUTE_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(SYSTEM_PLAYER_TICK_QUEUE, { policy: 'stately' })
     this.ctx.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
@@ -291,6 +299,22 @@ export class JobQueue implements JobQueuePort {
     execute_at: number
   }): Promise<string | null> {
     return ensureChatCleanupScheduled(this.ctx, args)
+  }
+
+  async scheduleRankingCompute(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleRankingCompute(this.ctx, args)
+  }
+
+  async getPendingRankingCompute(): Promise<PendingRankingCompute | null> {
+    return getPendingRankingCompute(this.ctx)
+  }
+
+  async ensureRankingComputeScheduled(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return ensureRankingComputeScheduled(this.ctx, args)
   }
 
   async scheduleSystemPlayerTick(args: {

@@ -9,6 +9,8 @@ export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
   ? ColumnType<S, I | undefined, U>
   : ColumnType<T, T | undefined, T>;
 
+type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
+
 export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
@@ -352,6 +354,7 @@ export interface Player {
   alliance_left_at: Timestamp | null;
   faction_code: string;
   id: Generated<string>;
+  military_value: Generated<Int8>;
   name: string;
   system_controlled: boolean;
 }
@@ -360,6 +363,21 @@ export interface PlayerBlock {
   blocked_id: string;
   blocker_id: string;
   created_at: Timestamp;
+}
+
+export interface RankingEntry {
+  category: string;
+  entity_id: string;
+  kind: string;
+  points: Int8;
+  position: number;
+  rank: number;
+  snapshot_id: string;
+}
+
+export interface RankingSnapshot {
+  computed_at: Timestamp;
+  id: Generated<string>;
 }
 
 export interface Report {
@@ -500,6 +518,8 @@ export interface DB {
   player: Player;
   player_block: PlayerBlock;
   system_player_memory: SystemPlayerMemory;
+  ranking_entry: RankingEntry;
+  ranking_snapshot: RankingSnapshot;
   report: Report;
   report_battle: ReportBattle;
   report_reinforcement: ReportReinforcement;

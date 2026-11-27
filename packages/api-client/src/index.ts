@@ -5,6 +5,7 @@ import { CommunicationEndpoint } from './endpoints/communication'
 import { DefenseEndpoint } from './endpoints/defense'
 import { LocationEndpoint } from './endpoints/location'
 import { OutpostEndpoint } from './endpoints/outpost'
+import { RankingEndpoint } from './endpoints/ranking'
 import { PlayerEndpoint } from './endpoints/player'
 import { TechnologyEndpoint } from './endpoints/technology'
 import { TroopEndpoint } from './endpoints/troop'
@@ -33,6 +34,9 @@ export {
   ALLIANCE_NAME_MIN_LENGTH,
 } from '@server-core/alliance/constant/limits'
 export { AllianceError } from '@server-core/alliance/error'
+export { RankingCategory } from '@server-core/ranking/value/category'
+export { RankingKind } from '@server-core/ranking/value/kind'
+export { RANKING_PAGE_SIZE } from '@server-core/ranking/constant/limits'
 export { AbuseReportKind } from '@server-core/communication/abuse-report/kind'
 export {
   ABUSE_REPORT_REASON_MAX_LENGTH,
@@ -89,6 +93,7 @@ export class Client {
   public location: LocationEndpoint
   public outpost: OutpostEndpoint
   public player: PlayerEndpoint
+  public ranking: RankingEndpoint
   public building: BuildingEndpoint
   public technology: TechnologyEndpoint
   public troop: TroopEndpoint
@@ -105,6 +110,7 @@ export class Client {
     this.location = new LocationEndpoint({ fetcher: this.fetcher })
     this.outpost = new OutpostEndpoint({ fetcher: this.fetcher })
     this.player = new PlayerEndpoint({ fetcher: this.fetcher })
+    this.ranking = new RankingEndpoint({ fetcher: this.fetcher })
     this.building = new BuildingEndpoint({ fetcher: this.fetcher })
     this.technology = new TechnologyEndpoint({ fetcher: this.fetcher })
     this.troop = new TroopEndpoint({ fetcher: this.fetcher })

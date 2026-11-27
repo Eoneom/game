@@ -97,6 +97,11 @@ import {
   troopReinforcementListHandler
 } from '#web/handler/troop/reinforcement/list'
 
+import {
+  rankingListHandler,
+  rankingMeHandler
+} from '#web/handler/ranking/get'
+
 const CANONICAL_HEALTH_PATH = '/api/v1/health'
 
 export const router = (): Router => {
@@ -208,6 +213,10 @@ export const router = (): Router => {
   r.post('/alliance/leave', authMiddleware, allianceLeaveHandler)
   r.get('/alliance/:alliance_id', authMiddleware, allianceGetHandler)
   r.post('/alliance/:alliance_id/application', authMiddleware, allianceApplyHandler)
+
+  // Rankings (slice 034).
+  r.get('/ranking', authMiddleware, rankingListHandler)
+  r.get('/ranking/me', authMiddleware, rankingMeHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)

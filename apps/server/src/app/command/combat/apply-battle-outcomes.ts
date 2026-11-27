@@ -15,6 +15,7 @@ import {
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CityEntity } from '#core/city/entity'
+import { militaryCredits } from '#core/ranking/military'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
@@ -117,6 +118,38 @@ async function shelterCapacityOfTarget(battle: BattleEntity): Promise<Resource> 
     code: BuildingCode.UNDERGROUND_SHELTER,
   })
   return BuildingService.getShelteredResources({ level })
+}
+
+/**
+ * Credits `player.military_value` (slice 034) in the outcome transaction: the attacker with every defender loss,
+ * the host and reinforcement owners with the attacker's losses split by raw attack. System players are skipped.
+ */
+async function creditMilitaryValue({
+  battle,
+  attacker_wins,
+}: {
+  battle: BattleEntity
+  attacker_wins: boolean
+}): Promise<void> {
+  const repository = Factory.getRepository()
+  const credits = militaryCredits({
+    attacker_player_id: battle.attacker_player_id,
+    defender_player_id: battle.defender_player_id,
+    state_json: battle.state_json,
+    // On an attacker win, whatever still stands on the defender side is destroyed with the capture.
+    destroyed_defender_stacks: attacker_wins ? battle.state_json.defender_stacks : [],
+  })
+  if (credits.length === 0) {
+    return
+  }
+
+  const players = await repository.player.listByIds(credits.map(credit => credit.player_id))
+  const human_ids = new Set(players.filter(player => !player.system_controlled).map(player => player.id))
+  for (const credit of credits) {
+    if (human_ids.has(credit.player_id)) {
+      await repository.player.addMilitaryValue(credit)
+    }
+  }
 }
 
 export type ApplyBattleOutcomesResult = {
@@ -277,6 +310,10 @@ export async function applyBattleOutcomes({
 
     await repository.battle.update(finished_battle)
     await repository.movement.delete(battle.movement_id)
+    await creditMilitaryValue({
+      battle: finished_battle,
+      attacker_wins,
+    })
 
     const promises: Promise<unknown>[] = [
       ...troop_deletes.map(tid => repository.troop.delete(tid)),

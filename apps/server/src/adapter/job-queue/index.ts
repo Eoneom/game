@@ -47,6 +47,11 @@ export {
 } from '#adapter/job-queue/communication/cleanup-chat'
 
 export {
+  RANKING_COMPUTE_QUEUE,
+  type RankingComputeJobData
+} from '#adapter/job-queue/ranking/compute'
+
+export {
   SYSTEM_PLAYER_TICK_QUEUE,
   SYSTEM_PLAYER_TICK_SINGLETON_KEY,
   type SystemPlayerTickJobData

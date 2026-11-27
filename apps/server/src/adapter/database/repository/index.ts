@@ -51,6 +51,8 @@ import { AbuseReportRepository } from '#app/port/repository/abuse-report'
 import { PostgresAbuseReportRepository } from '#adapter/database/repository/abuse-report'
 import { AllianceRepository } from '#app/port/repository/alliance'
 import { PostgresAllianceRepository } from '#adapter/database/repository/alliance'
+import { RankingRepository } from '#app/port/repository/ranking'
+import { PostgresRankingRepository } from '#adapter/database/repository/ranking'
 import {
   Kysely,
   sql
@@ -81,6 +83,7 @@ export class PostgresRepository implements Repository {
   player_block: PlayerBlockRepository
   abuse_report: AbuseReportRepository
   alliance: AllianceRepository
+  ranking: RankingRepository
 
   private db: Kysely<DB>
 
@@ -113,6 +116,7 @@ export class PostgresRepository implements Repository {
     this.player_block = new PostgresPlayerBlockRepository()
     this.abuse_report = new PostgresAbuseReportRepository()
     this.alliance = new PostgresAllianceRepository()
+    this.ranking = new PostgresRankingRepository()
   }
 
   async connect(): Promise<void> {

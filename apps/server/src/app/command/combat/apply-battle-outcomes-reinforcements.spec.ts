@@ -164,6 +164,8 @@ describe('battle outcomes with reinforcements (slice 033)', () => {
           id,
           faction_code: id === 'attacker' ? FactionCode.THE_ASH_LITURGY : FactionCode.THE_CONFEDERATION
         })),
+        listByIds: vi.fn().mockResolvedValue([]),
+        addMilitaryValue: vi.fn().mockResolvedValue(undefined),
       },
       report: { createBattleReports },
     } as unknown as Repository)

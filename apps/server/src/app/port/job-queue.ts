@@ -76,6 +76,11 @@ export type PendingChatCleanup = {
   job_id: string
 }
 
+export type PendingRankingCompute = {
+  execute_at: number
+  job_id: string
+}
+
 export type SystemPlayerTickJobData = {
   tick_index: number
 }
@@ -176,6 +181,16 @@ export interface JobQueue {
   getPendingChatCleanup(): Promise<PendingChatCleanup | null>
 
   ensureChatCleanupScheduled(args: {
+    execute_at: number
+  }): Promise<string | null>
+
+  scheduleRankingCompute(args: {
+    execute_at: number
+  }): Promise<string | null>
+
+  getPendingRankingCompute(): Promise<PendingRankingCompute | null>
+
+  ensureRankingComputeScheduled(args: {
     execute_at: number
   }): Promise<string | null>
 
