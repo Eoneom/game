@@ -97,6 +97,13 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
         >
           Déplacement
         </RouterLink>
+        <RouterLink
+          to="/outpost/$outpostId/troop"
+          params={{ outpostId }}
+          className="rounded-sm border border-rust/50 bg-chrome px-2 py-1 text-caption uppercase tracking-wider text-amber hover:border-amber"
+        >
+          Unités
+        </RouterLink>
       </div>
 
       {outpost.type === OutpostType.TEMPORARY && (

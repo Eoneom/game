@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { Button } from './button'
 import { CountdownProgress } from './countdown-progress'
-import { ListItem } from './list/item'
+import { CatalogueCard } from './catalogue/card'
 import { QueuePanel } from './queue-panel'
 
 /** Slice 040: shared components carry the semantic type tokens. */
@@ -12,6 +12,13 @@ describe('typography tokens on shared components (040)', () => {
   it('Button uses text-meta semibold uppercase', () => {
     render(<Button>Construire</Button>)
     expect(screen.getByRole('button', { name: 'Construire' })).toHaveClass('text-meta', 'font-semibold', 'uppercase')
+  })
+
+  it('QueuePanel collapses to one text-meta line when nothing runs or waits (043)', () => {
+    render(<QueuePanel title="Construction" depth="0/3" empty="Aucune construction en cours" />)
+    expect(screen.getByText('Aucune construction en cours')).toHaveClass('text-meta')
+    expect(screen.getByText('· File 0/3')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Construction' })).not.toBeInTheDocument()
   })
 
   it('QueuePanel uses text-heading for the title and text-caption for depth and queue label', () => {
@@ -27,9 +34,20 @@ describe('typography tokens on shared components (040)', () => {
     expect(screen.getByText('01:05')).toHaveClass('text-body', 'font-mono')
   })
 
-  it('ListItem uses text-body for the name and text-caption for the badge', () => {
-    render(<ListItem active={false} name="Mine" badge="En cours" onSelect={() => undefined} />)
+  it('CatalogueCard uses text-body for the name, text-meta for the level and text-caption for the badge (043)', () => {
+    render(
+      <CatalogueCard
+        code="mine"
+        name="Mine"
+        image="/mine.png"
+        amount={{ kind: 'level', value: 2 }}
+        state={{ kind: 'queue_full' }}
+        selected={false}
+        onSelect={() => undefined}
+      />
+    )
     expect(screen.getByRole('heading', { name: 'Mine' })).toHaveClass('text-body')
-    expect(screen.getByText('En cours')).toHaveClass('text-caption')
+    expect(screen.getByText('Niv. 2')).toHaveClass('text-meta')
+    expect(screen.getByText('File pleine')).toHaveClass('text-caption')
   })
 })

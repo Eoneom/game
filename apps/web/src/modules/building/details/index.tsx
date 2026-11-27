@@ -5,6 +5,7 @@ import { BuildingTranslations } from '#building/translations'
 import { buildingImageSrc } from '#building/image'
 import { Requirement } from '#requirement/index'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
+import { LayoutDetailsAction } from '#ui/layout/details/action'
 import { Cost } from '#cost/index'
 import { BuildingDetailsMetadata } from '#building/details/metadata'
 import { BuildingDetailsSection } from '#building/details/section'
@@ -38,15 +39,9 @@ export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
           <p>{effect}</p>
         </div>
       </div>
-      <BuildingDetailsUpgrade cityId={cityId} building={building} />
-      <BuildingDetailsWarning energyUpgradeWarning={energyUpgradeWarning} />
-      <BuildingDetailsMetadata building={building} />
-      <BuildingDetailsSection>
-        <p className="description">{description}</p>
-      </BuildingDetailsSection>
     </LayoutDetailsContent>
 
-    <aside className="mt-4 space-y-3 border-t border-rust/50 pt-3">
+    <LayoutDetailsAction>
       <Requirement
         cityId={cityId}
         requirements={building.requirement}
@@ -54,6 +49,15 @@ export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
         building_levels_capacity={capped ? city?.maximum_building_levels : undefined}
       />
       <Cost cityId={cityId} {...building.upgrade_cost} />
-    </aside>
+      <BuildingDetailsUpgrade cityId={cityId} building={building} />
+      <BuildingDetailsWarning energyUpgradeWarning={energyUpgradeWarning} />
+    </LayoutDetailsAction>
+
+    <LayoutDetailsContent>
+      <BuildingDetailsMetadata building={building} />
+      <BuildingDetailsSection>
+        <p className="description">{description}</p>
+      </BuildingDetailsSection>
+    </LayoutDetailsContent>
   </>
 }

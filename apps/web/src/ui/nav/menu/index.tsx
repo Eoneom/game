@@ -186,6 +186,12 @@ export const NavMenu: React.FC = () => {
             current={isExact(base)}
           />
           <NavEntry
+            to="/outpost/$outpostId/troop"
+            params={params}
+            label="Unités"
+            current={isCurrent(`${base}/troop`)}
+          />
+          <NavEntry
             to="/outpost/$outpostId/world/movement"
             params={params}
             label="Déplacements"

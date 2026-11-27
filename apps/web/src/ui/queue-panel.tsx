@@ -9,6 +9,18 @@ interface Props {
 }
 
 export const QueuePanel: React.FC<Props> = ({ title, depth, active, queue, empty }) => {
+  // Nothing running and nothing waiting: one line (slice 043), « Aucune construction en cours · File 0/3 ».
+  if (!active && !queue) {
+    return (
+      <section aria-label={title} className="surface-panel mb-3 px-3 py-2">
+        <p className="m-0 text-meta text-amber-dim">
+          {empty ?? title}
+          {depth ? <span className="font-mono text-label"> · File {depth}</span> : null}
+        </p>
+      </section>
+    )
+  }
+
   return (
     <section className="surface-panel mb-3 p-3">
       <header className="mb-2 flex items-baseline justify-between gap-2">

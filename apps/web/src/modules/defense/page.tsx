@@ -1,11 +1,9 @@
-import React, { useState } from 'react'
-import { BuildingCode, DefenseCode } from '@eoneom/api-client'
+import React from 'react'
+import { BuildingCode } from '@eoneom/api-client'
 
 import { BuildingDetails } from '#building/details'
 import { useGetBuilding } from '#building/hooks'
-import { DefenseCityWallCard } from '#defense/city-wall'
-import { DefenseBuildQueue } from '#defense/queue'
-import { DefenseList } from '#defense/list'
+import { DefenseList, DefenseSelection } from '#defense/list'
 import { DefenseDetails } from '#defense/details'
 import { useCityDefenses } from '#defense/hooks'
 import { LayoutPage } from '#ui/layout/page'
@@ -14,24 +12,23 @@ import { Building } from '#types'
 
 interface Props {
   cityId: string
+  selectedCode: DefenseSelection | null
+  onSelect: (code: DefenseSelection) => void
 }
 
-type Selection = { kind: 'city_wall' } | { kind: 'defense', code: DefenseCode } | null
-
-/** Défense tab (slice 029): Enceinte, fortification queue and defense catalogue. */
-export const DefensePage: React.FC<Props> = ({ cityId }) => {
-  const [selection, setSelection] = useState<Selection>(null)
+/** Défense tab (slices 029 / 043): fortification queue, Enceinte and defense catalogue. */
+export const DefensePage: React.FC<Props> = ({ cityId, selectedCode, onSelect }) => {
   const { data } = useCityDefenses(cityId)
   const { data: cityWall, isFetching } = useGetBuilding(
     cityId,
-    selection?.kind === 'city_wall' ? BuildingCode.CITY_WALL : null
+    selectedCode === 'city_wall' ? BuildingCode.CITY_WALL : null
   )
 
-  const selectedDefense = selection?.kind === 'defense'
-    ? data?.defenses.find(defense => defense.code === selection.code)
+  const selectedDefense = selectedCode && selectedCode !== 'city_wall'
+    ? data?.defenses.find(defense => defense.code === selectedCode)
     : undefined
 
-  const details = selection?.kind === 'city_wall'
+  const details = selectedCode === 'city_wall'
     ? cityWall
       ? <BuildingDetails cityId={cityId} building={cityWall as Building} />
       : isFetching ? <LayoutDetailsEmpty>Chargement de l&apos;enceinte…</LayoutDetailsEmpty> : null
@@ -45,16 +42,10 @@ export const DefensePage: React.FC<Props> = ({ cityId }) => {
 
   return (
     <LayoutPage details={details}>
-      <DefenseCityWallCard
-        defenses={data}
-        active={selection?.kind === 'city_wall'}
-        onSelect={() => setSelection({ kind: 'city_wall' })}
-      />
       <DefenseList
         cityId={cityId}
-        selectedCode={selection?.kind === 'defense' ? selection.code : null}
-        onSelect={code => setSelection({ kind: 'defense', code })}
-        inProgress={<DefenseBuildQueue cityId={cityId} />}
+        selectedCode={selectedCode}
+        onSelect={onSelect}
       />
     </LayoutPage>
   )

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { BuildingCode } from '@eoneom/api-client'
 
 import { BuildingList } from '#building/list'
@@ -10,10 +10,12 @@ import { Building } from '#types'
 
 interface Props {
   cityId: string
+  /** Selected building from the URL (`?code=`, slice 043). */
+  selectedCode: BuildingCode | null
+  onSelect: (code: BuildingCode) => void
 }
 
-export const BuildingPage: React.FC<Props> = ({ cityId }) => {
-  const [selectedCode, setSelectedCode] = useState<BuildingCode | null>(null)
+export const BuildingPage: React.FC<Props> = ({ cityId, selectedCode, onSelect }) => {
   const { data: building, isFetching } = useGetBuilding(cityId, selectedCode)
 
   const details = building ? (
@@ -31,7 +33,7 @@ export const BuildingPage: React.FC<Props> = ({ cityId }) => {
       <BuildingList
         cityId={cityId}
         selectedCode={selectedCode}
-        onSelect={setSelectedCode}
+        onSelect={onSelect}
       />
     </LayoutPage>
   )

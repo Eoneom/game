@@ -93,3 +93,17 @@ const floorValue = (value: number, decimals = 2): number => {
   const factor = Math.pow(10, decimals)
   return Math.floor(value*factor)/factor
 }
+
+/** Short duration for cards and badges (slice 043): « 2 h 05 », « 14 min », « 40 s ». */
+export const formatCompactDuration = (totalSeconds: number): string => {
+  const s = Math.max(0, Math.ceil(totalSeconds))
+  const hours = Math.floor(s / 3600)
+  const minutes = Math.floor((s % 3600) / 60)
+  if (hours > 0) {
+    return `${hours} h ${String(minutes).padStart(2, '0')}`
+  }
+  if (minutes > 0) {
+    return `${minutes} min`
+  }
+  return `${s} s`
+}

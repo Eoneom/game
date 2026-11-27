@@ -12,17 +12,20 @@ import { triggerFxBurst } from '#ui/fx'
 
 export const technologyKeys = {
   all: ['technologies'] as const,
+  /** With a city (slice 043): entries carry `research_cost` priced with its research lab. */
+  list: (cityId?: string) => (cityId ? ['technologies', cityId] as const : ['technologies'] as const),
   detail: (cityId: string, code: TechnologyCode) => ['technology', cityId, code] as const,
 }
 
-export const useListTechnologies = () => {
+/** `GET /technology[?city_id=]`; invalidating `technologyKeys.all` refreshes every variant. */
+export const useListTechnologies = ({ cityId }: { cityId?: string } = {}) => {
   const { token } = useAuth()
 
   return useQuery({
-    queryKey: technologyKeys.all,
+    queryKey: technologyKeys.list(cityId),
     queryFn: async () => {
       if (!token) throw new Error('no token')
-      const res = await client.technology.list(token)
+      const res = await client.technology.list(token, { city_id: cityId })
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('empty response')
       return res.data

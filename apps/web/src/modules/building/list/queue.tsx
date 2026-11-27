@@ -1,0 +1,112 @@
+import React, { useMemo } from 'react'
+import { BUILDING_UPGRADE_QUEUE_LIMIT } from '@eoneom/api-client'
+
+import { projectUpgradeQueueLevels } from '#building/queue-levels'
+import { BuildingTranslations } from '#building/translations'
+import { buildingImageSrc } from '#building/image'
+import { Button } from '#ui/button'
+import { CountdownProgress } from '#ui/countdown-progress'
+import { EntityThumb } from '#ui/entity-thumb'
+import { QueuePanel } from '#ui/queue-panel'
+import { QueueItemTiming } from '#ui/queue-item-timing'
+import { useCountdownProgress } from '#hook/countdown-progress'
+import {
+  useListBuildings,
+  useCancelBuildingUpgrade,
+  useCancelQueuedBuildingUpgrade
+} from '#building/hooks'
+import { BuildingItem } from '#types'
+
+interface Props {
+  cityId: string
+}
+
+/** « Construction » queue panel above the building grid (slice 007); cancel buttons live here. */
+export const BuildingQueuePanel: React.FC<Props> = ({ cityId }) => {
+  const { data } = useListBuildings(cityId)
+  const buildings = data?.buildings ?? []
+  const upgradeQueue = data?.upgrade_queue ?? []
+  const cancelUpgrade = useCancelBuildingUpgrade(cityId)
+  const cancelQueued = useCancelQueuedBuildingUpgrade(cityId)
+
+  const inProgress = buildings.find(
+    (b): b is Extract<BuildingItem, { upgrade_at: number }> => 'upgrade_at' in b
+  )
+
+  const queuedWithLevels = useMemo(
+    () => projectUpgradeQueueLevels({
+      buildings,
+      upgrade_queue: upgradeQueue
+    }),
+    [buildings, upgradeQueue]
+  )
+
+  const { remainingSeconds, elapsedProgress, reset } = useCountdownProgress({
+    onDone: () => undefined,
+    endAt: inProgress?.upgrade_at,
+    startAt: inProgress?.upgrade_started_at
+  })
+
+  const handleCancel = () => {
+    cancelUpgrade.mutate()
+    reset()
+  }
+
+  const queueDepth = `${upgradeQueue.length}/${BUILDING_UPGRADE_QUEUE_LIMIT}`
+
+  return (
+    <QueuePanel
+      title="Construction"
+      depth={queueDepth}
+      empty={!inProgress ? 'Aucune construction en cours' : undefined}
+      active={inProgress ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <EntityThumb
+            size="md"
+            src={buildingImageSrc(inProgress.code)}
+            alt=""
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <p className="m-0 text-body text-amber">
+              {BuildingTranslations[inProgress.code].name}{' '}
+              <span className="text-label">→ niveau {inProgress.level + 1}</span>
+            </p>
+            <CountdownProgress
+              summary={<>Construction en cours</>}
+              elapsedProgress={elapsedProgress}
+              remainingSeconds={remainingSeconds}
+            />
+            <Button variant="danger" onClick={handleCancel}>Annuler</Button>
+          </div>
+        </div>
+      ) : undefined}
+      queue={queuedWithLevels.length > 0 ? (
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          {queuedWithLevels.map(item => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-body"
+            >
+              <span className="min-w-0 text-amber-dim">
+                {BuildingTranslations[item.building_code].name}{' '}
+                <span className="text-label">niveau {item.level}</span>
+              </span>
+              <QueueItemTiming
+                start_at={item.start_at}
+                finish_at={item.finish_at}
+                duration_seconds={item.duration_seconds}
+              />
+              <Button
+                variant="ghost"
+                className="shrink-0 !px-2 !py-1"
+                onClick={() => cancelQueued.mutate(item.id)}
+              >
+                Annuler
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : undefined}
+    />
+  )
+}

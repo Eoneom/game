@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { TechnologyCode } from '@eoneom/api-client'
 
 import { TechnologyList } from '#technology/list'
@@ -10,10 +10,12 @@ import { Technology } from '#types'
 
 interface Props {
   cityId: string
+  /** Selected technology from the URL (`?code=`, slice 043). */
+  selectedCode: TechnologyCode | null
+  onSelect: (code: TechnologyCode) => void
 }
 
-export const TechnologyPage: React.FC<Props> = ({ cityId }) => {
-  const [selectedCode, setSelectedCode] = useState<TechnologyCode | null>(null)
+export const TechnologyPage: React.FC<Props> = ({ cityId, selectedCode, onSelect }) => {
   const { data: technology, isFetching } = useGetTechnology(cityId, selectedCode)
 
   const details = technology ? (
@@ -29,8 +31,9 @@ export const TechnologyPage: React.FC<Props> = ({ cityId }) => {
   return (
     <LayoutPage details={details}>
       <TechnologyList
+        cityId={cityId}
         selectedCode={selectedCode}
-        onSelect={setSelectedCode}
+        onSelect={onSelect}
       />
     </LayoutPage>
   )

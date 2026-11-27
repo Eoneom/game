@@ -35,6 +35,7 @@ export const Requirement: React.FC<Props> = ({
     ...(requirements?.technologies ?? []).map(requirement => (
       <RequirementTechnology
         key={requirement.code}
+        cityId={cityId}
         requirement={requirement}
       />
     )),

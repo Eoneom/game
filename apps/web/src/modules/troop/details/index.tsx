@@ -5,6 +5,7 @@ import { troopImageSrc } from '#troop/image'
 import { TroopDetailsRecruit } from '#troop/details/recruit'
 import { Requirement } from '#requirement/index'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
+import { LayoutDetailsAction } from '#ui/layout/details/action'
 import { Cost } from '#cost/index'
 import { hasEnoughResources } from '#city/helper'
 import { useRequirement } from '#requirement/hook'
@@ -15,17 +16,12 @@ import { EntityThumb } from '#ui/entity-thumb'
 
 type TroopWithRecruitment = TroopItem & { ongoing_recruitment: NonNullable<TroopItem['ongoing_recruitment']> }
 
-interface Props {
-  cityId: string
-  troop: Troop
-}
-
-export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
+/** Requirement, cost and recruit form of a city troop, right under the details header (slice 043). */
+const TroopDetailsAction: React.FC<{ cityId: string, troop: Troop }> = ({ cityId, troop }) => {
   const { data: city } = useGetCity(cityId)
   const { data: troops = [] } = useListCityTroops(cityId)
   const [count, setCount] = useState(1)
 
-  const { name, description, effect } = TroopTranslations[troop.code]
   const numberCount = Number.isNaN(count) ? 1 : count
   const plasticCost = numberCount * troop.cost.plastic
   const mushroomCost = numberCount * troop.cost.mushroom
@@ -48,6 +44,36 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
     }) &&
     isRequirementMet
 
+  return (
+    <LayoutDetailsAction>
+      <Requirement cityId={cityId} requirements={troop.requirement} />
+      <Cost
+        cityId={cityId}
+        plastic={plasticCost}
+        mushroom={mushroomCost}
+        plasma={plasmaCost}
+        duration={numberCount * troop.cost.duration}
+      />
+      <TroopDetailsRecruit
+        cityId={cityId}
+        troop={troop}
+        canRecruit={canRecruit}
+        count={count}
+        onChange={value => setCount(value)}
+      />
+    </LayoutDetailsAction>
+  )
+}
+
+type Props =
+  | { cityId: string, troop: Troop, readOnly?: false }
+  /** Outposts cannot recruit (slice 043): no requirement, cost or recruit form. */
+  | { cityId?: undefined, troop: Troop, readOnly: true }
+
+export const TroopDetails: React.FC<Props> = (props) => {
+  const { troop } = props
+  const { name, description, effect } = TroopTranslations[troop.code]
+
   return <>
     <LayoutDetailsContent>
       <div className="flex gap-4">
@@ -57,26 +83,17 @@ export const TroopDetails: React.FC<Props> = ({ cityId, troop }) => {
           <p>{effect}</p>
         </div>
       </div>
-
-      <TroopDetailsRecruit
-        cityId={cityId}
-        troop={troop}
-        canRecruit={canRecruit}
-        count={count}
-        onChange={value => setCount(value)}
-      />
-      <p className='description'>{description}</p>
     </LayoutDetailsContent>
 
-    <aside className="mt-4 space-y-3 border-t border-rust/50 pt-3">
-      <Requirement cityId={cityId} requirements={troop.requirement} />
-      <Cost
-        cityId={cityId}
-        plastic={plasticCost}
-        mushroom={mushroomCost}
-        plasma={plasmaCost}
-        duration={numberCount * troop.cost.duration}
-      />
-    </aside>
+    {props.readOnly ? null : <TroopDetailsAction cityId={props.cityId} troop={troop} />}
+
+    <LayoutDetailsContent>
+      {props.readOnly ? (
+        <p>
+          Stationnées ici : <span className="font-mono text-amber">{troop.count}</span>
+        </p>
+      ) : null}
+      <p className='description'>{description}</p>
+    </LayoutDetailsContent>
   </>
 }

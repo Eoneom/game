@@ -144,7 +144,7 @@ describe('NavMenu', () => {
     expect(entry('Carte')).toHaveAttribute('href', '/city/c1/world/map')
   })
 
-  it('lists only Tableau de bord, Déplacements and Carte for an outpost', () => {
+  it('lists only Tableau de bord, Unités, Déplacements and Carte for an outpost', () => {
     location = { cityId: null, outpostId: 'o1' }
     pathname = '/outpost/o1'
     outpostType.value = OutpostType.TEMPORARY
@@ -154,6 +154,7 @@ describe('NavMenu', () => {
     expect(screen.getByText('12.9')).toBeInTheDocument()
     expect(screen.getByText('Temporaire')).toBeInTheDocument()
     expect(entry('Tableau de bord')).toHaveAttribute('href', '/outpost/o1')
+    expect(entry('Unités')).toHaveAttribute('href', '/outpost/o1/troop')
     expect(entry(/^Déplacements/)).toHaveAttribute('href', '/outpost/o1/world/movement')
     expect(entry('Carte')).toHaveAttribute('href', '/outpost/o1/world/map')
     for (const name of [ 'Bâtiments', 'Technologies', 'Troupes', 'Défense' ]) {

@@ -26,6 +26,7 @@ import { Route as OutpostOutpostIdRouteRouteImport } from './routes/outpost/$out
 import { Route as CityCityIdRouteRouteImport } from './routes/city/$cityId/route'
 import { Route as OutpostOutpostIdIndexRouteImport } from './routes/outpost/$outpostId/index'
 import { Route as CityCityIdIndexRouteImport } from './routes/city/$cityId/index'
+import { Route as OutpostOutpostIdTroopRouteImport } from './routes/outpost/$outpostId/troop'
 import { Route as OutpostOutpostIdMapRouteImport } from './routes/outpost/$outpostId/map'
 import { Route as CityCityIdTroopRouteImport } from './routes/city/$cityId/troop'
 import { Route as CityCityIdTechnologyRouteImport } from './routes/city/$cityId/technology'
@@ -131,6 +132,11 @@ const CityCityIdIndexRoute = CityCityIdIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => CityCityIdRouteRoute,
+} as any)
+const OutpostOutpostIdTroopRoute = OutpostOutpostIdTroopRouteImport.update({
+  id: '/troop',
+  path: '/troop',
+  getParentRoute: () => OutpostOutpostIdRouteRoute,
 } as any)
 const OutpostOutpostIdMapRoute = OutpostOutpostIdMapRouteImport.update({
   id: '/map',
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/city/$cityId/technology': typeof CityCityIdTechnologyRoute
   '/city/$cityId/troop': typeof CityCityIdTroopRoute
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
+  '/outpost/$outpostId/troop': typeof OutpostOutpostIdTroopRoute
   '/city/$cityId/': typeof CityCityIdIndexRoute
   '/outpost/$outpostId/': typeof OutpostOutpostIdIndexRoute
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/city/$cityId/technology': typeof CityCityIdTechnologyRoute
   '/city/$cityId/troop': typeof CityCityIdTroopRoute
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
+  '/outpost/$outpostId/troop': typeof OutpostOutpostIdTroopRoute
   '/city/$cityId': typeof CityCityIdIndexRoute
   '/outpost/$outpostId': typeof OutpostOutpostIdIndexRoute
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
@@ -346,6 +354,7 @@ export interface FileRoutesById {
   '/city/$cityId/technology': typeof CityCityIdTechnologyRoute
   '/city/$cityId/troop': typeof CityCityIdTroopRoute
   '/outpost/$outpostId/map': typeof OutpostOutpostIdMapRoute
+  '/outpost/$outpostId/troop': typeof OutpostOutpostIdTroopRoute
   '/city/$cityId/': typeof CityCityIdIndexRoute
   '/outpost/$outpostId/': typeof OutpostOutpostIdIndexRoute
   '/city/$cityId/world/movement': typeof CityCityIdWorldMovementRouteRouteWithChildren
@@ -387,6 +396,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/technology'
     | '/city/$cityId/troop'
     | '/outpost/$outpostId/map'
+    | '/outpost/$outpostId/troop'
     | '/city/$cityId/'
     | '/outpost/$outpostId/'
     | '/city/$cityId/world/movement'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/technology'
     | '/city/$cityId/troop'
     | '/outpost/$outpostId/map'
+    | '/outpost/$outpostId/troop'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/city/$cityId/world/movement'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/city/$cityId/technology'
     | '/city/$cityId/troop'
     | '/outpost/$outpostId/map'
+    | '/outpost/$outpostId/troop'
     | '/city/$cityId/'
     | '/outpost/$outpostId/'
     | '/city/$cityId/world/movement'
@@ -614,6 +626,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/city/$cityId/'
       preLoaderRoute: typeof CityCityIdIndexRouteImport
       parentRoute: typeof CityCityIdRouteRoute
+    }
+    '/outpost/$outpostId/troop': {
+      id: '/outpost/$outpostId/troop'
+      path: '/troop'
+      fullPath: '/outpost/$outpostId/troop'
+      preLoaderRoute: typeof OutpostOutpostIdTroopRouteImport
+      parentRoute: typeof OutpostOutpostIdRouteRoute
     }
     '/outpost/$outpostId/map': {
       id: '/outpost/$outpostId/map'
@@ -896,6 +915,7 @@ const OutpostOutpostIdWorldMovementRouteRouteWithChildren =
 interface OutpostOutpostIdRouteRouteChildren {
   OutpostOutpostIdMovementRouteRoute: typeof OutpostOutpostIdMovementRouteRouteWithChildren
   OutpostOutpostIdMapRoute: typeof OutpostOutpostIdMapRoute
+  OutpostOutpostIdTroopRoute: typeof OutpostOutpostIdTroopRoute
   OutpostOutpostIdIndexRoute: typeof OutpostOutpostIdIndexRoute
   OutpostOutpostIdWorldMovementRouteRoute: typeof OutpostOutpostIdWorldMovementRouteRouteWithChildren
   OutpostOutpostIdWorldMapRoute: typeof OutpostOutpostIdWorldMapRoute
@@ -905,6 +925,7 @@ const OutpostOutpostIdRouteRouteChildren: OutpostOutpostIdRouteRouteChildren = {
   OutpostOutpostIdMovementRouteRoute:
     OutpostOutpostIdMovementRouteRouteWithChildren,
   OutpostOutpostIdMapRoute: OutpostOutpostIdMapRoute,
+  OutpostOutpostIdTroopRoute: OutpostOutpostIdTroopRoute,
   OutpostOutpostIdIndexRoute: OutpostOutpostIdIndexRoute,
   OutpostOutpostIdWorldMovementRouteRoute:
     OutpostOutpostIdWorldMovementRouteRouteWithChildren,

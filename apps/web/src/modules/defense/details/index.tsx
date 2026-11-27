@@ -13,6 +13,7 @@ import { useGetCity } from '#city/hooks'
 import { Button } from '#ui/button'
 import { EntityThumb } from '#ui/entity-thumb'
 import { LayoutDetailsContent } from '#ui/layout/details/content'
+import { LayoutDetailsAction } from '#ui/layout/details/action'
 
 interface Props {
   cityId: string
@@ -51,22 +52,17 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
           <p>{effect}</p>
         </div>
       </div>
+    </LayoutDetailsContent>
 
-      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0 text-body text-amber-dim sm:grid-cols-4">
-        <li>Attaque <span className="font-mono text-amber">{defense.attack}</span></li>
-        <li>Vie <span className="font-mono text-amber">{defense.life || '—'}</span></li>
-        <li>Points <span className="font-mono text-amber">{defense.points}</span></li>
-        <li>{defense.armed ? 'Armée' : 'Non armée'}</li>
-      </ul>
-      {attackByRound && (
-        <p className="m-0 text-body text-amber-dim">
-          Attaque par tour (1 → 5) : <span className="font-mono text-amber">{attackByRound}</span>
-        </p>
-      )}
-      <p className="m-0 text-body text-amber-dim">
-        Dans la ville : <span className="font-mono text-amber">{defense.count}</span>
-      </p>
-
+    <LayoutDetailsAction>
+      <Requirement cityId={cityId} requirements={defense.requirement} />
+      <Cost
+        cityId={cityId}
+        plastic={cost.plastic}
+        mushroom={cost.mushroom}
+        plasma={cost.plasma}
+        duration={count * defense.cost.duration}
+      />
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex min-w-[7rem] flex-col gap-1">
           <span className="field-label">Quantité (max {maxCount})</span>
@@ -95,18 +91,24 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
       {maxCount === 0 ? (
         <p className="m-0 text-meta text-amber-dim">Capacité de l&apos;enceinte atteinte : améliorez l&apos;enceinte.</p>
       ) : null}
+    </LayoutDetailsAction>
+
+    <LayoutDetailsContent>
+      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0 text-body text-amber-dim sm:grid-cols-4">
+        <li>Attaque <span className="font-mono text-amber">{defense.attack}</span></li>
+        <li>Vie <span className="font-mono text-amber">{defense.life || '—'}</span></li>
+        <li>Points <span className="font-mono text-amber">{defense.points}</span></li>
+        <li>{defense.armed ? 'Armée' : 'Non armée'}</li>
+      </ul>
+      {attackByRound && (
+        <p className="m-0 text-body text-amber-dim">
+          Attaque par tour (1 → 5) : <span className="font-mono text-amber">{attackByRound}</span>
+        </p>
+      )}
+      <p className="m-0 text-body text-amber-dim">
+        Dans la ville : <span className="font-mono text-amber">{defense.count}</span>
+      </p>
       <p className="description">{description}</p>
     </LayoutDetailsContent>
-
-    <aside className="mt-4 space-y-3 border-t border-rust/50 pt-3">
-      <Requirement cityId={cityId} requirements={defense.requirement} />
-      <Cost
-        cityId={cityId}
-        plastic={cost.plastic}
-        mushroom={cost.mushroom}
-        plasma={cost.plasma}
-        duration={count * defense.cost.duration}
-      />
-    </aside>
   </>
 }

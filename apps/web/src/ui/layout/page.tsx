@@ -5,6 +5,7 @@ interface Props {
   details?: React.ReactNode
 }
 
+/** List + details page: on `xl` the details panel is a fixed 28 rem column (slice 043); stacked below. */
 export const LayoutPage: React.FC<Props> = ({ details, children }) => {
   const showDetails = details !== undefined && details !== null
 
@@ -12,7 +13,7 @@ export const LayoutPage: React.FC<Props> = ({ details, children }) => {
     <div
       className={
         showDetails
-          ? 'grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)] lg:grid-rows-1'
+          ? 'grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_minmax(0,1fr)] gap-3 xl:grid-cols-[minmax(0,1fr)_28rem] xl:grid-rows-1'
           : 'flex min-h-0 flex-1 flex-col'
       }
     >

@@ -1,4 +1,5 @@
 import { BuildingCode } from '@eoneom/api-client'
+import { BuildingFamily } from '#building/family'
 
 interface BuildingTranslation {
   name: string
@@ -73,4 +74,11 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
     description: 'Un guichet blindé, des registres et des coursiers : de quoi traiter avec les autres colonies de la faction sans quitter ses murs.',
     effect: 'Donne accès à la bourse de faction. Chaque niveau permet un ordre ouvert de plus dans la ville'
   }
+}
+
+export const BuildingFamilyLabels: Record<BuildingFamily, string> = {
+  [BuildingFamily.PRODUCTION]: 'Production',
+  [BuildingFamily.STORAGE]: 'Stockage',
+  [BuildingFamily.MILITARY]: 'Militaire',
+  [BuildingFamily.SPECIAL]: 'Spécial',
 }

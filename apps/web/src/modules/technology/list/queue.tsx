@@ -1,0 +1,110 @@
+import React, { useMemo } from 'react'
+import { RESEARCH_QUEUE_LIMIT } from '@eoneom/api-client'
+
+import { projectResearchQueueLevels } from '#technology/queue-levels'
+import { TechnologyTranslations } from '#technology/translations'
+import { technologyImageSrc } from '#technology/image'
+import { Button } from '#ui/button'
+import { CountdownProgress } from '#ui/countdown-progress'
+import { EntityThumb } from '#ui/entity-thumb'
+import { QueuePanel } from '#ui/queue-panel'
+import { QueueItemTiming } from '#ui/queue-item-timing'
+import { useCountdownProgress } from '#hook/countdown-progress'
+import {
+  useListTechnologies,
+  useCancelTechnology,
+  useCancelQueuedTechnologyResearch
+} from '#technology/hooks'
+import { TechnologyItem } from '#types'
+
+interface Props {
+  cityId: string
+}
+
+/** « Recherche » queue panel above the technology grid (player-wide, city name per row). */
+export const TechnologyQueuePanel: React.FC<Props> = ({ cityId }) => {
+  const { data } = useListTechnologies({ cityId })
+  const technologies = data?.technologies ?? []
+  const researchQueue = data?.research_queue ?? []
+  const cancelTechnology = useCancelTechnology()
+  const cancelQueued = useCancelQueuedTechnologyResearch()
+
+  const inProgress = technologies.find(
+    (t): t is Extract<TechnologyItem, { research_at: number }> => 'research_at' in t
+  )
+
+  const queuedWithLevels = useMemo(
+    () => projectResearchQueueLevels({
+      technologies,
+      research_queue: researchQueue
+    }),
+    [technologies, researchQueue]
+  )
+
+  const { remainingSeconds, elapsedProgress } = useCountdownProgress({
+    onDone: () => undefined,
+    endAt: inProgress?.research_at,
+    startAt: inProgress?.research_started_at
+  })
+
+  const queueDepth = `${researchQueue.length}/${RESEARCH_QUEUE_LIMIT}`
+
+  return (
+    <QueuePanel
+      title="Recherche"
+      depth={queueDepth}
+      empty={!inProgress ? 'Aucune recherche en cours' : undefined}
+      active={inProgress ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+          <EntityThumb
+            size="md"
+            src={technologyImageSrc(inProgress.code)}
+            alt=""
+          />
+          <div className="min-w-0 flex-1 space-y-2">
+            <p className="m-0 text-body text-amber">
+              {TechnologyTranslations[inProgress.code].name}{' '}
+              <span className="text-label">→ niveau {inProgress.level + 1}</span>
+            </p>
+            <CountdownProgress
+              summary={<>Recherche en cours</>}
+              elapsedProgress={elapsedProgress}
+              remainingSeconds={remainingSeconds}
+            />
+            <Button variant="danger" onClick={() => cancelTechnology.mutate()}>
+              Annuler
+            </Button>
+          </div>
+        </div>
+      ) : undefined}
+      queue={queuedWithLevels.length > 0 ? (
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          {queuedWithLevels.map(item => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-body"
+            >
+              <span className="min-w-0 text-amber-dim">
+                {TechnologyTranslations[item.technology_code].name}{' '}
+                <span className="text-label">niveau {item.level}</span>
+                <span className="text-label"> · {item.city_name}</span>
+              </span>
+              <QueueItemTiming
+                start_at={item.start_at}
+                finish_at={item.finish_at}
+                duration_seconds={item.duration_seconds}
+              />
+              <Button
+                variant="ghost"
+                className="shrink-0 !px-2 !py-1"
+                onClick={() => cancelQueued.mutate(item.id)}
+              >
+                Annuler
+              </Button>
+            </li>
+          ))}
+        </ul>
+      ) : undefined}
+    />
+  )
+}

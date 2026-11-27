@@ -15,7 +15,7 @@ interface Props {
 
 export const TechnologyDetailsResearch: React.FC<Props> = ({ cityId, technology }) => {
   const { data: city } = useGetCity(cityId)
-  const { data } = useListTechnologies()
+  const { data } = useListTechnologies({ cityId })
   const technologies = data?.technologies ?? []
   const researchQueue = data?.research_queue ?? []
   const research = useResearchTechnology(cityId)

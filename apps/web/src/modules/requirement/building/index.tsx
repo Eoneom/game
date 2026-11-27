@@ -4,6 +4,7 @@ import classNames from 'classnames'
 
 import { BuildingTranslations } from '#building/translations'
 import { useListBuildings } from '#building/hooks'
+import { RequirementLink } from '#requirement/link'
 
 interface Props {
   cityId: string
@@ -28,7 +29,9 @@ export const RequirementBuilding: React.FC<Props> = ({ cityId, requirement }) =>
     >
       <span className="text-caption font-normal uppercase tracking-wide text-label">Bâtiment</span>
       {' '}
-      {BuildingTranslations[requirement.code].name}
+      <RequirementLink kind="building" code={requirement.code} cityId={cityId}>
+        {BuildingTranslations[requirement.code].name}
+      </RequirementLink>
       {' '}
       <span className="whitespace-nowrap">niveau {requirement.level}</span>
       {!isMet && (
