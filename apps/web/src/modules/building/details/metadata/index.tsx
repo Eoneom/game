@@ -1,9 +1,11 @@
 import React from 'react'
 
 import {
+  isCommandCenterBuilding,
   isConsumingBuilding,
   isEnergyBuilding,
   isProductionBuilding,
+  isShelterBuilding,
   isWarehouseBuilding
 } from '@eoneom/api-client'
 
@@ -14,6 +16,8 @@ import { BuildingDetailsMetadataProduction } from '#building/details/metadata/pr
 import { BuildingDetailsMetadataEnergy } from '#building/details/metadata/energy'
 import { BuildingDetailsMetadataConsumption } from '#building/details/metadata/consumption'
 import { BuildingDetailsSection } from '#building/details/section'
+import { BuildingDetailsMetadataCommandCenter } from '#building/details/metadata/command-center'
+import { BuildingDetailsMetadataShelter } from '#building/details/metadata/shelter'
 
 interface Props {
   building: Building
@@ -40,6 +44,30 @@ export const BuildingDetailsMetadata: React.FC<Props> = ({ building }) => {
         />
       </BuildingDetailsSection>
     </>
+  }
+
+  if (isCommandCenterBuilding(building)) {
+    return <>
+      <BuildingDetailsMetadataCommandCenter
+        currentMovementBonus={building.metadata.current_movement_bonus}
+        nextMovementBonus={building.metadata.next_movement_bonus}
+        movementLimit={building.metadata.movement_limit}
+        recruitQueueLimit={building.metadata.recruit_queue_limit}
+      />
+      <BuildingDetailsSection>
+        <BuildingDetailsMetadataConsumption
+          currentConsumption={building.metadata.current_consumption}
+          nextConsumption={building.metadata.next_consumption}
+        />
+      </BuildingDetailsSection>
+    </>
+  }
+
+  if (isShelterBuilding(building)) {
+    return <BuildingDetailsMetadataShelter
+      currentSheltered={building.metadata.current_sheltered}
+      nextSheltered={building.metadata.next_sheltered}
+    />
   }
 
   if (isConsumingBuilding(building)) {

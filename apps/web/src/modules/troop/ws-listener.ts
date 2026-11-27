@@ -1,4 +1,6 @@
 import { AppEvent } from '@eoneom/api-client'
+import { toast } from 'react-toastify'
+import { translateError } from '#helpers/error-translations'
 import { wsClient } from '#helpers/websocket'
 import { queryClient } from '#helpers/query-client'
 import { troopKeys } from '#troop/hooks'
@@ -29,6 +31,14 @@ export function registerTroopWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: cityKeys.detail(city_id) })
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
   })
+
+  wsClient.on<{ city_id: string, troop_code: string, error_code: string }>(
+    AppEvent.TroopQueueItemDropped,
+    ({ city_id, error_code }) => {
+      toast.error(`Recrutement retiré de la file : ${translateError(error_code)}`)
+      queryClient.invalidateQueries({ queryKey: troopKeys.cityList(city_id) })
+    }
+  )
 
   wsClient.on(AppEvent.OutpostCreated, () => {
     queryClient.invalidateQueries({ queryKey: outpostKeys.all })

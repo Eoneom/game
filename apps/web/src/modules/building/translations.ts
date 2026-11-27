@@ -47,5 +47,15 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
     name: 'Inducteur central',
     description: 'Un cœur électromagnétique colossal qui force la matière à se dissocier en plasma. Instable, vorace en énergie, et trop dangereux pour être stocké dans un entrepôt ordinaire.',
     effect: 'Consomme beaucoup d\'énergie. Produit du plasma. Stockage illimité'
+  },
+  [BuildingCode.COMMAND_CENTER]: {
+    name: 'Centre de commandement',
+    description: 'Cartes, radios et coursiers : coordonner des colonnes dispersées sur des terres hostiles demande un état-major et un lieu où il peut travailler.',
+    effect: 'Consomme de l\'énergie. Chaque niveau ajoute un mouvement simultané à tout l\'empire. Dès le niveau 1, débloque une file de recrutement dans la ville'
+  },
+  [BuildingCode.UNDERGROUND_SHELTER]: {
+    name: 'Abri souterrain',
+    description: 'Sous les ruines, des caves scellées où l\'on enterre une part des réserves avant que les pillards ne franchissent les murs.',
+    effect: 'Protège une quantité fixe de plastique, de champignons et de plasma contre le pillage'
   }
 }

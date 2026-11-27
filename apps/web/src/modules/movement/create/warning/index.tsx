@@ -9,6 +9,8 @@ interface Props {
   }[]
   selectedTroops: Partial<Record<TroopCode, number>>
   destinationCapacityExceeded?: boolean
+  /** Every movement slot of the empire is in use (slice 028). */
+  movementLimitReached?: boolean
 }
 
 export const MovementCreateWarning: React.FC<Props> = ({
@@ -16,8 +18,17 @@ export const MovementCreateWarning: React.FC<Props> = ({
   troops,
   selectedTroops,
   destinationCapacityExceeded = false,
+  movementLimitReached = false,
 }) => {
   const warnings: React.ReactNode[] = []
+
+  if (movementLimitReached) {
+    warnings.push(
+      <p key="movement-limit" className="m-0 text-sm font-semibold text-danger" role="status">
+        Limite de mouvements simultanés atteinte : attendez le retour d&apos;un mouvement ou améliorez un centre de commandement.
+      </p>
+    )
+  }
 
   if (destinationCapacityExceeded) {
     warnings.push(

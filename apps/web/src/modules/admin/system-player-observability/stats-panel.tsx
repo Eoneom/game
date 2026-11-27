@@ -284,6 +284,9 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
               <section>
                 <h3 className="field-label m-0 mb-1 text-label">
                   Mouvements en cours ({ongoing_movements.length})
+                  {snapshot.movement_limit !== undefined && (
+                    <span className="text-amber-dim"> — {snapshot.movement_used} / {snapshot.movement_limit} utilisés</span>
+                  )}
                 </h3>
                 {ongoing_movements.length === 0 ? (
                   <p className="m-0 text-sm text-amber-dim">

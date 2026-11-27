@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { CombatStrategy, Coordinates, MovementAction, TroopCode } from '@eoneom/api-client'
+import { CombatStrategy, Coordinates, MovementAction, TroopCode, TroopListDataResponse } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -16,10 +16,12 @@ export const troopKeys = {
   outpostList: (outpostId: string) => ['troops', 'outpost', outpostId] as const,
   detail: (troopId: string) => ['troop', troopId] as const,
   movements: ['movements'] as const,
+  movementCapacity: ['movements', 'capacity'] as const,
   movement: (id: string) => ['movement', id] as const,
 }
 
-export const useListCityTroops = (cityId: string) => {
+/** Shared by the city troop list and its recruitment queue (one request, two selections). */
+const useCityTroopListQuery = <T>(cityId: string, select: (data: TroopListDataResponse) => T) => {
   const { token } = useAuth()
 
   return useQuery({
@@ -29,11 +31,20 @@ export const useListCityTroops = (cityId: string) => {
       const res = await client.troop.listCity(token, { city_id: cityId })
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('no data')
-      return res.data.troops
+      return res.data
     },
+    select,
     enabled: !!token && !!cityId,
   })
 }
+
+export const useListCityTroops = (cityId: string) => useCityTroopListQuery(cityId, data => data.troops)
+
+/** Waiting recruitment batches of the city and how many slots its command center gives. */
+export const useCityRecruitQueue = (cityId: string) => useCityTroopListQuery(cityId, data => ({
+  queue: data.recruit_queue,
+  limit: data.recruit_queue_limit,
+}))
 
 export const useListOutpostTroops = (outpostId: string) => {
   const { token } = useAuth()
@@ -112,6 +123,43 @@ export const useCancelTroop = (cityId: string) => {
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId ?? '') })
     },
     onError: (err: Error) => toast.error(translateError(err.message)),
+  })
+}
+
+export const useCancelQueuedTroopRecruitment = (cityId: string) => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (queueItemId: string) => {
+      if (!token) throw new Error('no token')
+      const res = await client.troop.cancelQueued(token, {
+        city_id: cityId,
+        queue_item_id: queueItemId
+      })
+      if (isError(res)) throw new Error(res.error_code)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: troopKeys.cityList(cityId) })
+    },
+    onError: (err: Error) => toast.error(translateError(err.message)),
+  })
+}
+
+/** Movements in flight against the command-center cap (`GET /troop/movement/capacity`). */
+export const useMovementCapacity = () => {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: troopKeys.movementCapacity,
+    queryFn: async () => {
+      if (!token) throw new Error('no token')
+      const res = await client.troop.getMovementCapacity(token)
+      if (isError(res)) throw new Error(res.error_code)
+      if (!res.data) throw new Error('no data')
+      return res.data
+    },
+    enabled: !!token,
   })
 }
 

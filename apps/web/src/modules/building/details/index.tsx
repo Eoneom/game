@@ -12,7 +12,7 @@ import { BuildingDetailsUpgrade } from '#building/details/upgrade'
 import { BuildingDetailsWarning } from '#building/details/warning'
 import { useGetCity } from '#city/hooks'
 import { EntityThumb } from '#ui/entity-thumb'
-import { isConsumingBuilding, isProductionBuilding } from '@eoneom/api-client'
+import { isCommandCenterBuilding, isConsumingBuilding, isProductionBuilding } from '@eoneom/api-client'
 
 interface Props {
   cityId: string
@@ -23,7 +23,7 @@ export const BuildingDetails: React.FC<Props> = ({ cityId, building }) => {
   const { data: city } = useGetCity(cityId)
   const { name, description, effect } = BuildingTranslations[building.code]
   const energyUpgradeWarning =
-    isProductionBuilding(building) || isConsumingBuilding(building)
+    isProductionBuilding(building) || isConsumingBuilding(building) || isCommandCenterBuilding(building)
       ? building.metadata.energy_upgrade_warning
       : false
 

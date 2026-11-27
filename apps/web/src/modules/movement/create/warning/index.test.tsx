@@ -27,6 +27,21 @@ describe('MovementCreateWarning', () => {
     )
   })
 
+  it('shows the movement limit warning when every slot is used', () => {
+    render(
+      <MovementCreateWarning
+        isTemporaryOutpost={false}
+        troops={troops}
+        selectedTroops={{}}
+        movementLimitReached
+      />
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Limite de mouvements simultanés atteinte : attendez le retour d\'un mouvement ou améliorez un centre de commandement.'
+    )
+  })
+
   it('shows temporary outpost warning when all troops are taken', () => {
     render(
       <MovementCreateWarning

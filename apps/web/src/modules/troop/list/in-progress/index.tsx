@@ -7,7 +7,12 @@ import { CountdownProgress } from '#ui/countdown-progress'
 import { EntityThumb } from '#ui/entity-thumb'
 import { QueuePanel } from '#ui/queue-panel'
 import { useCountdownProgress } from '#hook/countdown-progress'
-import { useListCityTroops, useCancelTroop } from '#troop/hooks'
+import {
+  useListCityTroops,
+  useCancelTroop,
+  useCityRecruitQueue,
+  useCancelQueuedTroopRecruitment
+} from '#troop/hooks'
 import { TroopItem } from '#types'
 
 type TroopWithRecruitment = TroopItem & { ongoing_recruitment: NonNullable<TroopItem['ongoing_recruitment']> }
@@ -19,6 +24,10 @@ interface Props {
 export const TroopListInProgress: React.FC<Props> = ({ cityId }) => {
   const { data: troops = [] } = useListCityTroops(cityId)
   const cancelTroop = useCancelTroop(cityId)
+  const { data: recruitQueue } = useCityRecruitQueue(cityId)
+  const cancelQueued = useCancelQueuedTroopRecruitment(cityId)
+  const queue = recruitQueue?.queue ?? []
+  const queueLimit = recruitQueue?.limit ?? 0
 
   const inProgress = troops.find(
     (t): t is TroopWithRecruitment => Boolean(t.ongoing_recruitment)
@@ -38,6 +47,7 @@ export const TroopListInProgress: React.FC<Props> = ({ cityId }) => {
   return (
     <QueuePanel
       title="Recrutement"
+      depth={queueLimit > 0 ? `${queue.length}/${queueLimit}` : undefined}
       empty={!inProgress ? 'Aucun recrutement en cours' : undefined}
       active={inProgress ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
@@ -61,6 +71,28 @@ export const TroopListInProgress: React.FC<Props> = ({ cityId }) => {
             <Button variant="danger" onClick={handleCancel}>Annuler</Button>
           </div>
         </div>
+      ) : undefined}
+      queue={queue.length > 0 ? (
+        <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+          {queue.map(item => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-sm"
+            >
+              <span className="min-w-0 text-amber-dim">
+                <span className="font-mono text-amber">{item.count}</span>{' '}
+                {TroopTranslations[item.troop_code].name}
+              </span>
+              <Button
+                variant="ghost"
+                className="shrink-0 !px-2 !py-1 text-xs"
+                onClick={() => cancelQueued.mutate(item.id)}
+              >
+                Annuler
+              </Button>
+            </li>
+          ))}
+        </ul>
       ) : undefined}
     />
   )

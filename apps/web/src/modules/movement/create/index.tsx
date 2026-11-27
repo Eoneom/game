@@ -21,7 +21,8 @@ import { useGetCity } from '#city/hooks'
 import { useListTroops } from '#troop/hooks'
 import { estimateMovement } from '../api/estimate'
 import { useAuth } from '#auth/context'
-import { useCreateMovement } from '#troop/hooks'
+import { useCreateMovement, useMovementCapacity } from '#troop/hooks'
+import { MovementCapacityReadout } from '#movement/capacity'
 import { Button } from '#ui/button'
 
 type MovementCreateProps = (
@@ -47,6 +48,8 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   const { data: outpost } = useGetOutpost(outpostId)
   const { data: troops = [] } = useListTroops(cityId ? { cityId } : { outpostId: outpostId as string })
   const createMovement = useCreateMovement()
+  const { data: movementCapacity } = useMovementCapacity()
+  const movementLimitReached = Boolean(movementCapacity && movementCapacity.used >= movementCapacity.limit)
 
   const [ selectedTroops, setSelectedTroops ] = useState<Partial<Record<TroopCode, number>>>({})
   const [ destination, setDestination ] = useState<Coordinates>(
@@ -180,7 +183,8 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
     })
   }
 
-  const canSubmit = Boolean(estimation.distance)
+  const canSubmit = !movementLimitReached
+    && Boolean(estimation.distance)
     && (action !== MovementAction.TRANSPORT || usedCapacity > 0)
     && (action !== MovementAction.ATTACK || combatStrategy)
 
@@ -252,6 +256,9 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
           )}
           <MovementCreateEstimation estimation={estimation} />
           <div className="space-y-3 border-t border-rust/50 pt-3">
+            {movementCapacity && (
+              <MovementCapacityReadout used={movementCapacity.used} limit={movementCapacity.limit} />
+            )}
             <MovementCreateWarning
               isTemporaryOutpost={Boolean(outpost?.type === OutpostType.TEMPORARY)}
               troops={troops}
@@ -259,6 +266,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
               destinationCapacityExceeded={
                 action === MovementAction.TRANSPORT && estimation.destination_capacity_exceeded
               }
+              movementLimitReached={movementLimitReached}
             />
             <Button type="submit" disabled={!canSubmit} className="w-full">
               Envoyer le déplacement

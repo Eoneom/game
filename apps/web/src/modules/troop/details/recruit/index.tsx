@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useRecruitTroop, useListCityTroops } from '#troop/hooks'
+import { useRecruitTroop, useListCityTroops, useCityRecruitQueue } from '#troop/hooks'
 import { Button } from '#ui/button'
 import { Troop, TroopItem } from '#types'
 
@@ -16,13 +16,17 @@ interface Props {
 
 export const TroopDetailsRecruit: React.FC<Props> = ({ cityId, troop, onChange, count, canRecruit }) => {
   const { data: troops = [] } = useListCityTroops(cityId)
+  const { data: recruitQueue } = useCityRecruitQueue(cityId)
   const recruit = useRecruitTroop(cityId)
 
   const inProgress = troops.find(
     (t): t is TroopWithRecruitment => Boolean(t.ongoing_recruitment)
   )
+  const queueLimit = recruitQueue?.limit ?? 0
+  const canEnqueue = Boolean(inProgress) && (recruitQueue?.queue.length ?? 0) < queueLimit
 
-  if (inProgress) {
+  // Without a command center (no queue slot) a running batch blocks recruiting, as before.
+  if (inProgress && queueLimit === 0) {
     return null
   }
 
@@ -47,13 +51,13 @@ export const TroopDetailsRecruit: React.FC<Props> = ({ cityId, troop, onChange, 
       </label>
 
       <Button
-        disabled={!canRecruit}
+        disabled={inProgress ? !canEnqueue : !canRecruit}
         onClick={() => {
           recruit.mutate({ code: troop.code, count })
           onChange(1)
         }}
       >
-        Recruter
+        {inProgress ? 'Ajouter à la file' : 'Recruter'}
       </Button>
     </div>
   )

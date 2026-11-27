@@ -62,6 +62,9 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
         {hasResources(report.resources) && (
           <p className="details-meta">Butin : {formatResources(report.resources)}</p>
         )}
+        {battle.perspective === 'defender' && battle.sheltered && hasResources(battle.sheltered) && (
+          <p className="details-meta">Protégé par l&apos;abri : {formatResources(battle.sheltered)}</p>
+        )}
         <h3>Pertes (votre camp)</h3>
         <ul>
           {report.troops.map(troop => (

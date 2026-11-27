@@ -75,6 +75,9 @@ const ErrorTranslations: Record<string, string> = {
   [TroopError.TRANSPORT_RESOURCES_REQUIRED]: 'Des ressources sont requises pour ce transport',
   [TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED]: 'Les ressources ne sont pas autorisées pour cette action',
   [TroopError.NOT_IN_FACTION_ROSTER]: 'Cette unité n\'appartient pas à votre faction',
+  [TroopError.MOVEMENT_LIMIT_REACHED]: 'Limite de mouvements simultanés atteinte : construisez un centre de commandement',
+  [TroopError.QUEUE_FULL]: 'La file de recrutement est pleine',
+  [TroopError.QUEUE_ITEM_NOT_FOUND]: 'Élément de file de recrutement introuvable',
 
   [CombatError.SAME_FACTION_ATTACK]: 'Impossible d\'attaquer un allié de faction',
   [CombatError.NO_VALID_TARGET]: 'Aucune cible ennemie à cette destination',
