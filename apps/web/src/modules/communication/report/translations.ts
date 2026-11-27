@@ -9,6 +9,7 @@ export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.SPY]: 'Espionnage',
   [ReportType.SPY_DETECTED]: 'Espion repéré',
   [ReportType.REINFORCEMENT]: 'Renforts alliés',
+  [ReportType.TRADE]: 'Bourse',
 }
 
 export type BattleResultKind = 'victory' | 'defeat' | 'draw'

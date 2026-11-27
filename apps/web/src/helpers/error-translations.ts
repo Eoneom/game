@@ -6,6 +6,7 @@ import {
   CityError,
   CommunicationError,
   DefenseError,
+  ExchangeError,
   FactionError,
   OutpostError,
   PlayerError,
@@ -50,6 +51,14 @@ const ErrorTranslations: Record<string, string> = {
   [BuildingError.NOT_IN_PROGRESS]: 'Aucune construction en cours',
   [BuildingError.QUEUE_FULL]: 'La file de construction est pleine',
   [BuildingError.QUEUE_ITEM_NOT_FOUND]: 'Élément de file de construction introuvable',
+
+  [ExchangeError.TRADING_POST_REQUIRED]: 'Il faut un comptoir d\'échange dans cette ville pour passer un ordre',
+  [ExchangeError.ORDER_LIMIT_REACHED]: 'Cette ville a atteint sa limite d\'ordres ouverts (niveau du comptoir d\'échange)',
+  [ExchangeError.ORDER_INVALID]: 'Ordre invalide : lots et prix doivent être des entiers d\'au moins 1',
+  [ExchangeError.NOT_ENOUGH_CARRIERS]: 'Pas assez de transporteurs disponibles dans la ville pour livrer cet ordre',
+  [ExchangeError.ORDER_NOT_FOUND]: 'Ordre introuvable',
+  [ExchangeError.ORDER_NOT_OPEN]: 'Cet ordre n\'est plus ouvert',
+  [ExchangeError.RESOURCE_INVALID]: 'Marché inconnu',
 
   [CityError.ALREADY_EXISTS]: 'Cette ville existe déjà',
   [CityError.NOT_FOUND]: 'Ville introuvable',

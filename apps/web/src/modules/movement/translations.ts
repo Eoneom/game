@@ -7,6 +7,7 @@ export const MovementActionLabels: Record<MovementAction, string> = {
   [MovementAction.ATTACK]: 'Attaquer',
   [MovementAction.SPY]: 'Espionner',
   [MovementAction.REINFORCE]: 'Renforcer',
+  [MovementAction.EXCHANGE]: 'Convoi de bourse',
 }
 
 export const CombatStrategyLabels: Record<CombatStrategy, string> = {

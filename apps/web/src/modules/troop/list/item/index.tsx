@@ -26,6 +26,7 @@ export const TroopListItem: React.FC<Props> = ({
     count={troop.count}
     badge={badge}
     busy={busy}
+    detail={troop.exchange_reserved > 0 ? `dont ${troop.exchange_reserved} réservés pour la bourse` : undefined}
     image={{
       src: troopImageSrc(troop.code),
       alt: TroopTranslations[troop.code].name,

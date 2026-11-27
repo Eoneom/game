@@ -13,10 +13,13 @@ interface Props {
   }
   badge?: string
   busy?: boolean
+  /** Extra line under the count. */
+  detail?: string
 }
 
-export const ListItemCount: React.FC<Props> = ({ count, ...props }) => {
+export const ListItemCount: React.FC<Props> = ({ count, detail, ...props }) => {
   return <ListItem {...props}>
     <p className="m-0 text-xs text-amber-dim">× {count}</p>
+    {detail && <p className="m-0 text-xs text-label">{detail}</p>}
   </ListItem>
 }

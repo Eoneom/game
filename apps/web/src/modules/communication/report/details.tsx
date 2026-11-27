@@ -1,4 +1,4 @@
-import { ReportType } from '@eoneom/api-client'
+import { ExchangeSide, ReportType, exchange_lot_size } from '@eoneom/api-client'
 import { Report } from '#types'
 import { TroopTranslations } from '#troop/translations'
 import { troopImageSrc } from '#troop/image'
@@ -15,6 +15,12 @@ import {
 import { DefenseTranslations } from '#defense/translations'
 import { defenseImageSrc } from '#defense/image'
 import { SpyDetectedReportDetails, SpyReportDetails } from '#communication/report/spy-details'
+import {
+  ExchangeResourceLabels,
+  ExchangeSideLabels,
+  formatLots,
+  formatPrice,
+} from '#exchange/translations'
 
 interface Props {
   report?: Report
@@ -53,6 +59,49 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
 
   if (report.type === ReportType.SPY_DETECTED && report.spy_detected) {
     return <SpyDetectedReportDetails report={report} spyDetected={report.spy_detected} />
+  }
+
+  if (report.type === ReportType.TRADE && report.trade) {
+    const trade = report.trade
+    const sent: ReportResources = trade.side === ExchangeSide.SELL
+      ? { plastic: 0, mushroom: 0, plasma: 0, water: 0, [trade.resource]: trade.lots * exchange_lot_size[trade.resource] }
+      : { plastic: 0, mushroom: 0, plasma: 0, water: trade.lots * trade.price }
+    const at = (timestamp: number) => (
+      <time dateTime={new Date(timestamp).toISOString()}>{new Date(timestamp).toLocaleString()}</time>
+    )
+    return (
+      <LayoutDetailsContent>
+        <h1>{ReportTypeLabels[report.type]} : {ExchangeSideLabels[trade.side].toLowerCase()} de {ExchangeResourceLabels[trade.resource].toLowerCase()}</h1>
+        <p className="details-meta">
+          {formatLots(trade.resource, trade.lots)} à {formatPrice(trade.price)}, avec {trade.counterparty_name}.
+        </p>
+        <p className="details-meta">
+          Votre ville : {trade.city.name} ({formatCoordinates(trade.city.coordinates)}) · ville partenaire :{' '}
+          {trade.counterparty_city.name} ({formatCoordinates(trade.counterparty_city.coordinates)})
+        </p>
+        <p className="details-meta">Vous envoyez {formatResources(sent)}, arrivée {at(trade.outgoing_arrive_at)}.</p>
+        <p className="details-meta">Vous recevez {formatResources(report.resources)}, arrivée {at(trade.incoming_arrive_at)}.</p>
+        {trade.refunded_water > 0 && (
+          <p className="details-meta">
+            Différence avec votre prix limite rendue à votre stock : {trade.refunded_water} eau pure.
+          </p>
+        )}
+        <p className="details-meta">Les convois de la bourse ne peuvent pas être interceptés.</p>
+        <h3>Transporteurs envoyés</h3>
+        <ul>
+          {report.troops.map(troop => (
+            <li key={troop.code} className="flex items-center gap-2">
+              <img
+                src={troopImageSrc(troop.code)}
+                alt={TroopTranslations[troop.code].name}
+                className="h-8 w-8"
+              />
+              {TroopTranslations[troop.code].name} × {troop.count}
+            </li>
+          ))}
+        </ul>
+      </LayoutDetailsContent>
+    )
   }
 
   if (report.type === ReportType.REINFORCEMENT) {

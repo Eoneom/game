@@ -5,6 +5,8 @@ import { MovementActionLabels } from '#movement/translations'
 import { TroopTranslations } from '#troop/translations'
 import { Movement } from '#types'
 import { formatCoordinates } from '#helpers/transform'
+import { MovementAction } from '@eoneom/api-client'
+import { formatCargo } from '#movement/cargo'
 
 interface Props {
   movement: Movement
@@ -38,9 +40,14 @@ export const MovementDetails: React.FC<Props> = ({ movement }) => {
           Arrivée :{' '}
           <span className="details-coordinates">{formatCoordinates(movement.destination)}</span>
         </p>
-        {(movement.resources.plastic > 0 || movement.resources.mushroom > 0) && (
+        {formatCargo(movement.resources) && (
           <p className="details-meta">
-            Cargo : {movement.resources.plastic} plastique, {movement.resources.mushroom} champignon
+            Cargo : {formatCargo(movement.resources)}
+          </p>
+        )}
+        {movement.action === MovementAction.EXCHANGE && (
+          <p className="details-meta">
+            Convoi de la bourse de faction : il ne peut être ni modifié ni intercepté.
           </p>
         )}
       </div>

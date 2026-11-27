@@ -32,6 +32,7 @@ export default defineConfig({
       '#movement': path.resolve(webSrc, 'modules/movement'),
       '#outpost': path.resolve(webSrc, 'modules/outpost'),
       '#ranking': path.resolve(webSrc, 'modules/ranking'),
+      '#exchange': path.resolve(webSrc, 'modules/exchange'),
       '#requirement': path.resolve(webSrc, 'modules/requirement'),
       '#technology': path.resolve(webSrc, 'modules/technology'),
       '#troop': path.resolve(webSrc, 'modules/troop'),

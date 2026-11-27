@@ -6,6 +6,7 @@ import {
   isEnergyBuilding,
   isProductionBuilding,
   isShelterBuilding,
+  isTradingPostBuilding,
   isWarehouseBuilding
 } from '@eoneom/api-client'
 
@@ -18,6 +19,7 @@ import { BuildingDetailsMetadataConsumption } from '#building/details/metadata/c
 import { BuildingDetailsSection } from '#building/details/section'
 import { BuildingDetailsMetadataCommandCenter } from '#building/details/metadata/command-center'
 import { BuildingDetailsMetadataShelter } from '#building/details/metadata/shelter'
+import { BuildingDetailsMetadataTradingPost } from '#building/details/metadata/trading-post'
 
 interface Props {
   building: Building
@@ -67,6 +69,14 @@ export const BuildingDetailsMetadata: React.FC<Props> = ({ building }) => {
     return <BuildingDetailsMetadataShelter
       currentSheltered={building.metadata.current_sheltered}
       nextSheltered={building.metadata.next_sheltered}
+    />
+  }
+
+  if (isTradingPostBuilding(building)) {
+    return <BuildingDetailsMetadataTradingPost
+      openOrderCount={building.metadata.open_order_count}
+      currentOpenOrderLimit={building.metadata.current_open_order_limit}
+      nextOpenOrderLimit={building.metadata.next_open_order_limit}
     />
   }
 

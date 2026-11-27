@@ -12,7 +12,10 @@ interface Props {
 }
 
 export const MovementCreateAction: React.FC<Props> = ({ action, onChange, allowedActions }) => {
-  const choices = (allowedActions ?? Object.values(MovementAction)).slice().sort((a, b) => a.localeCompare(b))
+  // Exchange convoys are created by the server on each fill (slice 035), never by the player.
+  const choices = (allowedActions ?? Object.values(MovementAction).filter(value => value !== MovementAction.EXCHANGE))
+    .slice()
+    .sort((a, b) => a.localeCompare(b))
 
   return (
     <fieldset className="m-0 border-0 p-0">

@@ -1,0 +1,5 @@
+export const fieldClass = 'w-full rounded-sm border border-rust/50 bg-transparent px-2 py-1 text-sm text-amber placeholder:text-label focus:border-amber/60 focus:outline-none'
+export const sectionTitleClass = 'm-0 text-sm uppercase tracking-wider text-label'
+export const tableClass = 'w-full border-collapse text-sm'
+export const headRowClass = 'text-left text-xs uppercase tracking-wider text-label'
+export const rowClass = 'border-t border-rust/30 text-amber-dim'

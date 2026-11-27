@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as ExchangeRouteImport } from './routes/exchange'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as SharedRouteRouteImport } from './routes/_shared/route'
 import { Route as AllianceIndexRouteImport } from './routes/alliance/index'
@@ -50,6 +51,11 @@ import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/
 const RankingRoute = RankingRouteImport.update({
   id: '/ranking',
   path: '/ranking',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExchangeRoute = ExchangeRouteImport.update({
+  id: '/exchange',
+  path: '/exchange',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
@@ -244,6 +250,7 @@ const CityCityIdWorldMovementMovementIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof SharedIndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/exchange': typeof ExchangeRoute
   '/ranking': typeof RankingRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
@@ -280,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRoutesByTo {
+  '/exchange': typeof ExchangeRoute
   '/ranking': typeof RankingRoute
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shared': typeof SharedRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
+  '/exchange': typeof ExchangeRoute
   '/ranking': typeof RankingRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/exchange'
     | '/ranking'
     | '/city/$cityId'
     | '/outpost/$outpostId'
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/world/movement/$movementId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/exchange'
     | '/ranking'
     | '/report'
     | '/admin/combat-simulator'
@@ -432,6 +443,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_shared'
     | '/admin'
+    | '/exchange'
     | '/ranking'
     | '/city/$cityId'
     | '/outpost/$outpostId'
@@ -472,6 +484,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   SharedRouteRoute: typeof SharedRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  ExchangeRoute: typeof ExchangeRoute
   RankingRoute: typeof RankingRoute
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
@@ -488,6 +501,13 @@ declare module '@tanstack/react-router' {
       path: '/ranking'
       fullPath: '/ranking'
       preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exchange': {
+      id: '/exchange'
+      path: '/exchange'
+      fullPath: '/exchange'
+      preLoaderRoute: typeof ExchangeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -899,6 +919,7 @@ const OutpostOutpostIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   SharedRouteRoute: SharedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  ExchangeRoute: ExchangeRoute,
   RankingRoute: RankingRoute,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,

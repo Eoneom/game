@@ -4,6 +4,7 @@ import { Link } from '@tanstack/react-router'
 import { formatCoordinates, formatTime } from '#helpers/transform'
 import { useTimer } from '#hook/timer'
 import { MovementActionLabels } from '#movement/translations'
+import { formatCargo } from '#movement/cargo'
 import { MovementItem } from '#types'
 import { useLocation } from '#location/context'
 
@@ -26,6 +27,7 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
   })
 
   const actionLabel = MovementActionLabels[movement.action]
+  const cargo = formatCargo(movement.resources)
   const movementRouteContent = (
     <>
       <span className="flex items-center justify-between gap-2">
@@ -37,9 +39,9 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
         <span aria-hidden>→</span>
         <span title="Arrivée">{formatCoordinates(movement.destination)}</span>
       </span>
-      {(movement.resources.plastic > 0 || movement.resources.mushroom > 0) && (
+      {cargo && (
         <span className="mt-1 block text-xs text-label">
-          {movement.resources.plastic} plastique · {movement.resources.mushroom} champignon
+          {cargo}
         </span>
       )}
     </>

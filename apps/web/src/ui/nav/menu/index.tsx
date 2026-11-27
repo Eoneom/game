@@ -104,6 +104,14 @@ export const NavMenu: React.FC = () => {
             Classements
           </RouterLink>
         </li>
+        <li>
+          <RouterLink
+            to="/exchange"
+            className={linkClass('/exchange')}
+          >
+            Bourse
+          </RouterLink>
+        </li>
         {observabilitySession?.is_admin ? (
           <li>
             <RouterLink

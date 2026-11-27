@@ -53,7 +53,12 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   const { token } = useAuth()
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
-  const { data: troops = [] } = useListTroops(cityId ? { cityId } : { outpostId: outpostId as string })
+  const { data: listedTroops = [] } = useListTroops(cityId ? { cityId } : { outpostId: outpostId as string })
+  // Carriers reserved for the faction exchange stay in the city but cannot move (slice 035).
+  const troops = useMemo(() => listedTroops.map(troop => ({
+    ...troop,
+    count: Math.max(0, troop.count - (troop.exchange_reserved ?? 0)),
+  })), [listedTroops])
   const createMovement = useCreateMovement()
   const { data: movementCapacity } = useMovementCapacity()
   const movementLimitReached = Boolean(movementCapacity && movementCapacity.used >= movementCapacity.limit)
