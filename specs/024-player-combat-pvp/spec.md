@@ -334,7 +334,9 @@ Draw does **not** apply when one side eliminated the other’s **combat** force 
 
 ### Defender snapshot (auto-defend)
 
-All defender stacks on cell with `movement_id` null; no reinforcements; no building HP in v1.
+All defender stacks on cell with `movement_id` null; no building HP in v1.
+
+**Reinforcements** ([`033`](../033-alliances/spec.md)): when the target is a city, the stationed troops of the host's current alliance members on the cell join the defender side, one stack per owner and code with the owner's `player_id` (`TroopBattleStack.player_id`; host stacks and attacker stacks carry none, so battles without reinforcements are unchanged). The host's garrison default strategy applies to every defender stack. Arsenal modifiers are snapshotted per owner in `state_json.defender_owner_modifiers` (keyed by `player_id`; stacks without `player_id` or missing owners use `defender_modifiers`); Fortification stays the host's. Casualties follow the usual order and loss lines keep the owner's `player_id`. Loot comes from the city stock only. An attacker win destroys the reinforcements with the garrison; otherwise survivors are re-created per owner. Each reinforcement owner gets a `battle` report with perspective **`reinforcement`** (their own losses) and `battle:finished`.
 
 **City defenses** ([`029`](../029-city-defenses/spec.md)): when the target is a city, its defense stacks join the defender snapshot as `BattleStack`s with `kind: 'defense'` (stacks without `kind` are troops) and `defender_modifiers.fortification` is snapshotted (missing = 1). Defense pools use Fortification only (no strategy or Arsenal multiplier); ramparts add life only, minefields attack in round 1 then the whole stack is consumed (counted as lost, never targeted, not in the life pool), plasma batteries fire up to `floor(city_plasma / 5)` units and debit the city stock during the round (`round_summaries[].defender_plasma_spent`), and each shield generator lowers the attacker's attack pool by 2 % up to 30 % (`shield_reduction`). Exposure ignores defense stacks and applies to the troop life only. Casualty order: rampart → combat troops → turret → plasma battery → shield generator → carrier → civilian → scout (`siege_assault`: rampart → shield generator → plasma battery → turret → combat troops → …). **Victory** counts combat troops **plus armed defenses** (turret, plasma battery). An attacker win deletes every defense row of the city (with its fortification batch and queue) before the ownership transfer; on a defender win or draw the lost units are removed from the city's defense rows.
 
@@ -391,6 +393,7 @@ Existing HTTP surface unchanged: `GET /communication/report`, `GET /communicatio
 | --- | --- |
 | **Attacker** (`movement.player_id`) | **Yes** — always |
 | **Defender** (owner at battle start) | **Yes** — always |
+| **Reinforcement owner** ([`033`](../033-alliances/spec.md)) | **Yes** — perspective `reinforcement`, `troops` = their own losses |
 
 Two separate `ReportEntity` rows per finished battle (one per `player_id`), same logical battle, **independent** `was_read` state. No report for non-participants. If defender is a system player, Alpha gets an inbox row like humans.
 

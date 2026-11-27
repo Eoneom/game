@@ -4,7 +4,7 @@
 
 ## Summary
 
-Players create **movements** between map coordinates with an action (`MovementAction`: `explore`, `base`, `transport`, `attack`, `spy` — slice [`030`](../030-intelligence/spec.md)). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport/attack finish handlers. Peaceful outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)); `rebase` exists as a report type only, not as a `MovementAction`.
+Players create **movements** between map coordinates with an action (`MovementAction`: `explore`, `base`, `transport`, `attack`, `spy` — slice [`030`](../030-intelligence/spec.md), `reinforce` — slice [`033`](../033-alliances/spec.md)). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport/attack finish handlers. Peaceful outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)); `rebase` exists as a report type only, not as a `MovementAction`.
 
 **`attack`** ([`024`](../024-player-combat-pvp/spec.md)) requires a `combat_strategy`, at least one `combat`-role troop, no `scout`-role troop, and an enemy-faction target. On arrival `sagaFinishAttack` opens a **battle** (attacker strategy from the movement; defender strategy from the target garrison's `default_combat_strategy`, `balanced` when unset — see [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024)). Up to five rounds run through `combat.round.advance`; outcomes (occupation, loot, temporary-outpost destruction, retreat) are applied and two battle reports are written.
 
@@ -34,6 +34,7 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `troop:movement:transport-resources-required` | Transport without resources |
 | `troop:movement:transport-resources-not-allowed` | Resources on non-transport action |
 | `troop:movement:limit-reached` | Player already owns `movement_limit` movements (slice [`028`](../028-command-center-shelter/spec.md)) |
+| `troop:movement:foreign-origin` | From another player's city, only a `base` recall to one of the player's own cities or outposts is allowed (slice [`033`](../033-alliances/spec.md)) |
 
 **Movement cap** ([`028`](../028-command-center-shelter/spec.md)): `movement_limit = 5 + Σ command_center level` over the player's cities; every `movement` row of the player counts (`movement.countByPlayer`). `createTroopMovement` (every action) rejects at the cap; a rebase (`rebaseTroopMovement`) runs the same check but excludes the inbound movement it replaces, so it is only blocked when the player is over the cap (after losing a city). Automatic return trips (`createReturnBaseTrip` from explore / transport) and battle retreats are never checked. Losing a city lowers the limit without cancelling movements under way.
 
@@ -54,6 +55,8 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `intel:scout-only` | Selection is empty or includes a non-`scout` troop |
 | `intel:no-valid-target` | No enemy stack or settlement at the destination |
 
+**`reinforce`** (slice [`033`](../033-alliances/spec.md)): the destination must be a city owned by another member of the player's alliance (`alliance:invalid-reinforce-target`; outposts, own cities and non-members are rejected), with `combat`-role troops only, at least one (`alliance:combat-troops-only`); the movement cap applies. On arrival `sagaFinishReinforce` re-checks the target: the troops are merged into the owner's own stacks on the host cell (rows keep the owner's `player_id`) and the host gets a `reinforcement` report and `reinforcement:arrived`; otherwise they come home with an automatic `base` movement (no cap check). **Recall**: stationed troops leave only through their owner's `base` movement from the host cell to one of the owner's cities or outposts (counts toward the cap, emits `reinforcement:recalled` to the host); every other action from another player's city is `troop:movement:foreign-origin`. Leaving, being kicked from or dissolving the alliance sends the troops between the former allies home automatically (closest city, no cap check). `GET /troop/reinforcement?city_id=` lists the allied troops stationed in one of the caller's cities; `GET /troop/reinforcement/abroad` lists the caller's troops stationed in allied cities.
+
 **Incoming attacks** ([`030`](../030-intelligence/spec.md)): `GET /troop/movement/incoming` lists other players' `attack` movements whose destination cell holds one of the player's cities, outposts or stationary troops (`movement.listIncomingAttacks`), while their finish job is pending. Fields follow the player's `detection` level read on each call: none at 0 (`[]`), target and `arrive_at` at 1, `attacker` at 2, `unit_count` (nearest 10) at 3, `troops` from 4; the strategy is never sent. Creating an attack emits `movement:incoming` to the defender when their `detection` ≥ 1.
 
 Tests: `apps/server/src/web/handler/troop/movement/*.spec.ts`, `apps/server/src/app/command/troop/movement/*.spec.ts`, `apps/server/src/app/query/troop/movement/*.spec.ts`, `apps/server/src/app/saga/finish/*.spec.ts`, `apps/server/src/app/command/combat/*.spec.ts`.
@@ -69,7 +72,7 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 
 ## Saga routing
 
-`MovementAction.EXPLORE` → `sagaFinishExplore`; `BASE` → `sagaFinishBase`; `TRANSPORT` → `sagaFinishTransport`; `ATTACK` → `sagaFinishAttack`; `SPY` → `sagaFinishSpy` (slice [`030`](../030-intelligence/spec.md)); default → `MOVEMENT_ACTION_NOT_IMPLEMENTED`.
+`MovementAction.EXPLORE` → `sagaFinishExplore`; `BASE` → `sagaFinishBase`; `TRANSPORT` → `sagaFinishTransport`; `ATTACK` → `sagaFinishAttack`; `SPY` → `sagaFinishSpy` (slice [`030`](../030-intelligence/spec.md)); `REINFORCE` → `sagaFinishReinforce` (slice [`033`](../033-alliances/spec.md)); default → `MOVEMENT_ACTION_NOT_IMPLEMENTED`.
 
 `TroopMovementGetActionQuery` resolves action for a movement id.
 

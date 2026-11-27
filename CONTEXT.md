@@ -32,6 +32,14 @@ _Avoid_: building, troop, tower
 A private message with a subject, sent by one Player to another.
 _Avoid_: mail item, email, DM
 
+**Alliance**:
+A named group of Players of the same Faction who coordinate. A Player belongs to at most one Alliance.
+_Avoid_: guild, clan, team, faction
+
+**Reinforcement**:
+Combat troops a Player stations in an allied Player's city.
+_Avoid_: support, garrison (the garrison is the host's own troops)
+
 **Chat channel**:
 A real-time conversation shared by a set of Players (global, faction, alliance).
 _Avoid_: room, lobby

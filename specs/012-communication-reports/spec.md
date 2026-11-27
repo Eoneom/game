@@ -39,11 +39,17 @@ When a battle finishes, `createBattleReports` writes **two** inbox rows in one t
 
 `report_battle` stores perspective, factions, target kind/id, winner, both strategies, `rounds_played`, `outcome_json` (`occupied`, `destroyed_temp_outpost`, `loot_applied`, `attacker_retreated`), per-side casualties and a copy of the per-round summaries (`round_summaries_json`; the live battle keeps its rounds in `battle_round`, see [`010`](../010-troop-movement-combat/spec.md#battle-persistence)). JSON values are serialized before insert because node-postgres would send JS arrays as Postgres array literals, which `jsonb` rejects.
 
-`GET /communication/report/:report_id` adds `battle` (the metadata) for `type = battle`. After both rows commit, `AppEvent.BattleFinished` is emitted per participant with `{ player_id, report_id, perspective, winner }`.
+`GET /communication/report/:report_id` adds `battle` (the metadata) for `type = battle`, plus `battle_players` (`attacker_name`, `defender_name` as `[TAG] Name`, slice [`033`](../033-alliances/spec.md)). After both rows commit, `AppEvent.BattleFinished` is emitted per participant with `{ player_id, report_id, perspective, winner }`.
+
+**Reinforcements** (slice [`033`](../033-alliances/spec.md)): each owner of troops stationed in the attacked city gets a third kind of row, perspective **`reinforcement`**, whose `troops` are their own losses (loss lines carrying their `player_id`); the defender row's `troops` exclude those lines. The `reinforcement` perspective shows the owner's Arsenal modifiers with the host's Fortification.
 
 ## Spy reports (030)
 
 A `spy` movement ([`010`](../010-troop-movement-combat/spec.md), [`030`](../030-intelligence/spec.md)) writes a **`spy`** report for the spy owner (`troops` = scouts sent) and, on failure, a **`spy_detected`** report for the target owner (`troops` empty). Each row has a `report_spy` metadata row (migration `00013_intelligence`): `movement_id`, `spy_player_id`, `target_player_id`, `target_json` (`{ kind, id, name, owner_name, faction_code, coordinates }`, kind and owner `null` when the target vanished) and `metadata_json` — `spy`: `success`, `aborted`, `roll`, `p_success`, `tier`, `scouts_lost` and the intel revealed by the tier (`troops`, `defenses`, `default_strategy`, `resources`, `buildings`, `technologies`, `outpost_type`); `spy_detected`: `spy_owner { name, faction_code }`, `scouts_destroyed`. Written through `report.createSpyReports` in one transaction; `GET /communication/report/:report_id` adds `spy` or `spy_detected`. No event is emitted for spy reports; the unread count refreshes like other movement reports.
+
+## Reinforcement reports (033)
+
+A stationed reinforcement ([`033`](../033-alliances/spec.md)) writes a **`reinforcement`** report for the host (`troops` = troops stationed, origin → host city) with a `report_reinforcement` row (`report_id`, `owner_player_id`; migration `00015_alliances`). `GET /communication/report/:report_id` adds `reinforcement` `{ owner_player_id, owner_name }`. `AppEvent.ReinforcementArrived` (`reinforcement:arrived`) is emitted to the host after the row commits.
 
 ## Background jobs
 

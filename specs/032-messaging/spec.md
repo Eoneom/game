@@ -75,13 +75,13 @@ WS `mail:received` `{ mail_id }` to the recipient when delivered.
 
 | Rule | Value / error |
 | --- | --- |
-| Channel access | `global`: every human player. `faction`: the player's own faction. `communication:channel-forbidden` otherwise. |
+| Channel access | `global`: every human player. `faction`: the player's own faction. `alliance`: current members of the player's alliance (slice [`033`](../033-alliances/spec.md)). `communication:channel-forbidden` otherwise. |
 | Body | 1–500 characters, trimmed. `communication:body-invalid` |
 | Rate limit | 1 message per 2 s per player per channel. `communication:rate-limited` (HTTP 429) |
 | Authors | Human players only; system players never post. |
 | Retention | Messages older than **30 days** are deleted. |
 
-Channel identifiers on the wire: `global`, `faction` (the server resolves the caller's faction). Stored as `global` or `faction:<faction_code>`.
+Channel identifiers on the wire: `global`, `faction`, `alliance` (the server resolves the caller's faction and alliance). Stored as `global`, `faction:<faction_code>` or `alliance:<alliance_id>`. **Alliance channel** ([`033`](../033-alliances/spec.md), enabled): leaving the alliance removes access immediately (history and post are rejected), the history stays with the alliance, and dissolving deletes its messages. Author names carry `alliance_tag` and show as `[TAG] Name`.
 
 ### HTTP
 
@@ -195,7 +195,7 @@ Migration (next free number):
 ## Follow-ups
 
 - **Moderation**: abuse reports are stored only; review tools, bans and filters belong to slice `038`, as does moving the rate limiter to a shared store.
-- **Alliance channel**: slice `033` adds a third channel (`ChatChannel`, stored key, access rule, panel tab).
+- **Alliance channel**: done in slice [`033`](../033-alliances/spec.md) (`ChatChannel.ALLIANCE`, stored key `alliance:<alliance_id>`, member-only access and fan-out, « Alliance » panel tab).
 - **Mail notifications**: the toast on `mail:received` does not open the letter; consider a link like the battle report toast.
 - **Reason input**: replace `window.prompt` / `window.confirm` with in-game dialogs when the UI kit has one.
 - **Multi-tab**: the WS connection map holds one socket per player (slice 017), so a second tab steals live chat from the first.
