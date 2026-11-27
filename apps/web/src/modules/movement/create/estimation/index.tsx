@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { formatTime } from '#helpers/transform'
+import { formatSpeed, formatTime } from '#helpers/transform'
 import { MovementEstimation } from '#types'
 
 interface Props {
@@ -26,7 +26,7 @@ export const MovementCreateEstimation: React.FC<Props> = ({ estimation }) => {
         </li>
         <li className="flex justify-between gap-3">
           <span className="text-amber-dim">Vitesse des troupes</span>
-          <span className="font-mono text-amber">{estimation.speed}</span>
+          <span className="font-mono text-amber">{formatSpeed(estimation.speed)}</span>
         </li>
         <li className="flex justify-between gap-3">
           <span className="text-amber-dim">Durée</span>

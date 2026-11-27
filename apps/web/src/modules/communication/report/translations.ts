@@ -66,6 +66,22 @@ export const regrowthLines = (regrown?: { code: DefenseCode, count: number }[]):
     .filter(line => line.count > 0)
     .map(line => `${DefenseTranslations[line.code].name} : +${line.count} repoussé${line.count > 1 ? 's' : ''}`)
 
+type RoundSummary = ReportBattleMetadata['round_summaries'][number]
+
+/**
+ * Battle report lines for the Confederation defenses (slice 039): "Leurres : N pertes absorbées" over the battle and
+ * "Canon électromagnétique : tir doublé (siège)" when the railguns fired doubled in at least one round.
+ */
+export const confederationDefenseLines = (round_summaries: RoundSummary[]): string[] => {
+  const absorbed = round_summaries.reduce((sum, row) => sum + (row.decoy_absorbed ?? 0), 0)
+  return [
+    absorbed > 0 ? `Leurres : ${absorbed} perte${absorbed > 1 ? 's' : ''} absorbée${absorbed > 1 ? 's' : ''}` : null,
+    round_summaries.some(row => row.railgun_doubled)
+      ? `${DefenseTranslations[DefenseCode.RAILGUN].name} : tir doublé (siège)`
+      : null,
+  ].filter((line): line is string => line !== null)
+}
+
 /**
  * Combat modifiers of one side, e.g. "+9 % attaque, +6 % vie" (Arsenal), "+9 % fortification" or
  * "Garnison +15 % vie" (slice 037); null when neutral.

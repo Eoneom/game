@@ -32,6 +32,12 @@ export const transformApproximateTimeUntilSeconds = (seconds: number): string =>
   return `~${formatTime(Math.ceil(seconds))}`
 }
 
+/**
+ * Troop speed with at most three decimals: speeds carry multipliers (Propulsion tactique, faction logistics bonus,
+ * slice 039), e.g. 1.05 or 0.788.
+ */
+export const formatSpeed = (speed: number): string => String(Math.round(speed * 1000) / 1000)
+
 export const formatCoordinates = (coordinates: Coordinates): string => {
   return `${coordinates.x}.${coordinates.y}`
 }

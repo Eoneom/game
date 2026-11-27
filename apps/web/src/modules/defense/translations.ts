@@ -46,6 +46,16 @@ export const DefenseTranslations: Record<DefenseCode, { name: string, descriptio
     description: 'Des rouleaux de fil barbelé tendus devant les murs, qui ralentissent et désorganisent l\'assaut.',
     effect: 'Aucune attaque. Tombe en premier. Chaque rouleau réduit l\'attaque ennemie de 1 % au tour 1 (jusqu\'à 10 %) et de 0,5 % au tour 2 (jusqu\'à 5 %), dans la limite de 40 % au total avec boucliers et spores.',
   },
+  [DefenseCode.RAILGUN]: {
+    name: 'Canon électromagnétique',
+    description: 'Un rail d\'accélération alimenté par l\'inducteur central, qui perce le blindage des engins de siège.',
+    effect: 'Défense armée. Anti-siège : son attaque double à chaque tour où l\'assaillant mène un assaut de siège ou aligne au moins 50 % de son attaque en machines de guerre.',
+  },
+  [DefenseCode.HOLO_DECOY]: {
+    name: 'Leurres holographiques',
+    description: 'Des projecteurs qui peuplent les remparts de silhouettes trompeuses, le temps que l\'ennemi gaspille ses premières salves.',
+    effect: 'Aucune attaque ni vie. Aux tours 1 et 2, chaque leurre absorbe une perte, dans la limite de 30 % des pertes de la ville. Les leurres restants s\'éteignent après le tour 2 : à reconstruire après chaque bataille.',
+  },
 }
 
 /** Per-round attack profile of a defense (slice 037), e.g. "60 / 50 / 25 / 20 / 20"; null for a flat attack. */

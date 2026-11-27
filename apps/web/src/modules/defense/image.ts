@@ -14,6 +14,9 @@ const placeholder_image_src: Record<DefenseCode, string> = {
   [DefenseCode.SPORE_CLOUD]: '/troops/spore_acolyte.png',
   [DefenseCode.FIELD_ARTILLERY]: '/troops/assault_behemoth.png',
   [DefenseCode.BARBED_WIRE]: '/buildings/plastic_warehouse.png',
+  // La Confédération (slice 039): placeholders until the organo-synthetic art lands.
+  [DefenseCode.RAILGUN]: '/troops/striker_drone.png',
+  [DefenseCode.HOLO_DECOY]: '/troops/seeker.png',
 }
 
 export const defenseImageSrc = (code: DefenseCode): string => placeholder_image_src[code]

@@ -7,6 +7,7 @@ import { LayoutDetailsContent } from '#ui/layout/details/content'
 import { formatCoordinates } from '#helpers/transform'
 import { CombatStrategyLabels } from '#movement/translations'
 import {
+  confederationDefenseLines,
   defenseLosses,
   formatCombatModifiers,
   formatShieldReduction,
@@ -145,6 +146,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
     const has_spores = battle.round_summaries.some(row => (row.spore_reduction ?? 0) > 0)
     const has_barbed_wire = battle.round_summaries.some(row => (row.barbed_wire_reduction ?? 0) > 0)
     const regrowth = battle.perspective === 'defender' ? regrowthLines(battle.outcome.regrown_defenses) : []
+    const confederation_lines = confederationDefenseLines(battle.round_summaries)
     return (
       <LayoutDetailsContent>
         <h1>{ReportTypeLabels[report.type]}</h1>
@@ -243,6 +245,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
           {battle.outcome.destroyed_temp_outpost && <li>Avant-poste temporaire détruit</li>}
           {battle.outcome.attacker_retreated && <li>Retraite de l&apos;attaquant</li>}
           {regrowth.map(line => <li key={line}>{line}</li>)}
+          {confederation_lines.map(line => <li key={line}>{line}</li>)}
         </ul>
       </LayoutDetailsContent>
     )

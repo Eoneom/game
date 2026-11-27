@@ -357,6 +357,14 @@ const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> =
         {(row.barbed_wire_reduction ?? 0) > 0 ? ` · Barbelés -${Math.round((row.barbed_wire_reduction ?? 0) * 100)} %` : null}
       </p>
     ) : null}
+    {(row.decoy_absorbed ?? 0) > 0 || row.railgun_doubled ? (
+      <p className="m-0 leading-tight">
+        {[
+          (row.decoy_absorbed ?? 0) > 0 ? `Leurres ${row.decoy_absorbed} pertes absorbées` : null,
+          row.railgun_doubled ? 'Canon électromagnétique ×2' : null,
+        ].filter(Boolean).join(' · ')}
+      </p>
+    ) : null}
     <div>
       <p className="m-0 mb-0.5 text-[10px] uppercase tracking-wide text-amber-dim">Pertes att.</p>
       <TroopLossList losses={row.attacker_losses} compact />

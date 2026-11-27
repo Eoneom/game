@@ -2,7 +2,7 @@ import { FactionCode } from '@eoneom/api-client'
 
 interface FactionTranslation {
   name: string
-  /** Signup card copy (slices 036 / 037), for playable factions. */
+  /** Signup card copy (slices 036 / 037 / 039), for playable factions. */
   lore?: string
   playstyle?: string
 }
@@ -11,7 +11,7 @@ export const FactionTranslations: Record<FactionCode, FactionTranslation> = {
   [FactionCode.THE_CONFEDERATION]: {
     name: 'La confédération',
     lore: 'Héritiers de l\'ordre d\'avant l\'effondrement, les citoyens de la Confédération rebâtissent ville après ville avec ce que les ruines leur laissent.',
-    playstyle: 'Armées polyvalentes, production équilibrée.',
+    playstyle: 'Logistique supérieure : +10 % de transport, +5 % de vitesse hors combat',
   },
   [FactionCode.THE_TECHNOLOGICAL_SINGULARITY]: {
     name: 'Singularité technologique'
