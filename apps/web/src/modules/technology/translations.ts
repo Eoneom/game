@@ -73,6 +73,16 @@ export const TechnologyTranslations: Record<TechnologyCode, TechnologyTranslatio
     name: 'Fortification',
     description: 'Béton armé de rebuts, blindages superposés et circuits de tir redondants rendent les défenses de ville plus coriaces',
     effect: 'Augmente l\'attaque et la vie des défenses de 3% par niveau. Débloque la tourelle, le générateur de bouclier et la batterie plasma'
+  },
+  [TechnologyCode.ESPIONAGE]: {
+    name: 'Espionnage',
+    description: 'Des éclaireurs discrets, des relais d\'écoute bricolés et une patience infinie pour voir sans être vus',
+    effect: 'Débloque l\'ordre « Espionner » pour les éclaireurs. Chaque niveau au-dessus de la Détection adverse améliore les chances de succès et le détail des rapports'
+  },
+  [TechnologyCode.DETECTION]: {
+    name: 'Détection',
+    description: 'Guetteurs, capteurs de vibration et balises de proximité surveillent les abords de nos positions',
+    effect: 'Signale les attaques entrantes : cible et heure d\'arrivée au niveau 1, attaquant au niveau 2, taille de l\'armée au niveau 3, composition exacte à partir du niveau 4. Protège aussi contre les espions'
   }
 }
 
@@ -80,4 +90,5 @@ export const TechnologyBranchLabels: Record<TechnologyBranch, string> = {
   [TechnologyBranch.FOUNDATIONS]: 'Fondations',
   [TechnologyBranch.ARSENAL]: 'Arsenal',
   [TechnologyBranch.ECONOMY]: 'Économie',
+  [TechnologyBranch.INTELLIGENCE]: 'Renseignement',
 }

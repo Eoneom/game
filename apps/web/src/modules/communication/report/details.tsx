@@ -14,6 +14,7 @@ import {
 } from '#communication/report/translations'
 import { DefenseTranslations } from '#defense/translations'
 import { defenseImageSrc } from '#defense/image'
+import { SpyDetectedReportDetails, SpyReportDetails } from '#communication/report/spy-details'
 
 interface Props {
   report?: Report
@@ -40,6 +41,14 @@ const winnerLabel = (winner: string) => {
 export const ReportDetails: React.FC<Props> = ({ report }) => {
   if (!report) {
     return null
+  }
+
+  if (report.type === ReportType.SPY && report.spy) {
+    return <SpyReportDetails report={report} spy={report.spy} />
+  }
+
+  if (report.type === ReportType.SPY_DETECTED && report.spy_detected) {
+    return <SpyDetectedReportDetails report={report} spyDetected={report.spy_detected} />
   }
 
   if (report.type === ReportType.BATTLE && report.battle) {

@@ -15,6 +15,7 @@ import {
   TroopError,
   WorldError,
   CombatError,
+  IntelError,
 } from '@eoneom/api-client'
 
 const FALLBACK_MESSAGE = 'Une erreur est survenue'
@@ -93,6 +94,10 @@ const ErrorTranslations: Record<string, string> = {
   [CombatError.SCOUT_NOT_ALLOWED_ON_ATTACK]: 'Les éclaireurs ne peuvent pas participer à une attaque',
   [CombatError.STRATEGY_REQUIRED]: 'Choisissez une stratégie de combat',
   [CombatError.BATTLE_NOT_FOUND]: 'Bataille introuvable',
+
+  [IntelError.ESPIONAGE_REQUIRED]: 'Recherchez l\'Espionnage pour envoyer des espions',
+  [IntelError.SCOUT_ONLY]: 'Seuls des éclaireurs peuvent espionner',
+  [IntelError.NO_VALID_TARGET]: 'Aucune cible ennemie à espionner à cette destination',
 
   [WorldError.ALREADY_EXISTS]: 'Ce monde existe déjà',
   [WorldError.CELL_NOT_FOUND]: 'Case introuvable',

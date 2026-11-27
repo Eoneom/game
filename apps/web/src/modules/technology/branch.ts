@@ -4,6 +4,7 @@ export enum TechnologyBranch {
   FOUNDATIONS = 'foundations',
   ARSENAL = 'arsenal',
   ECONOMY = 'economy',
+  INTELLIGENCE = 'intelligence',
 }
 
 /** Display order of branches in the technology list. */
@@ -11,6 +12,7 @@ const technology_branch_order: TechnologyBranch[] = [
   TechnologyBranch.FOUNDATIONS,
   TechnologyBranch.ARSENAL,
   TechnologyBranch.ECONOMY,
+  TechnologyBranch.INTELLIGENCE,
 ]
 
 export const technology_branch: Record<TechnologyCode, TechnologyBranch> = {
@@ -27,6 +29,8 @@ export const technology_branch: Record<TechnologyCode, TechnologyBranch> = {
   [TechnologyCode.AGRONOMY]: TechnologyBranch.ECONOMY,
   [TechnologyCode.STORAGE_COMPRESSION]: TechnologyBranch.ECONOMY,
   [TechnologyCode.PLASMA_CONTAINMENT]: TechnologyBranch.ECONOMY,
+  [TechnologyCode.ESPIONAGE]: TechnologyBranch.INTELLIGENCE,
+  [TechnologyCode.DETECTION]: TechnologyBranch.INTELLIGENCE,
 }
 
 /** Groups items by branch in `technology_branch_order`, keeping input order within a branch; empty branches are dropped. */

@@ -19,12 +19,15 @@ describe('technology_branch', () => {
     expect(technology_branch[TechnologyCode.TACTICAL_PROPULSION]).toBe(TechnologyBranch.ARSENAL)
     expect(technology_branch[TechnologyCode.STORAGE_COMPRESSION]).toBe(TechnologyBranch.ECONOMY)
     expect(technology_branch[TechnologyCode.PLASMA_CONTAINMENT]).toBe(TechnologyBranch.ECONOMY)
+    expect(technology_branch[TechnologyCode.ESPIONAGE]).toBe(TechnologyBranch.INTELLIGENCE)
+    expect(technology_branch[TechnologyCode.DETECTION]).toBe(TechnologyBranch.INTELLIGENCE)
   })
 
   it('has French labels for every branch', () => {
     expect(TechnologyBranchLabels[TechnologyBranch.FOUNDATIONS]).toBe('Fondations')
     expect(TechnologyBranchLabels[TechnologyBranch.ARSENAL]).toBe('Arsenal')
     expect(TechnologyBranchLabels[TechnologyBranch.ECONOMY]).toBe('Économie')
+    expect(TechnologyBranchLabels[TechnologyBranch.INTELLIGENCE]).toBe('Renseignement')
   })
 })
 

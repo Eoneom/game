@@ -23,6 +23,8 @@ const EXPLORED_CELL_ACTIONS = [
   MovementAction.BASE,
   MovementAction.TRANSPORT,
   MovementAction.ATTACK,
+  // Shown only for scouts-only selections (slice 030).
+  MovementAction.SPY,
 ] as const
 
 export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, viewport }) => {

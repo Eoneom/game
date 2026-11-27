@@ -1,6 +1,7 @@
 import React from 'react'
 import { HeaderTitle } from '#ui/header/title'
 import { HeaderResources } from '#ui/header/resources'
+import { HeaderIncomingAttacks } from '#ui/header/incoming'
 import { formatCoordinates } from '#helpers/transform'
 import { useLocation } from '#location/context'
 import { useGetCity } from '#city/hooks'
@@ -25,6 +26,7 @@ export const Header: React.FC = () => {
           cityId={city?.id}
           outpostId={city ? undefined : outpost?.id}
         />
+        <HeaderIncomingAttacks cityId={cityId ?? undefined} outpostId={cityId ? undefined : outpostId ?? undefined} />
       </div>
       <div className="justify-self-end [&_ul]:m-0 [&_ul]:flex [&_ul]:list-none [&_ul]:gap-3 [&_ul]:p-0">
         <HeaderResources city={city ?? null} outpost={outpost ?? null} />

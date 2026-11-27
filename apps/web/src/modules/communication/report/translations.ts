@@ -6,6 +6,8 @@ export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.REBASE]: 'Rebase',
   [ReportType.TRANSPORT]: 'Transport',
   [ReportType.BATTLE]: 'Bataille',
+  [ReportType.SPY]: 'Espionnage',
+  [ReportType.SPY_DETECTED]: 'Espion repéré',
 }
 
 export type BattleResultKind = 'victory' | 'defeat' | 'draw'

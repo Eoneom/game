@@ -4,6 +4,7 @@ import {
   Coordinates,
   MovementAction,
   OutpostType,
+  TechnologyCode,
   TroopCode,
   resource_transport_weight,
 } from '@eoneom/api-client'
@@ -23,6 +24,10 @@ import { estimateMovement } from '../api/estimate'
 import { useAuth } from '#auth/context'
 import { useCreateMovement, useMovementCapacity } from '#troop/hooks'
 import { MovementCapacityReadout } from '#movement/capacity'
+import { useDestinationStance } from '#movement/api/destination'
+import { isScoutOnlySelection, isSpyActionAvailable } from '#movement/spy'
+import { useListTechnologies } from '#technology/hooks'
+import { MovementCreateSpyPreview } from './spy'
 import { Button } from '#ui/button'
 
 type MovementCreateProps = (
@@ -98,6 +103,18 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   )
   const estimateResources = action === MovementAction.TRANSPORT ? resources : undefined
 
+  // Slice 030: « Espionner » needs scouts only and a destination that is not a same-faction location.
+  const scoutOnly = isScoutOnlySelection(selectedTroopList)
+  const { data: destinationStance } = useDestinationStance(destination, scoutOnly)
+  const { data: technologyList } = useListTechnologies()
+  const espionageLevel = technologyList?.technologies.find(technology => technology.code === TechnologyCode.ESPIONAGE)?.level ?? 0
+  const spyAvailable = isSpyActionAvailable({ troops: selectedTroopList, stance: destinationStance })
+  const availableActions = useMemo(
+    () => (allowedActions ?? Object.values(MovementAction))
+      .filter(movementAction => movementAction !== MovementAction.SPY || spyAvailable),
+    [allowedActions, spyAvailable]
+  )
+
   useEffect(() => {
     if (fixedDestination) {
       setDestination(fixedDestination)
@@ -105,10 +122,10 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   }, [fixedDestination?.x, fixedDestination?.y, fixedDestination])
 
   useEffect(() => {
-    if (allowedActions && !allowedActions.includes(action)) {
-      setAction(allowedActions[0])
+    if (!availableActions.includes(action)) {
+      setAction(availableActions.includes(MovementAction.BASE) ? MovementAction.BASE : availableActions[0])
     }
-  }, [allowedActions, action])
+  }, [availableActions, action])
 
   useEffect(() => {
     launchMovementEstimation()
@@ -187,6 +204,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
     && Boolean(estimation.distance)
     && (action !== MovementAction.TRANSPORT || usedCapacity > 0)
     && (action !== MovementAction.ATTACK || combatStrategy)
+    && (action !== MovementAction.SPY || (spyAvailable && espionageLevel > 0))
 
   return (
     <form
@@ -218,8 +236,14 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
           <MovementCreateAction
             action={action}
             onChange={setAction}
-            allowedActions={allowedActions}
+            allowedActions={availableActions}
           />
+          {action === MovementAction.SPY && (
+            <MovementCreateSpyPreview
+              espionageLevel={espionageLevel}
+              scoutCount={selectedTroopList.reduce((total, troop) => total + troop.count, 0)}
+            />
+          )}
           {action === MovementAction.ATTACK && (
             <MovementCreateCombatStrategy
               strategy={combatStrategy}

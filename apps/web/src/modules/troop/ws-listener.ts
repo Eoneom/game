@@ -1,6 +1,7 @@
-import { AppEvent } from '@eoneom/api-client'
+import { AppEvent, type MovementIncomingEventPayload } from '@eoneom/api-client'
 import { toast } from 'react-toastify'
 import { translateError } from '#helpers/error-translations'
+import { formatDate } from '#helpers/transform'
 import { wsClient } from '#helpers/websocket'
 import { queryClient } from '#helpers/query-client'
 import { troopKeys } from '#troop/hooks'
@@ -24,6 +25,20 @@ export function registerTroopWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: ['reports'] })
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
+  })
+
+  // Slice 030: an attack was launched at one of our positions (only sent once detection ≥ 1).
+  wsClient.on<MovementIncomingEventPayload>(AppEvent.MovementIncoming, ({ movement_id, arrive_at }) => {
+    toast.warn(`Attaque entrante ! Arrivée prévue ${formatDate(arrive_at)}`, {
+      toastId: `movement-incoming-${movement_id}`,
+      autoClose: 8000,
+    })
+    queryClient.invalidateQueries({ queryKey: troopKeys.incomingMovements })
+  })
+
+  // A finished Détection level adds detail to incoming attacks at once.
+  wsClient.on(AppEvent.TechnologyResearchFinished, () => {
+    queryClient.invalidateQueries({ queryKey: troopKeys.incomingMovements })
   })
 
   wsClient.on<{ city_id: string }>(AppEvent.TroopRecruitmentUpdated, ({ city_id }) => {

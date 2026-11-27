@@ -17,6 +17,7 @@ export const troopKeys = {
   detail: (troopId: string) => ['troop', troopId] as const,
   movements: ['movements'] as const,
   movementCapacity: ['movements', 'capacity'] as const,
+  incomingMovements: ['movements', 'incoming'] as const,
   movement: (id: string) => ['movement', id] as const,
 }
 
@@ -158,6 +159,23 @@ export const useMovementCapacity = () => {
       if (isError(res)) throw new Error(res.error_code)
       if (!res.data) throw new Error('no data')
       return res.data
+    },
+    enabled: !!token,
+  })
+}
+
+/** Incoming attacks filtered by the player's live detection level (slice 030); empty at level 0. */
+export const useListIncomingMovements = () => {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: troopKeys.incomingMovements,
+    queryFn: async () => {
+      if (!token) throw new Error('no token')
+      const res = await client.troop.listIncomingMovement(token)
+      if (isError(res)) throw new Error(res.error_code)
+      if (!res.data) throw new Error('no data')
+      return res.data.movements
     },
     enabled: !!token,
   })

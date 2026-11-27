@@ -2,6 +2,7 @@ import React from 'react'
 
 import { LayoutPage } from '#ui/layout/page'
 import { MovementList } from '#movement/list'
+import { IncomingMovementList } from '#movement/incoming'
 import { MovementDetails } from '#movement/details'
 import { MovementCreate } from '#movement/create'
 import { useGetMovement } from '#troop/hooks'
@@ -24,6 +25,7 @@ export const MovementPage: React.FC<MovementPageProps> = ({ cityId, outpostId, m
           : outpostId
             ? <MovementCreate outpostId={outpostId} />
             : null}
+        <IncomingMovementList />
         <MovementList />
       </div>
     </LayoutPage>
