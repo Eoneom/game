@@ -1,40 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { FactionCode, OutpostType, TroopCode } from '@eoneom/api-client'
+import { TroopCode } from '@eoneom/api-client'
 
 import {
-  destinationStance,
   formatSpySuccessPreview,
   isScoutOnlySelection,
-  isSpyActionAvailable,
   spySuccessPreview,
 } from '#movement/spy'
 
+/** Destination stance and « Espionner » gating moved to the send wizard matrix (`send/actions.test.ts`, slice 045). */
 describe('spy movement helpers (slice 030)', () => {
   it('accepts scouts-only selections', () => {
     expect(isScoutOnlySelection([{ code: TroopCode.EXPLORER, count: 2 }, { code: TroopCode.SEEKER, count: 1 }])).toBe(true)
     expect(isScoutOnlySelection([{ code: TroopCode.EXPLORER, count: 2 }, { code: TroopCode.LEGIONNAIRE, count: 1 }])).toBe(false)
     expect(isScoutOnlySelection([])).toBe(false)
-  })
-
-  it('reads the destination stance from the map settlements', () => {
-    const settlements = {
-      cities: [{ id: 'c', name: 'Bastion', player_id: 'p', faction_code: FactionCode.THE_ASH_LITURGY, alliance_tag: null, coordinates: { x: 4, y: 4 } }],
-      outposts: [{ id: 'o', player_id: 'q', faction_code: FactionCode.THE_CONFEDERATION, alliance_tag: null, type: OutpostType.PERMANENT, coordinates: { x: 5, y: 5 } }],
-    }
-    const viewer_faction_code = FactionCode.THE_CONFEDERATION
-
-    expect(destinationStance({ coordinates: { x: 4, y: 4 }, viewer_faction_code, settlements })).toBe('enemy')
-    expect(destinationStance({ coordinates: { x: 5, y: 5 }, viewer_faction_code, settlements })).toBe('friendly')
-    expect(destinationStance({ coordinates: { x: 6, y: 6 }, viewer_faction_code, settlements })).toBe('none')
-  })
-
-  it('offers « Espionner » for scouts aimed at a location that is not same-faction', () => {
-    const scouts = [{ code: TroopCode.EXPLORER, count: 1 }]
-    expect(isSpyActionAvailable({ troops: scouts, stance: 'enemy' })).toBe(true)
-    expect(isSpyActionAvailable({ troops: scouts, stance: 'none' })).toBe(true)
-    expect(isSpyActionAvailable({ troops: scouts, stance: 'friendly' })).toBe(false)
-    expect(isSpyActionAvailable({ troops: scouts, stance: undefined })).toBe(false)
-    expect(isSpyActionAvailable({ troops: [{ code: TroopCode.LEGIONNAIRE, count: 1 }], stance: 'enemy' })).toBe(false)
   })
 
   it('previews the odds from the known espionage level only', () => {

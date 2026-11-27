@@ -13,7 +13,6 @@ import {
   TroopGetMovementDataResponse,
   TroopListDataResponse,
   TroopListMovementDataResponse,
-  TroopMovementEstimateDataResponse,
   WorldGetCellsDataResponse,
 } from '@eoneom/api-client'
 
@@ -42,7 +41,6 @@ export type TroopItem = TroopListDataResponse['troops'][number]
 
 export type Movement = TroopGetMovementDataResponse
 export type MovementItem = TroopListMovementDataResponse['movements'][number]
-export type MovementEstimation = TroopMovementEstimateDataResponse
 
 export type Report = CommunicationGetReportDataResponse
 export type ReportItem = CommunicationListReportDataResponse['reports'][number]

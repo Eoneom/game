@@ -8,7 +8,7 @@ interface Props {
   outpostId?: string
 }
 
-/** Incoming attack count (slice 030); the list is empty below detection 1, so nothing shows then. */
+/** Incoming attack count (slice 030), linking to the « Entrants » tab (slice 045); hidden below detection 1. */
 export const HeaderIncomingAttacks: React.FC<Props> = ({ cityId, outpostId }) => {
   const { data: movements = [] } = useListIncomingMovements()
 
@@ -19,6 +19,7 @@ export const HeaderIncomingAttacks: React.FC<Props> = ({ cityId, outpostId }) =>
   const RouterLink = Link as React.ComponentType<{
     to: string
     params?: Record<string, string>
+    search?: Record<string, string>
     className?: string
     title?: string
     children: React.ReactNode
@@ -29,7 +30,7 @@ export const HeaderIncomingAttacks: React.FC<Props> = ({ cityId, outpostId }) =>
 
   if (cityId) {
     return (
-      <RouterLink to="/city/$cityId/world/movement" params={{ cityId }} className={className} title="Attaques entrantes">
+      <RouterLink to="/city/$cityId/world/movement" params={{ cityId }} search={{ tab: 'entrants' }} className={className} title="Attaques entrantes">
         {label}
       </RouterLink>
     )
@@ -37,7 +38,7 @@ export const HeaderIncomingAttacks: React.FC<Props> = ({ cityId, outpostId }) =>
 
   if (outpostId) {
     return (
-      <RouterLink to="/outpost/$outpostId/world/movement" params={{ outpostId }} className={className} title="Attaques entrantes">
+      <RouterLink to="/outpost/$outpostId/world/movement" params={{ outpostId }} search={{ tab: 'entrants' }} className={className} title="Attaques entrantes">
         {label}
       </RouterLink>
     )

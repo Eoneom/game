@@ -1,6 +1,4 @@
 import {
-  Coordinates,
-  FactionCode,
   SPY_SUCCESS_BASE,
   SPY_SUCCESS_MAX,
   SPY_SUCCESS_MIN,
@@ -9,7 +7,6 @@ import {
   TroopCode,
   TroopRole,
   troop_role,
-  WorldGetCellsDataResponse,
 } from '@eoneom/api-client'
 
 /** A spy movement carries `scout`-role troops only (slice 030). */
@@ -17,37 +14,6 @@ export const isScoutOnlySelection = (troops: { code: TroopCode; count: number }[
   const sent = troops.filter(troop => troop.count > 0)
   return sent.length > 0 && sent.every(troop => troop_role[troop.code] === TroopRole.SCOUT)
 }
-
-/**
- * What the client knows about the destination: an enemy-faction city or outpost, a same-faction one,
- * or no settlement (a field stack may still be there: field stacks are not on the map).
- */
-export type DestinationStance = 'enemy' | 'friendly' | 'none'
-
-export const destinationStance = ({
-  coordinates,
-  viewer_faction_code,
-  settlements,
-}: {
-  coordinates: Coordinates
-  viewer_faction_code: FactionCode
-  settlements: WorldGetCellsDataResponse['settlements']
-}): DestinationStance => {
-  const marker = [ ...settlements.cities, ...settlements.outposts ].find(settlement =>
-    settlement.coordinates.x === coordinates.x && settlement.coordinates.y === coordinates.y
-  )
-  if (!marker) return 'none'
-  return marker.faction_code === viewer_faction_code ? 'friendly' : 'enemy'
-}
-
-/** "Espionner" is offered for scouts-only selections aimed at a location that is not same-faction. */
-export const isSpyActionAvailable = ({
-  troops,
-  stance,
-}: {
-  troops: { code: TroopCode; count: number }[]
-  stance: DestinationStance | undefined
-}): boolean => isScoutOnlySelection(troops) && stance !== undefined && stance !== 'friendly'
 
 const formatPercent = (probability: number): string => `${Math.round(probability * 100)} %`
 

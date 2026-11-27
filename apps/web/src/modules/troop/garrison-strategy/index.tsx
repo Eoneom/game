@@ -1,7 +1,7 @@
 import React from 'react'
 import { CombatStrategy } from '@eoneom/api-client'
 
-import { MovementCreateCombatStrategy } from '#movement/create/strategy'
+import { MovementCreateCombatStrategy } from '#movement/send/strategy'
 
 interface Props {
   strategy: CombatStrategy

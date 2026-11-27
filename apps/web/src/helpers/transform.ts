@@ -52,15 +52,6 @@ export const formatDate = (timestamp: number): string => {
   return `${dd}/${mm}/${yyyy} ${hh}:${min}`
 }
 
-export const getRemainingSeconds = (date?: number): number => {
-  if (!date) {
-    return 0
-  }
-
-  const remainingTime = (date ?? 0) - (new Date().getTime())
-  return Math.ceil(remainingTime/1000)
-}
-
 export const transformHourlyEarnings = (value: number): string => {
   return `~${transformDecimals(Math.round(value * 3600))}/h`
 }

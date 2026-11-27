@@ -31,8 +31,8 @@ vi.mock('@tanstack/react-router', () => ({
 }))
 
 const cities = [
-  { id: 'c1', name: 'Alpha' },
-  { id: 'c2', name: 'Beta' },
+  { id: 'c1', name: 'Alpha', coordinates: { x: 1, y: 1 } },
+  { id: 'c2', name: 'Beta', coordinates: { x: 2, y: 2 } },
 ]
 
 describe('NavLocationCities', () => {

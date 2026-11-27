@@ -46,7 +46,9 @@ import { Route as CityCityIdBaseDefenseRouteImport } from './routes/city/$cityId
 import { Route as CityCityIdBaseBuildingRouteImport } from './routes/city/$cityId/base/building'
 import { Route as OutpostOutpostIdWorldMovementRouteRouteImport } from './routes/outpost/$outpostId/world/movement/route'
 import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/$cityId/world/movement/route'
+import { Route as OutpostOutpostIdWorldMovementSendRouteImport } from './routes/outpost/$outpostId/world/movement/send'
 import { Route as OutpostOutpostIdWorldMovementMovementIdRouteImport } from './routes/outpost/$outpostId/world/movement/$movementId'
+import { Route as CityCityIdWorldMovementSendRouteImport } from './routes/city/$cityId/world/movement/send'
 import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/city/$cityId/world/movement/$movementId'
 
 const RankingRoute = RankingRouteImport.update({
@@ -240,11 +242,23 @@ const CityCityIdWorldMovementRouteRoute =
     path: '/world/movement',
     getParentRoute: () => CityCityIdRouteRoute,
   } as any)
+const OutpostOutpostIdWorldMovementSendRoute =
+  OutpostOutpostIdWorldMovementSendRouteImport.update({
+    id: '/send',
+    path: '/send',
+    getParentRoute: () => OutpostOutpostIdWorldMovementRouteRoute,
+  } as any)
 const OutpostOutpostIdWorldMovementMovementIdRoute =
   OutpostOutpostIdWorldMovementMovementIdRouteImport.update({
     id: '/$movementId',
     path: '/$movementId',
     getParentRoute: () => OutpostOutpostIdWorldMovementRouteRoute,
+  } as any)
+const CityCityIdWorldMovementSendRoute =
+  CityCityIdWorldMovementSendRouteImport.update({
+    id: '/send',
+    path: '/send',
+    getParentRoute: () => CityCityIdWorldMovementRouteRoute,
   } as any)
 const CityCityIdWorldMovementMovementIdRoute =
   CityCityIdWorldMovementMovementIdRouteImport.update({
@@ -291,7 +305,9 @@ export interface FileRoutesByFullPath {
   '/city/$cityId/base/': typeof CityCityIdBaseIndexRoute
   '/city/$cityId/world/': typeof CityCityIdWorldIndexRoute
   '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/city/$cityId/world/movement/send': typeof CityCityIdWorldMovementSendRoute
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/send': typeof OutpostOutpostIdWorldMovementSendRoute
 }
 export interface FileRoutesByTo {
   '/exchange': typeof ExchangeRoute
@@ -328,7 +344,9 @@ export interface FileRoutesByTo {
   '/city/$cityId/base': typeof CityCityIdBaseIndexRoute
   '/city/$cityId/world': typeof CityCityIdWorldIndexRoute
   '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/city/$cityId/world/movement/send': typeof CityCityIdWorldMovementSendRoute
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/send': typeof OutpostOutpostIdWorldMovementSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -370,7 +388,9 @@ export interface FileRoutesById {
   '/city/$cityId/base/': typeof CityCityIdBaseIndexRoute
   '/city/$cityId/world/': typeof CityCityIdWorldIndexRoute
   '/city/$cityId/world/movement/$movementId': typeof CityCityIdWorldMovementMovementIdRoute
+  '/city/$cityId/world/movement/send': typeof CityCityIdWorldMovementSendRoute
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
+  '/outpost/$outpostId/world/movement/send': typeof OutpostOutpostIdWorldMovementSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -412,7 +432,9 @@ export interface FileRouteTypes {
     | '/city/$cityId/base/'
     | '/city/$cityId/world/'
     | '/city/$cityId/world/movement/$movementId'
+    | '/city/$cityId/world/movement/send'
     | '/outpost/$outpostId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/exchange'
@@ -449,7 +471,9 @@ export interface FileRouteTypes {
     | '/city/$cityId/base'
     | '/city/$cityId/world'
     | '/city/$cityId/world/movement/$movementId'
+    | '/city/$cityId/world/movement/send'
     | '/outpost/$outpostId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/send'
   id:
     | '__root__'
     | '/_shared'
@@ -490,7 +514,9 @@ export interface FileRouteTypes {
     | '/city/$cityId/base/'
     | '/city/$cityId/world/'
     | '/city/$cityId/world/movement/$movementId'
+    | '/city/$cityId/world/movement/send'
     | '/outpost/$outpostId/world/movement/$movementId'
+    | '/outpost/$outpostId/world/movement/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -767,12 +793,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CityCityIdWorldMovementRouteRouteImport
       parentRoute: typeof CityCityIdRouteRoute
     }
+    '/outpost/$outpostId/world/movement/send': {
+      id: '/outpost/$outpostId/world/movement/send'
+      path: '/send'
+      fullPath: '/outpost/$outpostId/world/movement/send'
+      preLoaderRoute: typeof OutpostOutpostIdWorldMovementSendRouteImport
+      parentRoute: typeof OutpostOutpostIdWorldMovementRouteRoute
+    }
     '/outpost/$outpostId/world/movement/$movementId': {
       id: '/outpost/$outpostId/world/movement/$movementId'
       path: '/$movementId'
       fullPath: '/outpost/$outpostId/world/movement/$movementId'
       preLoaderRoute: typeof OutpostOutpostIdWorldMovementMovementIdRouteImport
       parentRoute: typeof OutpostOutpostIdWorldMovementRouteRoute
+    }
+    '/city/$cityId/world/movement/send': {
+      id: '/city/$cityId/world/movement/send'
+      path: '/send'
+      fullPath: '/city/$cityId/world/movement/send'
+      preLoaderRoute: typeof CityCityIdWorldMovementSendRouteImport
+      parentRoute: typeof CityCityIdWorldMovementRouteRoute
     }
     '/city/$cityId/world/movement/$movementId': {
       id: '/city/$cityId/world/movement/$movementId'
@@ -830,12 +870,14 @@ const CityCityIdMovementRouteRouteWithChildren =
 
 interface CityCityIdWorldMovementRouteRouteChildren {
   CityCityIdWorldMovementMovementIdRoute: typeof CityCityIdWorldMovementMovementIdRoute
+  CityCityIdWorldMovementSendRoute: typeof CityCityIdWorldMovementSendRoute
 }
 
 const CityCityIdWorldMovementRouteRouteChildren: CityCityIdWorldMovementRouteRouteChildren =
   {
     CityCityIdWorldMovementMovementIdRoute:
       CityCityIdWorldMovementMovementIdRoute,
+    CityCityIdWorldMovementSendRoute: CityCityIdWorldMovementSendRoute,
   }
 
 const CityCityIdWorldMovementRouteRouteWithChildren =
@@ -899,12 +941,15 @@ const OutpostOutpostIdMovementRouteRouteWithChildren =
 
 interface OutpostOutpostIdWorldMovementRouteRouteChildren {
   OutpostOutpostIdWorldMovementMovementIdRoute: typeof OutpostOutpostIdWorldMovementMovementIdRoute
+  OutpostOutpostIdWorldMovementSendRoute: typeof OutpostOutpostIdWorldMovementSendRoute
 }
 
 const OutpostOutpostIdWorldMovementRouteRouteChildren: OutpostOutpostIdWorldMovementRouteRouteChildren =
   {
     OutpostOutpostIdWorldMovementMovementIdRoute:
       OutpostOutpostIdWorldMovementMovementIdRoute,
+    OutpostOutpostIdWorldMovementSendRoute:
+      OutpostOutpostIdWorldMovementSendRoute,
   }
 
 const OutpostOutpostIdWorldMovementRouteRouteWithChildren =

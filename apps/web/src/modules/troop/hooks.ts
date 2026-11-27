@@ -164,8 +164,13 @@ export const useMovementCapacity = () => {
   })
 }
 
+/** Polling of the movements page (slice 045); other readers rely on WS invalidations. */
+interface MovementListOptions {
+  refetchInterval?: number
+}
+
 /** Incoming attacks filtered by the player's live detection level (slice 030); empty at level 0. */
-export const useListIncomingMovements = () => {
+export const useListIncomingMovements = ({ refetchInterval }: MovementListOptions = {}) => {
   const { token } = useAuth()
 
   return useQuery({
@@ -178,10 +183,11 @@ export const useListIncomingMovements = () => {
       return res.data.movements
     },
     enabled: !!token,
+    refetchInterval,
   })
 }
 
-export const useListMovements = () => {
+export const useListMovements = ({ refetchInterval }: MovementListOptions = {}) => {
   const { token } = useAuth()
 
   return useQuery({
@@ -194,6 +200,7 @@ export const useListMovements = () => {
       return res.data.movements
     },
     enabled: !!token,
+    refetchInterval,
   })
 }
 
