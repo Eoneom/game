@@ -149,4 +149,50 @@ describe('ChatPanel', () => {
     expect(screen.getByRole('tab', { name: /Alliance/ })).toBeInTheDocument()
     allianceMember = false
   })
+
+  it('opens to 288 px with a log of messages controlled by the toggle (slice 041)', () => {
+    const { container } = render(<ChatPanel />)
+    const section = container.querySelector('section[aria-label="Discussion"]')
+    const toggle = screen.getByRole('button', { name: /Discussion/ })
+    expect(section).toHaveClass('h-10')
+    expect(toggle).toHaveAttribute('aria-controls', 'chat-messages')
+
+    fireEvent.click(toggle)
+
+    expect(section).toHaveClass('h-72')
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('id', 'chat-messages')
+    expect(screen.getByRole('log', { name: 'Messages' })).toHaveTextContent('bonjour')
+  })
+
+  it('moves between tabs with the arrow keys, Home and End, and selects with a click (slice 041)', () => {
+    allianceMember = true
+    render(<ChatPanel />)
+
+    expect(screen.getByRole('tablist', { name: 'Canaux' })).toBeInTheDocument()
+    const [ global, faction, alliance ] = screen.getAllByRole('tab')
+    expect(global).toHaveAttribute('aria-selected', 'true')
+    expect(global).toHaveAttribute('tabindex', '0')
+    expect(faction).toHaveAttribute('tabindex', '-1')
+    expect(global).toHaveAttribute('aria-controls', 'chat-messages')
+
+    global.focus()
+    fireEvent.keyDown(global, { key: 'ArrowRight' })
+    expect(faction).toHaveFocus()
+    fireEvent.keyDown(faction, { key: 'End' })
+    expect(alliance).toHaveFocus()
+    fireEvent.keyDown(alliance, { key: 'ArrowRight' })
+    expect(global).toHaveFocus()
+    fireEvent.keyDown(global, { key: 'ArrowLeft' })
+    expect(alliance).toHaveFocus()
+    fireEvent.keyDown(alliance, { key: 'Home' })
+    expect(global).toHaveFocus()
+    // Arrows only move the focus (manual activation).
+    expect(global).toHaveAttribute('aria-selected', 'true')
+
+    fireEvent.click(faction)
+    expect(faction).toHaveAttribute('aria-selected', 'true')
+    expect(faction).toHaveAttribute('tabindex', '0')
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', faction.id)
+    allianceMember = false
+  })
 })

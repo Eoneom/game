@@ -7,6 +7,7 @@ import { isError } from '#helpers/assertion'
 import { translateError } from '#helpers/error-translations'
 import { useAuth } from '#auth/context'
 import { cityKeys } from '#city/hooks'
+import { activityKeys } from '#location/activity-hooks'
 import { triggerFxBurst } from '#ui/fx'
 
 export const defenseKeys = {
@@ -44,6 +45,7 @@ export const useBuildDefense = (cityId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: defenseKeys.list(cityId) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
       triggerFxBurst()
     },
     onError: (err: Error) => toast.error(translateError(err.message)),
@@ -63,6 +65,7 @@ export const useCancelDefenseBuild = (cityId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: defenseKeys.list(cityId) })
       queryClient.invalidateQueries({ queryKey: cityKeys.detail(cityId) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     },
     onError: (err: Error) => toast.error(translateError(err.message)),
   })
@@ -83,6 +86,7 @@ export const useCancelQueuedDefenseBuild = (cityId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: defenseKeys.list(cityId) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     },
     onError: (err: Error) => toast.error(translateError(err.message)),
   })

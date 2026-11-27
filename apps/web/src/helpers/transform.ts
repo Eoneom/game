@@ -61,29 +61,17 @@ export const getRemainingSeconds = (date?: number): number => {
   return Math.ceil(remainingTime/1000)
 }
 
-export const transformMinuteEarnings = (value: number): string => {
-  return `~${transformDecimals(Math.round(value * 60))}/min`
-}
-
 export const transformHourlyEarnings = (value: number): string => {
   return `~${transformDecimals(Math.round(value * 3600))}/h`
 }
 
-export const transformDailyEarnings = (value: number): string => {
-  return `~${transformDecimals(Math.round(value * 3600 * 24))}/j`
-}
-
-export const formatEarningsRates = (earnings_per_second: number): string => {
-  return [
-    transformMinuteEarnings(earnings_per_second),
-    transformHourlyEarnings(earnings_per_second),
-    transformDailyEarnings(earnings_per_second),
-  ].join(' · ')
-}
-
+/** Compact number: 12480 → "12.48k". Zero is "0" (slice 041); a missing value is "". */
 export const transformDecimals = (value?: number): string => {
-  if (!value) {
+  if (value === undefined || Number.isNaN(value)) {
     return ''
+  }
+  if (value === 0) {
+    return '0'
   }
 
   const steps = [

@@ -1,196 +1,70 @@
 import React from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { render } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
 
-import { formatEarningsRates, transformDecimals } from '#helpers/transform'
 import { getEnergyDisplayStatus } from '#helpers/energy'
 
-import { HeaderResourcesItem } from './index'
+import { HeaderResourceChip } from './index'
 
-describe('HeaderResourcesItem', () => {
-  const baseProps = {
-    earnings_per_second: 1,
-    warehouse_full_in_seconds: 0,
-    icon: <span aria-hidden>icon</span>,
-  }
+const icon = <span aria-hidden>icon</span>
 
-  it('does not render a progress bar when warehouse_capacity is omitted', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          value={50}
-          icon={<span aria-hidden>icon</span>}
-        />
-      </ul>,
-    )
-    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
+const valueOf = (container: HTMLElement) => container.querySelector('.header-resource-chip [aria-hidden="true"].font-mono')
+
+describe('HeaderResourceChip', () => {
+  it('shows the compact stock with the exact value in the title and for screen readers', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Plastique" icon={icon} value={12480} capacity={100000} />)
+
+    expect(valueOf(container)).toHaveTextContent('12.48k')
+    const chip = container.querySelector('.header-resource-chip')
+    expect(chip?.getAttribute('title')).toBe(`Plastique ${(12480).toLocaleString('fr-FR')}`)
+    expect(chip?.textContent).toContain('Plastique')
   })
 
-  it('sets progress max to warehouse_capacity', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={50}
-          warehouse_capacity={200}
-        />
-      </ul>,
-    )
-    const progress = screen.getByRole('progressbar')
-    expect(progress).toHaveAttribute('max', '200')
-    expect(progress).toHaveAttribute('value', '50')
+  it('shows « 0 » for an empty stock', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Plasma" icon={icon} value={0} />)
+
+    expect(valueOf(container)).toHaveTextContent(/^0$/)
   })
 
-  it('does not add danger fill on progress when value is below 70% of capacity', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={50}
-          warehouse_capacity={100}
-        />
-      </ul>,
-    )
-    const progress = screen.getByRole('progressbar')
-    expect(progress.className).not.toContain('[&::-webkit-progress-value]:bg-danger')
+  it('shows no warning below 90 % of the warehouse', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Plastique" icon={icon} value={89} capacity={100} />)
+
+    expect(container.querySelector('[data-warning]')).toBeNull()
+    expect(valueOf(container)?.className).toContain('text-amber')
   })
 
-  it('adds danger fill on progress when value is at or above 70% of capacity', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={70}
-          warehouse_capacity={100}
-        />
-      </ul>,
-    )
-    expect(screen.getByRole('progressbar').className).toContain('[&::-webkit-progress-value]:bg-danger')
+  it('shows a danger dot from 90 % of the warehouse', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Plastique" icon={icon} value={90} capacity={100} />)
+
+    const dot = container.querySelector('[data-warning]')
+    expect(dot).toHaveAttribute('data-warning', 'near')
+    expect(dot?.className).toContain('bg-danger')
+    expect(valueOf(container)?.className).not.toContain('text-danger')
   })
 
-  it('adds danger class on resource item when value is at or above capacity', () => {
-    const { container } = render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={100}
-          warehouse_capacity={100}
-        />
-      </ul>,
-    )
-    const item = container.querySelector('.resource-item')
-    expect(item).toBeInTheDocument()
-    expect(item?.className).toContain('text-danger')
+  it('turns the value danger when the warehouse is full', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Champignon" icon={icon} value={100} capacity={100} />)
+
+    expect(container.querySelector('[data-warning]')).toHaveAttribute('data-warning', 'full')
+    expect(valueOf(container)?.className).toContain('text-danger')
   })
 
-  it('does not add danger class when below capacity', () => {
-    const { container } = render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={50}
-          warehouse_capacity={100}
-        />
-      </ul>,
-    )
-    const item = container.querySelector('.resource-item')
-    expect(item?.className).not.toContain('text-danger')
+  it('shows energy as consumption / production with its status colour', () => {
+    const { container, rerender } = render(<HeaderResourceChip kind="energy" name="Énergie" icon={icon} consumption={5} production={10} />)
+    expect(valueOf(container)).toHaveTextContent('5 / 10')
+    expect(valueOf(container)?.className).toContain('text-terminal')
+
+    rerender(<HeaderResourceChip kind="energy" name="Énergie" icon={icon} consumption={8} production={10} />)
+    expect(valueOf(container)?.className).toContain('text-amber')
+
+    rerender(<HeaderResourceChip kind="energy" name="Énergie" icon={icon} consumption={11} production={10} />)
+    expect(valueOf(container)?.className).toContain('text-danger')
   })
 
-  it('shows per-minute, hourly, and daily earnings under the stock value', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          earnings_per_second={1}
-          value={100}
-          warehouse_capacity={1000}
-        />
-      </ul>,
-    )
-    const li = screen.getByRole('listitem')
-    expect(within(li).getByText(formatEarningsRates(1))).toBeInTheDocument()
-  })
+  it('never renders a progress bar', () => {
+    const { container } = render(<HeaderResourceChip kind="stock" name="Plastique" icon={icon} value={50} capacity={100} />)
 
-  it('displays transformDecimals output for non-zero value', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          {...baseProps}
-          value={4242}
-          warehouse_capacity={10000}
-        />
-      </ul>,
-    )
-    const li = screen.getByRole('listitem')
-    expect(within(li).getByText(transformDecimals(4242))).toBeInTheDocument()
-  })
-
-  it('shows success styling when energy consumption is comfortably below production', () => {
-    const { container } = render(
-      <ul>
-        <HeaderResourcesItem
-          value={5}
-          secondary_value={10}
-          energy_production={10}
-          icon={<span aria-hidden>icon</span>}
-        />
-      </ul>,
-    )
-
-    const item = container.querySelector('.resource-item')
-    expect(item?.className).toContain('text-terminal')
-  })
-
-  it('shows amber when energy consumption is close to production', () => {
-    const { container } = render(
-      <ul>
-        <HeaderResourcesItem
-          value={8}
-          secondary_value={10}
-          energy_production={10}
-          icon={<span aria-hidden>icon</span>}
-        />
-      </ul>,
-    )
-
-    const item = container.querySelector('.resource-item')
-    expect(item).toBeInTheDocument()
-    expect(item?.className).toContain('text-amber')
-    expect(item?.className).not.toContain('text-terminal')
-    expect(item?.className).not.toContain('text-danger')
-  })
-
-  it('shows danger styling when energy consumption exceeds production', () => {
-    const { container } = render(
-      <ul>
-        <HeaderResourcesItem
-          value={11}
-          secondary_value={10}
-          energy_production={10}
-          icon={<span aria-hidden>icon</span>}
-        />
-      </ul>,
-    )
-
-    const item = container.querySelector('.resource-item')
-    expect(item?.className).toContain('text-danger')
-  })
-
-  it('renders energy usage progress bar', () => {
-    render(
-      <ul>
-        <HeaderResourcesItem
-          value={8}
-          secondary_value={10}
-          energy_production={10}
-          icon={<span aria-hidden>icon</span>}
-        />
-      </ul>,
-    )
-
-    const progress = screen.getByRole('progressbar')
-    expect(progress).toHaveAttribute('value', '80')
-    expect(progress).toHaveAttribute('max', '100')
+    expect(container.querySelector('[role="progressbar"], progress')).toBeNull()
   })
 })
 

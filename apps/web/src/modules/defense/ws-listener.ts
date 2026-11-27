@@ -5,11 +5,13 @@ import { wsClient } from '#helpers/websocket'
 import { queryClient } from '#helpers/query-client'
 import { cityKeys } from '#city/hooks'
 import { defenseKeys } from '#defense/hooks'
+import { activityKeys } from '#location/activity-hooks'
 
 export function registerDefenseWsListeners(): void {
   wsClient.on<{ city_id: string }>(AppEvent.DefenseBuildUpdated, ({ city_id }) => {
     queryClient.invalidateQueries({ queryKey: defenseKeys.list(city_id) })
     queryClient.invalidateQueries({ queryKey: cityKeys.detail(city_id) })
+    queryClient.invalidateQueries({ queryKey: activityKeys.all })
   })
 
   wsClient.on<{ city_id: string, defense_code: string, error_code: string }>(
@@ -17,6 +19,7 @@ export function registerDefenseWsListeners(): void {
     ({ city_id, error_code }) => {
       toast.error(`Fortification retirée de la file : ${translateError(error_code)}`)
       queryClient.invalidateQueries({ queryKey: defenseKeys.list(city_id) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     }
   )
 

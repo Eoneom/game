@@ -3,7 +3,7 @@ import { render, screen, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CombatStrategy, OutpostType } from '@eoneom/api-client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { vi } from 'vitest'
+import { afterEach, vi } from 'vitest'
 
 import { AuthProvider } from '#auth/context'
 import { LocationProvider } from '#location/context'
@@ -91,8 +91,19 @@ function renderWithOutpost(outpost: Outpost | null) {
   )
 }
 
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
+
 describe('OutpostPage', () => {
   beforeEach(() => {
+    // jsdom here has no localStorage; AuthProvider reads the token from it.
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key),
+    })
     mockSettleCity.mockReset()
     mockSetPermanent.mockReset()
     mockSetCombatStrategy.mockReset()
@@ -129,7 +140,7 @@ describe('OutpostPage', () => {
     expect(screen.getByRole('heading', { name: 'Production et terrain' })).toBeInTheDocument()
     expect(screen.getByText('Actuelle')).toBeInTheDocument()
     expect(screen.getByText('Terrain')).toBeInTheDocument()
-    expect(screen.getByText('Plasma')).toBeInTheDocument()
+    expect(screen.getByRole('rowheader', { name: 'Plasma' })).toBeInTheDocument()
   })
 
   it('hides production panel for temporary outpost', () => {

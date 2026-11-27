@@ -1,14 +1,15 @@
 import React from 'react'
 import { render, screen, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { OutpostType } from '@server-core/outpost/constant/type'
-import { vi } from 'vitest'
+import { CombatStrategy, OutpostType } from '@eoneom/api-client'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { City, Outpost } from '#types'
 import { AuthProvider } from '#auth/context'
 import { LocationProvider, useLocation } from '#location/context'
 import { cityKeys } from '#city/hooks'
 import { outpostKeys } from '#outpost/hooks'
+import { ResourcePanelProvider } from '#ui/header/resources/context'
 
 import { Header } from './index'
 
@@ -32,11 +33,14 @@ vi.mock('@tanstack/react-router', () => ({
     >
       {children}
     </a>
-  ) }))
+  ),
+  useLocation: () => ({ pathname: '/' }),
+}))
 
 const minimalCity = (overrides: Partial<City> = {}): City => ({
   id: 'city-1',
   name: 'Testville',
+  default_combat_strategy: CombatStrategy.BALANCED,
   plastic: 10,
   mushroom: 20,
   plasma: 0,
@@ -65,6 +69,7 @@ const minimalOutpost = (overrides: Partial<Outpost> = {}): Outpost => ({
   id: 'out-1',
   coordinates: { x: 6, y: 7 },
   type: OutpostType.TEMPORARY,
+  default_combat_strategy: CombatStrategy.BALANCED,
   plastic: 0,
   mushroom: 0,
   plasma: 0,
@@ -115,7 +120,9 @@ function renderHeader({ city, outpost, cityId, outpostId }: RenderOptions = {}) 
         <LocationProvider>
           {cityId && <SetLocation cityId={cityId} />}
           {outpostId && <SetLocation outpostId={outpostId} />}
-          <Header />
+          <ResourcePanelProvider>
+            <Header />
+          </ResourcePanelProvider>
         </LocationProvider>
       </AuthProvider>
     </QueryClientProvider>,
@@ -123,6 +130,20 @@ function renderHeader({ city, outpost, cityId, outpostId }: RenderOptions = {}) 
 }
 
 describe('Header', () => {
+  // jsdom here has no localStorage; AuthProvider reads the token from it.
+  beforeEach(() => {
+    const store = new Map<string, string>()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => store.set(key, value),
+      removeItem: (key: string) => store.delete(key),
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders brand heading', () => {
     renderHeader()
     expect(screen.getByRole('heading', { level: 3, name: 'EONEOM' })).toBeInTheDocument()
@@ -157,18 +178,26 @@ describe('Header', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('with city, shows resource progress bars', async () => {
+  it('shows the city coordinates next to the title', async () => {
+    const city = minimalCity({ id: 'c-5', name: 'Metro', coordinates: { x: 12, y: 7 } })
+    renderHeader({ city, cityId: 'c-5' })
+    await act(async () => {})
+    expect(screen.getByText('12.7')).toBeInTheDocument()
+  })
+
+  it('with city, shows the compact resource button and no progress bar in the bar', async () => {
     const city = minimalCity()
     renderHeader({ city, cityId: city.id })
     await act(async () => {})
-    expect(screen.getAllByRole('progressbar')).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'Ressources — afficher le détail' })).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
-  it('with outpost, shows resource items with progress bars', async () => {
+  it('with outpost, shows three resource chips and no progress bar in the bar', async () => {
     const outpost = minimalOutpost({ plastic: 100, mushroom: 200 })
-    renderHeader({ outpost, outpostId: outpost.id })
+    const { container } = renderHeader({ outpost, outpostId: outpost.id })
     await act(async () => {})
-    expect(screen.getAllByRole('listitem')).toHaveLength(3)
-    expect(screen.getAllByRole('progressbar')).toHaveLength(2)
+    expect(container.querySelectorAll('.header-resource-chip')).toHaveLength(3)
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 })

@@ -4,17 +4,13 @@ import classNames from 'classnames'
 import {
   formatCoordinates,
   transformDecimals,
-  transformHourlyEarnings,
 } from '#helpers/transform'
 import { useGetCity } from '#city/hooks'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconPlasma } from '#ui/icon/plasma'
 import { IconWater } from '#ui/icon/water'
-import {
-  formatTechnologyBonus,
-  ProductionTerrainReadout
-} from '#ui/production-terrain-readout'
+import { cityProductionRows, ProductionBreakdownTable } from '#ui/production-breakdown-table'
 import { EnergyReadout } from '#ui/energy-readout'
 
 interface Props {
@@ -153,34 +149,10 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
         </Panel>
 
         <Panel title="Production, énergie et terrain">
-          <ProductionTerrainReadout
-            current={city.earnings_per_second}
-            base={city.pre_cell_earnings_per_second}
-            terrain={city.cell_resource_coefficient}
-            technology={city.technology_production_multiplier}
-            faction={city.faction_production_multiplier}
+          <ProductionBreakdownTable
+            rows={cityProductionRows(city)}
+            energyRatio={city.production_energy_ratio}
           />
-          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-body">
-            <span className="flex items-center gap-1 text-amber-dim">
-              <IconPlasma /> Plasma
-            </span>
-            <span className="font-mono text-amber">
-              {transformHourlyEarnings(city.earnings_per_second.plasma)}
-              {city.technology_production_multiplier.plasma !== 1 ? (
-                <span className="ml-2 text-meta text-terminal">
-                  {formatTechnologyBonus(city.technology_production_multiplier.plasma)} techno
-                </span>
-              ) : null}
-            </span>
-          </p>
-          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-body">
-            <span className="flex items-center gap-1 text-amber-dim">
-              <IconWater /> Eau pure
-            </span>
-            <span className="font-mono text-amber">
-              {transformHourlyEarnings(city.earnings_per_second.water)}
-            </span>
-          </p>
           <div className="border-t border-rust/50 pt-3">
             <EnergyReadout
               consumption={city.energy_consumption}

@@ -25,7 +25,7 @@ export const HeaderIncomingAttacks: React.FC<Props> = ({ cityId, outpostId }) =>
   }>
 
   const label = `${movements.length} attaque${movements.length > 1 ? 's' : ''} entrante${movements.length > 1 ? 's' : ''}`
-  const className = 'mt-1 inline-block rounded-sm border border-danger bg-danger-deep/50 px-2 py-0.5 text-caption uppercase tracking-wide text-amber'
+  const className = 'inline-block shrink-0 rounded-sm border border-danger bg-danger-deep/50 px-2 py-0.5 text-caption uppercase tracking-wide text-amber'
 
   if (cityId) {
     return (

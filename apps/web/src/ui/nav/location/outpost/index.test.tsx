@@ -1,9 +1,11 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { OutpostType } from '@eoneom/api-client'
 
 import { NavLocationOutposts } from './index'
+
+const currentPath = vi.hoisted(() => ({ value: '/' }))
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
@@ -26,7 +28,8 @@ vi.mock('@tanstack/react-router', () => ({
       {children}
     </a>
   ),
-  useLocation: () => ({ pathname: '/' }) }))
+  useLocation: () => ({ pathname: currentPath.value }),
+}))
 
 const outposts = [
   {
@@ -47,5 +50,21 @@ describe('NavLocationOutposts', () => {
     render(<NavLocationOutposts outposts={outposts} countLimit={15} />)
 
     expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('Avant-postes 2/15')
+  })
+
+  it('shows an incoming-attack dot on targeted outposts only', () => {
+    render(<NavLocationOutposts outposts={outposts} countLimit={15} threatenedIds={new Set([ 'o2' ])} />)
+
+    expect(screen.getByRole('link', { name: '1.2' }).querySelector('[data-threat]')).toBeNull()
+    expect(screen.getByRole('link', { name: /3\.4/ }).querySelector('[data-threat]')).not.toBeNull()
+  })
+
+  it('marks the current outpost with aria-current', () => {
+    currentPath.value = '/outpost/o1/world/map'
+    render(<NavLocationOutposts outposts={outposts} countLimit={15} />)
+
+    expect(screen.getByRole('link', { name: '1.2' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: '3.4' })).not.toHaveAttribute('aria-current')
+    currentPath.value = '/'
   })
 })

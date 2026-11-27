@@ -20,6 +20,7 @@ export function registerTechnologyWsListeners(): void {
     ({ error_code }) => {
       toast.error(translateError(error_code))
       queryClient.invalidateQueries({ queryKey: technologyKeys.all })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     }
   )
 }

@@ -9,6 +9,7 @@ import { wsClient } from '#helpers/websocket'
 import { queryClient } from '#helpers/query-client'
 import { exchangeKeys } from '#exchange/hooks'
 import { reportKeys } from '#communication/report/hooks'
+import { activityKeys } from '#location/activity-hooks'
 
 let registered = false
 
@@ -30,5 +31,7 @@ export function registerExchangeWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: ['city'] })
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: ['reports'] })
+    // Filled orders start convoys: the movement count of the left column changes (slice 041).
+    queryClient.invalidateQueries({ queryKey: activityKeys.all })
   })
 }

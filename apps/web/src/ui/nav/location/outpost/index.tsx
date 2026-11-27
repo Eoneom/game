@@ -8,9 +8,11 @@ import { OutpostType } from '@eoneom/api-client'
 interface Props {
   outposts: OutpostItem[]
   countLimit: number
+  /** Ids targeted by an incoming attack (slice 041). */
+  threatenedIds?: ReadonlySet<string>
 }
 
-export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) => {
+export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit, threatenedIds }) => {
   const temporaries = useMemo(() => {
     return outposts
       .filter(outpost => outpost.type === OutpostType.TEMPORARY)
@@ -29,15 +31,15 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
 
   return (
     <section className="space-y-2">
-      <h3 className="m-0 text-meta text-amber-dim">
+      <h3 className="m-0 text-meta text-label">
         Avant-postes {outposts.length}/{countLimit}
       </h3>
       {Boolean(permanents.length) && (
         <div>
-          <h5 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
+          <h4 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
             Permanents
-          </h5>
-          <ul className="m-0 list-none space-y-1 p-0">
+          </h4>
+          <ul className="m-0 list-none space-y-0.5 p-0">
             {permanents.map(outpost => (
               <NavLocationItem
                 key={outpost.id}
@@ -45,6 +47,7 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
                 outpostId={outpost.id}
                 text={formatCoordinates(outpost.coordinates)}
                 linkClassName="font-mono"
+                threatened={threatenedIds?.has(outpost.id) ?? false}
               />
             ))}
           </ul>
@@ -52,10 +55,10 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
       )}
       {Boolean(temporaries.length) && (
         <div>
-          <h5 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
+          <h4 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
             Temporaires
-          </h5>
-          <ul className="m-0 list-none space-y-1 p-0">
+          </h4>
+          <ul className="m-0 list-none space-y-0.5 p-0">
             {temporaries.map(outpost => (
               <NavLocationItem
                 key={outpost.id}
@@ -63,6 +66,7 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
                 outpostId={outpost.id}
                 text={formatCoordinates(outpost.coordinates)}
                 linkClassName="font-mono"
+                threatened={threatenedIds?.has(outpost.id) ?? false}
               />
             ))}
           </ul>

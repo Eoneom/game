@@ -1,125 +1,72 @@
-import {
-  formatEarningsRates,
-  transformApproximateTimeUntilSeconds,
-  transformDecimals,
-} from '#helpers/transform'
-import { getEnergyDisplayStatus, getEnergyUsagePercent } from '#helpers/energy'
-import { ResourceItem } from '#ui/resource-item'
-import { Tooltip } from '#ui/tooltip'
 import React from 'react'
 import classNames from 'classnames'
 
-interface Props {
-  value: number
-  icon: React.ReactNode
-  warehouse_capacity?: number
-  earnings_per_second?: number
-  warehouse_full_in_seconds?: number
-  secondary_value?: number
-  energy_production?: number
+import { transformDecimals } from '#helpers/transform'
+import { getEnergyDisplayStatus } from '#helpers/energy'
+
+/** Fill ratio from which a warehouse chip shows a danger dot (slice 041). */
+export const WAREHOUSE_WARN_RATIO = 0.9
+
+/** Exact value for titles and screen readers, e.g. 12480 → « 12 480 ». */
+export const formatExactAmount = (value: number): string => Math.floor(value).toLocaleString('fr-FR')
+
+const energyStatusClass: Record<'success' | 'warn' | 'danger', string> = {
+  success: 'text-terminal',
+  warn: 'text-amber',
+  danger: 'text-danger',
 }
 
-export const HeaderResourcesItem: React.FC<Props> = ({
-  value,
-  warehouse_capacity,
-  earnings_per_second,
-  warehouse_full_in_seconds,
-  secondary_value,
-  energy_production,
-  icon
-}) => {
-  const warnCapacity = 70 / 100
-  const energyStatus = energy_production !== undefined
-    ? getEnergyDisplayStatus(value, energy_production)
-    : undefined
-  const className = energyStatus !== undefined
-    ? energyStatus === 'warn' ? undefined : energyStatus
-    : warehouse_capacity !== undefined && value >= warehouse_capacity
-      ? 'danger'
-      : ''
-  const displayValue = secondary_value !== undefined ? `${transformDecimals(value)} / ${transformDecimals(secondary_value)}` : transformDecimals(value)
+type Props = {
+  /** Resource name for screen readers and the title, e.g. « Plastique ». */
+  name: string
+  icon: React.ReactNode
+} & (
+  | { kind: 'stock', value: number, capacity?: number }
+  | { kind: 'energy', consumption: number, production: number }
+)
 
-  const resourceItem = (
-    <ResourceItem
-      className={className}
-      icon={icon}
-      value={displayValue}
-    />
-  )
+/** One compact header chip: icon + stock (or energy consumption / production), with fill warnings. */
+export const HeaderResourceChip: React.FC<Props> = (props) => {
+  const { name, icon } = props
 
-  const hasWarehouse = warehouse_capacity !== undefined
-  const hasEnergy = energy_production !== undefined
-  const hasEarnings = earnings_per_second !== undefined
+  let display: string
+  let exact: string
+  let colorClass = 'text-amber'
+  let warning: 'near' | 'full' | null = null
 
-  const energyUsagePercent = hasEnergy ? getEnergyUsagePercent(value, energy_production) : 0
-  const energyProgressClass = energyStatus === 'danger'
-    ? '[&::-webkit-progress-value]:bg-danger [&::-moz-progress-bar]:bg-danger'
-    : energyStatus === 'warn'
-      ? '[&::-webkit-progress-value]:bg-amber [&::-moz-progress-bar]:bg-amber'
-      : '[&::-webkit-progress-value]:bg-terminal [&::-moz-progress-bar]:bg-terminal'
-  const energyTooltipContent = hasEnergy ? (
-    <>
-      {Math.round(energyUsagePercent)}%
-      <br />
-      {transformDecimals(value)} / {transformDecimals(energy_production)}
-    </>
-  ) : null
+  if (props.kind === 'energy') {
+    display = `${transformDecimals(props.consumption)} / ${transformDecimals(props.production)}`
+    exact = `${formatExactAmount(props.consumption)} / ${formatExactAmount(props.production)}`
+    colorClass = energyStatusClass[getEnergyDisplayStatus(props.consumption, props.production)]
+  } else {
+    display = transformDecimals(props.value)
+    exact = formatExactAmount(props.value)
+    if (props.capacity !== undefined && props.capacity > 0) {
+      if (props.value >= props.capacity) {
+        warning = 'full'
+        colorClass = 'text-danger'
+      } else if (props.value >= props.capacity * WAREHOUSE_WARN_RATIO) {
+        warning = 'near'
+      }
+    }
+  }
 
-  const earningsRatesLabel = hasEarnings
-    ? formatEarningsRates(earnings_per_second)
-    : null
-
-  const storageLevel = hasWarehouse ? Math.round((value / warehouse_capacity) * 100 * 100) / 100 : 0
-  const progressWarn = hasWarehouse && value >= warehouse_capacity * warnCapacity
-  const storageTooltipContent = hasWarehouse ? (
-    <>
-      {storageLevel}%
-      <br />
-      Max = {transformDecimals(warehouse_capacity)}
-      {warehouse_full_in_seconds !== undefined && warehouse_full_in_seconds > 0 ? (
-        <>
-          <br />
-          Plein dans {transformApproximateTimeUntilSeconds(warehouse_full_in_seconds)}
-        </>
-      ) : null}
-    </>
-  ) : null
+  const srText = `${name} ${exact}${warning === 'full' ? ', entrepôt plein' : warning === 'near' ? ', entrepôt presque plein' : ''}. `
 
   return (
-    <li className="flex flex-col gap-1">
-      {resourceItem}
-      {earningsRatesLabel ? (
-        <span
-          className="max-w-[11rem] truncate font-mono text-caption leading-tight text-label"
-          title={earningsRatesLabel}
-        >
-          {earningsRatesLabel}
-        </span>
+    <span
+      className="header-resource-chip flex items-center gap-1.5"
+      data-resource={name}
+      title={`${name} ${exact}`}
+    >
+      <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center text-label">{icon}</span>
+      <span aria-hidden className={classNames('font-mono text-body font-medium tabular-nums', colorClass)}>
+        {display}
+      </span>
+      {warning ? (
+        <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger" data-warning={warning} />
       ) : null}
-      {hasWarehouse && storageTooltipContent && (
-        <Tooltip content={storageTooltipContent} position="bottom">
-          <progress
-            className={classNames(
-              'h-1.5 w-full overflow-hidden rounded-sm border border-rust/40 bg-chrome [&::-webkit-progress-bar]:bg-chrome [&::-webkit-progress-value]:bg-amber [&::-moz-progress-bar]:bg-amber',
-              progressWarn && '[&::-webkit-progress-value]:bg-danger [&::-moz-progress-bar]:bg-danger'
-            )}
-            value={value}
-            max={warehouse_capacity}
-          />
-        </Tooltip>
-      )}
-      {hasEnergy && energyTooltipContent && (
-        <Tooltip content={energyTooltipContent} position="bottom">
-          <progress
-            className={classNames(
-              'h-1.5 w-full overflow-hidden rounded-sm border border-rust/40 bg-chrome [&::-webkit-progress-bar]:bg-chrome',
-              energyProgressClass
-            )}
-            value={energyUsagePercent}
-            max={100}
-          />
-        </Tooltip>
-      )}
-    </li>
+      <span className="sr-only">{srText}</span>
+    </span>
   )
 }

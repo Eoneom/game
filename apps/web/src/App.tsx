@@ -6,13 +6,19 @@ import { AuthUnauthenticated } from '#auth/unauthenticated'
 import { Header } from '#ui/header'
 import { NavMenu } from '#ui/nav/menu'
 import { NavLocation } from '#ui/nav/location'
-import { ActivityStrip } from '#ui/activity'
+import { ResourcePanelProvider } from '#ui/header/resources/context'
 import { FxLayer } from '#ui/fx'
 import { ChatPanel } from '#communication/chat/panel'
 import { useAuth } from '#auth/context'
 import { useClearInvalidSession, useInitStoredToken } from '#auth/hooks'
 import { isInvalidSessionError } from '#auth/session'
 import { useListCities } from '#city/hooks'
+
+/** Skip link target: move focus without touching the router's URL. */
+const focusWorkspace = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  event.preventDefault()
+  document.getElementById('workspace')?.focus()
+}
 
 const App: React.FC = () => {
   useInitStoredToken()
@@ -45,20 +51,27 @@ const App: React.FC = () => {
       </div>
     )
   } else {
+    // Shell (slice 041): skip link, header, left navigation, workspace, locations, chat.
     content = (
-      <div className="app-shell relative flex h-full flex-col overflow-hidden animate-boot-sweep motion-reduce:animate-none">
-        <Header />
-        <ActivityStrip />
-        <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
-          <NavMenu />
-          <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-rust/55 bg-chrome p-6">
-            <Outlet />
-          </main>
-          <NavLocation />
+      <ResourcePanelProvider>
+        <a className="skip-link" href="#workspace" onClick={focusWorkspace}>Aller au contenu</a>
+        <div className="app-shell relative flex h-full flex-col overflow-hidden animate-boot-sweep motion-reduce:animate-none">
+          <Header />
+          <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
+            <NavMenu />
+            <main
+              id="workspace"
+              tabIndex={-1}
+              className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto border border-rust/55 bg-chrome p-6"
+            >
+              <Outlet />
+            </main>
+            <NavLocation />
+          </div>
+          <ChatPanel />
+          <FxLayer />
         </div>
-        <ChatPanel />
-        <FxLayer />
-      </div>
+      </ResourcePanelProvider>
     )
   }
 

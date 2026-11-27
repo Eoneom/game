@@ -18,6 +18,10 @@ import { useBlockPlayer } from '#communication/block/hooks'
 import { promptAbuseReason, useReportAbuse } from '#communication/abuse-report/hooks'
 import { useMyAlliance } from '#alliance/hooks'
 import { allianceDisplayName } from '#alliance/translations'
+import { Button } from '#ui/button'
+
+const MESSAGES_ID = 'chat-messages'
+const tabId = (channel: ChatChannel) => `chat-tab-${channel}`
 
 const BASE_TABS: { channel: ChatChannel; label: string }[] = [
   { channel: ChatChannel.GLOBAL, label: 'Global' },
@@ -77,7 +81,7 @@ const ChatMessageRow: React.FC<{
         </button>
       )}
       <span className="text-amber-dim"> : </span>
-      <span className="whitespace-pre-wrap break-words text-amber">{message.body}</span>
+      <span className="whitespace-pre-wrap break-words text-ink">{message.body}</span>
       {menuOpen && (
         <ul
           role="menu"
@@ -123,6 +127,7 @@ export const ChatPanel: React.FC = () => {
   const [ draft, setDraft ] = useState('')
   const [ menuMessageId, setMenuMessageId ] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
+  const tabRefs = useRef<Partial<Record<ChatChannel, HTMLButtonElement | null>>>({})
 
   const history = useChatHistory(panel.tab, panel.open)
   const postMessage = usePostChatMessage(panel.tab, { onSuccess: () => setDraft('') })
@@ -171,6 +176,23 @@ export const ChatPanel: React.FC = () => {
     postMessage.mutate(body)
   }
 
+  // WAI-ARIA tabs, manual activation: arrows / Home / End move the focus, Enter / Space select (slice 041).
+  const onTabKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = tabs.length - 1
+    const next = event.key === 'ArrowRight'
+      ? (index === last ? 0 : index + 1)
+      : event.key === 'ArrowLeft'
+        ? (index === 0 ? last : index - 1)
+        : event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? last
+            : null
+    if (next === null) return
+    event.preventDefault()
+    tabRefs.current[tabs[next].channel]?.focus()
+  }
+
   const hasActivity = unseen[ChatChannel.GLOBAL] || unseen[ChatChannel.FACTION] || (isAllianceMember && unseen[ChatChannel.ALLIANCE])
 
   return (
@@ -178,27 +200,35 @@ export const ChatPanel: React.FC = () => {
       aria-label="Discussion"
       className={classNames(
         'chat-panel surface-frame relative z-20 flex shrink-0 flex-col border-t border-rust/70',
-        panel.open ? 'h-64' : 'h-auto'
+        panel.open ? 'h-72' : 'h-10'
       )}
     >
-      <div className="flex items-center gap-2 px-3 py-1">
+      <div className="flex h-10 shrink-0 items-center gap-2 px-3">
         <button
           type="button"
           className="flex items-center gap-2 text-caption uppercase tracking-wider text-label hover:text-amber"
           aria-expanded={panel.open}
+          aria-controls={MESSAGES_ID}
           onClick={() => updatePanel({ ...panel, open: !panel.open })}
         >
           <span aria-hidden>{panel.open ? '▾' : '▸'}</span>
           Discussion
           {!panel.open && hasActivity && <ActivityDot label="Nouveaux messages" />}
         </button>
-        <div role="tablist" className="ml-2 flex gap-1">
-          {tabs.map(({ channel, label }) => (
+        <div role="tablist" aria-label="Canaux" className="ml-2 flex gap-1">
+          {tabs.map(({ channel, label }, index) => (
             <button
               key={channel}
+              ref={element => {
+                tabRefs.current[channel] = element
+              }}
+              id={tabId(channel)}
               type="button"
               role="tab"
               aria-selected={panel.tab === channel}
+              aria-controls={MESSAGES_ID}
+              tabIndex={panel.tab === channel ? 0 : -1}
+              onKeyDown={event => onTabKeyDown(event, index)}
               className={classNames(
                 'flex items-center gap-1 rounded-sm border px-2 py-0.5 text-caption uppercase tracking-wider transition',
                 panel.tab === channel
@@ -216,82 +246,89 @@ export const ChatPanel: React.FC = () => {
         </div>
       </div>
 
-      {panel.open && (
-        <>
-          <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-3 py-1">
-            {history.hasNextPage && (
-              <button
-                type="button"
-                className="mb-1 text-meta text-amber-dim underline hover:text-amber disabled:opacity-40"
-                disabled={history.isFetchingNextPage}
-                onClick={() => history.fetchNextPage()}
-              >
-                charger plus
-              </button>
-            )}
-            {messages.length === 0 && !history.isPending && (
-              <p className="m-0 text-meta text-label">Aucun message pour le moment.</p>
-            )}
-            <ul className="m-0 flex list-none flex-col gap-1 p-0">
-              {messages.map(message => (
-                <ChatMessageRow
-                  key={message.id}
-                  message={message}
-                  isOwn={message.author.id === viewerId}
-                  menuOpen={menuMessageId === message.id}
-                  onToggleMenu={() => setMenuMessageId(current => current === message.id ? null : message.id)}
-                  onWrite={() => {
-                    setMenuMessageId(null)
-                    navigate({ to: '/inbox/mail', search: { view: 'compose', to: message.author.name } })
-                  }}
-                  onBlock={() => {
-                    setMenuMessageId(null)
-                    if (window.confirm(`Bloquer ${message.author.name} ? Vous ne verrez plus ses messages.`)) {
-                      blockPlayer.mutate(message.author.name)
-                    }
-                  }}
-                  onReport={() => {
-                    setMenuMessageId(null)
-                    const reason = promptAbuseReason()
-                    if (reason === null) return
-                    reportAbuse.mutate({
-                      kind: AbuseReportKind.CHAT,
-                      message_id: message.id,
-                      ...(reason ? { reason } : {}),
-                    })
-                  }}
-                />
-              ))}
-            </ul>
-          </div>
-          <form
-            className="flex items-center gap-2 border-t border-rust/40 px-3 py-1.5"
-            onSubmit={event => {
-              event.preventDefault()
-              send()
-            }}
-          >
-            <input
-              aria-label="Message"
-              className="min-w-0 flex-1 rounded-sm border border-edge bg-transparent px-2 py-1 text-body text-amber placeholder:text-muted focus:border-amber"
-              placeholder={PLACEHOLDERS[panel.tab]}
-              maxLength={CHAT_BODY_MAX_LENGTH}
-              value={draft}
-              onChange={event => setDraft(event.target.value)}
-            />
-            <span className="font-mono text-caption text-label" aria-label="Caractères">
-              {draft.length}/{CHAT_BODY_MAX_LENGTH}
-            </span>
-            <button
-              type="submit"
-              className="rounded-sm border border-copper bg-copper/30 px-2 py-1 text-caption uppercase tracking-wide text-amber hover:bg-copper/50 disabled:opacity-40"
-              disabled={!draft.trim() || postMessage.isPending}
+      <div
+        id={MESSAGES_ID}
+        role="tabpanel"
+        aria-labelledby={tabId(panel.tab)}
+        className={panel.open ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}
+      >
+        {panel.open && (
+          <>
+            <div ref={listRef} role="log" aria-label="Messages" className="min-h-0 flex-1 overflow-y-auto px-3 py-1">
+              {history.hasNextPage && (
+                <button
+                  type="button"
+                  className="mb-1 text-meta text-amber-dim underline hover:text-amber disabled:opacity-40"
+                  disabled={history.isFetchingNextPage}
+                  onClick={() => history.fetchNextPage()}
+                >
+                  charger plus
+                </button>
+              )}
+              {messages.length === 0 && !history.isPending && (
+                <p className="m-0 text-meta text-label">Aucun message pour le moment.</p>
+              )}
+              <ul className="m-0 flex list-none flex-col gap-1 p-0">
+                {messages.map(message => (
+                  <ChatMessageRow
+                    key={message.id}
+                    message={message}
+                    isOwn={message.author.id === viewerId}
+                    menuOpen={menuMessageId === message.id}
+                    onToggleMenu={() => setMenuMessageId(current => current === message.id ? null : message.id)}
+                    onWrite={() => {
+                      setMenuMessageId(null)
+                      navigate({ to: '/inbox/mail', search: { view: 'compose', to: message.author.name } })
+                    }}
+                    onBlock={() => {
+                      setMenuMessageId(null)
+                      if (window.confirm(`Bloquer ${message.author.name} ? Vous ne verrez plus ses messages.`)) {
+                        blockPlayer.mutate(message.author.name)
+                      }
+                    }}
+                    onReport={() => {
+                      setMenuMessageId(null)
+                      const reason = promptAbuseReason()
+                      if (reason === null) return
+                      reportAbuse.mutate({
+                        kind: AbuseReportKind.CHAT,
+                        message_id: message.id,
+                        ...(reason ? { reason } : {}),
+                      })
+                    }}
+                  />
+                ))}
+              </ul>
+            </div>
+            <form
+              className="flex items-center gap-2 border-t border-rust/40 px-3 py-1.5"
+              onSubmit={event => {
+                event.preventDefault()
+                send()
+              }}
             >
-              Envoyer
-            </button>
-          </form>
-        </>
-      )}
+              <input
+                aria-label="Message"
+                className="min-w-0 flex-1 rounded-sm border border-edge bg-transparent px-2 py-1 text-body text-amber placeholder:text-muted focus:border-amber"
+                placeholder={PLACEHOLDERS[panel.tab]}
+                maxLength={CHAT_BODY_MAX_LENGTH}
+                value={draft}
+                onChange={event => setDraft(event.target.value)}
+              />
+              <span className="font-mono text-caption text-label" aria-label="Caractères">
+                {draft.length}/{CHAT_BODY_MAX_LENGTH}
+              </span>
+              <Button
+                type="submit"
+                className="py-1"
+                disabled={!draft.trim() || postMessage.isPending}
+              >
+                Envoyer
+              </Button>
+            </form>
+          </>
+        )}
+      </div>
     </section>
   )
 }

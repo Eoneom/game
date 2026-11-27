@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect } from 'react'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -12,6 +11,10 @@ export const activityKeys = {
   outpost: (outpostId: string) => ['activity', 'outpost', outpostId] as const,
 }
 
+/**
+ * Activity of the current location (slice 013, extended by 041) for the left column.
+ * WebSocket listeners invalidate `activityKeys.all`; the 15 s polling stays as a safety net.
+ */
 export const useLocationActivity = () => {
   const { token } = useAuth()
   const { cityId, outpostId } = useLocation()
@@ -21,6 +24,7 @@ export const useLocationActivity = () => {
       ? activityKeys.city(cityId)
       : activityKeys.outpost(outpostId ?? ''),
     queryFn: async () => {
+      if (!token) throw new Error('no token')
       if (cityId) {
         const res = await client.location.cityActivity(token, cityId)
         if (isError(res)) throw new Error(res.error_code)
@@ -41,14 +45,4 @@ export const useLocationActivity = () => {
 export const useInvalidateLocationActivity = () => {
   const queryClient = useQueryClient()
   return () => queryClient.invalidateQueries({ queryKey: activityKeys.all })
-}
-
-/** Call from a mounted shell so finish WS events refresh the strip. */
-export const useActivityWsBridge = () => {
-  const invalidate = useInvalidateLocationActivity()
-  useEffect(() => {
-    const onFocus = () => invalidate()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [invalidate])
 }

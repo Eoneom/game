@@ -18,7 +18,7 @@ import { OutpostType } from '@eoneom/api-client'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconPlasma } from '#ui/icon/plasma'
-import { ProductionTerrainReadout } from '#ui/production-terrain-readout'
+import { outpostProductionRows, ProductionBreakdownTable } from '#ui/production-breakdown-table'
 import { Link } from '@tanstack/react-router'
 
 interface Props {
@@ -178,12 +178,7 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
           <article className="surface-panel p-3">
             <h2 className="m-0 text-heading text-amber">Production et terrain</h2>
             <div className="mt-3">
-              <ProductionTerrainReadout
-                current={outpost.earnings_per_second}
-                terrain={outpost.cell_resource_coefficient}
-                technology={outpost.technology_production_multiplier}
-                faction={outpost.faction_production_multiplier}
-              />
+              <ProductionBreakdownTable rows={outpostProductionRows(outpost)} />
             </div>
           </article>
         )}

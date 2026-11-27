@@ -24,6 +24,7 @@ export function registerBuildingWsListeners(): void {
     ({ city_id, error_code }) => {
       toast.error(translateError(error_code))
       queryClient.invalidateQueries({ queryKey: buildingKeys.list(city_id) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     }
   )
 }

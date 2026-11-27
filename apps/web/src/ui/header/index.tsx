@@ -7,6 +7,7 @@ import { useLocation } from '#location/context'
 import { useGetCity } from '#city/hooks'
 import { useGetOutpost } from '#outpost/hooks'
 
+/** Shell header (slice 041): brand aligned with the left column, location title, compact resources. */
 export const Header: React.FC = () => {
   const { cityId, outpostId } = useLocation()
   const { data: city } = useGetCity(cityId)
@@ -15,21 +16,24 @@ export const Header: React.FC = () => {
   const text = city ? city.name : outpost ? formatCoordinates(outpost.coordinates) : ''
 
   return (
-    <header className="command-bar surface-frame relative z-20 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 border-b border-rust/80 px-4 py-2 neon-amber motion-safe-neon">
-      <div className="justify-self-start">
+    <header className="command-bar surface-frame relative z-30 grid h-14 shrink-0 grid-cols-[16rem_minmax(0,1fr)_auto] items-center border-b border-rust/80 pr-4">
+      <div className="px-4">
         <h3 className="m-0 text-title tracking-[0.12em] text-amber">EONEOM</h3>
         <p className="m-0 text-caption uppercase tracking-wider text-label">Command terminal</p>
       </div>
-      <div className="justify-self-center px-2 text-center [&_h1]:m-0 [&_h1]:text-heading [&_h1]:text-amber [&_a]:text-amber">
+      <div className="flex min-w-0 items-center gap-3 px-6 [&_h1]:m-0 [&_h1]:truncate [&_h1]:text-heading [&_h1]:text-amber [&_a]:text-amber">
         <HeaderTitle
           text={text}
           cityId={city?.id}
           outpostId={city ? undefined : outpost?.id}
         />
+        {city ? (
+          <span className="shrink-0 font-mono text-meta text-label">{formatCoordinates(city.coordinates)}</span>
+        ) : null}
         <HeaderIncomingAttacks cityId={cityId ?? undefined} outpostId={cityId ? undefined : outpostId ?? undefined} />
       </div>
-      <div className="justify-self-end [&_ul]:m-0 [&_ul]:flex [&_ul]:list-none [&_ul]:gap-3 [&_ul]:p-0">
-        <HeaderResources city={city ?? null} outpost={outpost ?? null} />
+      <div className="justify-self-end">
+        <HeaderResources city={city ?? null} outpost={city ? null : outpost ?? null} />
       </div>
     </header>
   )

@@ -52,6 +52,7 @@ export function registerTroopWsListeners(): void {
     ({ city_id, error_code }) => {
       toast.error(`Recrutement retiré de la file : ${translateError(error_code)}`)
       queryClient.invalidateQueries({ queryKey: troopKeys.cityList(city_id) })
+      queryClient.invalidateQueries({ queryKey: activityKeys.all })
     }
   )
 
