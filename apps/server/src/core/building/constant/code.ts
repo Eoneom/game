@@ -9,4 +9,5 @@ export enum BuildingCode {
   CENTRAL_INDUCTOR = 'central_inductor',
   COMMAND_CENTER = 'command_center',
   UNDERGROUND_SHELTER = 'underground_shelter',
+  CITY_WALL = 'city_wall',
 }

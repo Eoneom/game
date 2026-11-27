@@ -183,5 +183,23 @@ export const technology_costs: Record<TechnologyCode, LevelCosts> = {
       base: 150,
       multiplier: 2
     }
+  },
+  [TechnologyCode.FORTIFICATION]: {
+    plastic: {
+      base: 7000,
+      multiplier: 1.7
+    },
+    mushroom: {
+      base: 7000,
+      multiplier: 1.7
+    },
+    plasma: {
+      base: 400,
+      multiplier: 1.7
+    },
+    duration: {
+      base: 180,
+      multiplier: 2
+    }
   }
 }

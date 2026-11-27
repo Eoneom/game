@@ -1,4 +1,9 @@
+import {
+  BattleStack,
+  isDefenseStack
+} from '#core/combat/type/battle-stack'
 import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
+import { defense_characteristics } from '#core/defense/constant/characteristic'
 import { CombatRole } from '#core/troop/constant/combat-role'
 import { troop_characteristics } from '#core/troop/constant/characteristic'
 import { TroopCode } from '#core/troop/constant/code'
@@ -73,16 +78,32 @@ export function lifeContribution({
   }
 }
 
-export function countCombatStacks(stacks: { code: TroopCode; count: number }[]): number {
-  return stacks
-    .filter(s => s.count > 0 && combatRoleFor(s.code) === CombatRole.COMBAT)
-    .reduce((sum, s) => sum + s.count, 0)
+/** Combat-role troop units; defense stacks are ignored. */
+export function countCombatStacks(stacks: BattleStack[]): number {
+  return stacks.reduce((sum, s) => {
+    if (s.count <= 0 || isDefenseStack(s) || combatRoleFor(s.code) !== CombatRole.COMBAT) {
+      return sum
+    }
+    return sum + s.count
+  }, 0)
 }
 
-export function isHomogeneousCombatArmy(stacks: { code: TroopCode; count: number }[]): boolean {
+/** Units that keep a side in the fight: combat troops plus armed defenses (turret, plasma battery), slice 029. */
+export function countBattlePresence(stacks: BattleStack[]): number {
+  const armed_defenses = stacks.reduce((sum, s) => {
+    if (s.count <= 0 || !isDefenseStack(s) || !defense_characteristics[s.code].armed) {
+      return sum
+    }
+    return sum + s.count
+  }, 0)
+  return countCombatStacks(stacks) + armed_defenses
+}
+
+/** Exposure counts troop classes only: defense stacks are ignored (slice 029). */
+export function isHomogeneousCombatArmy(stacks: BattleStack[]): boolean {
   const classes = new Set<CombatTroopClass>()
   for (const stack of stacks) {
-    if (stack.count <= 0) {
+    if (stack.count <= 0 || isDefenseStack(stack)) {
       continue
     }
     if (combatRoleFor(stack.code) !== CombatRole.COMBAT) {

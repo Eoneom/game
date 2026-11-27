@@ -57,5 +57,14 @@ export const BuildingRequirement: Record<BuildingCode, RequirementValue> = {
   [BuildingCode.UNDERGROUND_SHELTER]: {
     buildings: [],
     technologies: []
+  },
+  [BuildingCode.CITY_WALL]: {
+    buildings: [],
+    technologies: [
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 2
+      }
+    ]
   }
 }

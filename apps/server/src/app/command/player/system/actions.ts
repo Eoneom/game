@@ -58,6 +58,7 @@ import {
 import {
   resourcesForTransportToDestination,
   shouldSystemBuildShelter,
+  shouldSystemUpgradeCityWall,
   shouldSystemUpgradeSolarPanel,
   sortBuildingsForSystemUpgrade,
 } from '#command/player/system/storage'
@@ -106,6 +107,7 @@ import {
   type SystemOutpostDeployRole,
 } from '#command/player/system/outpost-logistics'
 import { listSettleReadyTemporaryOutposts } from '#command/player/system/settle-candidates'
+import { tryBuildSystemDefenses } from '#command/player/system/defenses'
 import {
   carrierTroopsForTransportLoad,
   clampResourcesToTransportCapacity,
@@ -207,6 +209,22 @@ async function tryUpgrade(
     city => upgrade_score_by_city_id.get(city.id) ?? 0,
   )
 
+  // Enceinte: capital first (slice 029). The capital is the first city.
+  const capital = cities[0]
+  let capital_city_wall_level: number | null = null
+  const loadCapitalCityWallLevel = async (): Promise<number> => {
+    if (capital_city_wall_level === null) {
+      const { buildings } = capital
+        ? await new BuildingListQuery().run({
+          city_id: capital.id,
+          player_id,
+        })
+        : { buildings: [] }
+      capital_city_wall_level = buildings.find(building => building.code === BuildingCode.CITY_WALL)?.level ?? 0
+    }
+    return capital_city_wall_level
+  }
+
   for (const city of cities_by_upgrade_priority) {
     const [
       city_details,
@@ -301,6 +319,15 @@ async function tryUpgrade(
 
       if (building.code === BuildingCode.UNDERGROUND_SHELTER
         && !shouldSystemBuildShelter(building_list.buildings)) {
+        continue
+      }
+
+      if (building.code === BuildingCode.CITY_WALL
+        && !shouldSystemUpgradeCityWall({
+          buildings: projected_buildings,
+          is_capital: city.id === capital?.id,
+          capital_city_wall_level: city.id === capital?.id ? 0 : await loadCapitalCityWallLevel(),
+        })) {
         continue
       }
 
@@ -595,8 +622,26 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     }
   }
 
+  // City defenses share the recruit category (slice 029).
+  const defense_builds = await tryBuildSystemDefenses({
+    player_id,
+    cities,
+    technologies,
+    ai_profile: snapshot.ai_profile,
+  })
+
   if (recruits.length === 0) {
-    return null
+    if (defense_builds.length === 0) {
+      return null
+    }
+    const first_build = defense_builds[0]
+    return {
+      defense_builds,
+      city_id: first_build.city_id,
+      city_name: first_build.city_name,
+      defense_code: first_build.code,
+      count: first_build.count,
+    }
   }
 
   const total_count = recruits.reduce((sum, recruit) => sum + recruit.count, 0)
@@ -608,6 +653,7 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
     city_name: first.city_name,
     troop_code: first.troop_code,
     count: total_count,
+    ...(defense_builds.length > 0 ? { defense_builds } : {}),
   }
 }
 

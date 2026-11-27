@@ -5,7 +5,10 @@ import {
   stacksToBattleStacks,
 } from '#app/command/troop/movement/attack-target'
 import { BattleEntity } from '#core/combat/entity/battle'
-import { BattleStateJson } from '#core/combat/type/battle-stack'
+import {
+  BattleStack,
+  BattleStateJson
+} from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import {
   CombatStrategy,
@@ -48,12 +51,21 @@ export const sagaFinishAttack = async ({
       && troop.count > 0
       && troop.movement_id === null
   )
-  const defender_stacks = stacksToBattleStacks(defender_troops)
+  const defender_stacks: BattleStack[] = stacksToBattleStacks(defender_troops)
 
   let defender_strategy = CombatStrategy.BALANCED
   if (target.target_kind === BattleTargetKind.CITY && target.target_id) {
     const city = await repository.city.get(target.target_id)
     defender_strategy = resolveDefaultCombatStrategy(city.default_combat_strategy)
+    // City defenses join the defender side (slice 029).
+    const defenses = await repository.defense.listByCity({ city_id: city.id })
+    defender_stacks.push(...defenses
+      .filter(defense => defense.count > 0)
+      .map(defense => ({
+        kind: 'defense' as const,
+        code: defense.code,
+        count: defense.count,
+      })))
   } else if (target.target_kind === BattleTargetKind.OUTPOST && target.target_id) {
     const outpost = await repository.outpost.getById(target.target_id)
     defender_strategy = resolveDefaultCombatStrategy(outpost.default_combat_strategy)
@@ -63,11 +75,17 @@ export const sagaFinishAttack = async ({
 
   const [
     attacker_modifiers,
-    defender_modifiers,
+    defender_combat_modifiers,
+    defender_fortification,
   ] = await Promise.all([
     AppService.getCombatModifiers({ player_id }),
     AppService.getCombatModifiers({ player_id: target.defender_player_id }),
+    AppService.getFortificationMultiplier({ player_id: target.defender_player_id }),
   ])
+  const defender_modifiers = {
+    ...defender_combat_modifiers,
+    fortification: defender_fortification,
+  }
 
   const state_json: BattleStateJson = {
     attacker_stacks,

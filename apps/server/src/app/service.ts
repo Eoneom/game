@@ -17,6 +17,7 @@ import { CombatModifiers } from '#core/combat/type/battle-stack'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyService } from '#core/technology/service'
 import { TroopCode } from '#core/troop/constant/code'
+import { DefenseCode } from '#core/defense/constant/code'
 import { TroopRole } from '#core/troop/constant/role'
 import { TroopService } from '#core/troop/service'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
@@ -381,6 +382,15 @@ export class AppService {
     })
   }
 
+  /** `fortification` multiplier for the player's defenses (slice 029), snapshotted at battle start. */
+  static async getFortificationMultiplier({ player_id }: { player_id: string }): Promise<number> {
+    const levels = await this.getTechnologyLevels({
+      player_id,
+      codes: [ TechnologyCode.FORTIFICATION ]
+    })
+    return TechnologyService.getFortificationMultiplier({ fortification_level: levels[TechnologyCode.FORTIFICATION] })
+  }
+
   /** `tactical_propulsion` level read when a movement is created (slice 027). */
   static async getTacticalPropulsionLevel({ player_id }: { player_id: string }): Promise<number> {
     const levels = await this.getTechnologyLevels({
@@ -605,6 +615,23 @@ export class AppService {
     troop_code: TroopCode
   }): Promise<Levels> {
     const requirement = RequirementService.getTroopRequirement({ troop_code })
+    return this.getRequirementLevels({
+      city_id,
+      player_id,
+      requirement
+    })
+  }
+
+  static async getDefenseRequirementLevels({
+    city_id,
+    player_id,
+    defense_code
+  }: {
+    city_id: string
+    player_id: string
+    defense_code: DefenseCode
+  }): Promise<Levels> {
+    const requirement = RequirementService.getDefenseRequirement({ defense_code })
     return this.getRequirementLevels({
       city_id,
       player_id,

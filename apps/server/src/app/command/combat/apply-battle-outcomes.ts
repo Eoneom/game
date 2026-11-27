@@ -6,6 +6,12 @@ import { combatRoleFor } from '#core/combat/troop-combat'
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingService } from '#core/building/service'
 import { BattleEntity } from '#core/combat/entity/battle'
+import {
+  BattleStack,
+  isDefenseStack,
+  isTroopStack,
+  TroopBattleStack
+} from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CityEntity } from '#core/city/entity'
@@ -13,7 +19,6 @@ import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostType } from '#core/outpost/constant/type'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { CombatRole } from '#core/troop/constant/combat-role'
-import { TroopCode } from '#core/troop/constant/code'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopService } from '#core/troop/service'
 import { Resource } from '#shared/resource'
@@ -26,20 +31,25 @@ export type BattleOutcomeFlags = {
   attacker_retreated: boolean
 }
 
-function hasCombat(stacks: { code: TroopCode; count: number }[]): boolean {
-  return stacks.some(s => s.count > 0 && combatRoleFor(s.code) === CombatRole.COMBAT)
+function troopStacks(stacks: BattleStack[]): TroopBattleStack[] {
+  return stacks.filter(isTroopStack)
 }
 
+function hasCombat(stacks: BattleStack[]): boolean {
+  return troopStacks(stacks).some(s => s.count > 0 && combatRoleFor(s.code) === CombatRole.COMBAT)
+}
+
+/** Troop survivors become troop rows again; defense survivors stay in their `defense` rows. */
 function toEntities({
   stacks,
   player_id,
   cell_id,
 }: {
-  stacks: { code: TroopCode; count: number }[]
+  stacks: BattleStack[]
   player_id: string
   cell_id: string
 }): TroopEntity[] {
-  return stacks
+  return troopStacks(stacks)
     .filter(s => s.count > 0)
     .map(s => TroopEntity.create({
       id: id(),
@@ -169,7 +179,7 @@ export async function applyBattleOutcomes({
       }))
       outcome.occupied = true
 
-      const carriers = attacker_stacks.filter(
+      const carriers = troopStacks(attacker_stacks).filter(
         s => s.count > 0 && combatRoleFor(s.code) === CombatRole.CARRIER
       )
       const capacity = TroopService.getTotalTransportCapacity({ troops: carriers })
@@ -195,6 +205,12 @@ export async function applyBattleOutcomes({
 
       if (battle.target_kind === BattleTargetKind.CITY && battle.target_id) {
         const city = await repository.city.get(battle.target_id)
+        // Every remaining defense is destroyed, and the fortification batch and queue go with the old owner (slice 029).
+        await Promise.all([
+          repository.defense.deleteByCity({ city_id: city.id }),
+          repository.defense_build_queue.deleteByCity({ city_id: city.id }),
+          Factory.getJobQueue().cancelDefenseBuildProgress({ city_id: city.id }),
+        ])
         await repository.city.updateOne(CityEntity.create({
           ...city,
           player_id: battle.attacker_player_id,
@@ -233,6 +249,17 @@ export async function applyBattleOutcomes({
         player_id: battle.defender_player_id,
         cell_id: destination_cell.id,
       }))
+    }
+
+    if (!attacker_wins && battle.target_kind === BattleTargetKind.CITY && battle.target_id) {
+      // Defender win or draw: surviving defenses stay, lost units are removed (units built meanwhile are kept).
+      const city_id = battle.target_id
+      const defense_losses = battle.state_json.cumulative_defender_losses.filter(isDefenseStack)
+      await Promise.all(defense_losses.map(line => repository.defense.removeCount({
+        city_id,
+        code: line.code,
+        count: line.count,
+      })))
     }
 
     const finished_battle = battle.finish({

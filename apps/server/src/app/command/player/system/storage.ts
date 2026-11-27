@@ -65,6 +65,45 @@ export function shouldSystemBuildShelter<
   return (central_inductor?.level ?? 0) >= 1
 }
 
+/** Rank of `city_wall` once it may be built: low, with the shelter (slice 029). */
+const SYSTEM_CITY_WALL_UPGRADE_RANK = 5
+
+/** The Enceinte waits for this cloning factory level (slice 029). */
+const SYSTEM_CITY_WALL_MIN_CLONING_FACTORY_LEVEL = 4
+
+/** `city_wall` may be ranked once the city's cloning factory reaches level 4. */
+export function isSystemCityWallAllowed<
+  T extends { code: BuildingCode, level: number }
+>(buildings: T[]): boolean {
+  const cloning_factory = buildings.find(building => building.code === BuildingCode.CLONING_FACTORY)
+  return (cloning_factory?.level ?? 0) >= SYSTEM_CITY_WALL_MIN_CLONING_FACTORY_LEVEL
+}
+
+/**
+ * Upgrade the Enceinte in every city once `cloning_factory` ≥ 4, capital first:
+ * another city only builds a level its capital already has.
+ */
+export function shouldSystemUpgradeCityWall<
+  T extends { code: BuildingCode, level: number }
+>({
+  buildings,
+  is_capital,
+  capital_city_wall_level,
+}: {
+  buildings: T[]
+  is_capital: boolean
+  capital_city_wall_level: number
+}): boolean {
+  if (!isSystemCityWallAllowed(buildings)) {
+    return false
+  }
+  if (is_capital) {
+    return true
+  }
+  const city_wall_level = buildings.find(building => building.code === BuildingCode.CITY_WALL)?.level ?? 0
+  return city_wall_level < capital_city_wall_level
+}
+
 const CORE_PRODUCTION_BUILDING_CODES = [
   BuildingCode.RECYCLING_PLANT,
   BuildingCode.MUSHROOM_FARM,
@@ -219,6 +258,7 @@ function systemUpgradeRank({
   recycling_plant_level,
   prioritize_command_center,
   shelter_allowed,
+  city_wall_allowed,
 }: {
   building_code: BuildingCode
   resource_stock: Resource
@@ -232,9 +272,13 @@ function systemUpgradeRank({
   recycling_plant_level: number
   prioritize_command_center: boolean
   shelter_allowed: boolean
+  city_wall_allowed: boolean
 }): number {
   if (building_code === BuildingCode.UNDERGROUND_SHELTER) {
     return shelter_allowed ? SYSTEM_SHELTER_UPGRADE_RANK : 99
+  }
+  if (building_code === BuildingCode.CITY_WALL) {
+    return city_wall_allowed ? SYSTEM_CITY_WALL_UPGRADE_RANK : 99
   }
   if (building_code === BuildingCode.COMMAND_CENTER && prioritize_command_center) {
     return SYSTEM_COMMAND_CENTER_PRIORITY_RANK
@@ -391,6 +435,7 @@ export function sortBuildingsForSystemUpgrade<
 }): T[] {
   const production_bootstrap = needsCoreProductionBootstrap(buildings)
   const shelter_allowed = shouldSystemBuildShelter(buildings)
+  const city_wall_allowed = isSystemCityWallAllowed(buildings)
   const core_production_satisfied = isCoreProductionSatisfied(buildings)
   const {
     mushroom_farm_level,
@@ -411,6 +456,7 @@ export function sortBuildingsForSystemUpgrade<
       recycling_plant_level,
       prioritize_command_center,
       shelter_allowed,
+      city_wall_allowed,
     }) - systemUpgradeRank({
       building_code: right.code,
       resource_stock,
@@ -424,6 +470,7 @@ export function sortBuildingsForSystemUpgrade<
       recycling_plant_level,
       prioritize_command_center,
       shelter_allowed,
+      city_wall_allowed,
     })
     if (rank_difference !== 0) {
       return rank_difference

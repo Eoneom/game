@@ -37,6 +37,10 @@ import { PostgresSystemPlayerMemoryRepository } from '#adapter/database/reposito
 import { SystemPlayerMemoryRepository } from '#app/port/repository/system-player-memory'
 import { TroopRecruitQueueRepository } from '#app/port/repository/troop-recruit-queue'
 import { PostgresTroopRecruitQueueRepository } from '#adapter/database/repository/troop-recruit-queue'
+import { DefenseRepository } from '#app/port/repository/defense'
+import { PostgresDefenseRepository } from '#adapter/database/repository/defense'
+import { DefenseBuildQueueRepository } from '#app/port/repository/defense-build-queue'
+import { PostgresDefenseBuildQueueRepository } from '#adapter/database/repository/defense-build-queue'
 import {
   Kysely,
   sql
@@ -58,6 +62,8 @@ export class PostgresRepository implements Repository {
   technology: TechnologyRepository
   troop: TroopRepository
   troop_recruit_queue: TroopRecruitQueueRepository
+  defense: DefenseRepository
+  defense_build_queue: DefenseBuildQueueRepository
   battle: BattleRepository
   system_player_memory: SystemPlayerMemoryRepository
 
@@ -83,6 +89,8 @@ export class PostgresRepository implements Repository {
     this.technology = new PostgresTechnologyRepository(this.db)
     this.troop = new PostgresTroopRepository(this.db)
     this.troop_recruit_queue = new PostgresTroopRecruitQueueRepository(this.db)
+    this.defense = new PostgresDefenseRepository(this.db)
+    this.defense_build_queue = new PostgresDefenseBuildQueueRepository(this.db)
     this.battle = new PostgresBattleRepository(this.db)
     this.system_player_memory = new PostgresSystemPlayerMemoryRepository(this.db)
   }

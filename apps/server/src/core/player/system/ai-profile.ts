@@ -20,6 +20,8 @@ export type SystemAiProfile = {
   make_permanent_utility_multiplier: number
   /** Research Arsenal technologies ahead of Économie (slice 027). */
   research_arsenal_first: boolean
+  /** Share of each city's defense capacity filled with ramparts and turrets (slice 029). */
+  defense_fill_ratio: number
 }
 
 const SINGULARITY_DEFAULT_PROFILE: SystemAiProfile = {
@@ -33,6 +35,7 @@ const SINGULARITY_DEFAULT_PROFILE: SystemAiProfile = {
   max_founder_troops: 1,
   make_permanent_utility_multiplier: 1,
   research_arsenal_first: false,
+  defense_fill_ratio: 0.5,
 }
 
 const ASH_LITURGY_AGGRESSIVE_PROFILE: SystemAiProfile = {
@@ -46,6 +49,7 @@ const ASH_LITURGY_AGGRESSIVE_PROFILE: SystemAiProfile = {
   max_founder_troops: 2,
   make_permanent_utility_multiplier: 0.45,
   research_arsenal_first: true,
+  defense_fill_ratio: 0.25,
 }
 
 const PROFILES: Record<SystemAiProfileId, SystemAiProfile> = {

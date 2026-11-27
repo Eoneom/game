@@ -1,4 +1,5 @@
 import { BuildingCode } from '@server-core/building/constant/code'
+import { DefenseCode } from '@server-core/defense/constant/code'
 import { OutpostType } from '@server-core/outpost/constant/type'
 import { TechnologyCode } from '@server-core/technology/constant/code'
 import { MovementAction } from '@server-core/troop/constant/movement-action'
@@ -9,6 +10,11 @@ import { Resource, WarehouseCapacity } from '../shared/resource'
 
 export type AdminSystemPlayerTroopCount = {
   code: TroopCode
+  count: number
+}
+
+export type AdminSystemPlayerDefenseCount = {
+  code: DefenseCode
   count: number
 }
 
@@ -31,6 +37,8 @@ export type AdminSystemPlayerCitySummary = {
   warehouse_space_remaining: WarehouseCapacity
   troops: AdminSystemPlayerTroopCount[]
   pending_recruitment: AdminSystemPlayerPendingRecruitment | null
+  /** City defense stacks with at least one unit (slice 029). */
+  defenses: AdminSystemPlayerDefenseCount[]
 }
 
 export type AdminSystemPlayerOutpostSummary = {

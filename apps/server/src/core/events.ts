@@ -7,6 +7,8 @@ export enum AppEvent {
   TroopMovementFinished = 'troop:movement-finished',
   TroopRecruitmentUpdated = 'troop:recruitment-updated',
   TroopQueueItemDropped = 'troop:queue-item-dropped',
+  DefenseBuildUpdated = 'defense:build-updated',
+  DefenseQueueItemDropped = 'defense:queue-item-dropped',
   OutpostCreated = 'outpost:created',
   OutpostDeleted = 'outpost:deleted',
   OutpostResourcesGathered = 'outpost:resources-gathered',

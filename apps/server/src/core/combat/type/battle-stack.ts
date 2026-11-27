@@ -1,14 +1,28 @@
+import { DefenseCode } from '#core/defense/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 
-export type BattleStack = {
+/** Troop stack; rows stored before slice 029 have no `kind` and are troops. */
+export type TroopBattleStack = {
+  kind?: 'troop'
   code: TroopCode
   count: number
 }
 
-export type BattleCasualtyLine = {
-  code: TroopCode
+/** City defense stack on the defender side (slice 029). */
+export type DefenseBattleStack = {
+  kind: 'defense'
+  code: DefenseCode
   count: number
 }
+
+export type BattleStack = TroopBattleStack | DefenseBattleStack
+
+/** Same shape as a stack: defense lines carry `kind: 'defense'`, troop lines may omit `kind`. */
+export type BattleCasualtyLine = BattleStack
+
+export const isDefenseStack = (stack: BattleStack): stack is DefenseBattleStack => stack.kind === 'defense'
+
+export const isTroopStack = (stack: BattleStack): stack is TroopBattleStack => stack.kind !== 'defense'
 
 export type BattleRoundSummary = {
   round: number
@@ -18,12 +32,20 @@ export type BattleRoundSummary = {
   defender_life_pool: number
   attacker_losses: BattleCasualtyLine[]
   defender_losses: BattleCasualtyLine[]
+  /** Plasma the defender's batteries spent this round (slice 029); absent on older rounds (= 0). */
+  defender_plasma_spent?: number
+  /** Share of the attacker's attack pool removed by the defender's shield generators, 0–0.30 (slice 029). */
+  shield_reduction?: number
 }
 
-/** Technology multipliers for one side's `combat`-role stacks (slice 027). */
+/** Technology multipliers snapshotted for one side (slice 027 / 029). */
 export type CombatModifiers = {
+  /** Arsenal attack multiplier for `combat`-role troops. */
   attack: number
+  /** Arsenal life multiplier for `combat`-role troops. */
   life: number
+  /** Fortification multiplier for defense attack and life (slice 029); missing = 1. */
+  fortification?: number
 }
 
 export const NEUTRAL_COMBAT_MODIFIERS: CombatModifiers = {

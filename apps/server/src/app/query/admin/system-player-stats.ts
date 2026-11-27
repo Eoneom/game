@@ -10,6 +10,7 @@ import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import { BuildingCode } from '#core/building/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import { TroopService } from '#core/troop/service'
+import { DefenseService } from '#core/defense/service'
 import { now } from '#shared/time'
 import type { Resource, WarehouseCapacity } from '#shared/resource'
 import type {
@@ -42,6 +43,16 @@ async function troopsInCell({
     code: troop.code,
     count: troop.count,
   }))
+}
+
+async function defensesInCity({ city_id }: { city_id: string }): Promise<AdminSystemPlayerStatsSnapshot['cities'][number]['defenses']> {
+  const defenses = await Factory.getRepository().defense.listByCity({ city_id })
+  return DefenseService.sortDefenses({ defenses })
+    .filter(defense => defense.count > 0)
+    .map(defense => ({
+      code: defense.code,
+      count: defense.count,
+    }))
 }
 
 async function pendingRecruitmentForCity({
@@ -93,6 +104,7 @@ async function citySummary({
     energy_consumption_breakdown,
     troops,
     pending_recruitment,
+    defenses,
   ] = await Promise.all([
     repository.cell.getById(city.cell_id),
     AppService.getCityProductionBreakdown({
@@ -117,6 +129,7 @@ async function citySummary({
       player_id,
       cell_id: city.cell_id,
     }),
+    defensesInCity({ city_id: city.id }),
   ])
 
   const energy_breakdown = await AppService.getCityEnergyBreakdown({
@@ -160,6 +173,7 @@ async function citySummary({
     warehouse_space_remaining,
     troops,
     pending_recruitment,
+    defenses,
   }
 }
 

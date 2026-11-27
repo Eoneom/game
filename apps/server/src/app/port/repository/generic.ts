@@ -16,6 +16,8 @@ import { ResourceStockRepository } from '#app/port/repository/resource-stock'
 import { BattleRepository } from '#app/port/battle-repository'
 import { SystemPlayerMemoryRepository } from '#app/port/repository/system-player-memory'
 import { TroopRecruitQueueRepository } from '#app/port/repository/troop-recruit-queue'
+import { DefenseRepository } from '#app/port/repository/defense'
+import { DefenseBuildQueueRepository } from '#app/port/repository/defense-build-queue'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -41,6 +43,8 @@ export interface Repository {
   technology: TechnologyRepository
   troop: TroopRepository
   troop_recruit_queue: TroopRecruitQueueRepository
+  defense: DefenseRepository
+  defense_build_queue: DefenseBuildQueueRepository
   battle: BattleRepository
   system_player_memory: SystemPlayerMemoryRepository
 }

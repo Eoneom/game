@@ -38,6 +38,10 @@ import { troopGetHandler } from '#web/handler/troop/get'
 import { troopMovementCapacityHandler } from '#web/handler/troop/movement/capacity'
 import { troopCancelQueuedHandler } from '#web/handler/troop/cancel-queued'
 import { citySettleHandler } from '#web/handler/city/settle'
+import { defenseListHandler } from '#web/handler/defense/list'
+import { defenseBuildHandler } from '#web/handler/defense/build'
+import { defenseCancelHandler } from '#web/handler/defense/cancel'
+import { defenseCancelQueuedHandler } from '#web/handler/defense/cancel-queued'
 import { cityActivityHandler, outpostActivityHandler } from '#web/handler/location/activity'
 import { healthGetHandler } from '#web/handler/health/get'
 import { adminSystemPlayerObservabilityGetHandler } from '#web/handler/admin/system-player-observability/get'
@@ -95,6 +99,11 @@ export const router = (): Router => {
   r.put('/troop/recruit', authMiddleware, troopRecruitHandler)
   r.get('/city/:city_id/troop', authMiddleware, troopListCityHandler)
   r.get('/outpost/:outpost_id/troop', authMiddleware, troopListOutpostHandler)
+
+  r.get('/city/:city_id/defense', authMiddleware, defenseListHandler)
+  r.put('/defense/build', authMiddleware, defenseBuildHandler)
+  r.put('/defense/cancel', authMiddleware, defenseCancelHandler)
+  r.put('/defense/queue/cancel', authMiddleware, defenseCancelQueuedHandler)
 
   r.get('/outpost', authMiddleware, outpostListHandler)
   r.get('/outpost/:outpost_id', authMiddleware, outpostGetHandler)

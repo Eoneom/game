@@ -12,5 +12,6 @@ export const technology_order: Record<TechnologyCode, number> = {
   [TechnologyCode.ADVANCED_RECYCLING]: 9,
   [TechnologyCode.AGRONOMY]: 10,
   [TechnologyCode.STORAGE_COMPRESSION]: 11,
-  [TechnologyCode.PLASMA_CONTAINMENT]: 12
+  [TechnologyCode.PLASMA_CONTAINMENT]: 12,
+  [TechnologyCode.FORTIFICATION]: 13
 }

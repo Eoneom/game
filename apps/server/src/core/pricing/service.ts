@@ -18,6 +18,11 @@ import {
   REPLICATION_CATALYST_REDUCTION_PER_LEVEL,
   troop_costs
 } from '#core/pricing/constant/troop'
+import {
+  CITY_WALL_REDUCTION_PER_LEVEL,
+  defense_costs
+} from '#core/pricing/constant/defense'
+import { DefenseCode } from '#core/defense/constant/code'
 import { scaleGameDurationSeconds } from '#shared/game-time-scale'
 import { Resource } from '#shared/resource'
 
@@ -48,6 +53,36 @@ export class PricingService {
     const base_duration = cost.duration * count
     const total_reduction = cloning_factory_reduction * replication_catalyst_reduction
     const reduced_duration = Math.ceil(base_duration * total_reduction)
+
+    return {
+      code,
+      resource: {
+        plastic: cost.plastic * count,
+        mushroom: cost.mushroom * count,
+        plasma: (cost.plasma ?? 0) * count
+      },
+      duration: scaleGameDurationSeconds(reduced_duration)
+    }
+  }
+
+  /** Resources × count; duration × count × Enceinte reduction, game time scaled like troops (slice 029). */
+  static getDefenseCost({
+    code,
+    count,
+    city_wall_level
+  }: {
+    code: DefenseCode
+    count: number
+    city_wall_level: number
+  }): CountCostValue<DefenseCode> {
+    const cost = defense_costs[code]
+
+    const city_wall_reduction = this.getLevelReduction({
+      reduction_percent_per_level: CITY_WALL_REDUCTION_PER_LEVEL,
+      level: city_wall_level
+    })
+
+    const reduced_duration = Math.ceil(cost.duration * count * city_wall_reduction)
 
     return {
       code,

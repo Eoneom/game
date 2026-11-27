@@ -1,6 +1,7 @@
 import { BuildingEndpoint } from './endpoints/building'
 import { CityEndpoint } from './endpoints/city'
 import { CommunicationEndpoint } from './endpoints/communication'
+import { DefenseEndpoint } from './endpoints/defense'
 import { LocationEndpoint } from './endpoints/location'
 import { OutpostEndpoint } from './endpoints/outpost'
 import { PlayerEndpoint } from './endpoints/player'
@@ -14,6 +15,8 @@ export { BuildingCode } from '@server-core/building/constant/code'
 export { BUILDING_UPGRADE_QUEUE_LIMIT } from '@server-core/building/constant/upgrade-queue'
 export { RESEARCH_QUEUE_LIMIT } from '@server-core/technology/constant/research-queue'
 export { TROOP_RECRUIT_QUEUE_LIMIT } from '@server-core/troop/constant/recruit-queue'
+export { DEFENSE_BUILD_QUEUE_LIMIT } from '@server-core/defense/constant/build-queue'
+export { DefenseCode } from '@server-core/defense/constant/code'
 export { CellType } from '@server-core/world/value/cell-type'
 export { FactionCode } from '@server-core/faction/constant/code'
 export { playableFactionCodes } from '@server-core/faction/constant/playable'
@@ -32,6 +35,7 @@ export { AuthError } from '@server-core/auth/error'
 export { BuildingError } from '@server-core/building/error'
 export { CityError } from '@server-core/city/error'
 export { CommunicationError } from '@server-core/communication/error'
+export { DefenseError } from '@server-core/defense/error'
 export { FactionError } from '@server-core/faction/error'
 export { OutpostError } from '@server-core/outpost/error'
 export { PlayerError } from '@server-core/player/error'
@@ -53,6 +57,7 @@ export class Client {
   private fetcher: Fetcher
   public city: CityEndpoint
   public communication: CommunicationEndpoint
+  public defense: DefenseEndpoint
   public location: LocationEndpoint
   public outpost: OutpostEndpoint
   public player: PlayerEndpoint
@@ -67,6 +72,7 @@ export class Client {
 
     this.city = new CityEndpoint({ fetcher: this.fetcher })
     this.communication = new CommunicationEndpoint({ fetcher: this.fetcher })
+    this.defense = new DefenseEndpoint({ fetcher: this.fetcher })
     this.location = new LocationEndpoint({ fetcher: this.fetcher })
     this.outpost = new OutpostEndpoint({ fetcher: this.fetcher })
     this.player = new PlayerEndpoint({ fetcher: this.fetcher })

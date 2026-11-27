@@ -16,6 +16,7 @@ import {
 import { PricingService } from '#core/pricing/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
+import { DefenseCode } from '#core/defense/constant/code'
 import { scaleGameDurationSeconds } from '#shared/game-time-scale'
 
 function reductionFrom(reduction_percent_per_level: number, level: number): number {
@@ -438,5 +439,71 @@ describe('PricingService military and economy technologies (slice 027)', () => {
       level_one(TechnologyCode.PLASMA_CONTAINMENT).duration,
       scaleGameDurationSeconds(150)
     )
+  })
+})
+
+describe('PricingService city defenses (slice 029)', () => {
+  it('prices defenses per unit × count, plasma included', () => {
+    const result = PricingService.getDefenseCost({
+      code: DefenseCode.PLASMA_BATTERY,
+      count: 3,
+      city_wall_level: 0,
+    })
+
+    assert.deepStrictEqual(result.resource, {
+      plastic: 4500,
+      mushroom: 3000,
+      plasma: 900,
+    })
+    assert.strictEqual(result.duration, scaleGameDurationSeconds(540))
+  })
+
+  it('has no plasma cost for ramparts, turrets and minefields', () => {
+    for (const code of [
+      DefenseCode.RAMPART,
+      DefenseCode.TURRET,
+      DefenseCode.MINEFIELD 
+    ]) {
+      assert.strictEqual(PricingService.getDefenseCost({
+        code,
+        count: 2,
+        city_wall_level: 1 
+      }).resource.plasma, 0)
+    }
+  })
+
+  it('shortens the duration by (1 − 1/10)^level of the Enceinte', () => {
+    const result = PricingService.getDefenseCost({
+      code: DefenseCode.RAMPART,
+      count: 10,
+      city_wall_level: 2,
+    })
+
+    assert.strictEqual(result.duration, scaleGameDurationSeconds(Math.ceil(600 * Math.pow(0.9, 2))))
+  })
+
+  it('prices the Enceinte and Fortification per the spec', () => {
+    const wall = PricingService.getBuildingLevelCost({
+      code: BuildingCode.CITY_WALL,
+      level: 1,
+      architecture_level: 0,
+    })
+    assert.deepStrictEqual(wall.resource, {
+      plastic: 1500,
+      mushroom: 1000,
+      plasma: 0,
+    })
+    assert.strictEqual(wall.duration, scaleGameDurationSeconds(150))
+
+    const fortification = PricingService.getTechnologyLevelCost({
+      code: TechnologyCode.FORTIFICATION,
+      level: 2,
+      research_lab_level: 0,
+    })
+    assert.deepStrictEqual(fortification.resource, {
+      plastic: Math.ceil(7000 * 1.7),
+      mushroom: Math.ceil(7000 * 1.7),
+      plasma: Math.ceil(400 * 1.7),
+    })
   })
 })

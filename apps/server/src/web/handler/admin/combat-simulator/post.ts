@@ -8,12 +8,18 @@ import {
   AdminCombatSimulatorDataResponse,
   AdminCombatSimulatorRequest,
   AdminCombatSimulatorResponse,
-  AdminCombatSimulatorStackWire,
+  AdminCombatSimulatorResultStackWire,
 } from '@eoneom/api-client/src/endpoints/admin/combat-simulator'
 import { simulateCombat } from '#command/combat/simulate'
 import {
-  BattleStack, CombatModifiers
+  BattleStack,
+  CombatModifiers,
+  isDefenseStack
 } from '#core/combat/type/battle-stack'
+import {
+  parseCityPlasma,
+  parseDefenseStacks
+} from '#web/handler/admin/combat-simulator/parse-defenses'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { TechnologyService } from '#core/technology/service'
@@ -21,7 +27,6 @@ import { TroopCode } from '#core/troop/constant/code'
 
 const TROOP_CODE_VALUES = new Set<string>(Object.values(TroopCode))
 const COMBAT_STRATEGY_VALUES = new Set<string>(Object.values(CombatStrategy))
-
 function parseStacks(
   raw: unknown,
 ): { ok: true; stacks: BattleStack[] } | { ok: false; error_code: RequestError } {
@@ -100,26 +105,38 @@ function parseCombatModifiers(raw: unknown): { ok: true; modifiers: CombatModifi
   }
   const ballistic_alloys_level = parseTechnologyLevel((raw as { ballistic_alloys?: unknown }).ballistic_alloys)
   const organic_plating_level = parseTechnologyLevel((raw as { organic_plating?: unknown }).organic_plating)
-  if (ballistic_alloys_level === null || organic_plating_level === null) {
+  const fortification_level = parseTechnologyLevel((raw as { fortification?: unknown }).fortification)
+  if (ballistic_alloys_level === null || organic_plating_level === null || fortification_level === null) {
     return {
       ok: false,
       error_code: RequestError.TECHNOLOGY_LEVEL_NOT_FOUND
     }
   }
+  const modifiers = TechnologyService.getCombatModifiers({
+    ballistic_alloys_level,
+    organic_plating_level,
+  })
   return {
     ok: true,
-    modifiers: TechnologyService.getCombatModifiers({
-      ballistic_alloys_level,
-      organic_plating_level,
-    }),
+    modifiers: fortification_level > 0
+      ? {
+        ...modifiers,
+        fortification: TechnologyService.getFortificationMultiplier({ fortification_level }),
+      }
+      : modifiers,
   }
 }
 
-function toWireStacks(stacks: BattleStack[]): AdminCombatSimulatorStackWire[] {
-  return stacks.map(s => ({
-    troop_code: s.code,
-    count: s.count,
-  }))
+function toWireStacks(stacks: BattleStack[]): AdminCombatSimulatorResultStackWire[] {
+  return stacks.map(s => isDefenseStack(s)
+    ? {
+      defense_code: s.code,
+      count: s.count,
+    }
+    : {
+      troop_code: s.code,
+      count: s.count,
+    })
 }
 
 function winnerWire(winner: BattleWinner | null): AdminCombatSimulatorDataResponse['winner'] {
@@ -147,6 +164,22 @@ export const adminCombatSimulatorPostHandler = async (
     return res.status(400).json({
       status: 'nok',
       error_code: defender_parsed.error_code,
+    })
+  }
+
+  const defender_defenses_parsed = parseDefenseStacks(req.body.defender_defense_stacks)
+  if (!defender_defenses_parsed.ok) {
+    return res.status(400).json({
+      status: 'nok',
+      error_code: defender_defenses_parsed.error_code,
+    })
+  }
+
+  const city_plasma_parsed = parseCityPlasma(req.body.defender_city_plasma)
+  if (!city_plasma_parsed.ok) {
+    return res.status(400).json({
+      status: 'nok',
+      error_code: city_plasma_parsed.error_code,
     })
   }
 
@@ -185,11 +218,15 @@ export const adminCombatSimulatorPostHandler = async (
   try {
     const result = simulateCombat({
       attacker_stacks: attacker_parsed.stacks,
-      defender_stacks: defender_parsed.stacks,
+      defender_stacks: [
+        ...defender_parsed.stacks,
+        ...defender_defenses_parsed.stacks,
+      ],
       attacker_strategy: attacker_strategy_parsed.strategy,
       defender_strategy: defender_strategy_parsed.strategy,
       attacker_modifiers: attacker_modifiers_parsed.modifiers,
       defender_modifiers: defender_modifiers_parsed.modifiers,
+      ...(city_plasma_parsed.plasma !== undefined ? { defender_plasma: city_plasma_parsed.plasma } : {}),
     })
 
     const data: AdminCombatSimulatorDataResponse = {
@@ -202,6 +239,8 @@ export const adminCombatSimulatorPostHandler = async (
         defender_life_pool: summary.defender_life_pool,
         attacker_losses: toWireStacks(summary.attacker_losses),
         defender_losses: toWireStacks(summary.defender_losses),
+        ...(summary.defender_plasma_spent !== undefined ? { defender_plasma_spent: summary.defender_plasma_spent } : {}),
+        ...(summary.shield_reduction !== undefined ? { shield_reduction: summary.shield_reduction } : {}),
       })),
       final_attacker_stacks: toWireStacks(result.final_attacker_stacks),
       final_defender_stacks: toWireStacks(result.final_defender_stacks),

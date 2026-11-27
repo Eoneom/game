@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { BattleOutcomeFlags } from '#app/command/combat/apply-battle-outcomes'
 import { BattleEntity } from '#core/combat/entity/battle'
+import { isTroopStack } from '#core/combat/type/battle-stack'
 import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
@@ -66,7 +67,7 @@ export async function createBattleReports({
     type: ReportType.BATTLE,
     was_read: false,
     player_id: battle.attacker_player_id,
-    troops: battle.state_json.cumulative_attacker_losses,
+    troops: battle.state_json.cumulative_attacker_losses.filter(isTroopStack),
     recorded_at: finished_at,
     origin: movement.origin,
     destination: movement.destination,
@@ -79,7 +80,8 @@ export async function createBattleReports({
     type: ReportType.BATTLE,
     was_read: false,
     player_id: battle.defender_player_id,
-    troops: battle.state_json.cumulative_defender_losses,
+    // Defense losses live in the battle metadata (`casualties_defender` lines with `kind: 'defense'`).
+    troops: battle.state_json.cumulative_defender_losses.filter(isTroopStack),
     recorded_at: finished_at,
     origin: movement.origin,
     destination: movement.destination,

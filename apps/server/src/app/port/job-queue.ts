@@ -1,3 +1,5 @@
+import type { DefenseCode } from '#core/defense/constant/code'
+
 export type PendingBuildingUpgrade = {
   player_id: string
   city_id: string
@@ -27,6 +29,22 @@ export type TroopRecruitProgressJobData = {
 }
 
 export type PendingTroopRecruitProgress = TroopRecruitProgressJobData & {
+  execute_at: number
+  job_id: string
+}
+
+/** Same progression as troop recruitment, keyed by city (slice 029). */
+export type DefenseBuildProgressJobData = {
+  player_id: string
+  city_id: string
+  defense_code: DefenseCode
+  remaining_count: number
+  finish_at: number
+  started_at: number
+  last_progress: number
+}
+
+export type PendingDefenseBuildProgress = DefenseBuildProgressJobData & {
   execute_at: number
   job_id: string
 }
@@ -97,6 +115,14 @@ export interface JobQueue {
   cancelTroopRecruitProgress(args: { city_id: string }): Promise<void>
 
   getPendingTroopRecruitProgress(args: { city_id: string }): Promise<PendingTroopRecruitProgress | null>
+
+  scheduleDefenseBuildProgress(args: DefenseBuildProgressJobData & {
+    execute_at: number
+  }): Promise<string | null>
+
+  cancelDefenseBuildProgress(args: { city_id: string }): Promise<void>
+
+  getPendingDefenseBuildProgress(args: { city_id: string }): Promise<PendingDefenseBuildProgress | null>
 
   scheduleTroopMovementFinish(args: {
     player_id: string

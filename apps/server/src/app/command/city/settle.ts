@@ -2,6 +2,7 @@ import { Factory } from '#adapter/factory'
 import { runCommand } from '#command/run'
 import { AppService } from '#app/service'
 import { BuildingService } from '#core/building/service'
+import { DefenseService } from '#core/defense/service'
 import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { CityService } from '#core/city/service'
@@ -101,6 +102,10 @@ export async function citySettle({
     })
 
     const buildings = BuildingService.init({ city_id: city.id })
+    const defenses = DefenseService.init({
+      player_id,
+      city_id: city.id
+    })
 
     const settler_troop_to_update = founder_troop.removeCount(1)
     const exploration_to_update = exploration.exploreCells([
@@ -112,6 +117,7 @@ export async function citySettle({
     await Promise.all([
       repository.outpost.delete(outpost.id),
       ...buildings.map(building => repository.building.create(building)),
+      ...defenses.map(defense => repository.defense.create(defense)),
       repository.troop.updateOne(settler_troop_to_update),
       repository.exploration.updateOne(exploration_to_update)
     ])

@@ -11,6 +11,8 @@ export const technology_bonus_per_level = {
   [TechnologyCode.AGRONOMY]: 0.05,
   [TechnologyCode.STORAGE_COMPRESSION]: 0.1,
   [TechnologyCode.PLASMA_CONTAINMENT]: 0.05,
+  /** Attack and life of defenses (slice 029). */
+  [TechnologyCode.FORTIFICATION]: 0.03,
 } as const satisfies Partial<Record<TechnologyCode, number>>
 
 export type BonusTechnologyCode = keyof typeof technology_bonus_per_level

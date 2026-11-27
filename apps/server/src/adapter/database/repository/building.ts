@@ -23,6 +23,8 @@ export class PostgresBuildingRepository
       .selectFrom('building')
       .select(({ fn }) => fn.sum<number>('level').as('total'))
       .where('city_id', '=', city_id)
+      // The Enceinte has its own layer, outside the city's building level cap (slice 029).
+      .where('code', '!=', BuildingCode.CITY_WALL)
       .executeTakeFirstOrThrow()
 
     return Number(result.total ?? 0)

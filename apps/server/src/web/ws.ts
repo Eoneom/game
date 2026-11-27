@@ -230,6 +230,35 @@ export function setupWebSocketServer(
     }
   })
 
+  eventBus.on(AppEvent.DefenseBuildUpdated, ({
+    city_id, player_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.DefenseBuildUpdated,
+        city_id
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.DefenseQueueItemDropped, ({
+    player_id,
+    city_id,
+    defense_code,
+    error_code
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.DefenseQueueItemDropped,
+        city_id,
+        defense_code,
+        error_code
+      }))
+    }
+  })
+
   eventBus.on(AppEvent.OutpostCreated, ({ player_id }) => {
     const ws = game_connections.get(player_id)
     if (ws?.readyState === WebSocket.OPEN) {

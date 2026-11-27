@@ -14,6 +14,8 @@ export type SimulateCombatParams = {
   defender_strategy: CombatStrategy
   attacker_modifiers?: CombatModifiers
   defender_modifiers?: CombatModifiers
+  /** City plasma for plasma batteries; omitted = unlimited (slice 029). */
+  defender_plasma?: number
 }
 
 export type SimulateCombatResult = {

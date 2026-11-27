@@ -69,6 +69,8 @@ export class PostgresBattleRepository implements BattleRepository {
       defender_life_pool: row.defender_life_pool,
       attacker_losses: row.attacker_losses as BattleCasualtyLine[],
       defender_losses: row.defender_losses as BattleCasualtyLine[],
+      defender_plasma_spent: row.defender_plasma_spent,
+      shield_reduction: row.shield_reduction,
     }))
   }
 
@@ -83,6 +85,8 @@ export class PostgresBattleRepository implements BattleRepository {
       // Pre-serialized: node-postgres would send arrays as Postgres array literals.
       attacker_losses: JSON.stringify(summary.attacker_losses),
       defender_losses: JSON.stringify(summary.defender_losses),
+      defender_plasma_spent: summary.defender_plasma_spent ?? 0,
+      shield_reduction: summary.shield_reduction ?? 0,
     }
   }
 
@@ -112,6 +116,20 @@ export class PostgresBattleRepository implements BattleRepository {
     }
 
     return this.buildFromRow(row, await this.listRounds(row.id))
+  }
+
+  async countByTargetSince({
+    target_id,
+    since
+  }: { target_id: string, since: number }): Promise<number> {
+    const result = await this.db
+      .selectFrom('battle')
+      .select(({ fn }) => fn.countAll<number>().as('count'))
+      .where('target_id', '=', target_id)
+      .where('started_at', '>=', toTimestampRequired(since))
+      .executeTakeFirstOrThrow()
+
+    return Number(result.count)
   }
 
   private buildFromRow(

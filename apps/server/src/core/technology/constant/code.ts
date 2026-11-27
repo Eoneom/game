@@ -10,5 +10,6 @@ export enum TechnologyCode {
   ADVANCED_RECYCLING = 'advanced_recycling',
   AGRONOMY = 'agronomy',
   STORAGE_COMPRESSION = 'storage_compression',
-  PLASMA_CONTAINMENT = 'plasma_containment'
+  PLASMA_CONTAINMENT = 'plasma_containment',
+  FORTIFICATION = 'fortification'
 }

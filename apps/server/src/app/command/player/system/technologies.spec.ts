@@ -97,6 +97,7 @@ describe('sortTechnologiesForSystemResearch', () => {
       TechnologyCode.BALLISTIC_ALLOYS,
       TechnologyCode.ORGANIC_PLATING,
       TechnologyCode.TACTICAL_PROPULSION,
+      TechnologyCode.FORTIFICATION,
     ])
     assert.deepStrictEqual(
       [ ...SYSTEM_TECHNOLOGY_RESEARCH_PRIORITY ].sort(),

@@ -203,6 +203,25 @@ describe('upgradeBuilding', () => {
     )
   })
 
+  it('lets the Enceinte be built in a full city (outside the level cap)', async () => {
+    repository.building.getTotalLevels = vi.fn().mockResolvedValue(10)
+    repository.building.get = vi.fn().mockResolvedValue(BuildingEntity.create({
+      id: id(),
+      code: BuildingCode.CITY_WALL,
+      level: 0,
+      city_id: city.id
+    }))
+    vi.spyOn(AppService, 'getCityMaximumBuildingLevels').mockResolvedValue(10)
+
+    await upgradeBuilding({
+      player_id,
+      city_id: city.id,
+      building_code: BuildingCode.CITY_WALL
+    })
+
+    assert.strictEqual(scheduleBuildingUpgradeFinish.mock.calls.length, 1)
+  })
+
   it('should prevent player to research if technology requirements are not met', async () => {
     repository.technology.list = vi.fn().mockResolvedValue([])
 

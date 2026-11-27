@@ -9,8 +9,18 @@ import {
   type SystemTickContext,
 } from '#app/query/player/system/system-tick-context'
 import { Factory } from '#adapter/factory'
-import { countCombatStacks } from '#core/combat/troop-combat'
-import { combatRoleFor, combatTroopClassFor } from '#core/combat/troop-combat'
+import {
+  combatRoleFor,
+  combatTroopClassFor,
+  countCombatStacks,
+  lifeContribution,
+} from '#core/combat/troop-combat'
+import {
+  BattleStack,
+  isDefenseStack,
+  isTroopStack,
+} from '#core/combat/type/battle-stack'
+import { DefenseService } from '#core/defense/service'
 import { CombatRole } from '#core/troop/constant/combat-role'
 import { TroopCode } from '#core/troop/constant/code'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
@@ -114,11 +124,11 @@ export function combatStacksForAttack(troops: TroopEntity[]): { code: TroopCode;
 }
 
 export function pickAttackerStrategyForDefender(
-  defender_stacks: { code: TroopCode, count: number }[],
+  defender_stacks: BattleStack[],
 ): CombatStrategy {
   const class_counts = new Map<CombatTroopClass, number>()
   for (const stack of defender_stacks) {
-    if (stack.count <= 0 || combatRoleFor(stack.code) !== CombatRole.COMBAT) {
+    if (stack.count <= 0 || isDefenseStack(stack) || combatRoleFor(stack.code) !== CombatRole.COMBAT) {
       continue
     }
     const combat_class = combatTroopClassFor(stack.code)
@@ -140,13 +150,47 @@ export function pickAttackerStrategyForDefender(
   return CombatStrategy.HOLD_THE_LINE
 }
 
+/** `siege_assault` is considered when defense points exceed this share of the defender's combat troop life pool (slice 029). */
+export const SYSTEM_SIEGE_ASSAULT_DEFENSE_SHARE = 0.3
+
+/**
+ * Siege when the target's defense points exceed 30 % of its combat troops' life pool
+ * (any defense point counts when the city has no combat troops).
+ */
+export function shouldConsiderSiegeAssault(defender_stacks: BattleStack[]): boolean {
+  const defense_points = DefenseService.getTotalPoints(defender_stacks.filter(isDefenseStack))
+  if (defense_points <= 0) {
+    return false
+  }
+  const combat_life = defender_stacks
+    .filter(isTroopStack)
+    .filter(stack => stack.count > 0 && combatRoleFor(stack.code) === CombatRole.COMBAT)
+    .reduce((sum, stack) => sum + lifeContribution({
+      code: stack.code,
+      count: stack.count
+    }), 0)
+  return defense_points > combat_life * SYSTEM_SIEGE_ASSAULT_DEFENSE_SHARE
+}
+
+/** Strategies the AI simulates for a target, preferred first. */
+export function attackStrategyCandidates(defender_stacks: BattleStack[]): CombatStrategy[] {
+  const default_strategy = pickAttackerStrategyForDefender(defender_stacks)
+  return shouldConsiderSiegeAssault(defender_stacks)
+    ? [
+      CombatStrategy.SIEGE_ASSAULT,
+      default_strategy
+    ]
+    : [ default_strategy ]
+}
+
+/** Simulates with the target's defenses included (city plasma unknown: batteries fire freely). */
 export function simulateAttackCommit({
   move_troops,
   defender_stacks,
   attacker_strategy,
 }: {
   move_troops: { code: TroopCode, count: number }[]
-  defender_stacks: { code: TroopCode, count: number }[]
+  defender_stacks: BattleStack[]
   attacker_strategy: CombatStrategy
 }): BattleWinner | null {
   const defender_strategy = pickAttackerStrategyForDefender(defender_stacks)
@@ -170,18 +214,35 @@ type AttackCandidate = {
 async function defenderCombatStacksOnCell({
   cell_id,
   attacker_player_id,
+  city_id,
 }: {
   cell_id: string
   attacker_player_id: string
-}): Promise<{ code: TroopCode, count: number }[]> {
+  /** City target: its defenses join the defender (slice 029). */
+  city_id: string | null
+}): Promise<BattleStack[]> {
   const repository = Factory.getRepository()
   const stacks = await repository.troop.listAllInCell({ cell_id })
-  return stacks
+  const troops: BattleStack[] = stacks
     .filter(troop => troop.player_id !== attacker_player_id && troop.count > 0 && troop.movement_id === null)
     .map(troop => ({
       code: troop.code,
       count: troop.count,
     }))
+  if (!city_id) {
+    return troops
+  }
+  const defenses = await repository.defense.listByCity({ city_id })
+  return [
+    ...troops,
+    ...defenses
+      .filter(defense => defense.count > 0)
+      .map(defense => ({
+        kind: 'defense' as const,
+        code: defense.code,
+        count: defense.count,
+      })),
+  ]
 }
 
 export async function pickSystemAttack({
@@ -274,15 +335,15 @@ export async function pickSystemAttack({
         const defender_stacks = await defenderCombatStacksOnCell({
           cell_id: target.destination_cell_id,
           attacker_player_id: player_id,
+          city_id: target.target_kind === BattleTargetKind.CITY ? target.target_id : null,
         })
         const defender_combat_count = countCombatStacks(defender_stacks)
-        const combat_strategy = pickAttackerStrategyForDefender(defender_stacks)
-        const winner = simulateAttackCommit({
+        const combat_strategy = attackStrategyCandidates(defender_stacks).find(strategy => simulateAttackCommit({
           move_troops,
           defender_stacks,
-          attacker_strategy: combat_strategy,
-        })
-        if (winner !== BattleWinner.ATTACKER) {
+          attacker_strategy: strategy,
+        }) === BattleWinner.ATTACKER)
+        if (!combat_strategy) {
           continue
         }
         const score = scoreAttackTarget({

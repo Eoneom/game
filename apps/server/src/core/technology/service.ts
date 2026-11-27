@@ -51,6 +51,14 @@ export class TechnologyService {
     }
   }
 
+  /** Attack and life multiplier of defenses (slice 029). */
+  static getFortificationMultiplier({ fortification_level }: { fortification_level: number }): number {
+    return this.getBonusMultiplier({
+      code: TechnologyCode.FORTIFICATION,
+      level: fortification_level
+    })
+  }
+
   static getProductionMultipliers({
     advanced_recycling_level,
     agronomy_level,

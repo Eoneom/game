@@ -1,6 +1,7 @@
 import { Factory } from '#adapter/factory'
 import { AppService } from '#app/service'
 import { BuildingService } from '#core/building/service'
+import { DefenseService } from '#core/defense/service'
 import { CityService } from '#core/city/service'
 import { PlayerService } from '#core/player/service'
 import { TechnologyService } from '#core/technology/service'
@@ -58,6 +59,10 @@ export async function bootstrapPlayer({
   })
   const buildings = BuildingService.init({ city_id: city.id })
   const technologies = TechnologyService.init({ player_id: player.id })
+  const defenses = DefenseService.init({
+    player_id: player.id,
+    city_id: city.id
+  })
   const gather_at = now()
   const initial_stock = await repository.resource_stock.getByCellId({ cell_id: city_first_cell.id })
   const stock_for_first_city = initial_stock.withState(ResourcesService.firstCityCanonicalResourceStockState({ gather_at }))
@@ -79,6 +84,7 @@ export async function bootstrapPlayer({
   await Promise.all([
     ...buildings.map(building => repository.building.create(building)),
     ...technologies.map(technology => repository.technology.create(technology)),
+    ...defenses.map(defense => repository.defense.create(defense)),
     repository.resource_stock.updateOne(stock_for_first_city),
     ...troops.map(troop => repository.troop.create(troop)),
     repository.exploration.create(exploration)

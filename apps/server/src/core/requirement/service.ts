@@ -1,5 +1,7 @@
 import { BuildingCode } from '#core/building/constant/code'
 import { BuildingRequirement } from '#core/requirement/constant/building'
+import { DefenseRequirement } from '#core/requirement/constant/defense'
+import { DefenseCode } from '#core/defense/constant/code'
 import { TechnologyRequirement } from '#core/requirement/constant/technology'
 import { TroopRequirement } from '#core/requirement/constant/troop'
 import { RequirementError } from '#core/requirement/error'
@@ -27,6 +29,23 @@ export class RequirementService {
     levels: Levels
   }): void {
     const requirement = this.getTroopRequirement({ troop_code })
+    return this.checkRequirement({
+      requirement,
+      levels
+    })
+  }
+
+  static getDefenseRequirement({ defense_code }: { defense_code: DefenseCode }): RequirementValue {
+    return DefenseRequirement[defense_code]
+  }
+  static checkDefenseRequirement({
+    defense_code,
+    levels
+  }: {
+    defense_code: DefenseCode
+    levels: Levels
+  }): void {
+    const requirement = this.getDefenseRequirement({ defense_code })
     return this.checkRequirement({
       requirement,
       levels

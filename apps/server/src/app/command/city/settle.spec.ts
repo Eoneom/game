@@ -5,6 +5,7 @@ import { AppService } from '#app/service'
 import { Repository } from '#app/port/repository/generic'
 import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
+import { DefenseCode } from '#core/defense/constant/code'
 import { OutpostType } from '#core/outpost/constant/type'
 import { OutpostEntity } from '#core/outpost/entity'
 import { OutpostError } from '#core/outpost/error'
@@ -47,6 +48,7 @@ describe('citySettle', () => {
   let outpostDelete: MockInstance
   let cityCreate: MockInstance
   let buildingCreate: MockInstance
+  let defenseCreate: MockInstance
   let troopUpdateOne: MockInstance
   let explorationUpdateOne: MockInstance
   let repository: Pick<Repository, 'outpost' | 'city' | 'exploration' | 'cell' | 'troop' | 'building'>
@@ -126,6 +128,7 @@ describe('citySettle', () => {
     outpostDelete = vi.fn().mockResolvedValue(undefined)
     cityCreate = vi.fn().mockResolvedValue(undefined)
     buildingCreate = vi.fn().mockResolvedValue(undefined)
+    defenseCreate = vi.fn().mockResolvedValue(undefined)
     troopUpdateOne = vi.fn().mockResolvedValue(undefined)
     explorationUpdateOne = vi.fn().mockResolvedValue(undefined)
 
@@ -150,7 +153,8 @@ describe('citySettle', () => {
         listInCell: vi.fn().mockResolvedValue([ settler_troop ]),
         updateOne: troopUpdateOne
       } as unknown as Repository['troop'],
-      building: { create: buildingCreate } as unknown as Repository['building']
+      building: { create: buildingCreate } as unknown as Repository['building'],
+      defense: { create: defenseCreate } as unknown as Repository['defense']
     }
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
@@ -273,6 +277,22 @@ describe('citySettle', () => {
     const created_city = cityCreate.mock.calls[0][0]
     buildingCreate.mock.calls.forEach(([ building ]) => {
       assert.strictEqual(building.city_id, created_city.id)
+    })
+  })
+
+  it('should init every defense of the new city at count 0', async () => {
+    await citySettle({
+      outpost_id,
+      player_id,
+      city_name
+    })
+
+    assert.strictEqual(defenseCreate.mock.calls.length, Object.keys(DefenseCode).length)
+    const created_city = cityCreate.mock.calls[0][0]
+    defenseCreate.mock.calls.forEach(([ defense ]) => {
+      assert.strictEqual(defense.city_id, created_city.id)
+      assert.strictEqual(defense.player_id, player_id)
+      assert.strictEqual(defense.count, 0)
     })
   })
 

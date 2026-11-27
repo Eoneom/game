@@ -14,7 +14,9 @@ import type {
   PendingTechnologyResearch,
   PendingTroopMovementFinish,
   PendingTroopRecruitProgress,
-  TroopRecruitProgressJobData
+  TroopRecruitProgressJobData,
+  DefenseBuildProgressJobData,
+  PendingDefenseBuildProgress
 } from '#app/port/job-queue'
 import {
   PGBOSS_SCHEMA,
@@ -39,6 +41,12 @@ import {
   getPendingTroopRecruitProgress,
   scheduleTroopRecruitProgress
 } from '#adapter/job-queue/troop/recruit'
+import {
+  DEFENSE_BUILD_PROGRESS_QUEUE,
+  cancelDefenseBuildProgress,
+  getPendingDefenseBuildProgress,
+  scheduleDefenseBuildProgress
+} from '#adapter/job-queue/defense/build'
 import {
   TROOP_MOVEMENT_FINISH_QUEUE,
   cancelTroopMovementFinish,
@@ -105,6 +113,7 @@ export class JobQueue implements JobQueuePort {
     await this.ctx.boss.createQueue(BUILDING_UPGRADE_FINISH_QUEUE)
     await this.ctx.boss.createQueue(TECHNOLOGY_RESEARCH_FINISH_QUEUE)
     await this.ctx.boss.createQueue(TROOP_RECRUIT_PROGRESS_QUEUE, { policy: 'stately' })
+    await this.ctx.boss.createQueue(DEFENSE_BUILD_PROGRESS_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(TROOP_MOVEMENT_FINISH_QUEUE)
     await this.ctx.boss.createQueue(COMBAT_ROUND_ADVANCE_QUEUE)
     await this.ctx.boss.createQueue(CITY_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
@@ -180,6 +189,20 @@ export class JobQueue implements JobQueuePort {
 
   async getPendingTroopRecruitProgress(args: { city_id: string }): Promise<PendingTroopRecruitProgress | null> {
     return getPendingTroopRecruitProgress(this.ctx, args)
+  }
+
+  async scheduleDefenseBuildProgress(args: DefenseBuildProgressJobData & {
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleDefenseBuildProgress(this.ctx, args)
+  }
+
+  async cancelDefenseBuildProgress(args: { city_id: string }): Promise<void> {
+    return cancelDefenseBuildProgress(this.ctx, args)
+  }
+
+  async getPendingDefenseBuildProgress(args: { city_id: string }): Promise<PendingDefenseBuildProgress | null> {
+    return getPendingDefenseBuildProgress(this.ctx, args)
   }
 
   async scheduleTroopMovementFinish(args: {

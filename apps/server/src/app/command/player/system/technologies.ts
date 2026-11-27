@@ -24,6 +24,8 @@ const SYSTEM_ARSENAL_RESEARCH_PRIORITY: TechnologyCode[] = [
   TechnologyCode.BALLISTIC_ALLOYS,
   TechnologyCode.ORGANIC_PLATING,
   TechnologyCode.TACTICAL_PROPULSION,
+  // Unlocks turrets for the system defense policy (slice 029).
+  TechnologyCode.FORTIFICATION,
 ]
 
 /** Highest-priority system AI research order (first entry = tried first). */

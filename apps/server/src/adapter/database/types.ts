@@ -82,7 +82,9 @@ export interface BattleRound {
   defender_attack_pool: number;
   defender_life_pool: number;
   defender_losses: Json;
+  defender_plasma_spent: Generated<number>;
   round: number;
+  shield_reduction: Generated<number>;
 }
 
 export interface City {
@@ -90,6 +92,23 @@ export interface City {
   default_combat_strategy: string | null;
   id: Generated<string>;
   name: string;
+  player_id: string;
+}
+
+export interface Defense {
+  city_id: string;
+  code: string;
+  count: Generated<number>;
+  id: Generated<string>;
+  player_id: string;
+}
+
+export interface DefenseBuildQueue {
+  city_id: string;
+  count: number;
+  created_at: Generated<Timestamp>;
+  defense_code: string;
+  id: Generated<string>;
   player_id: string;
 }
 
@@ -368,6 +387,8 @@ export interface DB {
   building_upgrade_queue: BuildingUpgradeQueue;
   cell: Cell;
   city: City;
+  defense: Defense;
+  defense_build_queue: DefenseBuildQueue;
   exploration: Exploration;
   exploration_cell: ExplorationCell;
   movement: Movement;

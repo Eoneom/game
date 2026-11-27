@@ -18,12 +18,15 @@ import {
   type TroopRecruitProgressJobData,
   COMBAT_ROUND_ADVANCE_QUEUE,
   type CombatRoundAdvanceJobData,
+  DEFENSE_BUILD_PROGRESS_QUEUE,
+  type DefenseBuildProgressJobData,
 } from '#adapter/job-queue'
 import type { JobQueue } from '#app/port/job-queue'
 import { finishBuildingUpgrade } from '#app/command/building/finish-upgrade'
 import { finishTechnologyResearch } from '#app/command/technology/finish-research'
 import { sagaFinishOneMovement } from '#app/saga/finish/movement'
 import { progressTroopRecruitment } from '#app/command/troop/progress-recruit'
+import { progressDefenseBuild } from '#app/command/defense/progress-build'
 import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progress-gather-all'
 import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
@@ -120,6 +123,36 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
           player_id: data.player_id,
           city_id: data.city_id,
           troop_id: data.troop_id,
+          remaining_count: data.remaining_count,
+          finish_at: data.finish_at,
+          started_at: data.started_at,
+          last_progress: data.last_progress,
+        })
+      }
+    }
+  )
+
+  await queue.work<DefenseBuildProgressJobData, void, { includeMetadata: true }>(
+    DEFENSE_BUILD_PROGRESS_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        const data = job.data
+        if (!data) {
+          logger.warn('defense build progress job missing data', { job_id: job.id })
+          continue
+        }
+
+        logger.info('processing defense build progress', {
+          job_id: job.id,
+          city_id: data.city_id,
+          defense_code: data.defense_code
+        })
+
+        await progressDefenseBuild({
+          player_id: data.player_id,
+          city_id: data.city_id,
+          defense_code: data.defense_code,
           remaining_count: data.remaining_count,
           finish_at: data.finish_at,
           started_at: data.started_at,

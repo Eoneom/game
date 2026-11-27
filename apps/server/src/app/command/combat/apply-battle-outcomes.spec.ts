@@ -15,6 +15,11 @@ import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { TroopCode } from '#core/troop/constant/code'
 import { BuildingCode } from '#core/building/constant/code'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
+import {
+  BattleCasualtyLine, BattleStack 
+} from '#core/combat/type/battle-stack'
+import { DefenseCode } from '#core/defense/constant/code'
+import { JobQueue } from '#app/port/job-queue'
 
 vi.mock('#app/command/communication/report/create-battle', () => ({
   createBattleReports: vi.fn().mockResolvedValue({
@@ -31,6 +36,12 @@ describe('applyBattleOutcomes loot', () => {
   let stockUpdateOne: MockInstance
   let queueDeleteByCity: MockInstance
   let buildingGetLevel: MockInstance
+  let defenseDeleteByCity: MockInstance
+  let defenseRemoveCount: MockInstance
+  let defenseQueueDeleteByCity: MockInstance
+  let cancelDefenseBuildProgress: MockInstance
+  let cityUpdateOne: MockInstance
+  let troopUpdateOne: MockInstance
   let city_id: string
 
   function setup({
@@ -38,11 +49,15 @@ describe('applyBattleOutcomes loot', () => {
     transporters,
     shelter_level = 0,
     target_kind = BattleTargetKind.CITY,
+    defender_stacks = [],
+    cumulative_defender_losses = [],
   }: {
     stock: ResourceStockEntity
     transporters: number
     shelter_level?: number
     target_kind?: BattleTargetKind
+    defender_stacks?: BattleStack[]
+    cumulative_defender_losses?: BattleCasualtyLine[]
   }): void {
     const city = CityEntity.initCity({
       name: 'defender city',
@@ -74,13 +89,13 @@ describe('applyBattleOutcomes loot', () => {
             count: transporters
           },
         ],
-        defender_stacks: [],
+        defender_stacks,
         attacker_origin: {
           x: 0,
           y: 0
         },
         cumulative_attacker_losses: [],
-        cumulative_defender_losses: [],
+        cumulative_defender_losses,
       },
       round_summaries: [],
       started_at: 1_000,
@@ -90,6 +105,14 @@ describe('applyBattleOutcomes loot', () => {
     stockUpdateOne = vi.fn().mockResolvedValue(undefined)
     queueDeleteByCity = vi.fn().mockResolvedValue(undefined)
     buildingGetLevel = vi.fn().mockResolvedValue(shelter_level)
+    defenseDeleteByCity = vi.fn().mockResolvedValue(undefined)
+    defenseRemoveCount = vi.fn().mockResolvedValue(undefined)
+    defenseQueueDeleteByCity = vi.fn().mockResolvedValue(undefined)
+    cancelDefenseBuildProgress = vi.fn().mockResolvedValue(undefined)
+    cityUpdateOne = vi.fn().mockResolvedValue(undefined)
+    troopUpdateOne = vi.fn().mockResolvedValue(undefined)
+
+    vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ cancelDefenseBuildProgress } as unknown as JobQueue)
 
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       battle: {
@@ -114,7 +137,7 @@ describe('applyBattleOutcomes loot', () => {
         listAllInCell: vi.fn().mockResolvedValue([]),
         listByMovement: vi.fn().mockResolvedValue([]),
         delete: vi.fn().mockResolvedValue(undefined),
-        updateOne: vi.fn().mockResolvedValue(undefined),
+        updateOne: troopUpdateOne,
       },
       resource_stock: {
         getByCellId: vi.fn().mockResolvedValue(stock),
@@ -122,10 +145,15 @@ describe('applyBattleOutcomes loot', () => {
       },
       city: {
         get: vi.fn().mockResolvedValue(city),
-        updateOne: vi.fn().mockResolvedValue(undefined),
+        updateOne: cityUpdateOne,
       },
       building: { getLevel: buildingGetLevel },
       troop_recruit_queue: { deleteByCity: queueDeleteByCity },
+      defense: {
+        deleteByCity: defenseDeleteByCity,
+        removeCount: defenseRemoveCount,
+      },
+      defense_build_queue: { deleteByCity: defenseQueueDeleteByCity },
     } as unknown as Repository)
   }
 
@@ -334,5 +362,131 @@ describe('applyBattleOutcomes loot', () => {
     })
 
     expect(queueDeleteByCity).toHaveBeenCalledWith({ city_id })
+  })
+
+  describe('city defenses', () => {
+    const empty_stock = () => testResourceStock({
+      cell_id: destination_cell.id,
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+    })
+
+    it('deletes every defense, the fortification queue and batch before the capture on attacker win', async () => {
+      setup({
+        stock: empty_stock(),
+        transporters: 0,
+        defender_stacks: [
+          {
+            kind: 'defense',
+            code: DefenseCode.RAMPART,
+            count: 4 
+          } 
+        ],
+      })
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.ATTACKER,
+        finished_at: 5_000,
+      })
+
+      expect(defenseDeleteByCity).toHaveBeenCalledWith({ city_id })
+      expect(defenseQueueDeleteByCity).toHaveBeenCalledWith({ city_id })
+      expect(cancelDefenseBuildProgress).toHaveBeenCalledWith({ city_id })
+      expect(defenseDeleteByCity.mock.invocationCallOrder[0]).toBeLessThan(cityUpdateOne.mock.invocationCallOrder[0])
+      expect(defenseRemoveCount).not.toHaveBeenCalled()
+    })
+
+    it('keeps surviving defenses on a draw and removes only the lost units', async () => {
+      setup({
+        stock: empty_stock(),
+        transporters: 0,
+        defender_stacks: [
+          {
+            code: TroopCode.WAR_MACHINE,
+            count: 2 
+          },
+          {
+            kind: 'defense',
+            code: DefenseCode.TURRET,
+            count: 3 
+          },
+        ],
+        cumulative_defender_losses: [
+          {
+            code: TroopCode.WAR_MACHINE,
+            count: 1 
+          },
+          {
+            kind: 'defense',
+            code: DefenseCode.RAMPART,
+            count: 5 
+          },
+          {
+            kind: 'defense',
+            code: DefenseCode.MINEFIELD,
+            count: 2 
+          },
+        ],
+      })
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.DRAW,
+        finished_at: 5_000,
+      })
+
+      expect(defenseDeleteByCity).not.toHaveBeenCalled()
+      expect(defenseRemoveCount).toHaveBeenCalledTimes(2)
+      expect(defenseRemoveCount).toHaveBeenCalledWith({
+        city_id,
+        code: DefenseCode.RAMPART,
+        count: 5 
+      })
+      expect(defenseRemoveCount).toHaveBeenCalledWith({
+        city_id,
+        code: DefenseCode.MINEFIELD,
+        count: 2 
+      })
+      // Defense survivors stay in their rows: only troops are written back as troop rows.
+      const written_codes = troopUpdateOne.mock.calls.map(([ troop ]) => troop.code)
+      assert.ok(written_codes.includes(TroopCode.WAR_MACHINE))
+      assert.ok(!written_codes.includes(DefenseCode.TURRET))
+    })
+
+    it('persists defense losses when the defender wins', async () => {
+      setup({
+        stock: empty_stock(),
+        transporters: 0,
+        defender_stacks: [
+          {
+            kind: 'defense',
+            code: DefenseCode.TURRET,
+            count: 3 
+          } 
+        ],
+        cumulative_defender_losses: [
+          {
+            kind: 'defense',
+            code: DefenseCode.TURRET,
+            count: 1 
+          } 
+        ],
+      })
+
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.DEFENDER,
+        finished_at: 5_000,
+      })
+
+      expect(defenseRemoveCount).toHaveBeenCalledWith({
+        city_id,
+        code: DefenseCode.TURRET,
+        count: 1 
+      })
+      expect(defenseDeleteByCity).not.toHaveBeenCalled()
+    })
   })
 })

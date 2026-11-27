@@ -156,6 +156,7 @@ describe('ensureSystemPlayers', () => {
       },
       building: { create: buildingCreate },
       technology: { create: technologyCreate },
+      defense: { create: vi.fn().mockResolvedValue(undefined) },
       resource_stock: {
         getByCellId: resourceStockGetByCellId,
         updateOne: resourceStockUpdateOne

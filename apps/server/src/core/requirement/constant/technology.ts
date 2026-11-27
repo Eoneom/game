@@ -136,5 +136,18 @@ export const TechnologyRequirement: Record<TechnologyCode, RequirementValue> = {
       }
     ],
     technologies: []
+  },
+  [TechnologyCode.FORTIFICATION]: {
+    buildings: [
+      {
+        code: BuildingCode.RESEARCH_LAB,
+        level: 5
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 1
+      }
+    ],
+    technologies: []
   }
 }

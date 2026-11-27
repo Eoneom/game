@@ -5,13 +5,14 @@ import {
   BattleRoundSummary,
   BattleStack,
   CombatModifiers,
+  isDefenseStack,
   NEUTRAL_COMBAT_MODIFIERS,
 } from '#core/combat/type/battle-stack'
 import {
   attackContribution,
   combatRoleFor,
   combatTroopClassFor,
-  countCombatStacks,
+  countBattlePresence,
   isHomogeneousCombatArmy,
   lifeCapacityFor,
   lifeContribution,
@@ -20,24 +21,90 @@ import {
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
+import {
+  defense_characteristics,
+  PLASMA_BATTERY_PLASMA_PER_ROUND,
+  SHIELD_REDUCTION_CAP,
+  SHIELD_REDUCTION_PER_UNIT,
+  SIEGE_DEFENSE_LIFE_MULTIPLIER,
+} from '#core/defense/constant/characteristic'
+import { DefenseCode } from '#core/defense/constant/code'
 import { CombatRole } from '#core/troop/constant/combat-role'
-import { troop_characteristics } from '#core/troop/constant/characteristic'
-import { TroopCode } from '#core/troop/constant/code'
+
+function lineKey(line: BattleCasualtyLine): string {
+  return `${isDefenseStack(line) ? 'defense' : 'troop'}:${line.code}`
+}
 
 function mergeCasualties(
   lines: BattleCasualtyLine[],
   added: BattleCasualtyLine[]
 ): BattleCasualtyLine[] {
-  const map = new Map<TroopCode, number>()
-  for (const line of lines) {
-    map.set(line.code, (map.get(line.code) ?? 0) + line.count)
+  const map = new Map<string, BattleCasualtyLine>()
+  for (const line of [ ...lines, ...added ]) {
+    const key = lineKey(line)
+    const current = map.get(key)
+    map.set(key, current
+      ? { ...current, count: current.count + line.count }
+      : { ...line })
   }
-  for (const line of added) {
-    map.set(line.code, (map.get(line.code) ?? 0) + line.count)
+  return Array.from(map.values()).filter(line => line.count > 0)
+}
+
+type SidePools = {
+  attack_pool: number
+  life_pool: number
+  class_attack: Map<CombatTroopClass, number>
+  /** Plasma spent by this side's plasma batteries this round. */
+  plasma_spent: number
+}
+
+/**
+ * Defense pools (slice 029): only Fortification scales them (no strategy or Arsenal multiplier).
+ * Minefields attack in round 1 only and have no life; batteries fire up to the available plasma.
+ */
+function addDefensePools({
+  stacks,
+  round,
+  fortification,
+  plasma_available,
+}: {
+  stacks: BattleStack[]
+  round: number
+  fortification: number
+  /** `undefined` = unlimited plasma (simulations). */
+  plasma_available?: number
+}): { attack: number; life: number; plasma_spent: number } {
+  let attack = 0
+  let life = 0
+  let plasma_spent = 0
+
+  for (const stack of stacks) {
+    if (stack.count <= 0 || !isDefenseStack(stack)) {
+      continue
+    }
+    const characteristic = defense_characteristics[stack.code]
+
+    if (stack.code === DefenseCode.MINEFIELD) {
+      if (round === 1) {
+        attack += characteristic.attack * stack.count * fortification
+      }
+      continue
+    }
+
+    if (stack.code === DefenseCode.PLASMA_BATTERY) {
+      const plasma_left = plasma_available === undefined
+        ? Infinity
+        : Math.max(0, plasma_available - plasma_spent)
+      const firing = Math.min(stack.count, Math.floor(plasma_left / PLASMA_BATTERY_PLASMA_PER_ROUND))
+      plasma_spent += firing * PLASMA_BATTERY_PLASMA_PER_ROUND
+      attack += characteristic.attack * firing * fortification
+    } else {
+      attack += characteristic.attack * stack.count * fortification
+    }
+    life += characteristic.life * stack.count * fortification
   }
-  return Array.from(map.entries())
-    .filter(([, count]) => count > 0)
-    .map(([code, count]) => ({ code, count }))
+
+  return { attack, life, plasma_spent }
 }
 
 function computePools({
@@ -45,18 +112,23 @@ function computePools({
   strategy,
   round,
   modifiers,
+  defense_life_multiplier = 1,
+  plasma_available,
 }: {
   stacks: BattleStack[]
   strategy: CombatStrategy
   round: number
   modifiers: CombatModifiers
-}): { attack_pool: number; life_pool: number; class_attack: Map<CombatTroopClass, number> } {
+  /** 75 % when the opposing side uses `siege_assault` (slice 029). */
+  defense_life_multiplier?: number
+  plasma_available?: number
+}): SidePools {
   let attack_pool = 0
   let life_pool = 0
   const class_attack = new Map<CombatTroopClass, number>()
 
   for (const stack of stacks) {
-    if (stack.count <= 0) {
+    if (stack.count <= 0 || isDefenseStack(stack)) {
       continue
     }
     const role = combatRoleFor(stack.code)
@@ -89,11 +161,33 @@ function computePools({
     }
   }
 
+  // Exposure is a troop-army penalty: it applies to the troop life only.
   if (isHomogeneousCombatArmy(stacks)) {
     life_pool = Math.floor(life_pool * EXPOSURE_LIFE_MULT)
   }
 
-  return { attack_pool, life_pool, class_attack }
+  const defense = addDefensePools({
+    stacks,
+    round,
+    fortification: modifiers.fortification ?? 1,
+    plasma_available,
+  })
+
+  return {
+    attack_pool: attack_pool + defense.attack,
+    life_pool: life_pool + defense.life * defense_life_multiplier,
+    class_attack,
+    plasma_spent: defense.plasma_spent,
+  }
+}
+
+/** `1 − min(0.30, 0.02 × surviving shield generators)` multiplier lost by the opposing attack pool. */
+function shieldReduction(stacks: BattleStack[]): number {
+  const shields = stacks.reduce(
+    (sum, s) => sum + (isDefenseStack(s) && s.code === DefenseCode.SHIELD_GENERATOR ? Math.max(0, s.count) : 0),
+    0
+  )
+  return Math.min(SHIELD_REDUCTION_CAP, SHIELD_REDUCTION_PER_UNIT * shields)
 }
 
 function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroopClass | null {
@@ -114,43 +208,84 @@ function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroop
   return best
 }
 
+/**
+ * Casualty tiers (slice 029). Without defenses this is the former order:
+ * combat → carrier → civilian → scout.
+ */
+const NORMAL_TIER = {
+  rampart: 0,
+  combat: 1,
+  [DefenseCode.TURRET]: 2,
+  [DefenseCode.PLASMA_BATTERY]: 3,
+  [DefenseCode.SHIELD_GENERATOR]: 4,
+} as const
+
+const SIEGE_TIER = {
+  rampart: 0,
+  [DefenseCode.SHIELD_GENERATOR]: 1,
+  [DefenseCode.PLASMA_BATTERY]: 2,
+  [DefenseCode.TURRET]: 3,
+  combat: 4,
+} as const
+
+const NON_COMBAT_TIER: Record<Exclude<CombatRole, CombatRole.COMBAT>, number> = {
+  [CombatRole.CARRIER]: 5,
+  [CombatRole.CIVILIAN]: 6,
+  [CombatRole.SCOUT]: 7,
+}
+
 function casualtySortKey({
-  code,
+  stack,
   dominant,
+  siege,
 }: {
-  code: TroopCode
+  stack: BattleStack
   dominant: CombatTroopClass | null
+  siege: boolean
 }): number {
-  const role = combatRoleFor(code)
-  const role_order =
-    role === CombatRole.COMBAT ? 0
-      : role === CombatRole.CARRIER ? 1
-        : role === CombatRole.CIVILIAN ? 2
-          : 3
-  const cls = combatTroopClassFor(code)
+  const tiers = siege ? SIEGE_TIER : NORMAL_TIER
+  if (isDefenseStack(stack)) {
+    const tier = stack.code === DefenseCode.RAMPART
+      ? tiers.rampart
+      : tiers[stack.code as DefenseCode.TURRET | DefenseCode.PLASMA_BATTERY | DefenseCode.SHIELD_GENERATOR]
+    return tier * 1_000_000
+  }
+  const role = combatRoleFor(stack.code)
+  const tier = role === CombatRole.COMBAT ? tiers.combat : NON_COMBAT_TIER[role]
+  const cls = combatTroopClassFor(stack.code)
   const focus = dominant && cls === dominant ? 0 : 1
-  const life = lifeCapacityFor(code)
-  return role_order * 1_000_000 + focus * 100_000 + life * 100
+  const life = lifeCapacityFor(stack.code)
+  return tier * 1_000_000 + focus * 100_000 + life * 100
+}
+
+function toLossLine(stack: BattleStack, count: number): BattleCasualtyLine {
+  return isDefenseStack(stack)
+    ? { kind: 'defense', code: stack.code, count }
+    : { code: stack.code, count }
 }
 
 function applyLosses({
   stacks,
   loss_budget,
   dominant_class,
+  siege = false,
 }: {
   stacks: BattleStack[]
   loss_budget: number
   dominant_class: CombatTroopClass | null
+  /** The opposing side uses `siege_assault`: siege casualty order. */
+  siege?: boolean
 }): { stacks: BattleStack[]; losses: BattleCasualtyLine[] } {
   const mutable = stacks.map(s => ({ ...s }))
   const losses: BattleCasualtyLine[] = []
   let budget = loss_budget
 
   const candidates = mutable
-    .filter(s => s.count > 0)
+    // Minefields cannot be targeted.
+    .filter(s => s.count > 0 && !(isDefenseStack(s) && s.code === DefenseCode.MINEFIELD))
     .sort((a, b) => {
-      const ka = casualtySortKey({ code: a.code, dominant: dominant_class })
-      const kb = casualtySortKey({ code: b.code, dominant: dominant_class })
+      const ka = casualtySortKey({ stack: a, dominant: dominant_class, siege })
+      const kb = casualtySortKey({ stack: b, dominant: dominant_class, siege })
       if (ka !== kb) {
         return ka - kb
       }
@@ -167,12 +302,27 @@ function applyLosses({
     }
     stack.count -= take
     budget -= take
-    losses.push({ code: stack.code, count: take })
+    losses.push(toLossLine(stack, take))
   }
 
   return {
     stacks: mutable.filter(s => s.count > 0),
     losses,
+  }
+}
+
+/** Minefields fire once: after the round they fired in, the whole stack is consumed (and counted as lost). */
+function consumeMinefields(result: { stacks: BattleStack[]; losses: BattleCasualtyLine[] }): {
+  stacks: BattleStack[]
+  losses: BattleCasualtyLine[]
+} {
+  const mines = result.stacks.filter(s => isDefenseStack(s) && s.code === DefenseCode.MINEFIELD && s.count > 0)
+  if (mines.length === 0) {
+    return result
+  }
+  return {
+    stacks: result.stacks.filter(s => !(isDefenseStack(s) && s.code === DefenseCode.MINEFIELD)),
+    losses: mergeCasualties(result.losses, mines.map(s => toLossLine(s, s.count))),
   }
 }
 
@@ -187,8 +337,9 @@ export function resolveBattleWinner({
   round: number
   max_round: number
 }): BattleWinner | null {
-  const att_combat = countCombatStacks(attacker_stacks)
-  const def_combat = countCombatStacks(defender_stacks)
+  // Combat troops + armed defenses; ramparts, mines and shields alone do not hold a position.
+  const att_combat = countBattlePresence(attacker_stacks)
+  const def_combat = countBattlePresence(defender_stacks)
 
   if (def_combat === 0 && att_combat > 0) {
     return BattleWinner.ATTACKER
@@ -214,6 +365,7 @@ export class CombatService {
     defender_strategy,
     attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
     defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_plasma,
   }: {
     round: number
     attacker_stacks: BattleStack[]
@@ -222,12 +374,16 @@ export class CombatService {
     defender_strategy: CombatStrategy
     attacker_modifiers?: CombatModifiers
     defender_modifiers?: CombatModifiers
+    /** City plasma available to the defender's batteries this round; `undefined` = unlimited. */
+    defender_plasma?: number
   }): {
     attacker_stacks: BattleStack[]
     defender_stacks: BattleStack[]
     round_summary: BattleRoundSummary
     winner: BattleWinner | null
   } {
+    const siege = attacker_strategy === CombatStrategy.SIEGE_ASSAULT
+
     const att_pools = computePools({
       stacks: attacker_stacks,
       strategy: attacker_strategy,
@@ -239,25 +395,31 @@ export class CombatService {
       strategy: defender_strategy,
       round,
       modifiers: defender_modifiers,
+      defense_life_multiplier: siege ? SIEGE_DEFENSE_LIFE_MULTIPLIER : 1,
+      plasma_available: defender_plasma,
     })
+
+    const shield_reduction = shieldReduction(defender_stacks)
+    const attacker_attack_pool = att_pools.attack_pool * (1 - shield_reduction)
 
     const att_dominant = dominantClass(att_pools.class_attack)
     const def_dominant = dominantClass(def_pools.class_attack)
 
-    const def_loss_budget = att_pools.attack_pool > 0
-      ? Math.max(1, Math.floor(att_pools.attack_pool / Math.max(1, def_pools.life_pool)))
+    const def_loss_budget = attacker_attack_pool > 0
+      ? Math.max(1, Math.floor(attacker_attack_pool / Math.max(1, def_pools.life_pool)))
       : 0
     const att_loss_budget = def_pools.attack_pool > 0
       ? Math.max(1, Math.floor(def_pools.attack_pool / Math.max(1, att_pools.life_pool)))
       : 0
 
-    const def_result = def_loss_budget > 0
+    const def_result = consumeMinefields(def_loss_budget > 0
       ? applyLosses({
         stacks: defender_stacks,
         loss_budget: def_loss_budget,
         dominant_class: att_dominant,
+        siege,
       })
-      : { stacks: defender_stacks, losses: [] as BattleCasualtyLine[] }
+      : { stacks: defender_stacks, losses: [] as BattleCasualtyLine[] })
 
     const att_result = att_loss_budget > 0
       ? applyLosses({
@@ -269,12 +431,14 @@ export class CombatService {
 
     const round_summary: BattleRoundSummary = {
       round,
-      attacker_attack_pool: att_pools.attack_pool,
+      attacker_attack_pool,
       defender_attack_pool: def_pools.attack_pool,
       attacker_life_pool: att_pools.life_pool,
       defender_life_pool: def_pools.life_pool,
       attacker_losses: att_result.losses,
       defender_losses: def_result.losses,
+      defender_plasma_spent: def_pools.plasma_spent,
+      shield_reduction,
     }
 
     const winner = resolveBattleWinner({
@@ -301,6 +465,7 @@ export class CombatService {
     defender_strategy,
     attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
     defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_plasma,
     max_round = 5,
   }: {
     attacker_stacks: BattleStack[]
@@ -309,6 +474,8 @@ export class CombatService {
     defender_strategy: CombatStrategy
     attacker_modifiers?: CombatModifiers
     defender_modifiers?: CombatModifiers
+    /** City plasma for the defender's batteries over the whole battle; `undefined` = unlimited. */
+    defender_plasma?: number
     max_round?: number
   }): {
     winner: BattleWinner | null
@@ -318,6 +485,7 @@ export class CombatService {
   } {
     let current_attacker = attacker_stacks.map(s => ({ ...s }))
     let current_defender = defender_stacks.map(s => ({ ...s }))
+    let plasma_left = defender_plasma
     const round_summaries: BattleRoundSummary[] = []
     let winner: BattleWinner | null = null
 
@@ -330,10 +498,14 @@ export class CombatService {
         defender_strategy,
         attacker_modifiers,
         defender_modifiers,
+        defender_plasma: plasma_left,
       })
       round_summaries.push(result.round_summary)
       current_attacker = result.attacker_stacks
       current_defender = result.defender_stacks
+      if (plasma_left !== undefined) {
+        plasma_left = Math.max(0, plasma_left - (result.round_summary.defender_plasma_spent ?? 0))
+      }
       winner = result.winner
       if (winner !== null) {
         break

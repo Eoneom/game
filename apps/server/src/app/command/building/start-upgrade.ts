@@ -41,7 +41,8 @@ export async function startBuildingUpgrade({
     repository.building.getTotalLevels({ city_id }),
   ])
 
-  if (total_building_levels >= maximum_building_levels) {
+  // The Enceinte is outside the city's building level cap (slice 029).
+  if (building_code !== BuildingCode.CITY_WALL && total_building_levels >= maximum_building_levels) {
     throw new Error(CityError.NOT_ENOUGH_SPACE)
   }
 

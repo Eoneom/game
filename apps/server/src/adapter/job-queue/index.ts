@@ -14,6 +14,11 @@ export {
 } from '#adapter/job-queue/troop/recruit'
 
 export {
+  DEFENSE_BUILD_PROGRESS_QUEUE,
+  type DefenseBuildProgressJobData
+} from '#adapter/job-queue/defense/build'
+
+export {
   TROOP_MOVEMENT_FINISH_QUEUE,
   type TroopMovementFinishJobData
 } from '#adapter/job-queue/troop/finish-movement'

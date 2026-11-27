@@ -78,10 +78,39 @@ const hold_the_line: RoundMultipliers = {
   },
 }
 
+/** Flat on every round (slice 029); its effects on defender defenses live in the combat engine. */
+const siege_assault_round: ClassMultipliers = {
+  [CombatTroopClass.LEGIONNAIRE]: {
+    attack: 0.85,
+    life: 0.95
+  },
+  [CombatTroopClass.INTERCEPTOR]: {
+    attack: 0.85,
+    life: 0.95
+  },
+  [CombatTroopClass.WAR_MACHINE]: {
+    attack: 1.25,
+    life: 1.00
+  },
+  [CombatTroopClass.DISRUPTOR]: {
+    attack: 0.85,
+    life: 0.95
+  },
+}
+
+const siege_assault: RoundMultipliers = {
+  1: siege_assault_round,
+  2: siege_assault_round,
+  3: siege_assault_round,
+  4: siege_assault_round,
+  5: siege_assault_round,
+}
+
 export const combat_strategy_tables: Record<CombatStrategy, RoundMultipliers | 'flat'> = {
   [CombatStrategy.BALANCED]: 'flat',
   [CombatStrategy.OPENING_STRIKE]: opening_strike,
   [CombatStrategy.HOLD_THE_LINE]: hold_the_line,
+  [CombatStrategy.SIEGE_ASSAULT]: siege_assault,
 }
 
 export function getStrategyMultipliers({

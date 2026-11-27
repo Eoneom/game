@@ -9,6 +9,7 @@ import { FactionCode } from '#core/faction/constant/code'
 import { FactionError } from '#core/faction/error'
 import { PlayerError } from '#core/player/error'
 import { TechnologyCode } from '#core/technology/constant/code'
+import { DefenseCode } from '#core/defense/constant/code'
 import { TroopService } from '#core/troop/service'
 import {
   STARTING_MUSHROOM,
@@ -87,6 +88,7 @@ describe('signupAuth', () => {
   let cityCreate: MockInstance
   let buildingCreate: MockInstance
   let technologyCreate: MockInstance
+  let defenseCreate: MockInstance
   let resourceStockGetByCellId: MockInstance
   let resourceStockUpdateOne: MockInstance
   let troopCreate: MockInstance
@@ -100,6 +102,7 @@ describe('signupAuth', () => {
     cityCreate = vi.fn().mockResolvedValue(undefined)
     buildingCreate = vi.fn().mockResolvedValue(undefined)
     technologyCreate = vi.fn().mockResolvedValue(undefined)
+    defenseCreate = vi.fn().mockResolvedValue(undefined)
     troopCreate = vi.fn().mockResolvedValue(undefined)
     explorationCreate = vi.fn().mockResolvedValue(undefined)
     resourceStockGetByCellId = vi.fn().mockImplementation(({ cell_id }: { cell_id: string }) => Promise.resolve(testResourceStock({
@@ -121,6 +124,7 @@ describe('signupAuth', () => {
       } as unknown as Repository['city'],
       building: { create: buildingCreate } as unknown as Repository['building'],
       technology: { create: technologyCreate } as unknown as Repository['technology'],
+      defense: { create: defenseCreate } as unknown as Repository['defense'],
       resource_stock: {
         getByCellId: resourceStockGetByCellId,
         updateOne: resourceStockUpdateOne
@@ -290,6 +294,21 @@ describe('signupAuth', () => {
     const created_player = playerCreate.mock.calls[0][0]
     technologyCreate.mock.calls.forEach(([ technology ]) => {
       assert.strictEqual(technology.player_id, created_player.id)
+    })
+  })
+
+  it('should init every city defense at count 0', async () => {
+    await signupAuth({
+      player_name,
+      city_name,
+      faction_code
+    })
+
+    assert.strictEqual(defenseCreate.mock.calls.length, Object.keys(DefenseCode).length)
+    const created_city = cityCreate.mock.calls[0][0]
+    defenseCreate.mock.calls.forEach(([ defense ]) => {
+      assert.strictEqual(defense.city_id, created_city.id)
+      assert.strictEqual(defense.count, 0)
     })
   })
 

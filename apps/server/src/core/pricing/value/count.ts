@@ -9,8 +9,8 @@ export interface CountCosts {
   plasma?: number
 }
 
-export interface CountCostValue {
-  code: TroopCode
+export interface CountCostValue<C extends string = TroopCode> {
+  code: C
   resource: Resource
   duration: number
 }
