@@ -17,6 +17,7 @@ vi.mock('#ui/nav/menu', () => ({ NavMenu: () => <nav aria-label="Navigation prin
 vi.mock('#ui/nav/location', () => ({ NavLocation: () => <aside aria-label="Emplacements">locations</aside> }))
 vi.mock('#communication/chat/panel', () => ({ ChatPanel: () => <section aria-label="Discussion">chat</section> }))
 vi.mock('#ui/fx', () => ({ FxLayer: () => null }))
+vi.mock('#location/restore', () => ({ useRestoreLocation: () => undefined }))
 
 import App from './App'
 

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState } from 'react'
 
+import { writeStoredLocation } from '#location/storage'
+
 interface LocationContextValue {
   cityId: string | null
   outpostId: string | null
@@ -21,11 +23,13 @@ export const LocationProvider: React.FC<Props> = ({ children }) => {
   const setCity = (id: string) => {
     setCityId(id)
     setOutpostId(null)
+    writeStoredLocation({ kind: 'city', id })
   }
 
   const setOutpost = (id: string) => {
     setOutpostId(id)
     setCityId(null)
+    writeStoredLocation({ kind: 'outpost', id })
   }
 
   const clearLocation = () => {

@@ -13,6 +13,7 @@ import { useAuth } from '#auth/context'
 import { useClearInvalidSession, useInitStoredToken } from '#auth/hooks'
 import { isInvalidSessionError } from '#auth/session'
 import { useListCities } from '#city/hooks'
+import { useRestoreLocation } from '#location/restore'
 
 /** Skip link target: move focus without touching the router's URL. */
 const focusWorkspace = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -22,6 +23,7 @@ const focusWorkspace = (event: React.MouseEvent<HTMLAnchorElement>) => {
 
 const App: React.FC = () => {
   useInitStoredToken()
+  useRestoreLocation()
 
   const is_admin_route = useRouterState({
     select: state => state.location.pathname.startsWith('/admin'),
