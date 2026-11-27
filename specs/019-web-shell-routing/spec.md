@@ -49,8 +49,9 @@ City layout: `routes/city/$cityId/route.tsx` + `modules/city/root.tsx`. Outpost:
 | `modules/communication/chat/panel.tsx` | Chat panel at the bottom of the shell: Global / Faction tabs, open state and tab in `localStorage` ([`032`](../032-messaging/spec.md)) |
 | `ui/nav/location` | City/outpost switcher |
 | `ui/activity` | Polls location activity endpoints |
-| `ui/fx` | Visual effects layer |
-| `index.css` | Global styles (boot animation, surfaces) |
+| `ui/fx` | Completion bursts (`triggerFxBurst`); no ambient embers since [`040`](../040-readability-typography-theme/spec.md) |
+| `index.css` | Global styles: semantic type tokens (`text-caption` … `text-display`, Tailwind default size scale dropped), palette (`ink`, `label`, `muted`, `edge`), flat surfaces (`surface-frame`, `surface-panel`, `surface-panel-inset`, `surface-raised`), global `:focus-visible` outline, boot animation ([`040`](../040-readability-typography-theme/spec.md)) |
+| `ui/typography-guard.test.ts`, `ui/palette-contrast.test.ts` | Guards for the 12 px floor, the token-only sizes, textures behind text and WCAG AA contrast ([`040`](../040-readability-typography-theme/spec.md)) |
 
 ## API wiring
 

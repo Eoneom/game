@@ -1,6 +1,6 @@
 # Slice 040 — Readability: typography scale and flat data theme
 
-**Status**: Planned.
+**Status**: Implemented on `main` (slice 040): semantic type tokens replace Tailwind's default size scale (`--text-*: initial`), every size class of `apps/web/src` migrated (no size below 12 px left, map labels 12 / 14), flat surfaces replace scanlines and textures behind text, ambient embers removed, palette `ink` / `label` / `muted` / `edge`, global `:focus-visible` outline, and the `typography-guard` / `palette-contrast` vitest guards. See [Implementation notes](#implementation-notes).
 
 ## Summary
 
@@ -355,14 +355,38 @@ A later palette edit that breaks AA fails the test suite.
 | [`041`](../041-app-shell-navigation/spec.md), [`042`](../042-city-dashboard/spec.md), 043–047 | Use the tokens and surfaces defined here. |
 | `README.md` (specs index) | Slice 040 row. |
 
-## Evidence index (expected paths)
+## Implementation notes
+
+- **Tokens**: the `@theme` block of `index.css` resets `--text-*` and defines the seven tokens as specified (assumption 1 held: the reset builds; `text-xs` / `text-sm` / `text-base` no longer generate CSS). `body` is `text-body text-ink`.
+- **Migration**: 365 size classes in 81 files. A script applied the mapping table mechanically (arbitrary sizes → `text-caption`; admin `text-xs` → `text-caption`, `text-sm` → `text-meta`; `text-xs` + `uppercase` → `text-caption`, other `text-xs` → `text-meta`; `text-sm` → `text-body`, or `text-meta` with `uppercase`, or `text-caption` for uppercase `text-label` section labels; `text-base` → `text-heading` on `h1`–`h3`, else `text-body`; `text-lg` / `text-xl` → `text-title`; `text-2xl` → `text-page`, `text-display` on the auth screens), then each line was reviewed by hand:
+  - `text-caption` for timestamps, units and counters: queue depth and queue item timing, chat time and character counter, mail character counter, « × N » counts, available troop counts, « niveau N » on the city wall, member counts and « Le / Envoyée le / Bloqué le <date> » lines, ranking footer, rank change and points.
+  - `text-meta` for button labels (`Button` gets `font-semibold`; map zoom buttons, nav logout button), chat message lines, the ranking table (dense) and every field label.
+  - Uppercase `text-sm` section labels (« Coût », « Pré-requis », list group titles, alliance / exchange `sectionTitleClass`) became `text-caption uppercase`, consistent with the spec's `sectionTitleClass` and details `[&_h3]` rows. Panel `h2` titles that were `text-base uppercase` (movements) and the `QueuePanel` title lose `uppercase` since uppercase is only allowed with caption / meta.
+  - Field labels of login, signup and mail compose follow the Forms rule (`text-meta text-label`, sentence case) rather than the mechanical `text-xs uppercase` → `text-caption` row, like `.field-label`.
+  - Button size overrides (`!px-2 !py-1 text-xs` in queues and the city wall) drop the size class and keep `py-1` (28 px).
+  - Arbitrary trackings `[0.18em]`, `[0.2em]`, `[0.25em]` → `tracking-wider`; the « EONEOM » brand keeps its own.
+- **Surfaces**: `surface-frame`, `surface-panel`, `surface-panel-inset`, `surface-raised` are declared with `@utility` (not `@layer utilities`), so an explicit `border-amber/30` or `border-danger/60` on the element overrides the surface border. Shell bars (header, nav, locations, activity strip, chat, admin header) use `surface-frame`; panels and auth cards `surface-panel`. The workspace `main` is `border border-rust/55 bg-chrome p-6` (24 px padding per the viewport table; the border is kept). Surfaces no longer set a text colour: unstyled text inherits `text-ink` from `body`. `.admin-surface-*` keep their shadows, without background images. The auth backdrop div is now `aria-hidden`. `tex-scanline.png`, `tex-ember.png` and `tex-grit.png` are deleted, with `--background-image-tex-scan`, `-ember` and the unused `--animate-ember` keyframes.
+- **Contrast and focus**: `a:hover` is `text-ink underline`; `:focus-visible` gets `outline-2 outline-offset-2 outline-amber` once in the base layer (covers every interactive element) and the `outline-none` / `focus:outline-none` / `focus:ring-amber/35` classes are removed. Inputs (`.field-input`, the three `fieldClass` strings, the chat input, the admin simulator stack select) use `border-edge` and `placeholder:text-muted`; the `fieldClass` forms also move to `px-3 py-2`. Mail bodies are `text-ink`.
+- **Widths**: reading text cap `max-w-[72ch]` on mail bodies and details paragraphs (`[&_p]:max-w-[72ch]`); `max-w-[40rem]` on the mail compose and alliance creation forms (auth cards stay `max-w-md`, already narrower).
+- **Neon**: `neon-amber` unchanged everywhere (041 removes it from the shell).
+- **Guards**: `typography-guard.test.ts` implements the six rules with block-aware allowlisting for `index.css` (`@theme` block and `body` rule) and the auth backdrop line; the forbidden fixtures are written with a `~` that the test strips, so Tailwind does not generate CSS for them. `palette-contrast.test.ts` parses the `@theme` hex values and checks every pair of the table (blended `copper/30` and `danger-deep/50`). `typography-tokens.test.tsx` asserts the token classes of `Button`, `QueuePanel`, `CountdownProgress` and `ListItem`. Both node-based tests reference `types="node"` (the web tsconfig has no node types).
+- **Not done here**: `transformDecimals(0)` is owned by [`041`](../041-app-shell-navigation/spec.md). The spacing table is a rule set for new and reworked screens (041–047); this slice applied it only where a migrated class or shared component already sat (buttons, fields, workspace padding).
+
+## Follow-ups
+
+- **Visual pass**: the manual check at 1920 × 1080 and 1280 × 720 listed under Testing has not been done in a browser; only the built CSS was inspected (no font size below 12 px, no texture or scanline rule).
+- **Colour roles**: only `body`, mail bodies and inherited text moved to `text-ink`; table cells and list row names that set `text-amber` / `text-amber-dim` explicitly keep them until their screens are reworked (042–046).
+- **Density**: dense-table first columns, numeric right alignment and row heights of the spacing table are left to the screen slices.
+
+## Evidence index
 
 | Area | Paths |
 | --- | --- |
-| Theme | `apps/web/src/index.css` (`@theme` text tokens, colour tokens `ink`, `label`, `muted`, `edge`, utilities `surface-frame`, `surface-panel`, `surface-panel-inset`, `surface-raised`; removed `scanlines`, `surface-inset`, `surface-chrome`) |
-| Shell | `apps/web/src/App.tsx` (workspace surface), `apps/web/src/ui/fx/index.tsx` (no ambient embers) |
-| Shared UI | `apps/web/src/ui/button.tsx`, `ui/list/item/index.tsx`, `ui/queue-panel.tsx`, `ui/countdown-progress.tsx`, `ui/tooltip.tsx`, `ui/resource-item.tsx`, `ui/production-terrain-readout.tsx`, `ui/energy-readout.tsx`, `ui/layout/details/**`, `modules/exchange/styles.ts` |
-| Map | `apps/web/src/modules/map/markers.tsx`, `modules/map/legend-overlay.tsx` |
+| Theme | `apps/web/src/index.css` (`@theme` text tokens, `--color-ink`, `-label`, `-muted`, `-edge`; `@utility surface-frame`, `surface-panel`, `surface-panel-inset`, `surface-raised`; `:focus-visible`; `.field-label`, `.field-input`, `.map-zoom-btn`; removed `.scanlines`, `.surface-inset`, `.surface-chrome`, `tex-scan` / `tex-ember` tokens, ember keyframes, admin surface textures) |
+| Shell | `apps/web/src/App.tsx` (workspace surface), `apps/web/src/ui/fx/index.tsx` (no ambient embers), `ui/header/**`, `ui/nav/**`, `ui/activity/index.tsx`, `modules/communication/chat/panel.tsx`, `modules/admin/layout.tsx` |
+| Shared UI | `apps/web/src/ui/button.tsx`, `ui/list/**`, `ui/queue-panel.tsx`, `ui/queue-item-timing.tsx`, `ui/countdown-progress.tsx`, `ui/tooltip.tsx`, `ui/resource-item.tsx`, `ui/production-terrain-readout.tsx`, `ui/energy-readout.tsx`, `ui/layout/details/**`, `ui/layout/page.tsx`, `modules/exchange/styles.ts`, `modules/alliance/no-alliance.tsx` (`fieldClass`) |
+| Screens | `apps/web/src/modules/{city,outpost,building,technology,troop,defense,requirement,cost,movement,communication,alliance,ranking,exchange,admin}/**` (size migration) |
+| Map | `apps/web/src/modules/map/markers.tsx` (labels 12 / 14), `modules/map/legend-overlay.tsx` (already 12) |
 | Auth | `apps/web/src/modules/auth/screen.tsx`, `login-form.tsx`, `signup-form.tsx` |
-| Guard tests | `apps/web/src/ui/typography-guard.test.ts`, `apps/web/src/ui/palette-contrast.test.ts` |
-| Assets | `apps/web/public/ui/` (scanline, ember, grit textures deleted) |
+| Guard tests | `apps/web/src/ui/typography-guard.test.ts`, `apps/web/src/ui/palette-contrast.test.ts`, `apps/web/src/ui/typography-tokens.test.tsx` |
+| Assets | `apps/web/public/ui/` (`tex-scanline.png`, `tex-ember.png`, `tex-grit.png` deleted) |
