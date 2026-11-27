@@ -20,6 +20,8 @@ export interface TroopGetMovementDataResponse {
   battle_id: string | null
   origin: Coordinates
   destination: Coordinates
+  /** Departure time (ms), from `movement.started_at` (slice 044). */
+  departure_at: number
   arrive_at: number
   resources: Resource
   troops: {

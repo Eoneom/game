@@ -29,7 +29,8 @@ const queryResult = {
     destination: {
       x: 3,
       y: 4
-    } }),
+    },
+    started_at: 1_743_999_000_000 }),
   arrive_at: 1_744_000_000_000,
   battle_id: null,
   troops: [
@@ -143,6 +144,7 @@ describe('troopGetMovementHandler', () => {
           x: 3,
           y: 4
         },
+        departure_at: 1_743_999_000_000,
         arrive_at: 1_744_000_000_000,
         resources: {
           plastic: 0,

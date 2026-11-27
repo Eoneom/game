@@ -6,6 +6,10 @@ import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import type { DB } from '#adapter/database/types'
 import {
+  fromTimestampRequired,
+  toTimestampRequired
+} from '#adapter/database/repository/shared/time'
+import {
   Insertable,
   Kysely,
   Selectable
@@ -100,6 +104,7 @@ export class PostgresMovementRepository
       combat_strategy: row.combat_strategy as CombatStrategy | null,
       exchange_trade_id: row.exchange_trade_id,
       is_return: row.is_return,
+      started_at: fromTimestampRequired(row.started_at),
     })
   }
 
@@ -119,6 +124,7 @@ export class PostgresMovementRepository
       combat_strategy: entity.combat_strategy,
       exchange_trade_id: entity.exchange_trade_id,
       is_return: entity.is_return,
+      started_at: toTimestampRequired(entity.started_at),
     }
   }
 }

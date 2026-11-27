@@ -28,7 +28,8 @@ const movement = MovementEntity.create({
   destination: {
     x: 3,
     y: 4
-  } 
+  },
+  started_at: 1_743_999_900_000,
 })
 
 const queryResult = {
@@ -141,6 +142,8 @@ describe('troopListMovementHandler', () => {
               x: 3,
               y: 4
             },
+            // Departure time from `movement.started_at` (slice 044).
+            departure_at: 1_743_999_900_000,
             arrive_at: 1_744_000_000_000,
             battle_id: null,
             resources: {

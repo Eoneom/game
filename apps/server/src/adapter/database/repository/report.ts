@@ -2,6 +2,7 @@ import { ReportEntity } from '#core/communication/report/entity'
 import {
   BattleReportEntry,
   ReportRepository,
+  SpyIntelEntry,
   SpyReportEntry,
   TradeReportEntry,
 } from '#app/port/repository/report'
@@ -24,8 +25,10 @@ import type { DB } from '#adapter/database/types'
 import {
   Insertable,
   Kysely,
-  Selectable
+  Selectable,
+  sql
 } from 'kysely'
+import { Coordinates } from '#core/world/value/coordinates'
 import {
   fromTimestampRequired,
   toTimestampRequired
@@ -393,6 +396,59 @@ export class PostgresReportRepository
         })
       }
     })
+  }
+
+  async listLatestSpyIntel({
+    player_id,
+    coordinates
+  }: {
+    player_id: string
+    coordinates: Coordinates[]
+  }): Promise<SpyIntelEntry[]> {
+    if (coordinates.length === 0) {
+      return []
+    }
+    const rows = await this.db
+      .selectFrom('report')
+      .innerJoin('report_spy', 'report_spy.report_id', 'report.id')
+      .distinctOn([
+        'report.destination_x',
+        'report.destination_y'
+      ])
+      .select([
+        'report.id',
+        'report.recorded_at',
+        'report.destination_x',
+        'report.destination_y',
+        'report_spy.metadata_json',
+        'report_spy.target_json'
+      ])
+      .where('report.player_id', '=', player_id)
+      .where('report.type', '=', ReportType.SPY)
+      .where(sql<boolean>`(report_spy.metadata_json->>'success')::boolean`, '=', true)
+      .where(eb => eb.or(coordinates.map(({
+        x, y
+      }) => eb.and([
+        eb('report.destination_x', '=', x),
+        eb('report.destination_y', '=', y)
+      ]))))
+      .orderBy('report.destination_x')
+      .orderBy('report.destination_y')
+      .orderBy('report.recorded_at', 'desc')
+      .execute()
+
+    return rows.map(row => ({
+      report_id: row.id,
+      recorded_at: fromTimestampRequired(row.recorded_at),
+      coordinates: {
+        x: row.destination_x,
+        y: row.destination_y
+      },
+      metadata: {
+        ...(row.metadata_json as object),
+        target: row.target_json as unknown as SpyTarget,
+      } as ReportSpyMetadata,
+    }))
   }
 
   async getSpyMetadataByReportId(report_id: string): Promise<ReportSpyMetadata | ReportSpyDetectedMetadata | null> {

@@ -1,5 +1,10 @@
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import {
+  attackContribution,
+  lifeContribution,
+} from '#core/combat/troop-combat'
+import { defense_characteristics } from '#core/defense/constant/characteristic'
+import {
   SPY_SUCCESS_BASE,
   SPY_SUCCESS_MAX,
   SPY_SUCCESS_MIN,
@@ -10,7 +15,9 @@ import { IntelError } from '#core/intel/error'
 import {
   IncomingAttack,
   IncomingAttackView,
+  ReportSpyMetadata,
   SpyIntelScope,
+  SpyStrengthEstimate,
 } from '#core/intel/type'
 import {
   troop_role, TroopRole 
@@ -133,8 +140,11 @@ export class IntelService {
       arrive_at: attack.arrive_at,
     }
 
+    // The attacker, its origin and departure time are revealed together (origin and departure from slice 044).
     if (detection_level >= DETECTION_LEVEL_ATTACKER) {
       view.attacker = attack.attacker
+      view.origin = attack.origin
+      view.departure_at = attack.departure_at
     }
 
     if (detection_level >= DETECTION_LEVEL_UNIT_COUNT) {
@@ -150,5 +160,46 @@ export class IntelService {
     }
 
     return view
+  }
+
+  /**
+   * Attack and life pools of a spied location from the stored snapshot (slice 044), display only: no strategy or
+   * technology modifier (unknown to the spy). Defense attack uses round 1 for `attack_by_round`. `defenses_known`
+   * is false only on a city whose tier did not reveal its defenses (tier 1); outposts have none.
+   */
+  static estimateStrength(metadata: Pick<ReportSpyMetadata, 'tier' | 'target' | 'troops' | 'defenses'>): SpyStrengthEstimate {
+    const troops = metadata.troops ?? []
+    const defenses = metadata.defenses ?? []
+
+    let attack = 0
+    let life = 0
+    for (const troop of troops) {
+      attack += attackContribution({
+        code: troop.code,
+        count: troop.count
+      })
+      life += lifeContribution({
+        code: troop.code,
+        count: troop.count
+      })
+    }
+    for (const defense of defenses) {
+      const characteristic = defense_characteristics[defense.code]
+      attack += defense.count * (characteristic.attack_by_round?.[0] ?? characteristic.attack)
+      life += defense.count * characteristic.life
+    }
+
+    const is_city = metadata.target.kind === BattleTargetKind.CITY
+    const defenses_known = !is_city || this.getSpyIntelScope({
+      tier: metadata.tier,
+      target_kind: BattleTargetKind.CITY
+    }).defenses
+
+    return {
+      attack: Math.round(attack),
+      life: Math.round(life),
+      troop_count: troops.reduce((sum, troop) => sum + troop.count, 0),
+      defenses_known,
+    }
   }
 }

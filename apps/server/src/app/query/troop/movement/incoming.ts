@@ -73,6 +73,8 @@ export class TroopMovementIncomingQuery extends GenericQuery<TroopMovementIncomi
           id: movement.id,
           target,
           arrive_at,
+          origin: movement.origin,
+          departure_at: movement.started_at,
           attacker: {
             name: attacker.name,
             faction_code: attacker.faction_code,

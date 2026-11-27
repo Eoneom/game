@@ -13,6 +13,8 @@ export interface TroopListMovementDataResponse {
     kind: MovementKind
     origin: Coordinates
     destination: Coordinates
+    /** Departure time (ms), from `movement.started_at` (slice 044). */
+    departure_at: number
     /** Arrival time (ms); the battle start while `battle_id` is set. */
     arrive_at: number
     /** Set while an arrived attack is in battle. */

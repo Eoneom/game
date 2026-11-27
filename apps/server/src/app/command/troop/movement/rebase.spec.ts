@@ -151,6 +151,8 @@ describe('rebaseTroopMovement', () => {
     assert.deepStrictEqual(movement_to_create.origin, initial_base_movement.destination)
     assert.deepStrictEqual(movement_to_create.destination, initial_base_movement.origin)
     assert.strictEqual(movement_to_create.getKind(), MovementKind.RETURN)
+    // The return trip leaves when the base movement arrives (slice 044 `departure_at`).
+    assert.strictEqual(movement_to_create.started_at, arrived_at)
 
     const troops_to_update = troopUpdateOne.mock.calls.map(([ t ]) => t)
     troops_to_update.forEach(troop_to_update => {

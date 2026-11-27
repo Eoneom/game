@@ -632,6 +632,7 @@ describe('placeExchangeOrder (slice 035)', () => {
         carriers: 3
       })
 
+      const before = Date.now()
       await placeExchangeOrder({
         player_id: buyer.id,
         city_id: buyer_city.id,
@@ -643,6 +644,8 @@ describe('placeExchangeOrder (slice 035)', () => {
 
       const convoys = [ ...world.movements.values() ]
       expect(convoys).toHaveLength(2)
+      // Convoys leave at the fill time (slice 044 `departure_at`).
+      expect(convoys.every(convoy => convoy.started_at >= before && convoy.started_at <= Date.now())).toBe(true)
       expect(convoys.every(convoy => convoy.action === MovementAction.EXCHANGE)).toBe(true)
       expect(convoys.every(convoy => convoy.exchange_trade_id === world.trades[0].id)).toBe(true)
 

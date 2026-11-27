@@ -60,6 +60,7 @@ const response_mapper = ({
       x: movement.destination.x,
       y: movement.destination.y
     },
+    departure_at: movement.started_at,
     arrive_at,
     resources: {
       plastic: movement.resources.plastic,

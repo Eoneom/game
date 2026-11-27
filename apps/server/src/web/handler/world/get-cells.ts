@@ -10,6 +10,7 @@ import {
   WorldGetCellsQuery, WorldGetCellsQueryResponse
 } from '#query/world/get-cells'
 import { getPlayerIdFromContext } from '#web/helpers'
+import { parseIntegerParam } from '#web/handler/world/query-number'
 
 type CellsDetail = 'terrain' | 'full'
 
@@ -20,23 +21,15 @@ const parseDetail = (value: unknown): CellsDetail => {
   return 'full'
 }
 
-const parseBound = (value: unknown): number | null => {
-  if (typeof value !== 'string' && typeof value !== 'number') {
-    return null
-  }
-  const parsed = Number.parseInt(`${value}`, 10)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
 export const worldGetCellsHandler = async (
   req: Request,
   res: Response<WorldGetCellsResponse>,
   next: NextFunction
 ) => {
-  const min_x = parseBound(req.query.min_x)
-  const max_x = parseBound(req.query.max_x)
-  const min_y = parseBound(req.query.min_y)
-  const max_y = parseBound(req.query.max_y)
+  const min_x = parseIntegerParam(req.query.min_x)
+  const max_x = parseIntegerParam(req.query.max_x)
+  const min_y = parseIntegerParam(req.query.min_y)
+  const max_y = parseIntegerParam(req.query.max_y)
 
   if (min_x === null || max_x === null || min_y === null || max_y === null) {
     return res.status(400).json({
@@ -83,6 +76,8 @@ const response_mapper = ({
   player_id: string
   detail: CellsDetail
 } & WorldGetCellsQueryResponse): WorldGetCellsDataResponse => {
+  // One Set lookup per cell instead of scanning every explored id (slice 044).
+  const explored = new Set(explored_cell_ids)
   return {
     viewer: {
       player_id,
@@ -90,7 +85,7 @@ const response_mapper = ({
     },
     cells: cells.map(cell => cell_mapper({
       cell,
-      explored_cell_ids,
+      explored,
       detail
     })),
     settlements
@@ -99,14 +94,14 @@ const response_mapper = ({
 
 const cell_mapper = ({
   cell,
-  explored_cell_ids,
+  explored,
   detail
 }: {
   cell: WorldGetCellsQueryResponse['cells'][number],
-  explored_cell_ids: string[],
+  explored: Set<string>,
   detail: CellsDetail
 }): WorldGetCellsDataResponse['cells'][number] => {
-  const is_explored = explored_cell_ids.some((explored_cell_id) => explored_cell_id === cell.id)
+  const is_explored = explored.has(cell.id)
   const include_coefficients = detail === 'full' && is_explored
   const characteristic: WorldGetCellsDataResponse['cells'][number]['characteristic'] = include_coefficients ? {
     resource_coefficient: {

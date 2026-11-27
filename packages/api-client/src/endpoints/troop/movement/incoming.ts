@@ -5,7 +5,7 @@ import { Coordinates } from '../../shared/coordinates'
 
 /**
  * Incoming attack visible to the defender (slice 030). Optional fields depend on the live `detection` level:
- * `attacker` from 2, `unit_count` (rounded to the nearest 10) from 3, `troops` from 4. The strategy is never sent.
+ * `attacker`, `origin` and `departure_at` from 2 (origin and departure: slice 044), `unit_count` (rounded to the nearest 10) from 3, `troops` from 4. The strategy is never sent.
  */
 export interface TroopIncomingMovement {
   id: string
@@ -17,6 +17,10 @@ export interface TroopIncomingMovement {
     coordinates: Coordinates
   }
   arrive_at: number
+  /** Attacker's departure cell (detection ≥ 2). */
+  origin?: Coordinates
+  /** Departure time in ms (detection ≥ 2). */
+  departure_at?: number
   attacker?: {
     name: string
     faction_code: FactionCode

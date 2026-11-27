@@ -49,6 +49,7 @@ const response_mapper = ({ movements }: TroopMovementListQueryResponse): TroopLi
         x: movement.destination.x,
         y: movement.destination.y
       },
+      departure_at: movement.started_at,
       arrive_at,
       battle_id,
       resources: {

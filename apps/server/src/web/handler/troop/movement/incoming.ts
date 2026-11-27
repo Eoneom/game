@@ -26,6 +26,8 @@ export const troopListIncomingMovementHandler = async (
             coordinates: movement.target.coordinates,
           },
           arrive_at: movement.arrive_at,
+          ...(movement.origin ? { origin: movement.origin } : {}),
+          ...(movement.departure_at !== undefined ? { departure_at: movement.departure_at } : {}),
           ...(movement.attacker ? { attacker: movement.attacker } : {}),
           ...(movement.unit_count !== undefined ? { unit_count: movement.unit_count } : {}),
           ...(movement.troops ? { troops: movement.troops } : {}),

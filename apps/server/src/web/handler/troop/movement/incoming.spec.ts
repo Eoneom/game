@@ -48,6 +48,11 @@ describe('troopListIncomingMovementHandler', () => {
           id: 'm2',
           target,
           arrive_at: 2_000,
+          origin: {
+            x: 9,
+            y: 9
+          },
+          departure_at: 500,
           unit_count: 30,
           troops: [
             {
@@ -81,6 +86,12 @@ describe('troopListIncomingMovementHandler', () => {
             id: 'm2',
             target,
             arrive_at: 2_000,
+            // From detection 2 (slice 044).
+            origin: {
+              x: 9,
+              y: 9
+            },
+            departure_at: 500,
             unit_count: 30,
             troops: [
               {

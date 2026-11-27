@@ -20,6 +20,11 @@ import { troopListOutpostHandler } from '#web/handler/troop/list/outpost'
 import { troopListMovementHandler } from '#web/handler/troop/movement/list'
 import { troopRecruitHandler } from '#web/handler/troop/recruit'
 import { worldGetCellsHandler } from '#web/handler/world/get-cells'
+import { worldTerrainHandler } from '#web/handler/world/terrain'
+import { worldExplorationHandler } from '#web/handler/world/exploration'
+import { worldMarkersHandler } from '#web/handler/world/markers'
+import { worldTargetsHandler } from '#web/handler/world/targets'
+import { worldIntelHandler } from '#web/handler/world/intel'
 import { technologyGetHandler } from '#web/handler/technology/get'
 import { outpostListHandler } from '#web/handler/outpost/list'
 import { outpostGetHandler } from '#web/handler/outpost/get'
@@ -181,6 +186,11 @@ export const router = (): Router => {
   r.put('/outpost/:outpost_id/combat-strategy', authMiddleware, outpostSetCombatStrategyHandler)
 
   r.get('/world/cells', authMiddleware, worldGetCellsHandler)
+  r.get('/world/terrain', authMiddleware, worldTerrainHandler)
+  r.get('/world/exploration', authMiddleware, worldExplorationHandler)
+  r.get('/world/markers', authMiddleware, worldMarkersHandler)
+  r.get('/world/targets', authMiddleware, worldTargetsHandler)
+  r.get('/world/intel', authMiddleware, worldIntelHandler)
 
   r.get('/communication/report', authMiddleware, communicationListReportHandler)
   r.put('/communication/report/mark', authMiddleware, communicationMarkReportHandler)

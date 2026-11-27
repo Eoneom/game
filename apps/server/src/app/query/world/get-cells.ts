@@ -2,11 +2,8 @@ import { CellEntity } from '#core/world/cell/entity'
 import { CityInBounds } from '#app/port/repository/city'
 import { OutpostInBounds } from '#app/port/repository/outpost'
 import { GenericQuery } from '#query/generic'
-import {
-  MAX_VIEWPORT_SIDE,
-  WORLD_SIZE
-} from '#core/world/constant/size'
-import { WorldError } from '#core/world/error'
+import { MAX_VIEWPORT_SIDE } from '#core/world/constant/size'
+import { assertWorldBounds } from '#app/query/world/bounds'
 import { FactionCode } from '#core/faction/constant/code'
 import { OutpostType } from '#core/outpost/constant/type'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -64,12 +61,12 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
     player_id,
     detail = 'full'
   }: WorldGetCellsQueryRequest): Promise<WorldGetCellsQueryResponse> {
-    this.assertValidBounds({
+    assertWorldBounds({
       min_x,
       max_x,
       min_y,
       max_y
-    })
+    }, MAX_VIEWPORT_SIDE)
 
     const bounds = {
       min_x,
@@ -183,34 +180,6 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
     return {
       cities,
       outposts
-    }
-  }
-
-  private assertValidBounds({
-    min_x,
-    max_x,
-    min_y,
-    max_y
-  }: {
-    min_x: number
-    max_x: number
-    min_y: number
-    max_y: number
-  }): void {
-    const bounds = [
-      min_x,
-      max_x,
-      min_y,
-      max_y
-    ]
-    if (bounds.some(value => !Number.isInteger(value) || value < 1 || value > WORLD_SIZE)) {
-      throw new Error(WorldError.INVALID_BOUNDS)
-    }
-    if (min_x > max_x || min_y > max_y) {
-      throw new Error(WorldError.INVALID_BOUNDS)
-    }
-    if ((max_x - min_x + 1) > MAX_VIEWPORT_SIDE || (max_y - min_y + 1) > MAX_VIEWPORT_SIDE) {
-      throw new Error(WorldError.INVALID_BOUNDS)
     }
   }
 }

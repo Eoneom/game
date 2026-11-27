@@ -15,6 +15,9 @@ export type BuildingRepository = GenericRepository<BuildingEntity> & {
 
   getTotalLevels(query: { city_id: string }): Promise<number>
 
+  /** Total building levels per city, Enceinte included, in one grouped query (map size hint, slice 044). */
+  sumLevelsByCityIds(city_ids: string[]): Promise<{ city_id: string, total: number }[]>
+
   /** Sum of one building code's levels over every city the player owns. */
   getTotalLevelForPlayer(query: { player_id: string, code: BuildingCode }): Promise<number>
 }

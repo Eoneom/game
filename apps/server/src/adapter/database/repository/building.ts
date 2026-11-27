@@ -30,6 +30,26 @@ export class PostgresBuildingRepository
     return Number(result.total ?? 0)
   }
 
+  async sumLevelsByCityIds(city_ids: string[]): Promise<{ city_id: string, total: number }[]> {
+    if (city_ids.length === 0) {
+      return []
+    }
+    const rows = await this.db
+      .selectFrom('building')
+      .select(({ fn }) => [
+        'city_id',
+        fn.sum<number>('level').as('total')
+      ])
+      .where('city_id', 'in', city_ids)
+      .groupBy('city_id')
+      .execute()
+
+    return rows.map(row => ({
+      city_id: row.city_id,
+      total: Number(row.total ?? 0)
+    }))
+  }
+
   async getTotalLevelForPlayer({
     player_id,
     code

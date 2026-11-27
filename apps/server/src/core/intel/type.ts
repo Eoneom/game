@@ -54,6 +54,14 @@ export type ReportSpyDetectedMetadata = {
   scouts_destroyed: number
 }
 
+/** Strength estimate of a spied location (slice 044). */
+export type SpyStrengthEstimate = {
+  attack: number
+  life: number
+  troop_count: number
+  defenses_known: boolean
+}
+
 /** Which intel fields a spy report reveals. */
 export type SpyIntelScope = Record<keyof SpyIntel, boolean>
 
@@ -67,6 +75,9 @@ export type IncomingAttack = {
     coordinates: Coordinates
   }
   arrive_at: number
+  /** Attacker's departure cell and time (slice 044). */
+  origin: Coordinates
+  departure_at: number
   attacker: {
     name: string
     faction_code: FactionCode
@@ -79,6 +90,8 @@ export type IncomingAttackView = {
   id: string
   target: IncomingAttack['target']
   arrive_at: number
+  origin?: Coordinates
+  departure_at?: number
   attacker?: IncomingAttack['attacker']
   unit_count?: number
   troops?: IncomingAttack['troops']

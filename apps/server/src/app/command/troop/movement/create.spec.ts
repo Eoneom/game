@@ -278,6 +278,7 @@ describe('createTroopMovement', () => {
   })
 
   it('should create movement and update origin troops on partial move without outpost', async () => {
+    const before = Date.now()
     const result = await callCreate([
       {
         code: TroopCode.EXPLORER,
@@ -293,6 +294,8 @@ describe('createTroopMovement', () => {
     // A player order is an outgoing movement (slice 045).
     assert.strictEqual(movement.is_return, false)
     assert.strictEqual(movement.getKind(), MovementKind.OUTGOING)
+    // Departure is the creation time (slice 044 `departure_at`).
+    assert.ok(movement.started_at >= before && movement.started_at <= Date.now())
     assert.strictEqual(movement.player_id, player_id)
     assert.strictEqual(movement.action, MovementAction.EXPLORE)
     assert.deepStrictEqual(movement.origin, origin)

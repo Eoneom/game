@@ -16,6 +16,8 @@ type MovementEntityProps = BaseEntity & {
   exchange_trade_id?: string | null
   /** Troops going home on their own: return trips, automatic reinforcement return, owner recall (slice 045). */
   is_return?: boolean
+  /** Departure time (ms): the `start_at` given to `TroopService.createMovement` (slice 044). Defaults to now. */
+  started_at?: number
 }
 
 export class MovementEntity extends BaseEntity {
@@ -27,6 +29,7 @@ export class MovementEntity extends BaseEntity {
   readonly combat_strategy: CombatStrategy | null
   readonly exchange_trade_id: string | null
   readonly is_return: boolean
+  readonly started_at: number
 
   private constructor({
     id,
@@ -43,6 +46,7 @@ export class MovementEntity extends BaseEntity {
     combat_strategy = null,
     exchange_trade_id = null,
     is_return = false,
+    started_at = Date.now(),
   }: MovementEntityProps) {
     super({ id })
 
@@ -54,6 +58,7 @@ export class MovementEntity extends BaseEntity {
     this.combat_strategy = combat_strategy
     this.exchange_trade_id = exchange_trade_id
     this.is_return = is_return
+    this.started_at = started_at
   }
 
   static create(props: MovementEntityProps): MovementEntity {

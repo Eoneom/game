@@ -242,6 +242,7 @@ export interface Movement {
   plasma: Generated<number>;
   plastic: Generated<number>;
   player_id: string;
+  started_at: Generated<Timestamp>;
   water: Generated<number>;
 }
 

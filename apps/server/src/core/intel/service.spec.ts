@@ -5,6 +5,12 @@ import { IntelError } from '#core/intel/error'
 import { IntelService } from '#core/intel/service'
 import { IncomingAttack } from '#core/intel/type'
 import { TroopCode } from '#core/troop/constant/code'
+import { DefenseCode } from '#core/defense/constant/code'
+import { defense_characteristics } from '#core/defense/constant/characteristic'
+import {
+  attackContribution,
+  lifeContribution
+} from '#core/combat/troop-combat'
 
 describe('IntelService', () => {
   describe('creation rules', () => {
@@ -192,6 +198,11 @@ describe('IntelService', () => {
         },
       },
       arrive_at: 1_000,
+      origin: {
+        x: 10,
+        y: 12
+      },
+      departure_at: 400,
       attacker: {
         name: 'Raider',
         faction_code: FactionCode.THE_ASH_LITURGY,
@@ -226,12 +237,14 @@ describe('IntelService', () => {
       })
     })
 
-    it('adds the attacker at level 2', () => {
+    it('adds the attacker, its origin and departure time at level 2 (slice 044)', () => {
       const view = IntelService.toIncomingAttackView({
         attack,
         detection_level: 2 
       })
       assert.deepStrictEqual(view?.attacker, attack.attacker)
+      assert.deepStrictEqual(view?.origin, attack.origin)
+      assert.strictEqual(view?.departure_at, 400)
       assert.strictEqual(view?.unit_count, undefined)
       assert.strictEqual(view?.troops, undefined)
     })
@@ -262,12 +275,108 @@ describe('IntelService', () => {
         assert.deepStrictEqual(Object.keys(view ?? {}).sort(), [
           'arrive_at',
           'attacker',
+          'departure_at',
           'id',
+          'origin',
           'target',
           'troops',
           'unit_count' 
         ])
       }
+    })
+  })
+
+  describe('estimateStrength (slice 044)', () => {
+    const target = (kind: BattleTargetKind) => ({
+      kind,
+      id: 'target-id',
+      name: null,
+      owner_name: 'Owner',
+      faction_code: FactionCode.THE_ASH_LITURGY,
+      coordinates: {
+        x: 3,
+        y: 4
+      }
+    })
+
+    it('sums troop and defense pools without modifiers, round 1 attack for defenses that fire by round', () => {
+      const estimate = IntelService.estimateStrength({
+        tier: 2,
+        target: target(BattleTargetKind.CITY),
+        troops: [
+          {
+            code: TroopCode.PENITENT_HORDE,
+            count: 24
+          },
+          {
+            code: TroopCode.EXPLORER,
+            count: 3
+          }
+        ],
+        defenses: [
+          {
+            code: DefenseCode.TURRET,
+            count: 2
+          },
+          {
+            code: DefenseCode.MINEFIELD,
+            count: 1
+          }
+        ]
+      })
+
+      const troop_attack = attackContribution({
+        code: TroopCode.PENITENT_HORDE,
+        count: 24
+      }) + attackContribution({
+        code: TroopCode.EXPLORER,
+        count: 3
+      })
+      const troop_life = lifeContribution({
+        code: TroopCode.PENITENT_HORDE,
+        count: 24
+      }) + lifeContribution({
+        code: TroopCode.EXPLORER,
+        count: 3
+      })
+      const turret = defense_characteristics[DefenseCode.TURRET]
+      const minefield = defense_characteristics[DefenseCode.MINEFIELD]
+      assert.deepStrictEqual(estimate, {
+        attack: Math.round(troop_attack + 2 * turret.attack + (minefield.attack_by_round?.[0] ?? minefield.attack)),
+        life: Math.round(troop_life + 2 * turret.life + minefield.life),
+        troop_count: 27,
+        defenses_known: true
+      })
+      // 24 × 14 attack, 24 × 10 life for the horde.
+      assert.strictEqual(attackContribution({
+        code: TroopCode.PENITENT_HORDE,
+        count: 24
+      }), 336)
+    })
+
+    it('marks defenses unknown on a city spied at tier 1 only', () => {
+      const tier1 = IntelService.estimateStrength({
+        tier: 1,
+        target: target(BattleTargetKind.CITY),
+        troops: []
+      })
+      assert.deepStrictEqual(tier1, {
+        attack: 0,
+        life: 0,
+        troop_count: 0,
+        defenses_known: false
+      })
+      assert.strictEqual(IntelService.estimateStrength({
+        tier: 1,
+        target: target(BattleTargetKind.OUTPOST),
+        troops: []
+      }).defenses_known, true)
+      assert.strictEqual(IntelService.estimateStrength({
+        tier: 3,
+        target: target(BattleTargetKind.CITY),
+        troops: [],
+        defenses: []
+      }).defenses_known, true)
     })
   })
 })

@@ -289,6 +289,7 @@ export class TroopService {
       combat_strategy,
       exchange_trade_id,
       is_return,
+      started_at: start_at,
     })
 
     return { movement, arrive_at }

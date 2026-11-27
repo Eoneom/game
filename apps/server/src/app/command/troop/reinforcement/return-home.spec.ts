@@ -153,6 +153,8 @@ describe('automatic reinforcement return (slice 033)', () => {
     // The leaver's troops go to their closest city, the ally's to the ally's city.
     // Automatic returns are listed under « Retours » (slice 045).
     expect(movements.every(movement => movement.is_return)).toBe(true)
+    // They leave at the departure time (slice 044 `departure_at`).
+    expect(movements.every(movement => movement.started_at === 1000)).toBe(true)
     expect(movements.map(movement => ({
       player_id: movement.player_id,
       action: movement.action,

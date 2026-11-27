@@ -6,6 +6,7 @@ import {
   ReportSpyMetadata,
 } from '#core/intel/type'
 import { ReportTradeMetadata } from '#core/exchange/type'
+import { Coordinates } from '#core/world/value/coordinates'
 
 /** One `spy` or `spy_detected` report with its `report_spy` row (slice 030). */
 export type SpyReportEntry = {
@@ -14,6 +15,14 @@ export type SpyReportEntry = {
   spy_player_id: string
   target_player_id: string | null
   metadata: ReportSpyMetadata | ReportSpyDetectedMetadata
+}
+
+/** Latest successful `spy` report of a player on one cell (map targets overlay, slice 044). */
+export type SpyIntelEntry = {
+  report_id: string
+  recorded_at: number
+  coordinates: Coordinates
+  metadata: ReportSpyMetadata
 }
 
 /** One `trade` report with its `report_trade` row (slice 035). */
@@ -55,6 +64,9 @@ export type ReportRepository = GenericRepository<ReportEntity> & {
 
   /** Metadata of a `spy` or `spy_detected` report; the report type tells which shape it is. */
   getSpyMetadataByReportId(report_id: string): Promise<ReportSpyMetadata | ReportSpyDetectedMetadata | null>
+
+  /** Per cell, the player's latest `spy` report with `success = true`; cells without one are left out. */
+  listLatestSpyIntel(query: { player_id: string, coordinates: Coordinates[] }): Promise<SpyIntelEntry[]>
 
   list(query: {
     player_id: string
