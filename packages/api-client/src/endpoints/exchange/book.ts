@@ -3,7 +3,10 @@ import { GenericResponse } from '../../response'
 
 export interface ExchangeBookLevel {
   price: number
+  /** Remaining lots at this price, the caller's own included. */
   lots: number
+  /** The caller's own remaining lots at this price (slice 046); always 0 in the summary. */
+  own_lots: number
 }
 
 export interface ExchangeBookDataResponse {

@@ -5,6 +5,7 @@ import { EXCHANGE_FALLBACK_TYPICAL_DISTANCE } from '#core/exchange/constant/limi
 import { ExchangeService } from '#core/exchange/service'
 import { FactionService } from '#core/faction/service'
 import { TroopService } from '#core/troop/service'
+import { ExchangeImmediateFill } from '#core/exchange/type'
 import { TroopCount } from '#core/troop/type'
 import { WorldService } from '#core/world/service'
 import { Coordinates } from '#core/world/value/coordinates'
@@ -31,11 +32,21 @@ interface ExchangeEstimateQueryResponse {
   open_order_count: number
   /** The city's `trading_post` level. */
   open_order_limit: number
+  /** Transport load of the reserved payload: Σ amount × `resource_transport_weight` (slice 046). */
+  carrier_load: number
+  /** Capacity of the city's available (unreserved) carriers, with the faction logistics bonus (slice 046). */
+  available_carrier_capacity: number
+  /**
+   * Dry run of the matching against other players' crossing open orders (price-time, execution at the resting
+   * price), slice 046. Approximate: the resting side's carriers are not checked, so the real fill can be smaller.
+   */
+  immediate_fill: ExchangeImmediateFill
 }
 
 /**
  * Order form preview (slice 035): what `POST /exchange/order` would reserve and how long a delivery to a typical
- * faction city takes (median distance to the other human players' cities of the faction).
+ * faction city takes (median distance to the other human players' cities of the faction). Slice 046 adds the
+ * carrier load against the available capacity and an immediate-fill dry run; no lock is taken and nothing is written.
  */
 export class ExchangeEstimateQuery extends GenericQuery<ExchangeEstimateQueryRequest, ExchangeEstimateQueryResponse> {
   constructor() {
@@ -82,14 +93,23 @@ export class ExchangeEstimateQuery extends GenericQuery<ExchangeEstimateQueryReq
         code: BuildingCode.TRADING_POST
       }),
     ])
+    // Read-only selection of the crossing orders (no `FOR UPDATE`, no market lock): a preview, not a placement.
+    const matchable = await this.repository.exchange.listMatchable({
+      faction_code: player.faction_code,
+      resource: input.resource,
+      side: ExchangeService.oppositeSide(input.side),
+      limit_price: input.price,
+      exclude_player_id: player_id,
+    })
 
     // Faction logistics bonus (slice 039): fewer carriers reserved, faster deliveries.
     const logistics = FactionService.getLogisticsModifier(player.faction_code)
+    const available_troops = ExchangeService.availableTroops({
+      troops,
+      reservations: cell_reservations
+    })
     const reserved_carriers = ExchangeService.allocateCarriers({
-      stacks: ExchangeService.availableTroops({
-        troops,
-        reservations: cell_reservations
-      }),
+      stacks: available_troops,
       resources: reserved_resources,
       carrier_capacity_multiplier: logistics.transport_capacity,
     })
@@ -120,6 +140,17 @@ export class ExchangeEstimateQuery extends GenericQuery<ExchangeEstimateQueryReq
       typical_delivery_duration,
       open_order_count,
       open_order_limit,
+      carrier_load: TroopService.getTransportLoad({ resources: reserved_resources }),
+      available_carrier_capacity: TroopService.getTotalTransportCapacity({
+        troops: ExchangeService.carrierStacks(available_troops),
+        carrier_capacity_multiplier: logistics.transport_capacity,
+      }),
+      immediate_fill: ExchangeService.simulateImmediateFill({
+        side: input.side,
+        limit_price: input.price,
+        lots: input.lots,
+        resting: matchable,
+      }),
     }
   }
 }

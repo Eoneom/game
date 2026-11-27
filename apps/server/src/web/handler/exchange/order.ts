@@ -124,7 +124,7 @@ export const exchangeMineHandler = async (
   try {
     const player_id = getPlayerIdFromContext(res)
     const {
-      open, closed
+      open, closed, trading_posts
     } = await new ExchangeMineQuery().run({ player_id })
 
     return res.json({
@@ -132,6 +132,7 @@ export const exchangeMineHandler = async (
       data: {
         open: open.map(toOrderResponse),
         closed: closed.map(toOrderResponse),
+        trading_posts,
       }
     })
   } catch (err) {

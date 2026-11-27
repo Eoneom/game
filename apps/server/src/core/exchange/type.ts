@@ -18,12 +18,35 @@ export interface ConvoyCarriers {
 
 export interface ExchangeBookLevel {
   price: number
+  /** Remaining lots at this price, the caller's own included. */
   lots: number
+  /** The caller's own remaining lots at this price (slice 046); `0` in the summary, which excludes them. */
+  own_lots: number
+}
+
+/** Best price level of one side of one book among other players' open orders (summary, slice 046). */
+export interface ExchangeBestLevel {
+  resource: ExchangeResource
+  side: ExchangeSide
+  price: number
+  lots: number
+}
+
+/** What an incoming order would fill at once against the book (estimate dry run, slice 046). */
+export interface ExchangeImmediateFill {
+  lots: number
+  /** Water exchanged at the resting prices. */
+  water: number
 }
 
 export interface ExchangeTradeView {
   price: number
   lots: number
+  executed_at: number
+}
+
+export interface ExchangeLastTrade {
+  price: number
   executed_at: number
 }
 

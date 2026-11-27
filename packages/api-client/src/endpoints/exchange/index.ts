@@ -12,6 +12,7 @@ import {
   ExchangePlaceOrderRequest,
   ExchangePlaceOrderResponse
 } from './order'
+import { ExchangeSummaryResponse } from './summary'
 
 /** Faction exchange (slice 035). */
 export class ExchangeEndpoint {
@@ -48,6 +49,11 @@ export class ExchangeEndpoint {
       token,
       searchParams: { resource }
     })
+  }
+
+  /** Best matchable prices and last trade of every pair (slice 046). */
+  summary(token: string): Promise<ExchangeSummaryResponse> {
+    return this.fetcher.get('/exchange/summary', { token })
   }
 
   trades(token: string, { resource }: { resource: ExchangeResource }): Promise<ExchangeTradesResponse> {

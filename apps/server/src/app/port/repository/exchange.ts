@@ -1,7 +1,9 @@
 import { ExchangeOrderEntity } from '#core/exchange/entity'
 import {
   CarrierReservation,
+  ExchangeBestLevel,
   ExchangeBookLevel,
+  ExchangeLastTrade,
   ExchangeTradeView
 } from '#core/exchange/type'
 import { ExchangeResource } from '#core/exchange/value/resource'
@@ -57,18 +59,44 @@ export interface ExchangeRepository {
     exclude_player_id: string
   }): Promise<ExchangeOrderEntity[]>
 
-  /** Top `depth` price levels per side with their total remaining lots: bids high to low, asks low to high. */
+  /**
+   * Same selection and order as `listMatchableForUpdate`, without row locks: the estimate's immediate-fill dry run
+   * (slice 046) reads the book and changes nothing.
+   */
+  listMatchable(query: {
+    faction_code: FactionCode
+    resource: ExchangeResource
+    side: ExchangeSide
+    limit_price: number
+    exclude_player_id: string
+  }): Promise<ExchangeOrderEntity[]>
+
+  /**
+   * Top `depth` price levels per side with their total remaining lots: bids high to low, asks low to high.
+   * `own_lots` is the part of each level held by `viewer_player_id` (slice 046).
+   */
   getBook(query: {
     faction_code: FactionCode
     resource: ExchangeResource
     depth: number
+    viewer_player_id: string
   }): Promise<{ bids: ExchangeBookLevel[], asks: ExchangeBookLevel[] }>
+
+  /**
+   * Best level of each side of every book of the faction among other players' open orders, in one grouped query
+   * (slice 046): highest buy and lowest sell per resource, with the remaining lots at that price. Empty sides are
+   * absent.
+   */
+  bestLevels(query: { faction_code: FactionCode, exclude_player_id: string }): Promise<ExchangeBestLevel[]>
 
   listTrades(query: {
     faction_code: FactionCode
     resource: ExchangeResource
     limit: number
   }): Promise<ExchangeTradeView[]>
+
+  /** Newest trade of the faction's book, or `null` (slice 046). */
+  lastTrade(query: { faction_code: FactionCode, resource: ExchangeResource }): Promise<ExchangeLastTrade | null>
 
   createTrade(trade: ExchangeTradeRecord): Promise<void>
   findTradeParties(trade_id: string): Promise<ExchangeTradeParties | null>

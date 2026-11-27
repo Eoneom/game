@@ -115,6 +115,7 @@ import {
 } from '#web/handler/exchange/order'
 import {
   exchangeBookHandler,
+  exchangeSummaryHandler,
   exchangeTradesHandler
 } from '#web/handler/exchange/book'
 
@@ -246,6 +247,7 @@ export const router = (): Router => {
   r.delete('/exchange/order/:order_id', authMiddleware, exchangeCancelOrderHandler)
   r.get('/exchange/book', authMiddleware, exchangeBookHandler)
   r.get('/exchange/trades', authMiddleware, exchangeTradesHandler)
+  r.get('/exchange/summary', authMiddleware, exchangeSummaryHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)

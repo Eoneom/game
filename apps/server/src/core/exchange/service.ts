@@ -4,7 +4,8 @@ import { ExchangeOrderEntity } from '#core/exchange/entity'
 import { ExchangeError } from '#core/exchange/error'
 import {
   CarrierReservation,
-  ConvoyCarriers
+  ConvoyCarriers,
+  ExchangeImmediateFill
 } from '#core/exchange/type'
 import {
   ExchangeResource,
@@ -393,6 +394,51 @@ export class ExchangeService {
     return [ ...resting ].sort((a, b) => direction * (a.price - b.price)
       || a.created_at - b.created_at
       || a.id.localeCompare(b.id))
+  }
+
+  /**
+   * Dry run of the matching (estimate, slice 046): what an incoming order of `lots` at `limit_price` fills at once
+   * against `resting` (other players' open orders of the opposite side), in price-time priority and at the resting
+   * prices. Approximate: carriers of either side are not checked, so the real fill can be smaller.
+   */
+  static simulateImmediateFill<T extends RestingOrderView>({
+    side,
+    limit_price,
+    lots,
+    resting
+  }: {
+    side: ExchangeSide
+    limit_price: number
+    lots: number
+    resting: T[]
+  }): ExchangeImmediateFill {
+    let remaining_lots = lots
+    let filled_lots = 0
+    let water = 0
+    for (const order of this.sortByPriority({
+      side,
+      resting
+    })) {
+      if (remaining_lots <= 0) {
+        break
+      }
+      const terms = this.fillTerms({
+        side,
+        limit_price,
+        remaining_lots,
+        resting: order
+      })
+      if (!terms) {
+        continue
+      }
+      remaining_lots -= terms.lots
+      filled_lots += terms.lots
+      water += terms.lots * terms.price
+    }
+    return {
+      lots: filled_lots,
+      water
+    }
   }
 
   /** Lots and execution price (the resting order's) of a fill, or `null` when the prices do not cross. */

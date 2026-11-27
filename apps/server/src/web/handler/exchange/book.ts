@@ -7,9 +7,11 @@ import {
   ExchangeBookResponse,
   ExchangeTradesResponse
 } from '@eoneom/api-client/src/endpoints/exchange/book'
+import { ExchangeSummaryResponse } from '@eoneom/api-client/src/endpoints/exchange/summary'
 import { getPlayerIdFromContext } from '#web/helpers'
 import { ExchangeBookQuery } from '#query/exchange/book'
 import { ExchangeTradesQuery } from '#query/exchange/trades'
+import { ExchangeSummaryQuery } from '#query/exchange/summary'
 
 /** `GET /exchange/book?resource=` (slice 035). */
 export const exchangeBookHandler = async (
@@ -23,6 +25,25 @@ export const exchangeBookHandler = async (
       player_id,
       resource: req.query.resource
     })
+
+    return res.json({
+      status: 'ok',
+      data
+    })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/** `GET /exchange/summary` (slice 046): best matchable prices and last trade of every pair. */
+export const exchangeSummaryHandler = async (
+  _req: Request,
+  res: Response<ExchangeSummaryResponse>,
+  next: NextFunction
+) => {
+  try {
+    const player_id = getPlayerIdFromContext(res)
+    const data = await new ExchangeSummaryQuery().run({ player_id })
 
     return res.json({
       status: 'ok',

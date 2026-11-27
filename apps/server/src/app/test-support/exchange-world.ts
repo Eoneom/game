@@ -13,7 +13,11 @@ import { CityEntity } from '#core/city/entity'
 import { CityError } from '#core/city/error'
 import { ExchangeOrderEntity } from '#core/exchange/entity'
 import { ExchangeService } from '#core/exchange/service'
-import { CarrierReservation } from '#core/exchange/type'
+import {
+  CarrierReservation,
+  ExchangeBestLevel,
+  ExchangeBookLevel
+} from '#core/exchange/type'
 import { ExchangeOrderStatus } from '#core/exchange/value/order-status'
 import { ExchangeSide } from '#core/exchange/value/side'
 import { FactionCode } from '#core/faction/constant/code'
@@ -33,8 +37,9 @@ const sameCoordinates = (a: Coordinates, b: Coordinates) => a.x === b.x && a.y =
 
 /**
  * In-memory game state behind the repository ports used by the faction exchange (slice 035): players, cities,
- * stocks, troops, orders, reservations, trades, movements and trade reports. `listMatchableForUpdate` filters like
- * the SQL but returns rows in insertion order, so callers must sort by priority themselves.
+ * stocks, troops, orders, reservations, trades, movements and trade reports. `listMatchableForUpdate` and
+ * `listMatchable` filter like the SQL but return rows in insertion order, so callers must sort by priority
+ * themselves. `getBook`, `bestLevels` and `lastTrade` aggregate like the SQL (slice 046).
  */
 export class ExchangeWorld {
   readonly players = new Map<string, PlayerEntity>()
@@ -79,8 +84,10 @@ export class ExchangeWorld {
     stock = {},
     carriers = 0,
     carrier_code = TroopCode.LIGHT_TRANSPORTER,
+    name = `city-${this.cities.size + 1}`,
   }: {
     player: PlayerEntity
+    name?: string
     x?: number
     y?: number
     trading_post?: number
@@ -107,7 +114,7 @@ export class ExchangeWorld {
     const city = CityEntity.create({
       id: id(),
       player_id: player.id,
-      name: `city-${this.cities.size + 1}`,
+      name,
       cell_id: cell.id
     })
     this.cities.set(city.id, city)
@@ -232,6 +239,30 @@ export class ExchangeWorld {
         count
       }))
     }
+    const matchable: ExchangeRepository['listMatchable'] = async ({
+      faction_code, resource, side, limit_price, exclude_player_id
+    }) => openOrders().filter(order => order.faction_code === faction_code
+      && order.resource === resource
+      && order.side === side
+      && order.player_id !== exclude_player_id
+      && (side === ExchangeSide.SELL ? order.price <= limit_price : order.price >= limit_price))
+    /** Remaining lots per price of one book side, best price first. */
+    const levels = (orders: ExchangeOrderEntity[], side: ExchangeSide, viewer_player_id?: string): ExchangeBookLevel[] => {
+      const by_price = new Map<number, ExchangeBookLevel>()
+      for (const order of orders.filter(candidate => candidate.side === side)) {
+        const level = by_price.get(order.price) ?? {
+          price: order.price,
+          lots: 0,
+          own_lots: 0
+        }
+        level.lots += order.remaining_lots
+        if (order.player_id === viewer_player_id) {
+          level.own_lots += order.remaining_lots
+        }
+        by_price.set(order.price, level)
+      }
+      return [ ...by_price.values() ].sort((a, b) => side === ExchangeSide.BUY ? b.price - a.price : a.price - b.price)
+    }
     return {
       createOrder: async order => {
         this.orders.set(order.id, order)
@@ -250,18 +281,54 @@ export class ExchangeWorld {
         .filter(order => order.player_id === player_id && order.status !== ExchangeOrderStatus.OPEN)
         .slice(0, limit),
       listOpenCreatedBefore: async before => openOrders().filter(order => order.created_at < before),
-      listMatchableForUpdate: async ({
-        faction_code, resource, side, limit_price, exclude_player_id
-      }) => openOrders().filter(order => order.faction_code === faction_code
-        && order.resource === resource
-        && order.side === side
-        && order.player_id !== exclude_player_id
-        && (side === ExchangeSide.SELL ? order.price <= limit_price : order.price >= limit_price)),
-      getBook: async () => ({
-        bids: [],
-        asks: []
-      }),
+      listMatchableForUpdate: matchable,
+      listMatchable: matchable,
+      getBook: async ({
+        faction_code, resource, depth, viewer_player_id
+      }) => {
+        const book = openOrders().filter(order => order.faction_code === faction_code && order.resource === resource)
+        return {
+          bids: levels(book, ExchangeSide.BUY, viewer_player_id).slice(0, depth),
+          asks: levels(book, ExchangeSide.SELL, viewer_player_id).slice(0, depth),
+        }
+      },
+      bestLevels: async ({
+        faction_code, exclude_player_id
+      }) => {
+        const others = openOrders().filter(order => order.faction_code === faction_code && order.player_id !== exclude_player_id)
+        const best: ExchangeBestLevel[] = []
+        for (const resource of new Set(others.map(order => order.resource))) {
+          for (const side of [
+            ExchangeSide.BUY,
+            ExchangeSide.SELL
+          ]) {
+            const [ level ] = levels(others.filter(order => order.resource === resource), side)
+            if (level) {
+              best.push({
+                resource,
+                side,
+                price: level.price,
+                lots: level.lots
+              })
+            }
+          }
+        }
+        return best
+      },
       listTrades: async () => [],
+      lastTrade: async ({
+        faction_code, resource
+      }) => {
+        const trade = this.trades
+          .filter(candidate => candidate.faction_code === faction_code && candidate.resource === resource)
+          .reduce<ExchangeTradeRecord | null>((newest, candidate) => !newest || candidate.executed_at >= newest.executed_at ? candidate : newest, null)
+        return trade
+          ? {
+            price: trade.price,
+            executed_at: trade.executed_at
+          }
+          : null
+      },
       createTrade: async trade => {
         this.trades.push(trade)
       },

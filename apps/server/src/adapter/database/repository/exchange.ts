@@ -14,7 +14,9 @@ import {
 import { ExchangeOrderEntity } from '#core/exchange/entity'
 import {
   CarrierReservation,
+  ExchangeBestLevel,
   ExchangeBookLevel,
+  ExchangeLastTrade,
   ExchangeTradeView
 } from '#core/exchange/type'
 import { ExchangeOrderStatus } from '#core/exchange/value/order-status'
@@ -29,6 +31,8 @@ import {
   Selectable,
   sql
 } from 'kysely'
+
+type MatchableQuery = Parameters<ExchangeRepository['listMatchable']>[0]
 
 export class PostgresExchangeRepository implements ExchangeRepository {
   private get db(): Kysely<DB> {
@@ -154,22 +158,26 @@ export class PostgresExchangeRepository implements ExchangeRepository {
     return rows.map(row => this.buildOrder(row))
   }
 
-  async listMatchableForUpdate({
+  async listMatchableForUpdate(query: MatchableQuery): Promise<ExchangeOrderEntity[]> {
+    const rows = await this.matchableQuery(query).forUpdate().execute()
+    return rows.map(row => this.buildOrder(row))
+  }
+
+  async listMatchable(query: MatchableQuery): Promise<ExchangeOrderEntity[]> {
+    const rows = await this.matchableQuery(query).execute()
+    return rows.map(row => this.buildOrder(row))
+  }
+
+  private matchableQuery({
     faction_code,
     resource,
     side,
     limit_price,
     exclude_player_id
-  }: {
-    faction_code: FactionCode
-    resource: ExchangeResource
-    side: ExchangeSide
-    limit_price: number
-    exclude_player_id: string
-  }): Promise<ExchangeOrderEntity[]> {
+  }: MatchableQuery) {
     // Resting sells cross a buy at or below its limit; resting buys cross a sell at or above it.
     const is_sell_book = side === ExchangeSide.SELL
-    const rows = await this.db
+    return this.db
       .selectFrom('exchange_order')
       .selectAll()
       .where('faction_code', '=', faction_code)
@@ -181,25 +189,25 @@ export class PostgresExchangeRepository implements ExchangeRepository {
       .orderBy('price', is_sell_book ? 'asc' : 'desc')
       .orderBy('created_at', 'asc')
       .orderBy('id', 'asc')
-      .forUpdate()
-      .execute()
-    return rows.map(row => this.buildOrder(row))
   }
 
   async getBook({
     faction_code,
     resource,
-    depth
+    depth,
+    viewer_player_id
   }: {
     faction_code: FactionCode
     resource: ExchangeResource
     depth: number
+    viewer_player_id: string
   }): Promise<{ bids: ExchangeBookLevel[], asks: ExchangeBookLevel[] }> {
     const levels = (side: ExchangeSide) => this.db
       .selectFrom('exchange_order')
       .select(({ fn }) => [
         'price',
         fn.sum<number>(sql<number>`lots - filled_lots`).as('lots'),
+        fn.sum<number>(sql<number>`case when player_id = ${viewer_player_id} then lots - filled_lots else 0 end`).as('own_lots'),
       ])
       .where('faction_code', '=', faction_code)
       .where('resource', '=', resource)
@@ -217,14 +225,76 @@ export class PostgresExchangeRepository implements ExchangeRepository {
       levels(ExchangeSide.BUY),
       levels(ExchangeSide.SELL),
     ])
-    const toLevel = (row: { price: number, lots: number | string }): ExchangeBookLevel => ({
+    const toLevel = (row: { price: number, lots: number | string, own_lots: number | string }): ExchangeBookLevel => ({
       price: row.price,
       lots: Number(row.lots),
+      own_lots: Number(row.own_lots),
     })
     return {
       bids: bid_rows.map(toLevel),
       asks: ask_rows.map(toLevel),
     }
+  }
+
+  async bestLevels({
+    faction_code,
+    exclude_player_id
+  }: {
+    faction_code: FactionCode
+    exclude_player_id: string
+  }): Promise<ExchangeBestLevel[]> {
+    // One row per (resource, side): levels are grouped by price, then DISTINCT ON keeps the first level of each
+    // book side, i.e. the highest buy and the lowest sell.
+    const rows = await this.db
+      .selectFrom('exchange_order')
+      .distinctOn([
+        'resource',
+        'side'
+      ])
+      .select(({ fn }) => [
+        'resource',
+        'side',
+        'price',
+        fn.sum<number>(sql<number>`lots - filled_lots`).as('lots'),
+      ])
+      .where('faction_code', '=', faction_code)
+      .where('status', '=', ExchangeOrderStatus.OPEN)
+      .where('player_id', '!=', exclude_player_id)
+      .groupBy([
+        'resource',
+        'side',
+        'price'
+      ])
+      .orderBy('resource')
+      .orderBy('side')
+      .orderBy(sql`case when side = ${ExchangeSide.BUY} then -price else price end`)
+      .execute()
+    return rows.map(row => ({
+      resource: row.resource as ExchangeResource,
+      side: row.side as ExchangeSide,
+      price: row.price,
+      lots: Number(row.lots),
+    }))
+  }
+
+  async lastTrade({
+    faction_code,
+    resource
+  }: {
+    faction_code: FactionCode
+    resource: ExchangeResource
+  }): Promise<ExchangeLastTrade | null> {
+    const [ trade ] = await this.listTrades({
+      faction_code,
+      resource,
+      limit: 1
+    })
+    return trade
+      ? {
+        price: trade.price,
+        executed_at: trade.executed_at
+      }
+      : null
   }
 
   async listTrades({

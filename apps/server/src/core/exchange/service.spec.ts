@@ -412,6 +412,61 @@ describe('ExchangeService (slice 035)', () => {
     })
   })
 
+  describe('simulateImmediateFill (slice 046)', () => {
+    const resting = (id: string, price: number, created_at: number, remaining_lots: number) => ({
+      id,
+      price,
+      created_at,
+      remaining_lots
+    })
+
+    it('fills a buy from the cheapest sells first, oldest first, at the resting prices', () => {
+      expect(ExchangeService.simulateImmediateFill({
+        side: ExchangeSide.BUY,
+        limit_price: 12,
+        lots: 5,
+        resting: [
+          resting('late', 10, 9, 4),
+          resting('cheap', 9, 5, 2),
+          resting('early', 10, 1, 2),
+          resting('above', 13, 0, 10)
+        ],
+      })).toEqual({
+        // 2 at 9 (cheap), 2 at 10 (early), 1 at 10 (late); the sell at 13 does not cross.
+        lots: 5,
+        water: 2 * 9 + 2 * 10 + 1 * 10
+      })
+    })
+
+    it('fills a sell from the highest buys first and stops when the book runs out', () => {
+      expect(ExchangeService.simulateImmediateFill({
+        side: ExchangeSide.SELL,
+        limit_price: 8,
+        lots: 10,
+        resting: [
+          resting('b', 9, 2, 3),
+          resting('a', 11, 5, 1),
+          resting('below', 7, 0, 5)
+        ],
+      })).toEqual({
+        lots: 4,
+        water: 11 + 3 * 9
+      })
+    })
+
+    it('fills nothing when no resting order crosses', () => {
+      expect(ExchangeService.simulateImmediateFill({
+        side: ExchangeSide.BUY,
+        limit_price: 5,
+        lots: 3,
+        resting: [ resting('s', 6, 0, 3) ],
+      })).toEqual({
+        lots: 0,
+        water: 0
+      })
+    })
+  })
+
   describe('ExchangeOrderEntity', () => {
     const order = () => ExchangeOrderEntity.place({
       player_id: 'p',
