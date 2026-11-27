@@ -64,6 +64,8 @@ No other pricing rule changes: plasma has **no** level reduction, and `GAME_TIME
 
 Order and capacity rules are unchanged: resources are taken in the order plastic → mushroom → plasma, each `min(floor(stock × ratio), remaining carrier capacity)`. The ratios live in a named constant (e.g. `combat_loot_ratio`) in `core/combat/constant/`.
 
+Since slice [`035`](../035-faction-exchange/spec.md), **water** is looted last (plastic → mushroom → plasma → water), also at **25 %**.
+
 City **capture** (ownership transfer on attacker win, [`024`](../024-player-combat-pvp/spec.md)) is unaffected: the stock goes with the city.
 
 Since slice [`028`](../028-command-center-shelter/spec.md), the target city's *underground shelter* protects a fixed amount per resource first: each ratio applies to `max(0, stock − sheltered)` (city targets only; outposts and field stacks are unsheltered). The defender report records the sheltered amounts (`sheltered`).

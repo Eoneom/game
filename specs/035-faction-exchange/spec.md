@@ -1,6 +1,6 @@
 # Slice 035 — Faction exchange and water
 
-**Status**: Planned.
+**Status**: Partially implemented on `main`: water and buildings; exchange pending. Part 1 (water resource, Purificateur d'eau, Comptoir d'échange building, migration `00017_water`) is in; the order book, convoys, `trade` reports and the Bourse page are part 2.
 
 ## Summary
 
@@ -211,11 +211,48 @@ Migration (next free number):
 | [`012`](../012-communication-reports/spec.md) / [`017`](../017-realtime-websocket/spec.md) | `trade` report, exchange events. |
 | `CONTEXT.md` | **Water** (currency), **Order**. |
 
-## Evidence index (when implemented)
+## Implementation notes — part 1 (water)
+
+Part 1 delivers the **water** resource, the **Purificateur d'eau** and the **Comptoir d'échange** building (no orders yet). The order book, convoys, `trade` reports and the Bourse page are part 2.
+
+- **`Resource.water`** is required everywhere (server `shared/resource.ts`, api-client `Resource`), so every literal carries it. `PricingService` returns `water: 0` in every cost and refund (it is a `Resource`); `purchaseResourceStock` already checks and debits water, so a future water price needs no engine change. The API cost DTOs (`upgrade_cost`, `research_cost`, troop `cost`) and the web `Cost` component are **unchanged**: nothing costs water.
+- **Storage**: cities store unlimited water (no warehouse). `WarehouseCapacity` gains an optional `water` cap: absent = unlimited (cities), `0` for outposts (`OutpostService.getWarehousesCapacity`). Outposts neither produce nor store water: their `resource_stock.water` stays 0, their earnings carry `water: 0`, and `depositUpToCapacity` leaves the water in the cargo. A `transport` to an outpost brings its water back with the carriers; the movement estimate flags `destination_capacity_exceeded`. The outpost API (`GET /outpost/:id`, `/outpost`) exposes no water, and the web hides water for outposts (header, transport form).
+- **Gathering**: same loop as plasma, with its own `last_water_gather` (`timestamptz`, default `now()`, like `last_plasma_gather`). Earnings are `BuildingService.getEarningsBySecond(WATER_PURIFIER)` × the city's production energy ratio: the purifier counts as a **production** consumer of energy, like the central inductor. Cell coefficient fixed at 1 (`resource_coefficient.water = 1` is set in code, not stored); `TechnologyService.getProductionMultipliers` returns `water: 1`, so Économie technologies never apply.
+- **Gather clamp**: `getCappedEarnings` returns `max(0, capacity − stock)` when the stock would overflow, so a stock already above capacity gains nothing and never shrinks. The last gather time still advances (time spent above capacity is not banked).
+- **Transport**: `resource_transport_weight.water = 2`; `movement.water` column. Request bodies of `POST /troop/movement` and `/troop/movement/estimate` that omit `water` (older clients) count it as 0 (`getResourcesFromBody` in `web/helpers.ts`), so the command layer always sees a full `Resource`.
+- **Loot and shelter**: `combat_loot_ratio.water = 0.25`, looted last (plastic → mushroom → plasma → water); `underground_shelter_capacity.water` = base 100, ×1.6. As for the other resources, loot capacity counts **units**, not transport weight (unchanged rule). Reports store water in `report.water` / `report.remaining_water`; battle `sheltered` reads default `water` to 0 for rows written before this slice. Spy reports (tier ≥ 4) include the target's water; older spy reports show 0.
+- **Rankings**: unchanged. Values come from costs (`plastic + mushroom + 5 × plasma`), never from stock, and no cost has water, so water is excluded by construction.
+- **System players**: `sortBuildingsForSystemUpgrade` filters out `water_purifier` and `trading_post` (`SYSTEM_EXCLUDED_BUILDING_CODES`), so the AI never considers them. Their transport cargo is always `water: 0` (`resourcesForTransportToDestination`, `clampResourcesToTransportCapacity`); affordability checks (`canAfford`, `maxAffordableRecruitCount`, defense budget) include water, which costs nothing. Their cities can still hold water they loot from human cities.
+- **Buildings**: both start at level 0 in new cities (`BuildingService.init`) and count toward the city's building level cap. `water_purifier` returns production metadata (current / next production and consumption, energy warning); api-client `isProductionBuilding` includes it. `trading_post` has no metadata; its details show the translated effect ("Donne accès à la bourse de faction…"). The trading post consumes no energy.
+- **Migration** `00017_water`: `resource_stock.water` (integer, default 0), `resource_stock.last_water_gather` (timestamptz, default `now()`), `movement.water` and `report.water` / `report.remaining_water` (integer, default 0), level-0 `building` rows for both codes in every city. `down` drops the columns and keeps the building rows, like `00011`.
+- **Web**: new `IconWater` (`ui/icon/water.tsx`); water in the header (cities), city page (stock and hourly production, no technology bonus), transport form (cities), battle loot / transport cargo / sheltered amounts and spy stock in reports (« eau pure »), shelter details. Building art is a placeholder: `water_purifier` → recycling plant, `trading_post` → plastic warehouse (`modules/building/image.ts`).
+- **Hooks for part 2**: `Resource` and `resource_transport_weight` are shared with the api-client; cargo deposit is `ResourceStockEntity.depositUpToCapacity` (an exchange delivery should add to the stock directly, ignoring capacity, which the clamp now tolerates); movement creation and the cap are in `app/command/troop/movement/create.ts` / `AppService.assertMovementCapacity`; return trips in `createReturnBaseTrip` (`app/command/troop/movement/shared.ts`); trading post level via `repository.building.getLevel({ code: BuildingCode.TRADING_POST })`.
+
+## Follow-ups — part 1
+
+- **Artwork** for `water_purifier` and `trading_post` (remove the placeholders in `modules/building/image.ts` when `/buildings/<code>.png` lands).
+- **Water carried to an outpost by a `base` movement** (a rebase, or loot returning to an attack launched from an outpost) is dropped like plastic overflow on a `base` arrival, since outposts store none.
+- **Admin observability** (system player stats, ongoing movements) does not display water.
+- **Balance**: purifier output and costs need a playtest once the exchange exists.
+
+## Evidence index — part 1 (water)
+
+| Area | Paths |
+| --- | --- |
+| Resource type | `apps/server/src/shared/resource.ts`, `packages/api-client/src/endpoints/shared/resource.ts` |
+| Stock and gathering | `apps/server/src/core/resources/service.ts` (gather clamp, outpost water cap), `core/resources/resource-stock/entity.ts`, `adapter/database/repository/resource-stock.ts`, `app/service.ts` (city earnings, energy), `core/outpost/service.ts`; tests `core/resources/service.spec.ts`, `service.deposit.spec.ts`, `app/command/city/gather.spec.ts`, `app/service.spec.ts` |
+| Buildings | `core/building/constant/{code,earnings,energy,order,shelter-capacity}.ts`, `core/building/{helper,service}.ts`, `core/pricing/constant/building.ts`, `core/requirement/constant/building.ts`, `app/query/building/get.ts`; tests `core/building/service.spec.ts`, `core/pricing/service.spec.ts`, `core/requirement/service.spec.ts`, `app/query/building/get.spec.ts` |
+| Transport | `core/troop/constant/transport-weight.ts`, `core/troop/service.ts`, `core/troop/movement/entity.ts`, `adapter/database/repository/movement.ts`, `app/query/troop/movement/estimate.ts`, `web/helpers.ts`, `web/handler/troop/movement/{create,estimate,get,list}.ts`; tests `core/troop/service.spec.ts`, `app/command/troop/movement/create.spec.ts`, `finish/transport.spec.ts`, `finish/base.spec.ts`, `app/query/troop/movement/estimate.spec.ts` |
+| Loot and reports | `core/combat/constant/loot.ts`, `app/command/combat/apply-battle-outcomes.ts`, `app/command/communication/report/create-battle.ts`, `adapter/database/repository/report.ts`, `app/command/troop/movement/finish/spy.ts`; tests `apply-battle-outcomes.spec.ts`, `create-battle.spec.ts`, `finish/spy.spec.ts`, `web/handler/communication/report/get.spec.ts` |
+| System players | `app/command/player/system/{storage,transport,actions,troops,defenses}.ts`; test `storage.spec.ts` (`never ranks the water purifier nor the trading post`) |
+| API shape | `packages/api-client/src/endpoints/{city,building}/get.ts`, `types/report-battle.ts`; `web/handler/city/get.ts` (+ `get.spec.ts`) |
+| Migration | `apps/server/src/adapter/database/migrations/00017_water.ts`, `adapter/database/types.ts` |
+| Web | `apps/web/src/ui/icon/water.tsx`, `ui/header/resources/index.tsx` (+ test), `modules/city/page.tsx`, `modules/movement/create/{index,resources/index}.tsx`, `modules/communication/report/{details,spy-details}.tsx`, `modules/building/{translations,image}.ts`, `modules/building/details/metadata/shelter/index.tsx` |
+
+## Evidence index — part 2 (when implemented)
 
 | Area | Expected paths |
 | --- | --- |
-| Water | `shared/resource.ts`, `core/resources/`, `core/building/constant/earnings.ts`, `core/troop/constant/transport-weight.ts`, `packages/api-client/src/endpoints/shared/resource.ts` |
 | Exchange domain | `core/exchange/` (order, matching, lots, reservations) |
 | Commands / queries | `app/command/exchange/`, `app/query/exchange/` |
 | Convoys | `app/saga/finish/exchange.ts` |

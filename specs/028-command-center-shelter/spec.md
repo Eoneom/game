@@ -102,19 +102,20 @@ For `level ≥ 1`: `sheltered_r = ceil(base_r × multiplier_r^(level − 1))`; l
 | plastic | 2000 | 1.6 |
 | mushroom | 1500 | 1.6 |
 | plasma | 200 | 1.6 |
+| water | 100 | 1.6 (slice [`035`](../035-faction-exchange/spec.md)) |
 
 Constant `underground_shelter_capacity` in `core/building/constant/`.
 
 ### Loot formula (replaces the 026 per-resource cap for cities)
 
-For each resource `r`, in order plastic → mushroom → plasma:
+For each resource `r`, in order plastic → mushroom → plasma → water (water since [`035`](../035-faction-exchange/spec.md)):
 
 ```
 lootable_r = floor(max(0, stock_r − sheltered_r) × loot_ratio_r)
 taken_r    = min(lootable_r, remaining_carrier_capacity)
 ```
 
-- `loot_ratio` = 50 % plastic, 50 % mushroom, 25 % plasma ([`026`](../026-plasma-economy/spec.md)).
+- `loot_ratio` = 50 % plastic, 50 % mushroom, 25 % plasma ([`026`](../026-plasma-economy/spec.md)), 25 % water ([`035`](../035-faction-exchange/spec.md)).
 - Applies to **city** targets only. Outposts and field stacks have no shelter (`sheltered_r = 0`).
 - City **capture** is unaffected: the whole stock goes with the city.
 - Battle report metadata gains `sheltered: Resource` (defender perspective). The defender report shows "Protégé par l'abri" when non-zero.

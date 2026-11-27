@@ -47,3 +47,7 @@ _Avoid_: room, lobby
 **Role**:
 A job a unit type performs. Several unit types, each belonging to one Faction, can share a Role.
 _Avoid_: class, archetype, template, kind, job
+
+**Water**:
+The currency resource (FR *eau pure*), produced by a city's water purifier and stored without limit in cities only. Players trade it for plastic, mushroom and plasma on their Faction's exchange.
+_Avoid_: money, gold, credits, coins

@@ -36,6 +36,8 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `troop:movement:limit-reached` | Player already owns `movement_limit` movements (slice [`028`](../028-command-center-shelter/spec.md)) |
 | `troop:movement:foreign-origin` | From another player's city, only a `base` recall to one of the player's own cities or outposts is allowed (slice [`033`](../033-alliances/spec.md)) |
 
+**Transport cargo**: movement resources are plastic, mushroom, plasma and water (slice [`035`](../035-faction-exchange/spec.md), `movement.water`). Load = Σ amount × `resource_transport_weight` (plastic 1, mushroom 1, plasma 100, water 2) against the carriers' `transport_capacity`. Request bodies that omit `water` count it as 0 (`getResourcesFromBody`). On arrival, cities take every unit of plasma and water (no cap); outposts store no water, so it stays in the cargo and returns with the carriers (the estimate flags `destination_capacity_exceeded`). The exchange's `exchange` action and reserved carriers arrive with part 2 of slice 035.
+
 **Movement cap** ([`028`](../028-command-center-shelter/spec.md)): `movement_limit = 5 + Σ command_center level` over the player's cities; every `movement` row of the player counts (`movement.countByPlayer`). `createTroopMovement` (every action) rejects at the cap; a rebase (`rebaseTroopMovement`) runs the same check but excludes the inbound movement it replaces, so it is only blocked when the player is over the cap (after losing a city). Automatic return trips (`createReturnBaseTrip` from explore / transport) and battle retreats are never checked. Losing a city lowers the limit without cancelling movements under way.
 
 | `CombatError` (attack movements) | Meaning |

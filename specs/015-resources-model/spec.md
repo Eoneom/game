@@ -4,7 +4,7 @@
 
 ## Summary
 
-In-game **resources** are plastic, mushroom, and plasma (`shared/resource`). Each world cell can hold a **resource stock** (amounts + last gather timestamps). Cities and outposts gather passively into stock subject to **warehouse capacity** (buildings for cities, logistics for outposts). `ResourcesService` centralizes gather math, capping, affordability checks, and initial stock rolls.
+In-game **resources** are plastic, mushroom, plasma and, since slice [`035`](../035-faction-exchange/spec.md), **water** (`shared/resource`). Each world cell can hold a **resource stock** (amounts + last gather timestamps). Cities and outposts gather passively into stock subject to **warehouse capacity** (buildings for cities, logistics for outposts). `ResourcesService` centralizes gather math, capping, affordability checks, and initial stock rolls.
 
 **Depends on**: buildings/outposts for capacity and earnings ([`007`](../007-buildings-upgrade-queue/spec.md), [`011`](../011-outposts/spec.md)).
 
@@ -25,9 +25,9 @@ Tests: `apps/server/src/core/resources/service.spec.ts`, `service.deposit.spec.t
 | `randomResourceStockState` | New cell: independent uniform ints in `[0, STARTING_*]` per resource |
 | `firstCityCanonicalResourceStockState` | Signup main city: full `STARTING_PLASTIC` / `STARTING_MUSHROOM` |
 | `emptyResourceStockState` | Zero stock with gather timestamps |
-| `gatherResourceStock` | Per-resource earnings since last gather, capped by warehouse capacity |
+| `gatherResourceStock` | Per-resource earnings since last gather, capped by warehouse capacity. A stock already **above** capacity (future exchange deliveries, slice [`035`](../035-faction-exchange/spec.md)) gains nothing and never shrinks (`getCappedEarnings` clamps at ≥ 0) |
 | `getEarnings` / `getCappedEarnings` | Time delta × rate, respect capacity |
-| `assertCanAfford` / `pay` | Spend plastic/mushroom/plasma; throws `city:not-enough-resources` |
+| `assertCanAfford` / `pay` | Spend plastic/mushroom/plasma/water; throws `city:not-enough-resources` |
 
 Starting constants: `apps/server/src/core/city/constant` (`STARTING_MUSHROOM`, `STARTING_PLASTIC`).
 
@@ -35,15 +35,20 @@ Starting constants: `apps/server/src/core/city/constant` (`STARTING_MUSHROOM`, `
 
 Plasma is a **spendable** resource ([`026`](../026-plasma-economy/spec.md)): produced by the `central_inductor` into the city cell's stock (unlimited storage), it can be priced in building / technology / troop cost tables ([`014`](../014-requirements-pricing/spec.md)), is debited by `purchaseResourceStock` with plastic and mushroom and refunded by the same cancel rules. No current content costs plasma.
 
+## Water
+
+**Water** (`water`, FR *eau pure*) is the currency of the faction exchange ([`035`](../035-faction-exchange/spec.md)). The `water_purifier` produces it into the **city** cell's stock (`water`, `last_water_gather`, gathered like plasma); storage is **unlimited** in cities. Outposts neither produce nor store water: their stock row keeps `water = 0` and their `WarehouseCapacity` carries `water: 0`, so `depositUpToCapacity` leaves water in the cargo (it returns with the carriers). Starting stock 0. No content costs water; prices carry `water: 0`. Transport weight 2 per unit. Not counted in rankings ([`034`](../034-rankings/spec.md)).
+
 ### Loot ratio
 
-After an attacker win with surviving carriers ([`024`](../024-player-combat-pvp/spec.md)), each resource is looted in order plastic → mushroom → plasma as `min(floor(stock × ratio), remaining capacity)`:
+After an attacker win with surviving carriers ([`024`](../024-player-combat-pvp/spec.md)), each resource is looted in order plastic → mushroom → plasma → water as `min(floor(stock × ratio), remaining capacity)`:
 
 | Resource | Lootable share of defender stock |
 | --- | --- |
 | plastic | 50 % |
 | mushroom | 50 % |
 | plasma | 25 % |
+| water | 25 % (slice [`035`](../035-faction-exchange/spec.md)) |
 
 Constant: `combat_loot_ratio` in `apps/server/src/core/combat/constant/loot.ts`; applied by `lootFromStock` in `apps/server/src/app/command/combat/apply-battle-outcomes.ts`.
 

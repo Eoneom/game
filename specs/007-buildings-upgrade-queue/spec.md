@@ -42,11 +42,12 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 
 - `BuildingService.init({ city_id })` creates all codes; `getBuildingInitialLevel` sets mushroom farm, recycling plant, and solar panel to level 1 (`core/building/constant/initial-level.ts`).
 - Solar panel level 1 `base` energy is **80** so supply covers mushroom + recycling consumption (20+20 each) at the minimum cell `solar_coefficient` (**0.5**).
-- Production buildings (`MUSHROOM_FARM`, `RECYCLING_PLANT`, `CENTRAL_INDUCTOR`) earnings scale with cell coefficients and `gameTimeScale`.
+- Production buildings (`MUSHROOM_FARM`, `RECYCLING_PLANT`, `CENTRAL_INDUCTOR`, `WATER_PURIFIER`) earnings scale with cell coefficients (fixed 1 for plasma and water) and `gameTimeScale`.
 - Energy consumption/supply helpers for UI warnings (`getEnergyConsumption`, `getProductionEnergyRatio`, etc.).
 - Display order: `building_order` constant.
 - Slice [`028`](../028-command-center-shelter/spec.md) adds `command_center` (non-production energy consumer, `architecture` 2; each level raises the player movement cap and level ≥ 1 unlocks a recruitment queue in the city) and `underground_shelter` (no energy; shelters a fixed amount of each resource from loot, `BuildingService.getShelteredResources`). Both start at level 0 and use this upgrade queue; existing cities got level-0 rows in migration `00011_command_center_shelter`.
 - Slice [`029`](../029-city-defenses/spec.md) adds `city_wall` (**Enceinte**, no energy, `architecture` 2): it uses this upgrade queue but is **excluded** from the city's building level cap (`building.getTotalLevels` skips it, so it is not in `building_levels_used`, and `startBuildingUpgrade` lets it start in a full city). It gives `20 × level` defense points and shortens defense build times. The web building list hides it (shown in the **Défense** tab). Existing cities got a level-0 row in migration `00012_city_defenses`.
+- Slice [`035`](../035-faction-exchange/spec.md) (part 1) adds `water_purifier` (**Purificateur d'eau**, production building: 0.05 water/s ×1.15 per level, energy 40 ×1.25, `architecture` 3, no Économie technology bonus) and `trading_post` (**Comptoir d'échange**, no energy, `architecture` 2; it will gate the faction exchange orders). Both start at level 0, use this upgrade queue and count toward the building level cap; system players never build them. Existing cities got level-0 rows in migration `00017_water`.
 
 ## Web UI
 

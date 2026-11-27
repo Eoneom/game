@@ -4,7 +4,7 @@
 
 ## Summary
 
-Players own **cities** anchored to world cells. Signup creates the first city; additional cities are founded via **settle** (settler troop on an explored cell). **Passive gathering** accrues plastic/mushroom/plasma into per-cell resource stock on a recurring pg-boss job, capped by warehouse capacity. Successful gather emits `city:resources-gathered` on the app event bus (WebSocket fan-out in [`017`](../017-realtime-websocket/spec.md)).
+Players own **cities** anchored to world cells. Signup creates the first city; additional cities are founded via **settle** (settler troop on an explored cell). **Passive gathering** accrues plastic/mushroom/plasma/water (water since slice [`035`](../035-faction-exchange/spec.md), from the `water_purifier`) into per-cell resource stock on a recurring pg-boss job, capped by warehouse capacity. Successful gather emits `city:resources-gathered` on the app event bus (WebSocket fan-out in [`017`](../017-realtime-websocket/spec.md)).
 
 **Depends on**: world grid ([`005`](../005-world-grid-visibility/spec.md)), resources ([`015`](../015-resources-model/spec.md)), buildings for earnings/capacity ([`007`](../007-buildings-upgrade-queue/spec.md)). **Out of scope**: building upgrades, troop recruitment (other slices).
 
@@ -42,7 +42,7 @@ Tests: `apps/server/src/web/handler/city/{list,get,settle}.spec.ts`, `apps/serve
 
 Boot: `index.ts` calls `ensureCityResourcesGatherScheduled`. Worker registration: `adapter/job-queue/register-workers.ts`.
 
-`cityGather` loads city, cell, resource stock; computes earnings via `AppService.getCityEarningsBySecond`; applies `ResourcesService.gatherResourceStock`; persists stock; emits `AppEvent.CityResourcesGathered` when stock changes.
+`cityGather` loads city, cell, resource stock; computes earnings via `AppService.getCityEarningsBySecond`; applies `ResourcesService.gatherResourceStock` (plasma and water uncapped; plastic/mushroom capped, and a stock already above capacity gains nothing and never shrinks, slice [`035`](../035-faction-exchange/spec.md)); persists stock; emits `AppEvent.CityResourcesGathered` when stock changes.
 
 ## Domain rules
 
