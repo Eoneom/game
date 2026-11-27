@@ -13,22 +13,50 @@
   --color-amber: #e8c547;
   --color-amber-dim: #dbbf82;
   --color-terminal: #7dcea0;
+  /* Fills and borders only: copper fails AA as text (040). */
   --color-copper: #c97a3d;
-  --color-label: #e0c878;
+  --color-label: #cdb994;
+  /* Main reading text; body default (040). */
+  --color-ink: #efe1bd;
+  /* Placeholders only, on chrome / chrome-2 (040). */
+  --color-muted: #b3a07a;
+  /* Input, select and data table borders; focus fallback, >= 3:1 (040). */
+  --color-edge: #9a7656;
   --color-danger: #ffb4a8;
   --color-danger-deep: #7a1818;
   --color-plastic: #d4a06a;
   --color-mushroom: #7dcea0;
   --font-display: "Oxanium", ui-sans-serif, system-ui, sans-serif;
+
+  /* Semantic type scale (040): Tailwind's default size scale is dropped. */
+  --text-*: initial;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 500;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.25rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-heading: 1.125rem;
+  --text-heading--line-height: 1.5rem;
+  --text-heading--font-weight: 600;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.75rem;
+  --text-title--font-weight: 600;
+  --text-page: 1.5rem;
+  --text-page--line-height: 2rem;
+  --text-page--font-weight: 600;
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.25rem;
+  --text-display--font-weight: 700;
+
+  /* Decorative layers only, never behind text (040). */
   --background-image-tex-metal: url('/ui/tex-metal-panel.png');
   --background-image-tex-rust: url('/ui/tex-rust-noise.png');
-  --background-image-tex-scan: url('/ui/tex-scanline.png');
   --background-image-tex-panel-rivet: url('/ui/tex-panel-rivet.png');
-  --background-image-tex-ember: url('/ui/tex-ember.png');
   --animate-neon-pulse: neon-pulse 2.8s ease-in-out infinite;
   --animate-boot-sweep: boot-sweep 0.9s ease-out 1;
   --animate-panel-in: panel-in 0.2s ease-out;
-  --animate-ember: ember-drift 12s linear infinite;
 }
 
 @keyframes neon-pulse {
@@ -55,20 +83,15 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes ember-drift {
-  0% { transform: translateY(0) translateX(0); opacity: 0.3; }
-  50% { opacity: 0.65; }
-  100% { transform: translateY(-40px) translateX(12px); opacity: 0.12; }
-}
-
 @layer base {
   html {
     color-scheme: dark;
     @apply h-full overflow-hidden;
   }
 
+  /* Backdrop texture: only visible where no panel covers it. */
   body {
-    @apply m-0 h-full overflow-hidden bg-chrome font-display text-amber-dim antialiased;
+    @apply m-0 h-full overflow-hidden bg-chrome font-display text-body text-ink antialiased;
     background-image:
       linear-gradient(180deg, rgba(44, 36, 30, 0.82), rgba(53, 44, 36, 0.88)),
       var(--background-image-tex-rust);
@@ -88,7 +111,11 @@
   }
 
   a {
-    @apply text-amber no-underline transition-colors hover:text-copper;
+    @apply text-amber no-underline transition-colors hover:text-ink hover:underline;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-amber;
   }
 
   ::selection {
@@ -96,46 +123,36 @@
   }
 }
 
+/* Flat surfaces (040): no texture or overlay behind text. Declared with @utility so
+   explicit border / background classes on the element override them. */
+@utility surface-frame {
+  @apply border-rust/70 bg-chrome-2;
+}
+
+@utility surface-panel {
+  @apply rounded-sm border border-rust/60 bg-chrome-2;
+}
+
+@utility surface-panel-inset {
+  @apply rounded-sm border border-rust/40 bg-chrome;
+}
+
+@utility surface-raised {
+  @apply bg-chrome-3;
+}
+
 @layer utilities {
   .neon-amber {
     @apply animate-neon-pulse border-amber/55;
   }
 
-  .surface-chrome {
-    @apply border border-rust/70 bg-chrome-2 text-amber-dim;
-    background-image:
-      linear-gradient(165deg, rgba(53, 44, 36, 0.9), rgba(44, 36, 30, 0.92)),
-      var(--background-image-tex-metal);
-    background-size: auto, 160px;
-    background-repeat: repeat;
-  }
-
-  .surface-inset {
-    @apply border border-rust/55 bg-chrome text-amber-dim;
-    background-image:
-      linear-gradient(180deg, rgba(44, 36, 30, 0.9), rgba(52, 42, 34, 0.94)),
-      var(--background-image-tex-rust);
-    background-size: auto, 180px;
-    background-repeat: repeat;
-  }
-
   /* Operator console (/admin) — distinct elevation levels on shared chrome tokens */
   .admin-surface-page {
     @apply bg-chrome text-amber-dim;
-    background-image:
-      linear-gradient(180deg, rgba(32, 26, 21, 0.97), rgba(44, 36, 30, 0.99)),
-      var(--background-image-tex-rust);
-    background-size: auto, 180px;
-    background-repeat: repeat;
   }
 
   .admin-surface-panel {
     @apply border border-rust/70 bg-chrome-2 text-amber-dim;
-    background-image:
-      linear-gradient(165deg, rgba(53, 44, 36, 0.9), rgba(44, 36, 30, 0.92)),
-      var(--background-image-tex-metal);
-    background-size: auto, 160px;
-    background-repeat: repeat;
     box-shadow:
       0 3px 12px rgba(0, 0, 0, 0.38),
       inset 0 1px 0 rgba(232, 197, 71, 0.07);
@@ -143,11 +160,6 @@
 
   .admin-surface-card {
     @apply border border-rust/65 bg-chrome-3 text-amber-dim;
-    background-image:
-      linear-gradient(165deg, rgba(70, 56, 46, 0.88), rgba(53, 44, 36, 0.92)),
-      var(--background-image-tex-metal);
-    background-size: auto, 160px;
-    background-repeat: repeat;
     box-shadow:
       0 2px 6px rgba(0, 0, 0, 0.28),
       inset 0 1px 0 rgba(232, 197, 71, 0.05);
@@ -155,11 +167,6 @@
 
   .admin-surface-nested {
     @apply border border-rust/55 bg-chrome text-amber-dim;
-    background-image:
-      linear-gradient(180deg, rgba(44, 36, 30, 0.9), rgba(52, 42, 34, 0.94)),
-      var(--background-image-tex-rust);
-    background-size: auto, 180px;
-    background-repeat: repeat;
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.22);
   }
 
@@ -173,24 +180,17 @@
     box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.35);
   }
 
-  .scanlines::after {
-    content: '';
-    @apply pointer-events-none absolute inset-0 opacity-[0.07];
-    background-image: var(--background-image-tex-scan);
-    background-size: 4px 4px;
-  }
-
   .motion-safe-neon {
     @apply motion-reduce:animate-none;
   }
 
   .field-label {
-    @apply text-xs uppercase tracking-wider text-label;
+    @apply text-meta text-label;
   }
 
   .field-input {
-    @apply w-full rounded-sm border border-rust/60 bg-chrome px-3 py-2 font-mono text-base text-amber shadow-[inset_0_1px_0_rgba(232,197,71,0.08)] outline-none transition;
-    @apply placeholder:text-amber-dim/65 focus:border-amber focus:ring-1 focus:ring-amber/35;
+    @apply w-full rounded-sm border border-edge bg-chrome px-3 py-2 font-mono text-body text-amber shadow-[inset_0_1px_0_rgba(232,197,71,0.08)] transition;
+    @apply placeholder:text-muted focus:border-amber;
   }
 
   .field-input--number {
@@ -219,8 +219,8 @@
 
   .map-zoom-btn,
   .map-recenter-btn {
-    @apply rounded-sm border border-rust/60 bg-chrome-2 px-2.5 py-1 text-sm text-amber transition;
-    @apply hover:border-amber/50 hover:text-copper disabled:cursor-not-allowed disabled:opacity-40;
+    @apply rounded-sm border border-rust/60 bg-chrome-2 px-2.5 py-1 text-meta text-amber transition;
+    @apply hover:border-amber/50 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40;
   }
 
   .map-zoom-btn {

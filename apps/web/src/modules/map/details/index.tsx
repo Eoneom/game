@@ -67,7 +67,7 @@ export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, 
       {selectedCell?.explored && selectedCell.characteristic && (
         <div className="details-block">
           <h3 className="m-0 field-label">Coefficients de la cellule</h3>
-          <ul className="m-0 list-none space-y-1 p-0 text-sm text-amber-dim">
+          <ul className="m-0 list-none space-y-1 p-0 text-body text-amber-dim">
             <li>
               Plastique :{' '}
               <span className="font-mono tabular-nums">

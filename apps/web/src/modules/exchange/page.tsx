@@ -14,7 +14,7 @@ export interface ExchangePageSearch {
 }
 
 const tabClass = (active: boolean) => classNames(
-  'rounded-sm border px-3 py-1 text-xs uppercase tracking-wider transition',
+  'rounded-sm border px-3 py-1 text-caption uppercase tracking-wider transition',
   active
     ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
     : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -31,8 +31,8 @@ export const ExchangePage: React.FC<{
     <LayoutPage details={<ExchangeOrderForm resource={resource} />}>
       <div className="space-y-4">
         <header className="space-y-2">
-          <h2 className="m-0 text-base text-amber">Bourse de faction</h2>
-          <p className="m-0 text-xs text-label">
+          <h2 className="m-0 text-heading text-amber">Bourse de faction</h2>
+          <p className="m-0 text-meta text-label">
             Ordres à cours limité contre de l&apos;eau pure, entre joueurs de votre faction. Priorité au meilleur prix
             puis au plus ancien ; exécution au prix de l&apos;ordre en attente. Pas de frais.
           </p>
@@ -49,7 +49,7 @@ export const ExchangePage: React.FC<{
               </button>
             ))}
           </nav>
-          <p className="m-0 text-xs text-label">{formatLotSize(resource)}</p>
+          <p className="m-0 text-meta text-label">{formatLotSize(resource)}</p>
         </header>
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           <ExchangeBook resource={resource} />

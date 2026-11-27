@@ -22,13 +22,13 @@ export const IncomingMovementList: React.FC = () => {
 
   return (
     <section
-      className="surface-chrome rounded-sm border border-danger/60 p-4"
+      className="surface-panel border-danger/60 p-4"
       aria-labelledby="movements-incoming-heading"
     >
-      <h2 id="movements-incoming-heading" className="m-0 text-base uppercase tracking-wider text-danger">
+      <h2 id="movements-incoming-heading" className="m-0 text-heading text-danger">
         Attaques entrantes
       </h2>
-      <p className="mt-1 text-sm text-amber-dim">
+      <p className="mt-1 text-body text-amber-dim">
         Temps restant avant l&apos;arrivée des attaquants. La Détection révèle davantage de détails.
       </p>
       <ul className="mt-3 m-0 flex list-none flex-col gap-2 p-0">

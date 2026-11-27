@@ -11,7 +11,7 @@ export const ResourceItem: React.FC<Props> = ({ className, icon, value }) => {
   return (
     <div
       className={classNames(
-        'resource-item flex items-center gap-1.5 font-mono text-sm transition',
+        'resource-item flex items-center gap-1.5 font-mono text-body transition',
         className === 'danger' && 'text-danger',
         className === 'success' && 'text-terminal',
         (!className || (className !== 'danger' && className !== 'success')) && 'text-amber',

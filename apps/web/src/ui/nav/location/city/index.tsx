@@ -11,7 +11,7 @@ interface Props {
 export const NavLocationCities: React.FC<Props> = ({ cities, countLimit }) => {
   return (
     <section>
-      <h3 className="m-0 mb-2 text-xs text-amber-dim">
+      <h3 className="m-0 mb-2 text-meta text-amber-dim">
         Villes {cities.length}/{countLimit}
       </h3>
       <ul className="m-0 list-none space-y-1 p-0">

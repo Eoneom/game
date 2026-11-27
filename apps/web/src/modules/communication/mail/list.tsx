@@ -48,7 +48,7 @@ export const MailList: React.FC<Props> = ({
               key={value}
               type="button"
               className={classNames(
-                'rounded-sm border px-2 py-1 text-xs uppercase tracking-wider transition',
+                'rounded-sm border px-2 py-1 text-caption uppercase tracking-wider transition',
                 box === value
                   ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
                   : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -65,7 +65,7 @@ export const MailList: React.FC<Props> = ({
         </div>
       </div>
       {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-2 text-xs text-amber-dim">
+        <div className="flex items-center justify-between gap-2 text-meta text-amber-dim">
           <p className="m-0">Page {currentPage}/{totalPages}</p>
           <div className="flex gap-1">
             <Button disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)} variant="ghost">
@@ -78,7 +78,7 @@ export const MailList: React.FC<Props> = ({
         </div>
       )}
       {mails.length === 0 && (
-        <p className="m-0 text-sm text-label">{box === 'inbox' ? 'Aucune lettre reçue.' : 'Aucune lettre envoyée.'}</p>
+        <p className="m-0 text-body text-label">{box === 'inbox' ? 'Aucune lettre reçue.' : 'Aucune lettre envoyée.'}</p>
       )}
       <ul className="m-0 list-none space-y-2 p-0">
         {mails.map(mail => (
@@ -93,13 +93,13 @@ export const MailList: React.FC<Props> = ({
             )}
             onClick={() => onMailSelect(mail.id)}
           >
-            <div className="flex justify-between gap-2 text-xs">
+            <div className="flex justify-between gap-2 text-meta">
               <span className="uppercase tracking-wider text-label">
                 {box === 'inbox' ? `De ${mail.sender.name}` : `À ${mail.recipient.name}`}
               </span>
               <time dateTime={new Date(mail.sent_at).toISOString()}>{formatDate(mail.sent_at)}</time>
             </div>
-            <div className="mt-1 truncate text-sm">{mail.subject}</div>
+            <div className="mt-1 truncate text-body">{mail.subject}</div>
           </li>
         ))}
       </ul>

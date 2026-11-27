@@ -13,7 +13,7 @@ interface Props {
 
 export const MovementCreateTroops: React.FC<Props> = ({ troops, selectedTroops, onChange }) => {
   if (!troops.length) {
-    return <p className="m-0 text-sm text-amber-dim">Aucune troupe disponible.</p>
+    return <p className="m-0 text-body text-amber-dim">Aucune troupe disponible.</p>
   }
 
   return (
@@ -32,7 +32,7 @@ export const MovementCreateTroops: React.FC<Props> = ({ troops, selectedTroops, 
                 : 'border-rust/40 bg-chrome/50 text-amber-dim'
             )}
           >
-            <span className="min-w-0 flex-1 text-sm">{name}</span>
+            <span className="min-w-0 flex-1 text-body">{name}</span>
             <div className="flex items-center gap-2">
               <MovementCreateTroopsInput
                 max={troop.count}
@@ -42,7 +42,7 @@ export const MovementCreateTroops: React.FC<Props> = ({ troops, selectedTroops, 
                   [troop.code]: value
                 })}
               />
-              <span className="inline-block w-10 text-right font-mono text-xs tabular-nums text-label">
+              <span className="inline-block w-10 text-right font-mono text-caption tabular-nums text-label">
                 / {troop.count}
               </span>
             </div>

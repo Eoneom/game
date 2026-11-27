@@ -28,7 +28,7 @@ export const formatReservedResources = (resources: Resource): string => [
 ].filter(Boolean).join(', ')
 
 const sideClass = (active: boolean) => classNames(
-  'flex-1 rounded-sm border px-3 py-1 text-xs uppercase tracking-wider transition',
+  'flex-1 rounded-sm border px-3 py-1 text-caption uppercase tracking-wider transition',
   active
     ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
     : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -94,7 +94,7 @@ export const ExchangeOrderForm: React.FC<{ resource: ExchangeResource }> = ({ re
           </button>
         ))}
       </div>
-      <label className="block space-y-1 text-xs text-label">
+      <label className="block space-y-1 text-meta text-label">
         Ville
         <select
           className={fieldClass}
@@ -107,7 +107,7 @@ export const ExchangeOrderForm: React.FC<{ resource: ExchangeResource }> = ({ re
         </select>
       </label>
       <div className="grid grid-cols-2 gap-2">
-        <label className="block space-y-1 text-xs text-label">
+        <label className="block space-y-1 text-meta text-label">
           Lots
           <input
             className={fieldClass}
@@ -119,7 +119,7 @@ export const ExchangeOrderForm: React.FC<{ resource: ExchangeResource }> = ({ re
             onChange={event => setLotsText(event.target.value)}
           />
         </label>
-        <label className="block space-y-1 text-xs text-label">
+        <label className="block space-y-1 text-meta text-label">
           Prix (eau pure / lot)
           <input
             className={fieldClass}
@@ -132,15 +132,15 @@ export const ExchangeOrderForm: React.FC<{ resource: ExchangeResource }> = ({ re
           />
         </label>
       </div>
-      <p className="m-0 text-xs text-label">
+      <p className="m-0 text-meta text-label">
         {formatLotSize(resource)}
         {lots ? ` · ${side === ExchangeSide.BUY ? 'achat de' : 'vente de'} ${formatLots(resource, lots)}` : ''}
       </p>
 
-      {!input && <p className="m-0 text-xs text-danger">Lots et prix doivent être des entiers d&apos;au moins 1.</p>}
-      {input && estimateError && <p className="m-0 text-xs text-danger">Estimation indisponible.</p>}
+      {!input && <p className="m-0 text-meta text-danger">Lots et prix doivent être des entiers d&apos;au moins 1.</p>}
+      {input && estimateError && <p className="m-0 text-meta text-danger">Estimation indisponible.</p>}
       {input && estimate && (
-        <div className="space-y-1 rounded-sm border border-rust/40 p-2 text-xs text-amber-dim" aria-live="polite">
+        <div className="space-y-1 rounded-sm border border-rust/40 p-2 text-meta text-amber-dim" aria-live="polite">
           <p className="m-0">
             Réservé à la passation : <strong className="text-amber">{formatReservedResources(estimate.reserved_resources)}</strong>
             {!estimate.enough_resources && <span className="text-danger"> (stock insuffisant)</span>}
@@ -166,7 +166,7 @@ export const ExchangeOrderForm: React.FC<{ resource: ExchangeResource }> = ({ re
           </p>
         </div>
       )}
-      <p className="m-0 text-xs text-label">
+      <p className="m-0 text-meta text-label">
         Les ressources et les transporteurs restent réservés jusqu&apos;à l&apos;exécution, l&apos;annulation ou
         l&apos;expiration de l&apos;ordre (7 jours). Les convois ne peuvent pas être interceptés.
       </p>

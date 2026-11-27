@@ -23,19 +23,19 @@ export const RequirementTechnology: React.FC<Props> = ({ requirement }) => {
     <li
       key={requirement.code}
       className={classNames(
-        'rounded-sm px-2 py-1 text-sm',
+        'rounded-sm px-2 py-1 text-body',
         isMet
           ? 'text-terminal'
           : 'border border-danger/50 bg-danger-deep/30 font-semibold text-danger'
       )}
     >
-      <span className="text-xs font-normal uppercase tracking-wide text-label">Technologie</span>
+      <span className="text-caption font-normal uppercase tracking-wide text-label">Technologie</span>
       {' '}
       {TechnologyTranslations[requirement.code].name}
       {' '}
       <span className="whitespace-nowrap">niveau {requirement.level}</span>
       {!isMet && (
-        <span className="ml-1 text-xs font-normal opacity-90">
+        <span className="ml-1 text-meta font-normal opacity-90">
           (actuel {requiredTechnologyLevel})
         </span>
       )}

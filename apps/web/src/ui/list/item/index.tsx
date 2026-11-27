@@ -46,7 +46,7 @@ export const ListItem: React.FC<Props> = ({
             decoding="async"
           />
           {badge ? (
-            <span className="absolute right-1.5 top-1.5 rounded-sm border border-amber/50 bg-chrome/90 px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-amber">
+            <span className="absolute right-1.5 top-1.5 rounded-sm border border-amber/50 bg-chrome/90 px-1.5 py-0.5 text-caption uppercase tracking-wider text-amber">
               {badge}
             </span>
           ) : null}
@@ -54,11 +54,11 @@ export const ListItem: React.FC<Props> = ({
       ) : null}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5 p-2">
         {!image && badge ? (
-          <span className="self-start rounded-sm border border-amber/50 bg-copper/30 px-1.5 py-0.5 text-[0.65rem] uppercase tracking-wider text-amber">
+          <span className="self-start rounded-sm border border-amber/50 bg-copper/30 px-1.5 py-0.5 text-caption uppercase tracking-wider text-amber">
             {badge}
           </span>
         ) : null}
-        <h3 className="m-0 line-clamp-2 text-sm leading-snug text-amber">{name}</h3>
+        <h3 className="m-0 line-clamp-2 text-body leading-snug text-amber">{name}</h3>
         {children}
       </div>
     </article>

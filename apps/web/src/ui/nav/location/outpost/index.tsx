@@ -29,12 +29,12 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
 
   return (
     <section className="space-y-2">
-      <h3 className="m-0 text-xs text-amber-dim">
+      <h3 className="m-0 text-meta text-amber-dim">
         Avant-postes {outposts.length}/{countLimit}
       </h3>
       {Boolean(permanents.length) && (
         <div>
-          <h5 className="m-0 mb-1 text-[0.65rem] uppercase tracking-wider text-label">
+          <h5 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
             Permanents
           </h5>
           <ul className="m-0 list-none space-y-1 p-0">
@@ -52,7 +52,7 @@ export const NavLocationOutposts: React.FC<Props> = ({ outposts, countLimit }) =
       )}
       {Boolean(temporaries.length) && (
         <div>
-          <h5 className="m-0 mb-1 text-[0.65rem] uppercase tracking-wider text-label">
+          <h5 className="m-0 mb-1 text-caption uppercase tracking-wider text-label">
             Temporaires
           </h5>
           <ul className="m-0 list-none space-y-1 p-0">

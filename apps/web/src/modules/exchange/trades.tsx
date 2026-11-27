@@ -34,8 +34,8 @@ export const ExchangeTrades: React.FC<{ resource: ExchangeResource }> = ({ resou
   return (
     <section className="space-y-2" aria-label="Derniers échanges">
       <h3 className={sectionTitleClass}>Derniers échanges</h3>
-      {isPending && <p className="m-0 text-sm text-label">Chargement…</p>}
-      {!isPending && trades.length === 0 && <p className="m-0 text-sm text-label">Aucun échange pour l&apos;instant.</p>}
+      {isPending && <p className="m-0 text-body text-label">Chargement…</p>}
+      {!isPending && trades.length === 0 && <p className="m-0 text-body text-label">Aucun échange pour l&apos;instant.</p>}
       {trades.length > 0 && (
         <>
           <figure className="m-0 space-y-1">
@@ -54,7 +54,7 @@ export const ExchangeTrades: React.FC<{ resource: ExchangeResource }> = ({ resou
                 vectorEffect="non-scaling-stroke"
               />
             </svg>
-            <figcaption className="flex justify-between text-xs text-label">
+            <figcaption className="flex justify-between text-meta text-label">
               <span>Min {Math.min(...prices)}</span>
               <span>Dernier {trades[0].price}</span>
               <span>Max {Math.max(...prices)}</span>

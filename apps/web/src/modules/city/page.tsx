@@ -34,9 +34,9 @@ const Panel: React.FC<{ title: string; lede?: string; children: React.ReactNode 
   lede,
   children,
 }) => (
-  <article className="surface-chrome rounded-sm border border-rust/60 p-3">
-    <h2 className="m-0 text-base tracking-wide text-amber">{title}</h2>
-    {lede ? <p className="mt-1 text-xs text-amber-dim">{lede}</p> : null}
+  <article className="surface-panel p-3">
+    <h2 className="m-0 text-heading tracking-wide text-amber">{title}</h2>
+    {lede ? <p className="mt-1 text-meta text-amber-dim">{lede}</p> : null}
     <div className="mt-3 space-y-3">{children}</div>
   </article>
 )
@@ -61,12 +61,12 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
     <section className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-rust/50 pb-3">
         <div>
-          <h1 className="m-0 text-2xl tracking-wide text-amber">{city.name}</h1>
-          <p className="m-0 mt-1 text-sm text-amber-dim">
+          <h1 className="m-0 text-page tracking-wide text-amber">{city.name}</h1>
+          <p className="m-0 mt-1 text-body text-amber-dim">
             Tableau de bord de la colonie — stocks, production, terrain.
           </p>
         </div>
-        <p className="m-0 font-mono text-sm text-label">
+        <p className="m-0 font-mono text-body text-label">
           {formatCoordinates(city.coordinates)}
         </p>
       </header>
@@ -76,7 +76,7 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
           title="Disponibilité et stockage"
           lede="Stocks actuels, place libre et capacité maximale."
         >
-          <ul className="m-0 list-none space-y-1 p-0 text-sm">
+          <ul className="m-0 list-none space-y-1 p-0 text-body">
             <li className="flex justify-between gap-2">
               <span className="flex items-center gap-1 text-amber-dim">
                 <IconPlastic /> Plastique
@@ -105,7 +105,7 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
 
           <div className="space-y-2 border-t border-rust/50 pt-3">
             <div>
-              <div className="mb-1 flex justify-between text-xs text-amber-dim">
+              <div className="mb-1 flex justify-between text-meta text-amber-dim">
                 <span className="flex items-center gap-1">
                   <IconPlastic /> Entrepôt plastique
                 </span>
@@ -125,7 +125,7 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
               />
             </div>
             <div>
-              <div className="mb-1 flex justify-between text-xs text-amber-dim">
+              <div className="mb-1 flex justify-between text-meta text-amber-dim">
                 <span className="flex items-center gap-1">
                   <IconMushroom /> Entrepôt champignon
                 </span>
@@ -146,7 +146,7 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
             </div>
           </div>
 
-          <p className="border-t border-rust/40 pt-3 text-xs text-amber-dim">
+          <p className="border-t border-rust/40 pt-3 text-meta text-amber-dim">
             Capacité de développement :{' '}
             <strong className="text-amber">{city.maximum_building_levels}</strong>
           </p>
@@ -160,20 +160,20 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
             technology={city.technology_production_multiplier}
             faction={city.faction_production_multiplier}
           />
-          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-sm">
+          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-body">
             <span className="flex items-center gap-1 text-amber-dim">
               <IconPlasma /> Plasma
             </span>
             <span className="font-mono text-amber">
               {transformHourlyEarnings(city.earnings_per_second.plasma)}
               {city.technology_production_multiplier.plasma !== 1 ? (
-                <span className="ml-2 text-xs text-terminal">
+                <span className="ml-2 text-meta text-terminal">
                   {formatTechnologyBonus(city.technology_production_multiplier.plasma)} techno
                 </span>
               ) : null}
             </span>
           </p>
-          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-sm">
+          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-body">
             <span className="flex items-center gap-1 text-amber-dim">
               <IconWater /> Eau pure
             </span>

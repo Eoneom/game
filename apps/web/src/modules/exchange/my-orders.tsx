@@ -36,8 +36,8 @@ export const ExchangeMyOrders: React.FC = () => {
   return (
     <section className="space-y-3" aria-label="Mes ordres">
       <h3 className={sectionTitleClass}>Mes ordres ouverts</h3>
-      {isPending && <p className="m-0 text-sm text-label">Chargement…</p>}
-      {!isPending && open.length === 0 && <p className="m-0 text-sm text-label">Aucun ordre ouvert.</p>}
+      {isPending && <p className="m-0 text-body text-label">Chargement…</p>}
+      {!isPending && open.length === 0 && <p className="m-0 text-body text-label">Aucun ordre ouvert.</p>}
       {open.length > 0 && (
         <table className={tableClass}>
           <thead>
@@ -60,8 +60,8 @@ export const ExchangeMyOrders: React.FC = () => {
                 <td className="px-2 py-1">{order.city_name}</td>
                 <td className="px-2 py-1 text-right tabular-nums">{order.filled_lots} / {order.lots}</td>
                 <td className="px-2 py-1 text-right tabular-nums">{order.price}</td>
-                <td className="px-2 py-1 text-xs"><Reservation order={order} /></td>
-                <td className="px-2 py-1 text-xs">{formatDate(order.expires_at)}</td>
+                <td className="px-2 py-1 text-meta"><Reservation order={order} /></td>
+                <td className="px-2 py-1 text-meta">{formatDate(order.expires_at)}</td>
                 <td className="px-2 py-1 text-right">
                   <Button
                     variant="ghost"
@@ -78,7 +78,7 @@ export const ExchangeMyOrders: React.FC = () => {
       )}
 
       <h3 className={sectionTitleClass}>Historique</h3>
-      {!isPending && closed.length === 0 && <p className="m-0 text-sm text-label">Aucun ordre clos.</p>}
+      {!isPending && closed.length === 0 && <p className="m-0 text-body text-label">Aucun ordre clos.</p>}
       {closed.length > 0 && (
         <table className={tableClass}>
           <thead>
@@ -101,7 +101,7 @@ export const ExchangeMyOrders: React.FC = () => {
                 <td className="px-2 py-1 text-right tabular-nums">{order.filled_lots} / {order.lots}</td>
                 <td className="px-2 py-1 text-right tabular-nums">{order.price}</td>
                 <td className="px-2 py-1">{ExchangeStatusLabels[order.status]}</td>
-                <td className="px-2 py-1 text-xs">{order.closed_at ? formatDate(order.closed_at) : '—'}</td>
+                <td className="px-2 py-1 text-meta">{order.closed_at ? formatDate(order.closed_at) : '—'}</td>
               </tr>
             ))}
           </tbody>

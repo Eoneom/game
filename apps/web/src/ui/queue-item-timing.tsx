@@ -22,7 +22,7 @@ export const QueueItemTiming: React.FC<Props> = ({
   })
 
   return (
-    <span className="shrink-0 text-right font-mono text-xs leading-tight text-label">
+    <span className="shrink-0 text-right font-mono text-caption leading-tight text-label">
       <span className="block text-amber-dim">fin {formatDurationMmSs(remainingSeconds)}</span>
       <span className="block opacity-80">{formatTime(duration_seconds)}</span>
     </span>

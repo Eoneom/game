@@ -52,7 +52,7 @@ export const ReportList: React.FC<Props> = ({
               key={label}
               type="button"
               className={classNames(
-                'rounded-sm border px-2 py-1 text-xs uppercase tracking-wider transition',
+                'rounded-sm border px-2 py-1 text-caption uppercase tracking-wider transition',
                 wasReadFilter === value
                   ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
                   : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -70,7 +70,7 @@ export const ReportList: React.FC<Props> = ({
         )}
       </div>
       {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-2 text-xs text-amber-dim">
+        <div className="flex items-center justify-between gap-2 text-meta text-amber-dim">
           <p className="m-0">
             Page {currentPage}/{totalPages}
           </p>
@@ -96,13 +96,13 @@ export const ReportList: React.FC<Props> = ({
             )}
             onClick={() => onReportSelect(report.id)}
           >
-            <div className="flex justify-between gap-2 text-xs">
+            <div className="flex justify-between gap-2 text-meta">
               <span className="uppercase tracking-wider text-label">{report.type}</span>
               <time dateTime={new Date(report.recorded_at).toISOString()}>
                 {formatDate(report.recorded_at)}
               </time>
             </div>
-            <div className="mt-1 flex items-center gap-2 font-mono text-sm">
+            <div className="mt-1 flex items-center gap-2 font-mono text-body">
               <span>{formatCoordinates(report.origin)}</span>
               <span aria-hidden>→</span>
               <span>{formatCoordinates(report.destination)}</span>

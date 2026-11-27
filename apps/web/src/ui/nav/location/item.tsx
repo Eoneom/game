@@ -26,7 +26,7 @@ export const NavLocationItem: React.FC<Props> = (props) => {
           ? pathname.startsWith(`/city/${props.cityId}`)
           : pathname === href || pathname.startsWith(`${href}/`),
     }),
-    'block rounded-sm border border-transparent px-2 py-1 text-sm text-amber-dim transition hover:border-rust/50 hover:text-amber',
+    'block rounded-sm border border-transparent px-2 py-1 text-body text-amber-dim transition hover:border-rust/50 hover:text-amber',
     linkClassName,
     (props.kind === 'city'
       ? pathname.startsWith(`/city/${props.cityId}`)

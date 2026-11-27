@@ -213,7 +213,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
           </>
         )}
         <h3>Tours ({battle.rounds_played})</h3>
-        <table className="w-full text-sm">
+        <table className="w-full text-body">
           <thead>
             <tr>
               <th>Tour</th>
@@ -239,7 +239,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
             ))}
           </tbody>
         </table>
-        <ul className="mt-4 text-sm text-amber-dim">
+        <ul className="mt-4 text-body text-amber-dim">
           {battle.outcome.occupied && <li>Occupation réussie</li>}
           {battle.outcome.loot_applied && <li>Butin prélevé</li>}
           {battle.outcome.destroyed_temp_outpost && <li>Avant-poste temporaire détruit</li>}

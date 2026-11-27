@@ -46,7 +46,7 @@ const WINNER_LABEL: Record<NonNullable<AdminCombatSimulatorDataResponse['winner'
 
 /** Avoid `field-input` `w-full` — it breaks flex row proportions for unit vs count. */
 const stackSelectClass =
-  'm-0 min-h-9 rounded-sm border border-rust/60 bg-chrome px-2 py-1 font-mono text-sm leading-tight text-amber shadow-[inset_0_1px_0_rgba(232,197,71,0.08)] outline-none focus:border-amber focus:ring-1 focus:ring-amber/35'
+  'm-0 min-h-9 rounded-sm border border-edge bg-chrome px-2 py-1 font-mono text-meta leading-tight text-amber shadow-[inset_0_1px_0_rgba(232,197,71,0.08)] focus:border-amber'
 
 type StackEditorProps = {
   title: string
@@ -96,7 +96,7 @@ const TroopLossList: React.FC<{
               loading="lazy"
               decoding="async"
             />
-            <span className="text-[11px] leading-tight">
+            <span className="text-caption leading-tight">
               {compact ? (
                 <span className="text-amber-dim">×{loss.count}</span>
               ) : (
@@ -117,7 +117,7 @@ const SideTotalsSummary: React.FC<{ stacks: CombatSimulatorStackRow[] }> = ({ st
   const totals = useMemo(() => computeSideCombatTotals(stacks), [ stacks ])
 
   return (
-    <p className="m-0 text-xs text-amber-dim">
+    <p className="m-0 text-caption text-amber-dim">
       Totaux (base, hors stratégie) — ATK {totals.attack} / DEF {totals.defense} / VIE {totals.life}
     </p>
   )
@@ -150,11 +150,11 @@ const StackEditor: React.FC<StackEditorProps> = ({
 
   return (
     <section className="admin-surface-panel flex flex-col gap-2 rounded-sm p-3">
-      <h2 className="m-0 text-sm font-normal text-amber">{title}</h2>
-      <label className="flex flex-col gap-1 text-sm">
+      <h2 className="m-0 text-meta font-normal text-amber">{title}</h2>
+      <label className="flex flex-col gap-1 text-meta">
         <span className="field-label text-label">Faction</span>
         <select
-          className="field-input max-w-xs py-1 text-sm"
+          className="field-input max-w-xs py-1 text-meta"
           value={faction}
           onChange={e => onFactionChange(e.target.value as CombatSimulatorFaction)}
         >
@@ -208,14 +208,14 @@ const StackEditor: React.FC<StackEditorProps> = ({
                   </select>
                   <button
                     type="button"
-                    className="h-9 shrink-0 rounded-sm border border-rust/50 px-2 text-xs text-amber-dim hover:border-danger hover:text-amber disabled:opacity-50"
+                    className="h-9 shrink-0 rounded-sm border border-rust/50 px-2 text-caption text-amber-dim hover:border-danger hover:text-amber disabled:opacity-50"
                     onClick={() => removeRow(index)}
                     disabled={stacks.length <= 1}
                   >
                     Retirer
                   </button>
                 </div>
-                <p className="m-0 flex min-h-0 flex-1 items-center text-[11px] leading-tight text-amber-dim">
+                <p className="m-0 flex min-h-0 flex-1 items-center text-caption leading-tight text-amber-dim">
                   Unité — ATK {per_unit.attack} / DEF {per_unit.defense} / VIE {per_unit.life}
                   {' · '}
                   Ligne — ATK {per_unit.attack * count} / DEF {per_unit.defense * count} / VIE{' '}
@@ -228,7 +228,7 @@ const StackEditor: React.FC<StackEditorProps> = ({
       </div>
       <button
         type="button"
-        className="self-start rounded-sm border border-rust/60 bg-chrome-3 px-2 py-1 text-sm text-amber shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:border-amber/50 disabled:opacity-50"
+        className="self-start rounded-sm border border-rust/60 bg-chrome-3 px-2 py-1 text-meta text-amber shadow-[0_1px_3px_rgba(0,0,0,0.2)] hover:border-amber/50 disabled:opacity-50"
         onClick={addRow}
         disabled={!can_add}
       >
@@ -274,10 +274,10 @@ const DefenseStackEditor: React.FC<{
   onCityPlasmaChange: (value: string) => void
 }> = ({ counts, onChange, city_plasma, onCityPlasmaChange }) => (
   <section className="admin-surface-panel mt-3 flex flex-col gap-2 rounded-sm p-3">
-    <h2 className="m-0 text-sm font-normal text-amber">Défenses du défenseur (ville)</h2>
+    <h2 className="m-0 text-meta font-normal text-amber">Défenses du défenseur (ville)</h2>
     <div className="flex flex-wrap items-end gap-3">
       {Object.values(DefenseCode).map(code => (
-        <label key={code} className="flex items-center gap-2 text-sm">
+        <label key={code} className="flex items-center gap-2 text-meta">
           <img
             src={defenseImageSrc(code)}
             alt=""
@@ -289,20 +289,20 @@ const DefenseStackEditor: React.FC<{
               type="number"
               min={0}
               step={1}
-              className="field-input w-24 py-1 text-sm"
+              className="field-input w-24 py-1 text-meta"
               value={counts[code]}
               onChange={e => onChange({ ...counts, [code]: parseTechnologyLevel(e.target.value) })}
             />
           </span>
         </label>
       ))}
-      <label className="flex flex-col gap-1 text-sm">
+      <label className="flex flex-col gap-1 text-meta">
         <span className="field-label text-label">Plasma de la ville (vide = illimité)</span>
         <input
           type="number"
           min={0}
           step={1}
-          className="field-input w-32 py-1 text-sm"
+          className="field-input w-32 py-1 text-meta"
           value={city_plasma}
           onChange={e => onCityPlasmaChange(e.target.value)}
         />
@@ -324,7 +324,7 @@ const TechnologyLevelInputs: React.FC<{
 }> = ({ side, codes, levels, onChange }) => (
   <>
     {codes.map(code => (
-      <label key={code} className="flex flex-col gap-1 text-sm">
+      <label key={code} className="flex flex-col gap-1 text-meta">
         <span className="field-label text-label">
           {TechnologyTranslations[code].name} ({side})
         </span>
@@ -332,7 +332,7 @@ const TechnologyLevelInputs: React.FC<{
           type="number"
           min={0}
           step={1}
-          className="field-input w-24 py-1 text-sm"
+          className="field-input w-24 py-1 text-meta"
           value={levels[code]}
           onChange={e => onChange({ ...levels, [code]: parseTechnologyLevel(e.target.value) })}
         />
@@ -342,8 +342,8 @@ const TechnologyLevelInputs: React.FC<{
 )
 
 const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> = ({ row }) => (
-  <article className="admin-surface-nested flex min-w-0 flex-col gap-1 rounded-sm p-2 text-[11px] text-amber-dim">
-    <h3 className="m-0 text-xs font-normal text-amber">Round {row.round}</h3>
+  <article className="admin-surface-nested flex min-w-0 flex-col gap-1 rounded-sm p-2 text-caption text-amber-dim">
+    <h3 className="m-0 text-caption font-normal text-amber">Round {row.round}</h3>
     <p className="m-0 leading-tight">
       Att. ATK {row.attacker_attack_pool} / VIE {row.attacker_life_pool}
     </p>
@@ -366,11 +366,11 @@ const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> =
       </p>
     ) : null}
     <div>
-      <p className="m-0 mb-0.5 text-[10px] uppercase tracking-wide text-amber-dim">Pertes att.</p>
+      <p className="m-0 mb-0.5 text-caption uppercase tracking-wide text-amber-dim">Pertes att.</p>
       <TroopLossList losses={row.attacker_losses} compact />
     </div>
     <div>
-      <p className="m-0 mb-0.5 text-[10px] uppercase tracking-wide text-amber-dim">Pertes déf.</p>
+      <p className="m-0 mb-0.5 text-caption uppercase tracking-wide text-amber-dim">Pertes déf.</p>
       <TroopLossList losses={row.defender_losses} compact />
     </div>
   </article>
@@ -456,8 +456,8 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       <div className="min-h-0 flex-1 overflow-y-auto">
         <header className="admin-surface-toolbar mb-3 shrink-0 space-y-1">
-          <h1 className="m-0 text-lg text-amber">Simulateur de combat</h1>
-          <p className="m-0 text-sm text-amber-dim">
+          <h1 className="m-0 text-title text-amber">Simulateur de combat</h1>
+          <p className="m-0 text-meta text-amber-dim">
             Simulation hors persistance — moteur PvP (5 rounds max), réservé aux opérateurs.
             La simulation se met à jour automatiquement lorsque les paramètres changent.
           </p>
@@ -487,10 +487,10 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
         </div>
 
         <div className="admin-surface-toolbar mt-3 flex flex-wrap items-end gap-4">
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-meta">
             <span className="field-label text-label">Stratégie attaquant</span>
             <select
-              className="field-input py-1 text-sm"
+              className="field-input py-1 text-meta"
               value={attacker_strategy}
               onChange={e => setAttackerStrategy(e.target.value as CombatStrategy)}
             >
@@ -501,10 +501,10 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm">
+          <label className="flex flex-col gap-1 text-meta">
             <span className="field-label text-label">Stratégie défenseur</span>
             <select
-              className="field-input py-1 text-sm"
+              className="field-input py-1 text-meta"
               value={defender_strategy}
               onChange={e => setDefenderStrategy(e.target.value as CombatStrategy)}
             >
@@ -544,13 +544,13 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
         className={`admin-surface-panel flex shrink-0 flex-col gap-2 rounded-sm p-3 transition-opacity ${sim_pending ? 'opacity-80' : ''}`}
       >
         {sim_pending ? (
-          <p className="m-0 text-center text-xs text-amber-dim">Mise à jour de la simulation…</p>
+          <p className="m-0 text-center text-caption text-amber-dim">Mise à jour de la simulation…</p>
         ) : null}
 
         {display_result ? (
           <>
             {display_result.winner ? (
-              <p className="m-0 rounded-sm border border-amber/40 bg-chrome-3 px-3 py-1.5 text-center text-sm text-amber">
+              <p className="m-0 rounded-sm border border-amber/40 bg-chrome-3 px-3 py-1.5 text-center text-meta text-amber">
                 {WINNER_LABEL[display_result.winner]}
               </p>
             ) : null}
@@ -563,19 +563,19 @@ const CombatSimulatorContent: React.FC<{ is_admin: boolean }> = ({ is_admin }) =
 
             <button
               type="button"
-              className="self-start text-xs text-amber-dim underline hover:text-amber"
+              className="self-start text-caption text-amber-dim underline hover:text-amber"
               onClick={() => setShowJson(v => !v)}
             >
               {show_json ? 'Masquer le JSON' : 'Afficher le JSON'}
             </button>
             {show_json ? (
-              <pre className="admin-surface-code max-h-40 overflow-y-auto whitespace-pre-wrap break-all rounded-sm p-2 text-[11px]">
+              <pre className="admin-surface-code max-h-40 overflow-y-auto whitespace-pre-wrap break-all rounded-sm p-2 text-caption">
                 {JSON.stringify(display_result, null, 2)}
               </pre>
             ) : null}
           </>
         ) : (
-          <p className="m-0 text-center text-sm text-amber-dim">
+          <p className="m-0 text-center text-meta text-amber-dim">
             Résultats des 5 rounds affichés ici après la première simulation.
           </p>
         )}

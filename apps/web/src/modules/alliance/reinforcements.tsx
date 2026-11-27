@@ -9,10 +9,10 @@ import { useCreateMovement } from '#troop/hooks'
 import { useGetCity } from '#city/hooks'
 import { allianceKeys, useCityReinforcements, useReinforcementsAbroad } from '#alliance/hooks'
 
-const sectionTitleClass = 'm-0 text-sm uppercase tracking-wider text-label'
+const sectionTitleClass = 'm-0 text-caption uppercase tracking-wider text-label'
 
 const TroopLine: React.FC<{ troops: { code: keyof typeof TroopTranslations; count: number }[] }> = ({ troops }) => (
-  <p className="m-0 text-xs text-amber-dim">
+  <p className="m-0 text-meta text-amber-dim">
     {troops.map(troop => `${TroopTranslations[troop.code].name} × ${troop.count}`).join(', ')}
   </p>
 )
@@ -26,13 +26,13 @@ export const StationedReinforcements: React.FC<{ cityId: string }> = ({ cityId }
   return (
     <section className="space-y-2">
       <h3 className={sectionTitleClass}>Renforts stationnés</h3>
-      <p className="m-0 text-xs text-label">
+      <p className="m-0 text-meta text-label">
         Ces troupes alliées défendent la ville avec votre garnison. Seul leur propriétaire peut les rappeler.
       </p>
       <ul className="m-0 list-none space-y-2 p-0">
         {reinforcements.map(reinforcement => (
           <li key={reinforcement.owner.id} className="rounded-sm border border-rust/30 p-2">
-            <div className="text-sm text-amber">{reinforcement.owner.name}</div>
+            <div className="text-body text-amber">{reinforcement.owner.name}</div>
             <TroopLine troops={reinforcement.troops} />
           </li>
         ))}
@@ -57,7 +57,7 @@ export const ReinforcementsAbroad: React.FC<{ cityId: string }> = ({ cityId }) =
         {reinforcements.map(reinforcement => (
           <li key={reinforcement.city.id} className="flex items-center justify-between gap-2 rounded-sm border border-rust/30 p-2">
             <div>
-              <div className="text-sm text-amber">
+              <div className="text-body text-amber">
                 {reinforcement.city.name} ({formatCoordinates(reinforcement.city.coordinates)}) — {reinforcement.host.name}
               </div>
               <TroopLine troops={reinforcement.troops} />

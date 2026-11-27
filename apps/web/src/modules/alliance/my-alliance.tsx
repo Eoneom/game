@@ -75,14 +75,14 @@ const ReceivedApplications: React.FC = () => {
   return (
     <section className="space-y-2">
       <h3 className={sectionTitleClass}>Candidatures</h3>
-      {received.length === 0 && <p className="m-0 text-sm text-label">Aucune candidature en attente.</p>}
+      {received.length === 0 && <p className="m-0 text-body text-label">Aucune candidature en attente.</p>}
       <ul className="m-0 list-none space-y-2 p-0">
         {received.map(application => (
           <li key={application.id} className="space-y-1 rounded-sm border border-rust/30 p-2">
             <div className="flex items-center justify-between gap-2">
               <div>
-                <div className="text-sm text-amber">{application.player.name}</div>
-                <div className="text-xs text-label">Le {formatDate(application.created_at)}</div>
+                <div className="text-body text-amber">{application.player.name}</div>
+                <div className="text-caption text-label">Le {formatDate(application.created_at)}</div>
               </div>
               <div className="flex gap-2">
                 <Button disabled={accept.isPending} onClick={() => accept.mutate(application.id)}>Accepter</Button>
@@ -90,7 +90,7 @@ const ReceivedApplications: React.FC = () => {
               </div>
             </div>
             {application.message && (
-              <p className="m-0 whitespace-pre-wrap text-sm text-amber-dim">{application.message}</p>
+              <p className="m-0 whitespace-pre-wrap text-body text-amber-dim">{application.message}</p>
             )}
           </li>
         ))}
@@ -124,8 +124,8 @@ const MemberRow: React.FC<{
     <li className="space-y-1 rounded-sm border border-rust/30 p-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <span className="text-sm text-amber">{member.name}</span>
-          <span className="ml-2 text-xs uppercase tracking-wider text-label">{AllianceRoleLabels[member.role]}</span>
+          <span className="text-body text-amber">{member.name}</span>
+          <span className="ml-2 text-caption uppercase tracking-wider text-label">{AllianceRoleLabels[member.role]}</span>
         </div>
         {!isViewer && (
           <div className="flex flex-wrap gap-1">
@@ -168,7 +168,7 @@ const MemberRow: React.FC<{
           </div>
         )}
       </div>
-      <ul className="m-0 flex list-none flex-wrap gap-2 p-0 text-xs text-amber-dim">
+      <ul className="m-0 flex list-none flex-wrap gap-2 p-0 text-meta text-amber-dim">
         {member.cities.map(city => (
           <li key={city.id}>
             {mapCityId ? (
@@ -248,13 +248,13 @@ export const MyAlliance: React.FC<{ alliance: MyAllianceData, viewerId: string |
   return (
     <div className="space-y-5">
       <header className="space-y-1">
-        <h2 className="m-0 text-base text-amber">{allianceDisplayName(alliance.name, alliance.tag)}</h2>
-        <p className="m-0 text-xs text-label">
+        <h2 className="m-0 text-heading text-amber">{allianceDisplayName(alliance.name, alliance.tag)}</h2>
+        <p className="m-0 text-meta text-label">
           Votre rôle : {AllianceRoleLabels[alliance.viewer_role]} — fondée le {formatDate(alliance.created_at)}
         </p>
         {alliance.description
-          ? <p className="m-0 whitespace-pre-wrap text-sm text-amber-dim">{alliance.description}</p>
-          : <p className="m-0 text-sm text-label">Pas de description.</p>}
+          ? <p className="m-0 whitespace-pre-wrap text-body text-amber-dim">{alliance.description}</p>
+          : <p className="m-0 text-body text-label">Pas de description.</p>}
         {isChef && <DescriptionEditor description={alliance.description} />}
       </header>
 
@@ -302,7 +302,7 @@ export const MyAlliance: React.FC<{ alliance: MyAllianceData, viewerId: string |
         {isChef && (
           <>
             {!alone && (
-              <p className="m-0 text-xs text-label">
+              <p className="m-0 text-meta text-label">
                 Pour quitter l&apos;alliance, nommez d&apos;abord un autre chef.
               </p>
             )}

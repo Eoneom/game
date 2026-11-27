@@ -16,8 +16,8 @@ import {
 } from '#alliance/hooks'
 import { allianceDisplayName } from '#alliance/translations'
 
-export const fieldClass = 'w-full rounded-sm border border-rust/50 bg-transparent px-2 py-1 text-sm text-amber placeholder:text-label focus:border-amber/60 focus:outline-none'
-export const sectionTitleClass = 'm-0 text-sm uppercase tracking-wider text-label'
+export const fieldClass = 'w-full rounded-sm border border-edge bg-transparent px-3 py-2 text-body text-amber placeholder:text-muted focus:border-amber'
+export const sectionTitleClass = 'm-0 text-caption uppercase tracking-wider text-label'
 
 const CreateAllianceForm: React.FC = () => {
   const [ name, setName ] = useState('')
@@ -30,7 +30,7 @@ const CreateAllianceForm: React.FC = () => {
 
   return (
     <form
-      className="space-y-2"
+      className="max-w-[40rem] space-y-2"
       onSubmit={event => {
         event.preventDefault()
         create.mutate({ name: name.trim(), tag: tag.trim().toUpperCase(), description })
@@ -97,16 +97,16 @@ const AllianceSearch: React.FC<{ appliedAllianceIds: Set<string> }> = ({ applied
         value={message}
         onChange={event => setMessage(event.target.value)}
       />
-      {!isFetching && alliances.length === 0 && <p className="m-0 text-sm text-label">Aucune alliance trouvée.</p>}
+      {!isFetching && alliances.length === 0 && <p className="m-0 text-body text-label">Aucune alliance trouvée.</p>}
       <ul className="m-0 list-none space-y-2 p-0">
         {alliances.map(alliance => (
           <li key={alliance.id} className="flex items-center justify-between gap-2 rounded-sm border border-rust/30 p-2">
             <div>
-              <div className="text-sm text-amber">{allianceDisplayName(alliance.name, alliance.tag)}</div>
-              <div className="text-xs text-label">{alliance.member_count} membre{alliance.member_count > 1 ? 's' : ''}</div>
+              <div className="text-body text-amber">{allianceDisplayName(alliance.name, alliance.tag)}</div>
+              <div className="text-caption text-label">{alliance.member_count} membre{alliance.member_count > 1 ? 's' : ''}</div>
             </div>
             {appliedAllianceIds.has(alliance.id)
-              ? <span className="text-xs text-label">Candidature envoyée</span>
+              ? <span className="text-meta text-label">Candidature envoyée</span>
               : (
                 <Button variant="ghost" disabled={apply.isPending} onClick={() => apply.mutate(alliance.id)}>
                   Postuler
@@ -138,8 +138,8 @@ const PendingInvitations: React.FC = () => {
         {invitations.map(invitation => (
           <li key={invitation.id} className="flex items-center justify-between gap-2 rounded-sm border border-rust/30 p-2">
             <div>
-              <div className="text-sm text-amber">{allianceDisplayName(invitation.alliance.name, invitation.alliance.tag)}</div>
-              <div className="text-xs text-label">
+              <div className="text-body text-amber">{allianceDisplayName(invitation.alliance.name, invitation.alliance.tag)}</div>
+              <div className="text-meta text-label">
                 Invité par {invitation.invited_by.name} — expire le {formatDate(invitation.expires_at)}
               </div>
             </div>
@@ -171,8 +171,8 @@ const OwnApplications: React.FC = () => {
         {sent.map(application => (
           <li key={application.id} className="flex items-center justify-between gap-2 rounded-sm border border-rust/30 p-2">
             <div>
-              <div className="text-sm text-amber">{allianceDisplayName(application.alliance.name, application.alliance.tag)}</div>
-              <div className="text-xs text-label">Envoyée le {formatDate(application.created_at)}</div>
+              <div className="text-body text-amber">{allianceDisplayName(application.alliance.name, application.alliance.tag)}</div>
+              <div className="text-caption text-label">Envoyée le {formatDate(application.created_at)}</div>
             </div>
             <Button variant="ghost" disabled={withdraw.isPending} onClick={() => withdraw.mutate(application.id)}>
               Retirer
@@ -192,13 +192,13 @@ export const NoAlliance: React.FC<{ cooldownUntil: number | null }> = ({ cooldow
   return (
     <div className="space-y-5">
       <header>
-        <h2 className="m-0 text-base text-amber">Alliance</h2>
-        <p className="m-0 text-xs text-amber-dim">
+        <h2 className="m-0 text-heading text-amber">Alliance</h2>
+        <p className="m-0 text-meta text-amber-dim">
           Vous n&apos;appartenez à aucune alliance. Une alliance regroupe des commandants de votre faction.
         </p>
       </header>
       {cooldownUntil && (
-        <p role="status" className="m-0 rounded-sm border border-danger/60 p-2 text-sm text-amber">
+        <p role="status" className="m-0 rounded-sm border border-danger/60 p-2 text-body text-amber">
           Vous avez quitté une alliance : vous pourrez en rejoindre ou en fonder une à partir du {formatDate(cooldownUntil)}.
         </p>
       )}

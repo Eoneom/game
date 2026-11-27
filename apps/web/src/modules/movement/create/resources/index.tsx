@@ -39,12 +39,12 @@ export const MovementCreateResources: React.FC<Props> = ({
   return (
     <fieldset className="m-0 space-y-3 border-0 p-0">
       <legend className="mb-0 px-0 field-label">Ressources à transporter</legend>
-      <p className="m-0 font-mono text-sm text-amber">
+      <p className="m-0 font-mono text-body text-amber">
         Capacité : {usedCapacity} / {capacity}
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         <li className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+          <span className="flex items-center gap-1.5 text-body text-amber-dim">
             <IconPlastic /> Plastique
           </span>
           <input
@@ -65,7 +65,7 @@ export const MovementCreateResources: React.FC<Props> = ({
           />
         </li>
         <li className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+          <span className="flex items-center gap-1.5 text-body text-amber-dim">
             <IconMushroom /> Champignon
           </span>
           <input
@@ -86,7 +86,7 @@ export const MovementCreateResources: React.FC<Props> = ({
           />
         </li>
         <li className="flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+          <span className="flex items-center gap-1.5 text-body text-amber-dim">
             <IconPlasma /> Plasma
           </span>
           <input
@@ -108,7 +108,7 @@ export const MovementCreateResources: React.FC<Props> = ({
         </li>
         {showWater && (
           <li className="flex items-center justify-between gap-3">
-            <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+            <span className="flex items-center gap-1.5 text-body text-amber-dim">
               <IconWater /> Eau pure
             </span>
             <input

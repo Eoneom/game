@@ -6,9 +6,9 @@ import { headRowClass, rowClass, sectionTitleClass, tableClass } from '#exchange
 
 const Levels: React.FC<{ title: string, levels: ExchangeBookLevel[], tone: string }> = ({ title, levels, tone }) => (
   <div className="min-w-0 flex-1 space-y-1">
-    <h4 className="m-0 text-xs uppercase tracking-wider text-label">{title}</h4>
+    <h4 className="m-0 text-caption uppercase tracking-wider text-label">{title}</h4>
     {levels.length === 0 ? (
-      <p className="m-0 text-xs text-label">Aucun ordre.</p>
+      <p className="m-0 text-meta text-label">Aucun ordre.</p>
     ) : (
       <table className={tableClass}>
         <thead>
@@ -38,7 +38,7 @@ export const ExchangeBook: React.FC<{ resource: ExchangeResource }> = ({ resourc
     <section className="space-y-2" aria-label="Carnet d'ordres">
       <h3 className={sectionTitleClass}>Carnet d&apos;ordres (eau pure par lot)</h3>
       {isPending ? (
-        <p className="m-0 text-sm text-label">Chargement…</p>
+        <p className="m-0 text-body text-label">Chargement…</p>
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row">
           <Levels title="Achats" levels={data?.bids ?? []} tone="text-terminal" />

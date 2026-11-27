@@ -231,13 +231,13 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   return (
     <form
       id="movement-creation"
-      className={compact ? 'space-y-3' : 'surface-chrome mb-4 rounded-sm p-4'}
+      className={compact ? 'space-y-3' : 'surface-panel mb-4 p-4'}
       onSubmit={event => onSubmit(event)}
     >
       {!compact && (
         <>
-          <h2 className="m-0 text-base uppercase tracking-wider text-amber">Nouveau déplacement</h2>
-          <p className="mt-1 text-sm text-amber-dim">
+          <h2 className="m-0 text-heading text-amber">Nouveau déplacement</h2>
+          <p className="mt-1 text-body text-amber-dim">
             Choisissez les troupes, l&apos;ordre et la case cible : l&apos;estimation se met à jour
             automatiquement avant l&apos;envoi.
           </p>
@@ -246,7 +246,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
 
       <div className={compact ? 'flex flex-col gap-3' : 'mt-4 grid gap-6 lg:grid-cols-2'}>
         <div id="troop-selection">
-          <h3 className="mb-2 text-sm uppercase tracking-wider text-label">Troupes à envoyer</h3>
+          <h3 className="mb-2 text-caption uppercase tracking-wider text-label">Troupes à envoyer</h3>
           <MovementCreateTroops
             troops={troops}
             selectedTroops={selectedTroops}
@@ -273,7 +273,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
             />
           )}
           {fixedDestination ? (
-            <p className="m-0 text-sm text-amber-dim">
+            <p className="m-0 text-body text-amber-dim">
               Destination{' '}
               <span className="font-mono tabular-nums text-amber">
                 ({fixedDestination.x}, {fixedDestination.y})

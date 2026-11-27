@@ -23,7 +23,7 @@ export const AllianceRanks: React.FC<{ allianceId: string }> = ({ allianceId }) 
 
   return (
     <section className="space-y-2" aria-label="Classement de l'alliance">
-      <h3 className="m-0 text-sm uppercase tracking-wider text-label">Classement</h3>
+      <h3 className="m-0 text-caption uppercase tracking-wider text-label">Classement</h3>
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
         {Object.values(RankingCategory).map(category => {
           const position = positions.find(candidate => candidate.category === category)
@@ -33,13 +33,13 @@ export const AllianceRanks: React.FC<{ allianceId: string }> = ({ allianceId }) 
               <AnyLink
                 to="/ranking"
                 search={{ category, kind: RankingKind.ALLIANCE, page: position.page }}
-                className="block rounded-sm border border-rust/30 px-2 py-1 text-sm text-amber-dim hover:border-amber/50 hover:text-amber"
+                className="block rounded-sm border border-rust/30 px-2 py-1 text-body text-amber-dim hover:border-amber/50 hover:text-amber"
               >
                 {RankingCategoryLabels[category]} : <span className="text-amber">{position.rank}</span>
                 {position.rank_change_24h !== null && position.rank_change_24h !== 0 && (
-                  <span className="ml-1 text-xs">{formatRankChange(position.rank_change_24h)}</span>
+                  <span className="ml-1 text-caption">{formatRankChange(position.rank_change_24h)}</span>
                 )}
-                <span className="ml-1 text-xs text-label">({formatPoints(position.points)} pts)</span>
+                <span className="ml-1 text-caption text-label">({formatPoints(position.points)} pts)</span>
               </AnyLink>
             </li>
           )

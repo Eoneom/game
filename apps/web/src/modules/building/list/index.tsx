@@ -79,7 +79,7 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
             alt=""
           />
           <div className="min-w-0 flex-1 space-y-2">
-            <p className="m-0 text-sm text-amber">
+            <p className="m-0 text-body text-amber">
               {BuildingTranslations[inProgress.code].name}{' '}
               <span className="text-label">→ niveau {inProgress.level + 1}</span>
             </p>
@@ -97,7 +97,7 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
           {queuedWithLevels.map(item => (
             <li
               key={item.id}
-              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-sm"
+              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-body"
             >
               <span className="min-w-0 text-amber-dim">
                 {BuildingTranslations[item.building_code].name}{' '}
@@ -110,7 +110,7 @@ export const BuildingList: React.FC<Props> = ({ cityId, selectedCode, onSelect }
               />
               <Button
                 variant="ghost"
-                className="shrink-0 !px-2 !py-1 text-xs"
+                className="shrink-0 !px-2 !py-1"
                 onClick={() => cancelQueued.mutate(item.id)}
               >
                 Annuler

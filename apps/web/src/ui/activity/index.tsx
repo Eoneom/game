@@ -31,7 +31,7 @@ const Chip: React.FC<{
       to={to}
       params={params}
       className={classNames(
-        'flex min-w-0 items-center gap-2 rounded-sm border px-2 py-1 text-xs transition',
+        'flex min-w-0 items-center gap-2 rounded-sm border px-2 py-1 text-meta transition',
         active
           ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
           : 'border-rust/40 bg-chrome/70 text-amber-dim hover:border-rust hover:text-amber',
@@ -223,8 +223,8 @@ export const ActivityStrip: React.FC = () => {
   const { cityId } = useLocation()
 
   return (
-    <div className="activity-strip surface-chrome relative z-10 flex flex-wrap items-center gap-2 border-b border-rust/70 px-3 py-2">
-      <span className="text-[0.65rem] uppercase tracking-[0.2em] text-label">Activité</span>
+    <div className="activity-strip surface-frame relative z-10 flex flex-wrap items-center gap-2 border-b border-rust/70 px-3 py-2">
+      <span className="text-caption uppercase tracking-wider text-label">Activité</span>
       {cityId ? (
         <>
           <BuildingChip cityId={cityId} />

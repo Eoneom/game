@@ -70,14 +70,14 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
     <section className="space-y-4">
       <header className="flex flex-wrap items-end justify-between gap-3 border-b border-rust/50 pb-3">
         <div>
-          <h1 className="m-0 text-2xl text-amber">Avant-poste</h1>
-          <p className="m-0 mt-1 text-sm text-amber-dim">
+          <h1 className="m-0 text-page text-amber">Avant-poste</h1>
+          <p className="m-0 mt-1 text-body text-amber-dim">
             {isPermanent
               ? 'Avant-poste permanent — production et stocks.'
               : 'Temporaire — rendez-le permanent pour produire.'}
           </p>
         </div>
-        <p className="m-0 font-mono text-sm text-label">
+        <p className="m-0 font-mono text-body text-label">
           {formatCoordinates(outpost.coordinates)}
         </p>
       </header>
@@ -86,30 +86,30 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
         <RouterLink
           to="/outpost/$outpostId/world/map"
           params={{ outpostId }}
-          className="rounded-sm border border-rust/50 bg-chrome px-2 py-1 text-xs uppercase tracking-wider text-amber hover:border-amber"
+          className="rounded-sm border border-rust/50 bg-chrome px-2 py-1 text-caption uppercase tracking-wider text-amber hover:border-amber"
         >
           Carte
         </RouterLink>
         <RouterLink
           to="/outpost/$outpostId/world/movement"
           params={{ outpostId }}
-          className="rounded-sm border border-rust/50 bg-chrome px-2 py-1 text-xs uppercase tracking-wider text-amber hover:border-amber"
+          className="rounded-sm border border-rust/50 bg-chrome px-2 py-1 text-caption uppercase tracking-wider text-amber hover:border-amber"
         >
           Déplacement
         </RouterLink>
       </div>
 
       {outpost.type === OutpostType.TEMPORARY && (
-        <div className="surface-chrome space-y-3 rounded-sm border border-rust/60 p-3">
+        <div className="surface-panel space-y-3 p-3">
           <Button onClick={() => setPermanent.mutate()}>Rendre permanent</Button>
           <OutpostSettle outpostId={outpostId} onSettle={name => settleCity.mutate(name)} />
         </div>
       )}
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <article className="surface-chrome space-y-3 rounded-sm border border-rust/60 p-3">
-          <h2 className="m-0 text-base text-amber">Ressources en stock</h2>
-          <ul className="m-0 list-none space-y-1 p-0 text-sm">
+        <article className="surface-panel space-y-3 p-3">
+          <h2 className="m-0 text-heading text-amber">Ressources en stock</h2>
+          <ul className="m-0 list-none space-y-1 p-0 text-body">
             <li className="flex justify-between">
               <span className="flex items-center gap-1 text-amber-dim">
                 <IconPlastic /> Plastique
@@ -132,7 +132,7 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
 
           <div className="space-y-2 border-t border-rust/50 pt-3">
             <div>
-              <div className="mb-1 flex justify-between text-xs text-amber-dim">
+              <div className="mb-1 flex justify-between text-meta text-amber-dim">
                 <span className="flex items-center gap-1">
                   <IconPlastic /> Entrepôt plastique
                 </span>
@@ -152,7 +152,7 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
               />
             </div>
             <div>
-              <div className="mb-1 flex justify-between text-xs text-amber-dim">
+              <div className="mb-1 flex justify-between text-meta text-amber-dim">
                 <span className="flex items-center gap-1">
                   <IconMushroom /> Entrepôt champignon
                 </span>
@@ -175,8 +175,8 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
         </article>
 
         {isPermanent && (
-          <article className="surface-chrome rounded-sm border border-rust/60 p-3">
-            <h2 className="m-0 text-base text-amber">Production et terrain</h2>
+          <article className="surface-panel p-3">
+            <h2 className="m-0 text-heading text-amber">Production et terrain</h2>
             <div className="mt-3">
               <ProductionTerrainReadout
                 current={outpost.earnings_per_second}

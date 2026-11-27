@@ -51,7 +51,7 @@ const App: React.FC = () => {
         <ActivityStrip />
         <div className="app-body relative z-10 flex min-h-0 flex-1 overflow-hidden">
           <NavMenu />
-          <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden surface-inset scanlines p-3">
+          <main className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border border-rust/55 bg-chrome p-6">
             <Outlet />
           </main>
           <NavLocation />

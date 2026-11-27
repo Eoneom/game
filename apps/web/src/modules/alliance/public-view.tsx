@@ -19,20 +19,20 @@ const AnyLink = Link as React.ComponentType<{
 export const AlliancePublicView: React.FC<{ allianceId: string }> = ({ allianceId }) => {
   const { data, isPending, error } = useAllianceDetails(allianceId)
 
-  let content: React.ReactNode = <p className="m-0 text-sm text-label">Chargement…</p>
+  let content: React.ReactNode = <p className="m-0 text-body text-label">Chargement…</p>
   if (error) {
-    content = <p role="alert" className="m-0 text-sm text-danger">{translateError(error.message)}</p>
+    content = <p role="alert" className="m-0 text-body text-danger">{translateError(error.message)}</p>
   } else if (!isPending && data) {
     content = (
       <div className="space-y-3">
         <header className="space-y-1">
-          <h2 className="m-0 text-base text-amber">{allianceDisplayName(data.name, data.tag)}</h2>
-          <p className="m-0 text-xs text-label">
+          <h2 className="m-0 text-heading text-amber">{allianceDisplayName(data.name, data.tag)}</h2>
+          <p className="m-0 text-meta text-label">
             {FactionTranslations[data.faction_code].name} — {data.member_count} membre{data.member_count > 1 ? 's' : ''} — fondée le {formatDate(data.created_at)}
           </p>
         </header>
         {data.chef && (
-          <p className="m-0 text-sm text-amber-dim">
+          <p className="m-0 text-body text-amber-dim">
             Chef :{' '}
             <AnyLink to="/inbox/mail" search={{ view: 'compose', to: data.chef.name }} className="text-amber hover:underline">
               {data.chef.name}
@@ -40,9 +40,9 @@ export const AlliancePublicView: React.FC<{ allianceId: string }> = ({ allianceI
           </p>
         )}
         {data.description
-          ? <p className="m-0 whitespace-pre-wrap text-sm text-amber-dim">{data.description}</p>
-          : <p className="m-0 text-sm text-label">Pas de description.</p>}
-        <AnyLink to="/ranking" search={{ kind: 'alliance' }} className="text-xs text-amber-dim hover:text-amber hover:underline">
+          ? <p className="m-0 whitespace-pre-wrap text-body text-amber-dim">{data.description}</p>
+          : <p className="m-0 text-body text-label">Pas de description.</p>}
+        <AnyLink to="/ranking" search={{ kind: 'alliance' }} className="text-meta text-amber-dim hover:text-amber hover:underline">
           ← Classement des alliances
         </AnyLink>
       </div>

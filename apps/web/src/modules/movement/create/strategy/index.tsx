@@ -31,7 +31,7 @@ export const MovementCreateCombatStrategy: React.FC<Props> = ({
             <label
               key={value}
               className={classNames(
-                'flex cursor-pointer items-center rounded-sm border px-3 py-2 text-sm transition',
+                'flex cursor-pointer items-center rounded-sm border px-3 py-2 text-body transition',
                 selected
                   ? 'border-amber bg-chrome text-amber'
                   : 'border-rust/50 bg-chrome/40 text-amber-dim hover:border-rust hover:text-amber'

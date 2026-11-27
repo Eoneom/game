@@ -45,8 +45,8 @@ export const DefenseBuildQueue: React.FC<Props> = ({ cityId }) => {
             alt={DefenseTranslations[ongoing.defense_code].name}
           />
           <div className="min-w-0 flex-1 space-y-2">
-            <p className="m-0 text-sm text-amber">
-              <span className="font-mono text-base text-amber">{ongoing.remaining_count}</span>{' '}
+            <p className="m-0 text-body text-amber">
+              <span className="font-mono text-body text-amber">{ongoing.remaining_count}</span>{' '}
               {DefenseTranslations[ongoing.defense_code].name}
             </p>
             <CountdownProgress
@@ -71,7 +71,7 @@ export const DefenseBuildQueue: React.FC<Props> = ({ cityId }) => {
           {queue.map(item => (
             <li
               key={item.id}
-              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-sm"
+              className="flex items-center justify-between gap-2 rounded-sm border border-rust/40 bg-chrome/50 px-2 py-1.5 text-body"
             >
               <span className="min-w-0 text-amber-dim">
                 <span className="font-mono text-amber">{item.count}</span>{' '}
@@ -79,7 +79,7 @@ export const DefenseBuildQueue: React.FC<Props> = ({ cityId }) => {
               </span>
               <Button
                 variant="ghost"
-                className="shrink-0 !px-2 !py-1 text-xs"
+                className="shrink-0 !px-2 !py-1"
                 onClick={() => cancelQueued.mutate(item.id)}
               >
                 Annuler

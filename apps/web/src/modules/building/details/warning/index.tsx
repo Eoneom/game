@@ -11,7 +11,7 @@ export const BuildingDetailsWarning: React.FC<Props> = ({ energyUpgradeWarning }
 
   return (
     <div className="space-y-2 rounded-sm border border-danger/50 bg-danger-deep/25 p-2">
-      <p className="m-0 text-sm font-semibold text-danger" role="status">
+      <p className="m-0 text-body font-semibold text-danger" role="status">
         Attention : ce niveau consommera plus d&apos;énergie que la ville n&apos;en produit. La production pourra être réduite.
       </p>
     </div>

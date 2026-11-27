@@ -52,18 +52,18 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
         </div>
       </div>
 
-      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0 text-sm text-amber-dim sm:grid-cols-4">
+      <ul className="m-0 grid list-none grid-cols-2 gap-1 p-0 text-body text-amber-dim sm:grid-cols-4">
         <li>Attaque <span className="font-mono text-amber">{defense.attack}</span></li>
         <li>Vie <span className="font-mono text-amber">{defense.life || '—'}</span></li>
         <li>Points <span className="font-mono text-amber">{defense.points}</span></li>
         <li>{defense.armed ? 'Armée' : 'Non armée'}</li>
       </ul>
       {attackByRound && (
-        <p className="m-0 text-sm text-amber-dim">
+        <p className="m-0 text-body text-amber-dim">
           Attaque par tour (1 → 5) : <span className="font-mono text-amber">{attackByRound}</span>
         </p>
       )}
-      <p className="m-0 text-sm text-amber-dim">
+      <p className="m-0 text-body text-amber-dim">
         Dans la ville : <span className="font-mono text-amber">{defense.count}</span>
       </p>
 
@@ -93,7 +93,7 @@ export const DefenseDetails: React.FC<Props> = ({ cityId, defense }) => {
         </Button>
       </div>
       {maxCount === 0 ? (
-        <p className="m-0 text-xs text-amber-dim">Capacité de l&apos;enceinte atteinte : améliorez l&apos;enceinte.</p>
+        <p className="m-0 text-meta text-amber-dim">Capacité de l&apos;enceinte atteinte : améliorez l&apos;enceinte.</p>
       ) : null}
       <p className="description">{description}</p>
     </LayoutDetailsContent>

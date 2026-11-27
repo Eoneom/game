@@ -24,7 +24,7 @@ export const Button: React.FC<Props> = ({
       disabled={disabled}
       onClick={() => onClick && onClick()}
       className={classNames(
-        'cursor-pointer rounded-sm border px-3 py-2 text-sm uppercase tracking-wide transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40',
+        'cursor-pointer rounded-sm border px-3 py-2 text-meta font-semibold uppercase tracking-wide transition active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40',
         variant === 'primary' &&
           'neon-amber motion-safe-neon border-copper bg-copper/30 text-amber hover:bg-copper/50',
         variant === 'danger' &&

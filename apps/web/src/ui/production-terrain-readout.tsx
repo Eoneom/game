@@ -98,11 +98,11 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
 
   return (
     <div className="space-y-3">
-      {lede ? <p className="m-0 text-xs text-amber-dim">{lede}</p> : null}
+      {lede ? <p className="m-0 text-meta text-amber-dim">{lede}</p> : null}
 
       <div className="overflow-hidden rounded-sm border border-rust/50 bg-chrome/40">
         <div
-          className={`grid ${gridCols} gap-2 border-b border-rust/40 px-3 py-2 text-[0.65rem] uppercase tracking-wider text-label`}
+          className={`grid ${gridCols} gap-2 border-b border-rust/40 px-3 py-2 text-caption uppercase tracking-wider text-label`}
         >
           <span>Ressource</span>
           <span className="text-right">Actuelle</span>
@@ -118,28 +118,28 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
               key={row.kind}
               className={`grid ${gridCols} items-center gap-2 px-3 py-2.5`}
             >
-              <span className="flex min-w-0 items-center gap-2 text-sm text-amber-dim">
+              <span className="flex min-w-0 items-center gap-2 text-body text-amber-dim">
                 <ResourceIcon kind={row.kind} />
                 <span className="truncate">{row.label}</span>
               </span>
-              <span className="text-right font-mono text-sm tabular-nums text-amber">
+              <span className="text-right font-mono text-body tabular-nums text-amber">
                 {formatRate(row.currentRate)}
               </span>
               {showBase ? (
-                <span className="text-right font-mono text-xs tabular-nums text-amber-dim">
+                <span className="text-right font-mono text-meta tabular-nums text-amber-dim">
                   {formatRate(row.baseRate ?? 0)}
                 </span>
               ) : null}
-              <span className="text-right font-mono text-sm tabular-nums text-label">
+              <span className="text-right font-mono text-body tabular-nums text-label">
                 {formatTerrainCoeff(row.terrainCoeff)}
               </span>
               {showFaction ? (
-                <span className="text-right font-mono text-sm tabular-nums text-label">
+                <span className="text-right font-mono text-body tabular-nums text-label">
                   {formatTechnologyBonus(row.factionMultiplier ?? 1)}
                 </span>
               ) : null}
               {showTechnology ? (
-                <span className="text-right font-mono text-sm tabular-nums text-terminal">
+                <span className="text-right font-mono text-body tabular-nums text-terminal">
                   {formatTechnologyBonus(row.technologyMultiplier ?? 1)}
                 </span>
               ) : null}

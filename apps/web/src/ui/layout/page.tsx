@@ -20,7 +20,7 @@ export const LayoutPage: React.FC<Props> = ({ details, children }) => {
         {children}
       </section>
       {showDetails && (
-        <aside className="action-panel surface-chrome min-h-0 overflow-auto rounded-sm border border-amber/30 p-3 shadow-[inset_0_0_24px_rgba(62,57,50,0.08)]">
+        <aside className="action-panel surface-panel min-h-0 overflow-auto border-amber/30 p-3 shadow-[inset_0_0_24px_rgba(62,57,50,0.08)]">
           {details}
         </aside>
       )}

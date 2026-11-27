@@ -21,9 +21,9 @@ export const CountdownProgress: React.FC<CountdownProgressProps> = ({
 
   return (
     <div className="countdown-progress space-y-1 rounded-sm border border-rust/40 bg-chrome/60 p-2">
-      <p className="countdown-progress__summary m-0 text-xs text-amber-dim">{summary}</p>
+      <p className="countdown-progress__summary m-0 text-meta text-amber-dim">{summary}</p>
       {complete ? (
-        <p className="countdown-progress__time m-0 text-sm text-terminal" aria-live="polite">
+        <p className="countdown-progress__time m-0 text-body text-terminal" aria-live="polite">
           {doneLabel}
         </p>
       ) : (
@@ -42,7 +42,7 @@ export const CountdownProgress: React.FC<CountdownProgressProps> = ({
               />
             </div>
           </div>
-          <p className="countdown-progress__time m-0 font-mono text-xs text-amber" aria-live="polite">
+          <p className="countdown-progress__time m-0 font-mono text-body text-amber" aria-live="polite">
             {timeLabel}
           </p>
         </>

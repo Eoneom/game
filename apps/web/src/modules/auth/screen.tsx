@@ -6,8 +6,9 @@ interface Props {
 
 export const AuthScreen: React.FC<Props> = ({ children }) => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-chrome p-6 scanlines relative">
+    <div className="flex min-h-screen items-center justify-center bg-chrome p-6 relative">
       <div
+        aria-hidden
         className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:

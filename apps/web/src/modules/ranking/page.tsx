@@ -36,7 +36,7 @@ const AnyLink = Link as React.ComponentType<{
 }>
 
 const tabClass = (active: boolean) => classNames(
-  'rounded-sm border px-3 py-1 text-xs uppercase tracking-wider transition',
+  'rounded-sm border px-3 py-1 text-caption uppercase tracking-wider transition',
   active
     ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
     : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -119,7 +119,7 @@ export const RankingPage: React.FC<{
     <LayoutPage>
       <div className="space-y-3">
         <header className="space-y-2">
-          <h2 className="m-0 text-base text-amber">Classements</h2>
+          <h2 className="m-0 text-heading text-amber">Classements</h2>
           <nav aria-label="Catégorie" className="flex flex-wrap gap-1">
             {Object.values(RankingCategory).map(value => (
               <button
@@ -157,12 +157,12 @@ export const RankingPage: React.FC<{
           </nav>
         </header>
 
-        {isPending && <p className="m-0 text-sm text-label">Chargement…</p>}
+        {isPending && <p className="m-0 text-body text-label">Chargement…</p>}
         {!isPending && data?.computed_at === null && (
-          <p className="m-0 text-sm text-label">Le premier classement n&apos;a pas encore été calculé.</p>
+          <p className="m-0 text-body text-label">Le premier classement n&apos;a pas encore été calculé.</p>
         )}
         {!isPending && data && data.computed_at !== null && data.rows.length === 0 && (
-          <p className="m-0 text-sm text-label">
+          <p className="m-0 text-body text-label">
             {kind === RankingKind.ALLIANCE
               ? 'Aucune alliance classée (il faut au moins 3 membres).'
               : 'Personne n\'est classé ici.'}
@@ -170,9 +170,9 @@ export const RankingPage: React.FC<{
         )}
 
         {data && data.rows.length > 0 && (
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-meta">
             <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-label">
+              <tr className="text-left text-caption uppercase tracking-wider text-label">
                 <th scope="col" className="px-2 py-1">Rang</th>
                 <th scope="col" className="px-2 py-1">24 h</th>
                 <th scope="col" className="px-2 py-1">Nom</th>
@@ -205,7 +205,7 @@ export const RankingPage: React.FC<{
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between gap-2 text-xs text-amber-dim">
+          <div className="flex items-center justify-between gap-2 text-meta text-amber-dim">
             <p className="m-0">Page {page}/{totalPages}</p>
             <div className="flex gap-1">
               <Button variant="ghost" disabled={page <= 1} onClick={() => onNavigate({ category, kind, page: page - 1 })}>
@@ -219,7 +219,7 @@ export const RankingPage: React.FC<{
         )}
 
         {data?.computed_at != null && (
-          <footer className="text-xs text-label">{formatComputedAt(data.computed_at)}</footer>
+          <footer className="text-caption text-label">{formatComputedAt(data.computed_at)}</footer>
         )}
       </div>
     </LayoutPage>

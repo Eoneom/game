@@ -17,6 +17,6 @@ interface Props {
 
 export const ListItemLevel: React.FC<Props> = ({ level, ...props }) => {
   return <ListItem {...props}>
-    <p className="m-0 text-xs text-amber-dim">Niv. {level}</p>
+    <p className="m-0 text-meta text-amber-dim">Niv. {level}</p>
   </ListItem>
 }

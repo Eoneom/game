@@ -32,7 +32,7 @@ export const MovementCreateAction: React.FC<Props> = ({ action, onChange, allowe
               <label
                 key={movementAction}
                 className={classNames(
-                  'flex cursor-pointer items-center justify-center rounded-sm border px-3 py-3 text-center text-sm uppercase tracking-wide transition',
+                  'flex cursor-pointer items-center justify-center rounded-sm border px-3 py-3 text-center text-meta uppercase tracking-wide transition',
                   selected
                     ? 'border-amber bg-chrome text-amber'
                     : 'border-rust/50 bg-chrome/40 text-amber-dim hover:border-rust hover:text-amber'

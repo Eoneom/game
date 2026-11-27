@@ -25,12 +25,12 @@ export const MailDetails: React.FC<Props> = ({ mail, box, onReply, onDeleted }) 
   return (
     <article className="space-y-3">
       <header className="space-y-1">
-        <h2 className="m-0 break-words text-base text-amber">{mail.subject}</h2>
-        <p className="m-0 text-xs text-amber-dim">
+        <h2 className="m-0 break-words text-heading text-amber">{mail.subject}</h2>
+        <p className="m-0 text-meta text-amber-dim">
           De <strong>{mail.sender.name}</strong> à <strong>{mail.recipient.name}</strong> · {formatDate(mail.sent_at)}
         </p>
       </header>
-      <p className="m-0 whitespace-pre-wrap break-words text-sm text-amber">{mail.body}</p>
+      <p className="m-0 max-w-[72ch] whitespace-pre-wrap break-words text-body text-ink">{mail.body}</p>
       <div className="flex flex-wrap gap-2">
         <Button onClick={onReply}>Répondre</Button>
         {box === 'inbox' && (

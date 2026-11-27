@@ -67,8 +67,8 @@ function TroopsList({
         <ul
           className={
             one_per_line
-              ? 'm-0 flex list-none flex-col gap-0.5 p-0 text-xs text-amber'
-              : 'm-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2'
+              ? 'm-0 flex list-none flex-col gap-0.5 p-0 text-caption text-amber'
+              : 'm-0 grid list-none gap-0.5 p-0 text-caption text-amber sm:grid-cols-2'
           }
         >
           {present.map(troop => (
@@ -96,7 +96,7 @@ function DefensesList({ defenses }: { defenses: AdminSystemPlayerDefenseCount[] 
   return (
     <div>
       <h5 className="field-label m-0 mb-1 text-label">Défenses</h5>
-      <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
+      <ul className="m-0 grid list-none gap-0.5 p-0 text-caption text-amber sm:grid-cols-2">
         {defenses.map(defense => (
           <li key={defense.code}>
             {DefenseTranslations[defense.code].name}
@@ -117,7 +117,7 @@ const CityPendingRecruitment: React.FC<{
   })
 
   return (
-    <div className="text-xs text-amber-dim">
+    <div className="text-caption text-amber-dim">
       <p className="m-0">
         Recrutement : {pending.remaining_count}{' '}
         {translateTroopCode(pending.troop_code as TroopCode)}
@@ -160,7 +160,7 @@ function WarehouseStockBars({
   return (
     <div className="space-y-1.5">
       <div>
-        <div className="mb-0.5 flex justify-between text-[11px] text-amber-dim">
+        <div className="mb-0.5 flex justify-between text-caption text-amber-dim">
           <span>{RESOURCE_LABEL.plastic}</span>
           <span>
             {transformDecimals(resources.plastic)} / {transformDecimals(warehouses_capacity.plastic)}
@@ -177,7 +177,7 @@ function WarehouseStockBars({
         />
       </div>
       <div>
-        <div className="mb-0.5 flex justify-between text-[11px] text-amber-dim">
+        <div className="mb-0.5 flex justify-between text-caption text-amber-dim">
           <span>{RESOURCE_LABEL.mushroom}</span>
           <span>
             {transformDecimals(resources.mushroom)} / {transformDecimals(warehouses_capacity.mushroom)}
@@ -207,11 +207,11 @@ function CityStatsSection({
   return (
     <section className="admin-surface-nested rounded-sm p-2.5">
       <header className="mb-2 border-b border-rust/25 pb-2">
-        <h4 className="m-0 text-sm font-medium text-amber">
+        <h4 className="m-0 text-meta font-medium text-amber">
           {city.name}
           <span className="font-normal text-amber-dim"> — {formatCoordinates(city.coordinates)}</span>
         </h4>
-        <p className="m-0 mt-1 text-xs text-amber-dim">
+        <p className="m-0 mt-1 text-caption text-amber-dim">
           Prod. : {formatProductionLine(city.earnings_per_second)}
         </p>
       </header>
@@ -231,7 +231,7 @@ function CityStatsSection({
         />
         <div>
           <h5 className="field-label m-0 mb-1 text-label">Bâtiments</h5>
-          <ul className="m-0 grid list-none gap-0.5 p-0 text-xs text-amber sm:grid-cols-2">
+          <ul className="m-0 grid list-none gap-0.5 p-0 text-caption text-amber sm:grid-cols-2">
             {buildings.map(building => (
               <li key={`${city.id}-${building.code}`}>
                 {translateBuildingCode(building.code)}
@@ -261,13 +261,13 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
 
   if (is_loading && visible.length === 0) {
     return (
-      <p className="text-sm text-amber-dim">Chargement des statistiques…</p>
+      <p className="text-meta text-amber-dim">Chargement des statistiques…</p>
     )
   }
 
   if (visible.length === 0) {
     return (
-      <p className="text-sm text-amber-dim">Aucun joueur système à afficher.</p>
+      <p className="text-meta text-amber-dim">Aucun joueur système à afficher.</p>
     )
   }
 
@@ -285,8 +285,8 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
             className="admin-surface-card rounded-sm p-3"
           >
             <header className="mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-rust/30 pb-2">
-              <h2 className="m-0 text-base text-amber">{snapshot.player_name}</h2>
-              <time className="text-xs text-amber-dim" dateTime={String(snapshot.updated_at)}>
+              <h2 className="m-0 text-heading text-amber">{snapshot.player_name}</h2>
+              <time className="text-caption text-amber-dim" dateTime={String(snapshot.updated_at)}>
                 Mis à jour {formatDate(snapshot.updated_at)}
               </time>
             </header>
@@ -294,7 +294,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
             <div className="space-y-3">
               <section>
                 <h3 className="field-label m-0 mb-1 text-label">Technologies</h3>
-                <ul className="m-0 list-none space-y-0.5 p-0 text-sm text-amber">
+                <ul className="m-0 list-none space-y-0.5 p-0 text-meta text-amber">
                   {snapshot.technologies.map(tech => (
                     <li key={tech.code}>
                       {translateTechnologyCode(tech.code as TechnologyCode)}
@@ -312,7 +312,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                   )}
                 </h3>
                 {ongoing_movements.length === 0 ? (
-                  <p className="m-0 text-sm text-amber-dim">
+                  <p className="m-0 text-meta text-amber-dim">
                     Aucun mouvement de troupes en cours pour ce joueur.
                   </p>
                 ) : (
@@ -342,7 +342,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                   Avant-postes ({snapshot.outposts.length})
                 </h3>
                 {snapshot.outposts.length === 0 ? (
-                  <p className="m-0 text-sm text-amber-dim">
+                  <p className="m-0 text-meta text-amber-dim">
                     Aucun avant-poste (temporaire ou permanent) pour ce joueur.
                   </p>
                 ) : (
@@ -350,7 +350,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                     {snapshot.outposts.map(outpost => (
                       <li
                         key={outpost.id}
-                        className="admin-surface-nested min-w-0 space-y-2 rounded-sm p-2 text-sm text-amber"
+                        className="admin-surface-nested min-w-0 space-y-2 rounded-sm p-2 text-meta text-amber"
                       >
                         <div>
                           {translateOutpostType(outpost.type)}
@@ -358,7 +358,7 @@ export const SystemPlayerStatsPanel: React.FC<Props> = ({
                           {(outpost.earnings_per_second.plastic > 0
                             || outpost.earnings_per_second.mushroom > 0
                             || outpost.earnings_per_second.plasma > 0) && (
-                            <p className="m-0 mt-1 text-xs text-amber-dim">
+                            <p className="m-0 mt-1 text-caption text-amber-dim">
                               Prod. : {formatProductionLine(outpost.earnings_per_second)}
                             </p>
                           )}

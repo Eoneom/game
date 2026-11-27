@@ -45,14 +45,14 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
 
   return (
     <form
-      className="surface-chrome relative z-10 w-full max-w-md animate-boot-sweep motion-reduce:animate-none space-y-4 rounded-sm border border-amber/40 p-6 neon-amber motion-safe-neon"
+      className="surface-panel relative z-10 w-full max-w-md animate-boot-sweep motion-reduce:animate-none space-y-4 border-amber/40 p-6 neon-amber motion-safe-neon"
       onSubmit={onSubmit}
     >
-      <h1 className="m-0 text-center text-2xl tracking-[0.2em] text-amber">EONEOM</h1>
-      <p className="m-0 text-center text-sm text-amber-dim">
+      <h1 className="m-0 text-center text-display tracking-[0.2em] text-amber">EONEOM</h1>
+      <p className="m-0 text-center text-body text-amber-dim">
         Choisissez votre faction et fondez votre première ville.
       </p>
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-wider text-label">
+      <label className="flex flex-col gap-1 text-meta text-label">
         Nom
         <input
           type="text"
@@ -60,10 +60,10 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
           value={playerName}
           onChange={event => setPlayerName(event.target.value)}
           autoComplete="username"
-          className="field-input text-base normal-case tracking-normal"
+          className="field-input text-body normal-case tracking-normal"
         />
       </label>
-      <label className="flex flex-col gap-1 text-xs uppercase tracking-wider text-label">
+      <label className="flex flex-col gap-1 text-meta text-label">
         Ville
         <input
           type="text"
@@ -71,18 +71,18 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
           value={cityName}
           onChange={event => setCityName(event.target.value)}
           autoComplete="off"
-          className="field-input text-base normal-case tracking-normal"
+          className="field-input text-body normal-case tracking-normal"
         />
       </label>
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-        <legend className="px-0 text-xs uppercase tracking-wider text-label">Faction</legend>
+        <legend className="px-0 text-meta text-label">Faction</legend>
         {playableFactionCodes().map(code => {
           const translation = FactionTranslations[code]
           return (
             <label
               key={code}
               className={classNames(
-                'flex cursor-pointer gap-2 rounded-sm border p-3 text-sm normal-case tracking-normal text-amber',
+                'flex cursor-pointer gap-2 rounded-sm border p-3 text-body normal-case tracking-normal text-amber',
                 factionCode === code ? 'border-amber bg-chrome/60' : 'border-rust/50'
               )}
             >
@@ -98,7 +98,7 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
               />
               <span className="flex flex-col gap-1">
                 <span id={`faction-${code}-name`}>{translation.name}</span>
-                <span id={`faction-${code}-details`} className="flex flex-col gap-1 text-xs text-amber-dim">
+                <span id={`faction-${code}-details`} className="flex flex-col gap-1 text-meta text-amber-dim">
                   {translation.lore ? <span>{translation.lore}</span> : null}
                   {translation.playstyle ? <span className="text-terminal">{translation.playstyle}</span> : null}
                 </span>
@@ -110,7 +110,7 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
       <Button type="submit" className="w-full">
         S'inscrire
       </Button>
-      <p className="m-0 text-center text-sm text-amber-dim">
+      <p className="m-0 text-center text-body text-amber-dim">
         <button
           type="button"
           className="cursor-pointer border-0 bg-transparent p-0 text-amber underline-offset-4 hover:underline"

@@ -48,7 +48,7 @@ export const Cost: React.FC<Props> = ({ cityId, plastic, mushroom, plasma = 0, d
 
   return (
     <div className="space-y-2">
-      <h3 className="m-0 text-sm uppercase tracking-wider text-label">Coût</h3>
+      <h3 className="m-0 text-caption uppercase tracking-wider text-label">Coût</h3>
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
         <CostResource short={plasticShort} icon={<IconPlastic />} value={plastic} />
         <CostResource short={mushroomShort} icon={<IconMushroom />} value={mushroom} />

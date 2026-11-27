@@ -24,7 +24,7 @@ export const MovementCreateWarning: React.FC<Props> = ({
 
   if (movementLimitReached) {
     warnings.push(
-      <p key="movement-limit" className="m-0 text-sm font-semibold text-danger" role="status">
+      <p key="movement-limit" className="m-0 text-body font-semibold text-danger" role="status">
         Limite de mouvements simultanés atteinte : attendez le retour d&apos;un mouvement ou améliorez un centre de commandement.
       </p>
     )
@@ -32,7 +32,7 @@ export const MovementCreateWarning: React.FC<Props> = ({
 
   if (destinationCapacityExceeded) {
     warnings.push(
-      <p key="capacity" className="m-0 text-sm font-semibold text-danger" role="status">
+      <p key="capacity" className="m-0 text-body font-semibold text-danger" role="status">
         Attention : les ressources dépassent la capacité de stockage de la destination. L&apos;excédent sera renvoyé.
       </p>
     )
@@ -45,7 +45,7 @@ export const MovementCreateWarning: React.FC<Props> = ({
 
     if (isAllTroopsTaken) {
       warnings.push(
-        <p key="temporary" className="m-0 text-sm font-semibold text-danger" role="status">
+        <p key="temporary" className="m-0 text-body font-semibold text-danger" role="status">
           Attention : ce déplacement va supprimer l&apos;avant-poste temporaire.
         </p>
       )

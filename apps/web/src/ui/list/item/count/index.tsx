@@ -19,7 +19,7 @@ interface Props {
 
 export const ListItemCount: React.FC<Props> = ({ count, detail, ...props }) => {
   return <ListItem {...props}>
-    <p className="m-0 text-xs text-amber-dim">× {count}</p>
-    {detail && <p className="m-0 text-xs text-label">{detail}</p>}
+    <p className="m-0 text-caption text-amber-dim">× {count}</p>
+    {detail && <p className="m-0 text-meta text-label">{detail}</p>}
   </ListItem>
 }

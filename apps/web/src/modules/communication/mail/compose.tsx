@@ -12,7 +12,7 @@ interface Props {
   onCancel: () => void
 }
 
-const fieldClass = 'w-full rounded-sm border border-rust/50 bg-transparent px-2 py-1 text-sm text-amber placeholder:text-label focus:border-amber/60 focus:outline-none'
+const fieldClass = 'w-full rounded-sm border border-edge bg-transparent px-3 py-2 text-body text-amber placeholder:text-muted focus:border-amber'
 
 export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSubject = '', inReplyTo, onSent, onCancel }) => {
   const [ recipient, setRecipient ] = useState(initialRecipient)
@@ -27,7 +27,7 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
 
   return (
     <form
-      className="space-y-3"
+      className="max-w-[40rem] space-y-3"
       onSubmit={event => {
         event.preventDefault()
         sendMail.mutate({
@@ -38,9 +38,9 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
         })
       }}
     >
-      <h2 className="m-0 text-base text-amber">{inReplyTo ? 'Répondre' : 'Nouvelle lettre'}</h2>
+      <h2 className="m-0 text-heading text-amber">{inReplyTo ? 'Répondre' : 'Nouvelle lettre'}</h2>
       <div className="relative">
-        <label className="mb-1 block text-xs uppercase tracking-wider text-label" htmlFor="mail-recipient">Destinataire</label>
+        <label className="mb-1 block text-meta text-label" htmlFor="mail-recipient">Destinataire</label>
         <input
           id="mail-recipient"
           className={fieldClass}
@@ -61,7 +61,7 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
                   type="button"
                   role="option"
                   aria-selected={false}
-                  className="block w-full px-2 py-1 text-left text-sm text-amber hover:bg-rust/30"
+                  className="block w-full px-2 py-1 text-left text-body text-amber hover:bg-rust/30"
                   onMouseDown={event => event.preventDefault()}
                   onClick={() => {
                     setRecipient(player.name)
@@ -76,7 +76,7 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
         )}
       </div>
       <div>
-        <label className="mb-1 block text-xs uppercase tracking-wider text-label" htmlFor="mail-subject">Objet</label>
+        <label className="mb-1 block text-meta text-label" htmlFor="mail-subject">Objet</label>
         <input
           id="mail-subject"
           className={fieldClass}
@@ -86,7 +86,7 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
         />
       </div>
       <div>
-        <label className="mb-1 block text-xs uppercase tracking-wider text-label" htmlFor="mail-body">Message</label>
+        <label className="mb-1 block text-meta text-label" htmlFor="mail-body">Message</label>
         <textarea
           id="mail-body"
           className={`${fieldClass} min-h-40`}
@@ -94,7 +94,7 @@ export const MailCompose: React.FC<Props> = ({ initialRecipient = '', initialSub
           value={body}
           onChange={event => setBody(event.target.value)}
         />
-        <p className="m-0 text-right font-mono text-xs text-label">{body.length}/{MAIL_BODY_MAX_LENGTH}</p>
+        <p className="m-0 text-right font-mono text-caption text-label">{body.length}/{MAIL_BODY_MAX_LENGTH}</p>
       </div>
       <div className="flex gap-2">
         <Button type="submit" disabled={sendMail.isPending || !recipient.trim() || !subject.trim() || !body.trim()}>

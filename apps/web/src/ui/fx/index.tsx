@@ -10,6 +10,7 @@ type Particle = {
   size: number
 }
 
+/** Completion bursts only; no ambient embers floating over the text (040). */
 export const FxLayer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -32,19 +33,6 @@ export const FxLayer: React.FC = () => {
     }
     resize()
     window.addEventListener('resize', resize)
-
-    const spawnAmbient = () => {
-      if (particles.length > 40) return
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: canvas.height * (0.4 + Math.random() * 0.6),
-        vx: (Math.random() - 0.3) * 0.15,
-        vy: -0.05 - Math.random() * 0.12,
-        life: 0,
-        max: 200 + Math.random() * 200,
-        size: 1 + Math.random() * 1.5,
-      })
-    }
 
     const onBurst = (e: Event) => {
       const detail = (e as CustomEvent<{ x?: number; y?: number }>).detail ?? {}
@@ -74,7 +62,6 @@ export const FxLayer: React.FC = () => {
     const tick = () => {
       raf = requestAnimationFrame(tick)
       if (!visible) return
-      if (Math.random() < 0.08) spawnAmbient()
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       particles = particles.filter(p => p.life < p.max)
       for (const p of particles) {

@@ -55,8 +55,8 @@ const ChatMessageRow: React.FC<{
   onBlock: () => void
   onReport: () => void
 }> = ({ message, isOwn, menuOpen, onToggleMenu, onWrite, onBlock, onReport }) => (
-  <li className="relative flex gap-2 text-sm leading-snug">
-    <time className="shrink-0 font-mono text-xs text-label" dateTime={new Date(message.created_at).toISOString()}>
+  <li className="relative flex gap-2 text-meta leading-snug">
+    <time className="shrink-0 font-mono text-caption text-label" dateTime={new Date(message.created_at).toISOString()}>
       {formatChatTime(message.created_at)}
     </time>
     <div className="min-w-0">
@@ -81,7 +81,7 @@ const ChatMessageRow: React.FC<{
       {menuOpen && (
         <ul
           role="menu"
-          className="absolute left-12 z-30 m-0 mt-1 list-none rounded-sm border border-rust/60 bg-chrome p-1 text-xs shadow-lg"
+          className="absolute left-12 z-30 m-0 mt-1 list-none rounded-sm border border-rust/60 bg-chrome p-1 text-meta shadow-lg"
         >
           <li>
             <button type="button" role="menuitem" className="block w-full px-2 py-1 text-left text-amber hover:bg-rust/30" onClick={onWrite}>
@@ -177,14 +177,14 @@ export const ChatPanel: React.FC = () => {
     <section
       aria-label="Discussion"
       className={classNames(
-        'chat-panel surface-chrome relative z-20 flex shrink-0 flex-col border-t border-rust/70',
+        'chat-panel surface-frame relative z-20 flex shrink-0 flex-col border-t border-rust/70',
         panel.open ? 'h-64' : 'h-auto'
       )}
     >
       <div className="flex items-center gap-2 px-3 py-1">
         <button
           type="button"
-          className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-label hover:text-amber"
+          className="flex items-center gap-2 text-caption uppercase tracking-wider text-label hover:text-amber"
           aria-expanded={panel.open}
           onClick={() => updatePanel({ ...panel, open: !panel.open })}
         >
@@ -200,7 +200,7 @@ export const ChatPanel: React.FC = () => {
               role="tab"
               aria-selected={panel.tab === channel}
               className={classNames(
-                'flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs uppercase tracking-wider transition',
+                'flex items-center gap-1 rounded-sm border px-2 py-0.5 text-caption uppercase tracking-wider transition',
                 panel.tab === channel
                   ? 'border-amber/50 bg-chrome text-amber'
                   : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'
@@ -222,7 +222,7 @@ export const ChatPanel: React.FC = () => {
             {history.hasNextPage && (
               <button
                 type="button"
-                className="mb-1 text-xs text-amber-dim underline hover:text-amber disabled:opacity-40"
+                className="mb-1 text-meta text-amber-dim underline hover:text-amber disabled:opacity-40"
                 disabled={history.isFetchingNextPage}
                 onClick={() => history.fetchNextPage()}
               >
@@ -230,7 +230,7 @@ export const ChatPanel: React.FC = () => {
               </button>
             )}
             {messages.length === 0 && !history.isPending && (
-              <p className="m-0 text-xs text-label">Aucun message pour le moment.</p>
+              <p className="m-0 text-meta text-label">Aucun message pour le moment.</p>
             )}
             <ul className="m-0 flex list-none flex-col gap-1 p-0">
               {messages.map(message => (
@@ -273,18 +273,18 @@ export const ChatPanel: React.FC = () => {
           >
             <input
               aria-label="Message"
-              className="min-w-0 flex-1 rounded-sm border border-rust/50 bg-transparent px-2 py-1 text-sm text-amber placeholder:text-label focus:border-amber/60 focus:outline-none"
+              className="min-w-0 flex-1 rounded-sm border border-edge bg-transparent px-2 py-1 text-body text-amber placeholder:text-muted focus:border-amber"
               placeholder={PLACEHOLDERS[panel.tab]}
               maxLength={CHAT_BODY_MAX_LENGTH}
               value={draft}
               onChange={event => setDraft(event.target.value)}
             />
-            <span className="font-mono text-xs text-label" aria-label="Caractères">
+            <span className="font-mono text-caption text-label" aria-label="Caractères">
               {draft.length}/{CHAT_BODY_MAX_LENGTH}
             </span>
             <button
               type="submit"
-              className="rounded-sm border border-copper bg-copper/30 px-2 py-1 text-xs uppercase tracking-wide text-amber hover:bg-copper/50 disabled:opacity-40"
+              className="rounded-sm border border-copper bg-copper/30 px-2 py-1 text-caption uppercase tracking-wide text-amber hover:bg-copper/50 disabled:opacity-40"
               disabled={!draft.trim() || postMessage.isPending}
             >
               Envoyer

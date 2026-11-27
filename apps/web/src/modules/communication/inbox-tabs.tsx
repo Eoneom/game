@@ -6,7 +6,7 @@ import { useCountUnreadReports } from '#communication/report/hooks'
 import { useCountUnreadMail } from '#communication/mail/hooks'
 
 const tabClass = (active: boolean) => classNames(
-  'rounded-sm border px-3 py-1 text-xs uppercase tracking-wider transition',
+  'rounded-sm border px-3 py-1 text-caption uppercase tracking-wider transition',
   active
     ? 'neon-amber motion-safe-neon border-amber/50 bg-chrome text-amber'
     : 'border-rust/40 text-amber-dim hover:border-rust hover:text-amber'

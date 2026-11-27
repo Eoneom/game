@@ -11,7 +11,7 @@ interface ReadoutProps {
 export const MovementCapacityReadout: React.FC<ReadoutProps> = ({ used, limit }) => {
   const full = used >= limit
   return (
-    <p className={`m-0 text-sm ${full ? 'text-danger' : 'text-amber-dim'}`}>
+    <p className={`m-0 text-body ${full ? 'text-danger' : 'text-amber-dim'}`}>
       Mouvements{' '}
       <span className="font-mono tabular-nums text-amber">
         {used} / {limit}

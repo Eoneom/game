@@ -64,11 +64,11 @@ export const Requirement: React.FC<Props> = ({
           : 'border border-transparent'
       )}
     >
-      <h3 className="m-0 text-sm uppercase tracking-wider text-label">Pré-requis</h3>
+      <h3 className="m-0 text-caption uppercase tracking-wider text-label">Pré-requis</h3>
       {has_building_levels && (
         <p
           className={classNames(
-            'm-0 text-sm',
+            'm-0 text-body',
             levels_ok ? 'text-terminal' : 'font-semibold text-danger'
           )}
         >

@@ -24,20 +24,20 @@ export const OngoingMovementItem: React.FC<{
   const show_cargo = movement.action === MovementAction.TRANSPORT && hasMovementCargo(movement.resources)
 
   return (
-    <li className="admin-surface-nested min-w-0 rounded-sm p-2 text-sm text-amber">
+    <li className="admin-surface-nested min-w-0 rounded-sm p-2 text-meta text-amber">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-medium">{action_label}</span>
-        <span className="text-xs text-amber-dim">
+        <span className="text-caption text-amber-dim">
           Arrivée dans {remainingSeconds} s
         </span>
       </div>
-      <p className="m-0 mt-1 font-mono text-xs text-amber-dim">
+      <p className="m-0 mt-1 font-mono text-caption text-amber-dim">
         {formatCoordinates(movement.origin)}
         <span aria-hidden className="mx-1">→</span>
         {formatCoordinates(movement.destination)}
       </p>
       {movement.troops.length > 0 && (
-        <ul className="m-0 mt-1 list-none space-y-0.5 p-0 text-xs">
+        <ul className="m-0 mt-1 list-none space-y-0.5 p-0 text-caption">
           {movement.troops.map(troop => (
             <li key={troop.code}>
               {translateTroopCode(troop.code as TroopCode)}
@@ -47,7 +47,7 @@ export const OngoingMovementItem: React.FC<{
         </ul>
       )}
       {show_cargo && (
-        <p className="m-0 mt-1 text-xs text-amber-dim">
+        <p className="m-0 mt-1 text-caption text-amber-dim">
           Cargaison :{' '}
           {movement.resources.plastic > 0 && `${movement.resources.plastic} ${RESOURCE_LABEL.plastic.toLowerCase()}`}
           {movement.resources.plastic > 0 && movement.resources.mushroom > 0 && ' · '}

@@ -90,7 +90,7 @@ export const HeaderResourcesItem: React.FC<Props> = ({
       {resourceItem}
       {earningsRatesLabel ? (
         <span
-          className="max-w-[11rem] truncate font-mono text-[0.65rem] leading-tight text-label"
+          className="max-w-[11rem] truncate font-mono text-caption leading-tight text-label"
           title={earningsRatesLabel}
         >
           {earningsRatesLabel}

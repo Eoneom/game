@@ -31,16 +31,16 @@ export const MovementListItem: React.FC<Props> = ({ movement }) => {
   const movementRouteContent = (
     <>
       <span className="flex items-center justify-between gap-2">
-        <span className="text-sm uppercase tracking-wide text-amber">{actionLabel}</span>
-        <span className="font-mono text-sm text-terminal">{formatTime(remainingTime)}</span>
+        <span className="text-meta uppercase tracking-wide text-amber">{actionLabel}</span>
+        <span className="font-mono text-body text-terminal">{formatTime(remainingTime)}</span>
       </span>
-      <span className="mt-1 flex items-center gap-2 font-mono text-xs text-amber-dim">
+      <span className="mt-1 flex items-center gap-2 font-mono text-meta text-amber-dim">
         <span title="Départ">{formatCoordinates(movement.origin)}</span>
         <span aria-hidden>→</span>
         <span title="Arrivée">{formatCoordinates(movement.destination)}</span>
       </span>
       {cargo && (
-        <span className="mt-1 block text-xs text-label">
+        <span className="mt-1 block text-meta text-label">
           {cargo}
         </span>
       )}
