@@ -45,6 +45,8 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 | `alliance:left` | same | `alliance_id`, `reason` (`leave` \| `kick` \| `dissolve`) — to the player who left |
 | `reinforcement:arrived` | same | `city_id`, `owner_player_id`, `report_id` — to the host when allied troops are stationed |
 | `reinforcement:recalled` | same | `city_id`, `owner_player_id`, `movement_id` — to the host when stationed troops leave (owner recall or automatic return) |
+| `exchange:filled` | same | `order_id`, `lots`, `price` — to each party of a faction exchange fill ([`035`](../035-faction-exchange/spec.md)) |
+| `exchange:book-updated` | same | `resource` — to connected players of the book's faction, throttled in `ws.ts` to once per 2 s per (faction, resource): the first update goes out at once, later ones collapse into one send at the end of the window |
 | `troop:recruitment-updated` | same | `city_id` |
 | `outpost:created` | same | — |
 | `outpost:deleted` | same | `outpost_id` |
@@ -52,7 +54,7 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 
 Bus implementation: `apps/server/src/app/event-bus.ts` (typed payloads, info logging). Tests: `apps/server/src/app/event-bus.spec.ts`.
 
-Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), `createTroopMovement` (`movement:incoming`), `sendCommunicationMail` (`mail:received`), `postCommunicationChatMessage` (`chat:message`), alliance commands in `app/command/alliance/` (`alliance:*`), `sagaFinishReinforce` (`reinforcement:arrived`), `createTroopMovement` and the automatic return (`reinforcement:recalled`), outpost lifecycle/gather.
+Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), `createTroopMovement` (`movement:incoming`), `sendCommunicationMail` (`mail:received`), `postCommunicationChatMessage` (`chat:message`), alliance commands in `app/command/alliance/` (`alliance:*`), `sagaFinishReinforce` (`reinforcement:arrived`), `createTroopMovement` and the automatic return (`reinforcement:recalled`), exchange order commands, the expiry job and city capture (`exchange:filled`, `exchange:book-updated`, slice [`035`](../035-faction-exchange/spec.md)), outpost lifecycle/gather.
 
 Multi-recipient fan-out (`sendToGamePlayers` in `ws.ts`) walks the in-memory connection map with a per-event filter; the event payload carries the channel faction (`null` for global), the alliance `member_ids` (`null` outside the alliance channel, slice [`033`](../033-alliances/spec.md)) and `excluded_player_ids`. `alliance:updated` and `alliance:application-received` use the same helper with their `player_ids`. Single server process only.
 
@@ -66,6 +68,7 @@ Registered in `startSession` (`apps/web/src/modules/auth/hooks.ts`):
 - `troop/ws-listener.ts` (incl. the « Attaque entrante » toast on `movement:incoming`, slice 030)
 - `outpost/ws-listener.ts`
 - `alliance/ws-listener.ts` (alliance data refresh and toasts, reinforcement lists, slice 033)
+- `exchange/ws-listener.ts` (book and trades refresh on `exchange:book-updated`; fill toast and own orders, movements, troops and reports refresh on `exchange:filled`, slice 035)
 - `communication/ws-listener.ts` (battle report toast, « Nouvelle lettre » toast on `mail:received`, chat history cache on `chat:message` via `communication/chat/ws-listener.ts`; registers once per page load)
 
 `wsClient.on` returns an unsubscribe function, used by the chat panel for its activity dot.

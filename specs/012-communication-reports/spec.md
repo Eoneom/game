@@ -23,7 +23,7 @@ Players receive persisted **reports** (exploration, base, rebase, transport, bat
 | `communication:report-not-found` | Unknown report |
 | `communication:report-not-owner` | Report belongs to another player |
 
-`ReportType` values: `exploration`, `base`, `rebase`, `transport`, `battle`, `spy`, `spy_detected` (`core/communication/value/report-type.ts`; the last two from slice [`030`](../030-intelligence/spec.md)).
+`ReportType` values: `exploration`, `base`, `rebase`, `transport`, `battle`, `spy`, `spy_detected`, `reinforcement`, `trade` (`core/communication/value/report-type.ts`; `spy` / `spy_detected` from slice [`030`](../030-intelligence/spec.md), `reinforcement` from [`033`](../033-alliances/spec.md), `trade` from [`035`](../035-faction-exchange/spec.md)).
 
 Tests: `apps/server/src/web/handler/communication/report/*.spec.ts`, `apps/server/src/app/query/communication/report/*.spec.ts`, `apps/server/src/app/command/communication/report/*.spec.ts`.
 
@@ -50,6 +50,10 @@ A `spy` movement ([`010`](../010-troop-movement-combat/spec.md), [`030`](../030-
 ## Reinforcement reports (033)
 
 A stationed reinforcement ([`033`](../033-alliances/spec.md)) writes a **`reinforcement`** report for the host (`troops` = troops stationed, origin → host city) with a `report_reinforcement` row (`report_id`, `owner_player_id`; migration `00015_alliances`). `GET /communication/report/:report_id` adds `reinforcement` `{ owner_player_id, owner_name }`. `AppEvent.ReinforcementArrived` (`reinforcement:arrived`) is emitted to the host after the row commits.
+
+## Trade reports (035)
+
+Each faction exchange fill ([`035`](../035-faction-exchange/spec.md)) writes one **`trade`** report per party (`origin` = own order city, `destination` = counterparty city, `troops` = carriers the party sent, `resources` = what it receives) with a `report_trade` row (`report_id`, `trade_id`, `counterparty_player_id`, `metadata_json`: order id, side, resource, lots, execution price, water refunded to the buyer, both cities, outgoing and incoming convoy arrival times; migration `00018_exchange`), written through `report.createTradeReports` in the fill transaction. `GET /communication/report/:report_id` adds `trade` with `counterparty_name` (`[TAG] Name`). Convoy arrival writes no report; the parties get `exchange:filled` ([`017`](../017-realtime-websocket/spec.md)).
 
 ## Background jobs
 

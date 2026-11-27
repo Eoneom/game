@@ -51,3 +51,7 @@ _Avoid_: class, archetype, template, kind, job
 **Water**:
 The currency resource (FR *eau pure*), produced by a city's water purifier and stored without limit in cities only. Players trade it for plastic, mushroom and plasma on their Faction's exchange.
 _Avoid_: money, gold, credits, coins
+
+**Order**:
+A limit offer to buy or sell whole lots of plastic, mushroom or plasma for Water on the Faction's exchange, placed from a city with a trading post. Its resources and carriers stay reserved until it is filled, cancelled or expires; each fill between two Orders is a trade.
+_Avoid_: offer, bid, ask, listing

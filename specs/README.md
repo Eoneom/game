@@ -35,7 +35,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 032 | Messaging: mail and chat | Implemented | [spec](./032-messaging/spec.md) |
 | 033 | Alliances | Implemented | [spec](./033-alliances/spec.md) |
 | 034 | Rankings | Implemented | [spec](./034-rankings/spec.md) |
-| 035 | Faction exchange and water | Partially implemented: water and buildings; exchange pending | [spec](./035-faction-exchange/spec.md) |
+| 035 | Faction exchange and water | Implemented | [spec](./035-faction-exchange/spec.md) |
 | 036 | Playable faction: La Symbiose | Planned | [spec](./036-faction-symbiosis/spec.md) |
 | 037 | Playable faction: L'Ordre du Bastion | Planned | [spec](./037-faction-bastion-order/spec.md) |
 | 038 | Security pass before public launch | Planned | [spec](./038-security-pass/spec.md) |
