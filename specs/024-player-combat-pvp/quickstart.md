@@ -19,6 +19,7 @@ Combat rounds resolve in one burst after movement arrival (`COMBAT_ROUND_INTERVA
 | Player | Faction | How |
 | --- | --- | --- |
 | Human confederation | `the_confederation` | Sign up via web `/signup` (playable faction) |
+| Human symbiose | `the_symbiosis` | Sign up via web `/signup` (playable faction, [`036`](../036-faction-symbiosis/spec.md)); attacks Confederation players and is attacked by them |
 | System singularity | `the_technological_singularity` | **Alpha** — auto-created on server boot (`ensureSystemPlayers`); cannot log in |
 | System ash liturgy | `the_ash_liturgy` | **Harrow** — auto-created on server boot; capital **Cinder I**; cannot log in |
 

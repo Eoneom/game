@@ -15,6 +15,7 @@ Defined in `apps/server/src/core/faction/constant/code.ts`:
 | `THE_CONFEDERATION` | `the_confederation` |
 | `THE_TECHNOLOGICAL_SINGULARITY` | `the_technological_singularity` |
 | `THE_ASH_LITURGY` | `the_ash_liturgy` |
+| `THE_SYMBIOSIS` | `the_symbiosis` (La Symbiose, playable, [`036`](../036-faction-symbiosis/spec.md)) |
 
 Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re-export from server core).
 
@@ -23,7 +24,7 @@ Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re
 `apps/server/src/core/faction/constant/playable.ts`:
 
 - `non_playable_faction_codes`: `Set` containing `FactionCode.THE_TECHNOLOGICAL_SINGULARITY` and `FactionCode.THE_ASH_LITURGY`.
-- `playableFactionCodes()`: all `FactionCode` values not in that set (today: only `the_confederation`).
+- `playableFactionCodes()`: all `FactionCode` values not in that set (today: `the_confederation` and `the_symbiosis`, [`036`](../036-faction-symbiosis/spec.md)).
 
 ## Domain service
 
@@ -33,6 +34,7 @@ Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re
 | --- | --- |
 | `isKnown` / `assertKnown` | Code is in `Object.values(FactionCode)` |
 | `isPlayable` / `assertPlayable` | Known and not in `non_playable_faction_codes` |
+| `getProductionMultipliers` | Per-resource production multiplier of a faction from `faction_production_modifier` (`constant/production-modifier.ts`, slice [`036`](../036-faction-symbiosis/spec.md)); neutral (1) when unset |
 
 **Errors** (`apps/server/src/core/faction/error.ts`, exported as `FactionError`):
 
@@ -49,18 +51,18 @@ Tests: `apps/server/src/core/faction/service.spec.ts`.
 - Handler missing `faction_code` → `400` + `faction_code:not-found` (`RequestError.FACTION_CODE_NOT_FOUND`).
 - Invalid faction from command → `200` + `faction:not-found` or `faction:not-playable` via error middleware.
 
-Tests: `apps/server/src/app/command/auth/signup.spec.ts` (unknown faction, singularity non-playable).
+Tests: `apps/server/src/app/command/auth/signup.spec.ts` (unknown faction, singularity and ash liturgy non-playable, `the_symbiosis` accepted with its own roster).
 
 ## Troop initialization
 
-`TroopService.init` / `TroopService.codesForFaction(faction_code)` use faction to determine which troop codes get zero-count stacks at city bootstrap (`signup.spec.ts` asserts count = `TroopService.codesForFaction(faction_code).length`). PvP adds **four** faction-exclusive combat `TroopCode`s per faction (eight total — roster in [`024`](../024-player-combat-pvp/spec.md)).
+`TroopService.init` / `TroopService.codesForFaction(faction_code)` use faction to determine which troop codes get zero-count stacks at city bootstrap (`signup.spec.ts` asserts count = `TroopService.codesForFaction(faction_code).length`). PvP adds **four** faction-exclusive combat `TroopCode`s per faction (roster in [`024`](../024-player-combat-pvp/spec.md); La Symbiose's nine codes in [`036`](../036-faction-symbiosis/spec.md)).
 
 ## Web UI
 
 | Path | Role |
 | --- | --- |
 | `apps/web/src/modules/faction/translations.ts` | French display names for every `FactionCode` (including singularity) |
-| `apps/web/src/modules/auth/signup-form.tsx` | Radio list from `playableFactionCodes()` only |
+| `apps/web/src/modules/auth/signup-form.tsx` | One radio card per `playableFactionCodes()` entry: name, short lore and playstyle (`FactionTranslations[code].lore` / `.playstyle`, slice [`036`](../036-faction-symbiosis/spec.md)) |
 
 Signup form default selection: `FactionCode.THE_CONFEDERATION`.
 
@@ -73,7 +75,7 @@ Signup form default selection: `FactionCode.THE_CONFEDERATION`.
 
 | Area | Paths |
 | --- | --- |
-| Core | `apps/server/src/core/faction/{constant/code,constant/playable,error,service}.ts` |
+| Core | `apps/server/src/core/faction/{constant/code,constant/playable,constant/production-modifier,error,service}.ts` |
 | Consumers | `apps/server/src/app/command/auth/signup.ts`, `apps/server/src/core/troop/service.ts` |
 | Client | `packages/api-client/src/index.ts`, `endpoints/player/signup.ts` |
 | Web | `apps/web/src/modules/faction/translations.ts`, `apps/web/src/modules/auth/signup-form.tsx` |

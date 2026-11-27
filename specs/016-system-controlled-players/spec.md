@@ -153,7 +153,9 @@ System AI does **not** launch `attack` movements until the empire meets **army r
 
 **Defense**: system players never set `default_combat_strategy`, so their cities and outposts defend `balanced`. Battle outcomes against them follow [`010`](../010-troop-movement-combat/spec.md); `battle:finished` is emitted for them too but no socket is connected.
 
-**AI profiles** (`core/player/system/ai-profile.ts`): Alpha uses `singularity_default`; **Harrow** (`the_ash_liturgy`, [`025`](../025-lawless-human-faction/spec.md)) uses `ash_liturgy_aggressive` — higher attack utility, ignores `empire_under_threat` for attack idling, +500 score on Confederation targets, no failed-attack memory, more scouts/founders, lower make-permanent priority, Arsenal research ahead of Économie (`research_arsenal_first`, slice [`027`](../027-military-economy-technologies/spec.md)).
+**AI profiles** (`core/player/system/ai-profile.ts`): Alpha uses `singularity_default`; **Harrow** (`the_ash_liturgy`, [`025`](../025-lawless-human-faction/spec.md)) uses `ash_liturgy_aggressive` — higher attack utility, ignores `empire_under_threat` for attack idling, +500 score on human targets (`human_target_score_bonus`, players of any playable faction — Confederation and Symbiose, [`036`](../036-faction-symbiosis/spec.md)), no failed-attack memory, more scouts/founders, lower make-permanent priority, Arsenal research ahead of Économie (`research_arsenal_first`, slice [`027`](../027-military-economy-technologies/spec.md)).
+
+Alpha has no target bonus but attacks humans of any faction: every faction other than its own is hostile ([`024`](../024-player-combat-pvp/spec.md)). No system player plays La Symbiose ([`036`](../036-faction-symbiosis/spec.md)); attack simulations handle its troops and defenses through the shared tables.
 
 See also [`024`](../024-player-combat-pvp/spec.md) (system AI note).
 

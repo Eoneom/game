@@ -130,7 +130,7 @@ At battle start (`app/saga/finish/attack.ts`), when the target is a **city**, th
 | Shield generator | 0 | `life × count × fortification` |
 
 - Strategy multipliers and Arsenal modifiers ([`027`](../027-military-economy-technologies/spec.md)) do **not** apply to defenses; only Fortification does.
-- **Shield**: after computing the attacker's attack pool, multiply it by `1 − min(0.30, 0.02 × surviving_shield_generators)`.
+- **Shield**: after computing the attacker's attack pool, multiply it by `1 − min(0.30, 0.02 × surviving_shield_generators)`. With spore clouds ([`036`](../036-faction-symbiosis/spec.md)) the two reductions add up, capped at **40 %** in total.
 - **Exposure** (homogeneous army) ignores defense stacks when counting classes.
 - Plasma spent by batteries is debited from the city stock during the round. Loot is computed on the remaining stock.
 
@@ -222,9 +222,18 @@ Migration (next free number):
 | System AI | Builds to 50 % / 25 % of capacity; includes defenses in attack simulation. |
 | Migration | Backfills for buildings, defenses, technology. |
 
+## Faction defenses ([`036`](../036-faction-symbiosis/spec.md))
+
+`defense_faction: Partial<Record<DefenseCode, FactionCode>>` (`core/defense/constant/faction.ts`) lists faction-exclusive defenses; codes without an entry are common. `PUT /defense/build` rejects another faction's defense with `defense:not-in-faction-roster`, and `GET /city/:city_id/defense` lists only the common defenses plus the player's own (costs and requirements stay complete). Every city still gets a row per code at count 0.
+
+| Code | Faction | Points / attack / life | Armed | Casualty tier | Special |
+| --- | --- | --- | --- | --- | --- |
+| `mycelium_wall` | `the_symbiosis` | 1 / 0 / 50 | no | with `rampart` (both orders) | Regrowth: on a defender win or draw, `floor(30 % × destroyed)` units are not removed from the city; the defender report lists them |
+| `spore_cloud` | `the_symbiosis` | 2 / 12 / 10 | yes | with `turret` (both orders) | Each surviving unit lowers the attacker attack pool by 1 %, max 15 %; with shields max 40 % in total; round summaries carry `spore_reduction` |
+
 ## Out of scope
 
-- Faction-specific defenses (with the new factions, slices `036` / `037`).
+- Faction-specific defenses (with the new factions: La Symbiose implemented in [`036`](../036-faction-symbiosis/spec.md), see [Faction defenses](#faction-defenses-036); `037` / `039` later).
 - Defenses on outposts.
 - Repairing damaged units (whole-unit model only).
 - Shield upkeep or energy-based shields.

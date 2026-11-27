@@ -52,7 +52,7 @@ Admin: second card on `/admin` observability; existing **POST /admin/system-play
 | --- | --- |
 | `attack` | Much higher priority / earlier in rotation; commit when simulator marginal |
 | `empire_under_threat` | **Ignored** for attack idling (still defend via other rules if added later) |
-| Target preference | **Human (Confederation) settlements/stacks first** when scoring |
+| Target preference | **Human settlements/stacks first** when scoring — players of any playable faction (Confederation, Symbiose) since [`036`](../036-faction-symbiosis/spec.md); profile knob `human_target_score_bonus` |
 | `failed_attack_targets` memory | **Disabled** or very short TTL — keeps raiding |
 | Scout / founder caps | **Raised** vs `SYSTEM_MAX_SCOUT_TROOPS` / `SYSTEM_MAX_FOUNDER_TROOPS` |
 | Economy / `make-permanent` | **Deprioritized** relative to attack and expansion tempo |

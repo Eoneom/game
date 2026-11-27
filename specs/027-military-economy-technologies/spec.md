@@ -102,6 +102,8 @@ All bonuses are **linear multipliers**: `1 + per_level × level`.
 
 The multiplier applies to the per-second rate **before** rounding, after cell coefficients and `GAME_TIME_SCALE`. The city and outpost production breakdowns (header earnings per minute) include the bonus. The breakdown exposes the technology multiplier so the UI can show it next to the cell bonus.
 
+A faction production modifier ([`036`](../036-faction-symbiosis/spec.md), La Symbiose: mushroom × 1.10, plastic × 0.90) stacks multiplicatively on the same sources: `rate × faction × (1 + tech)` (`faction_multiplier` beside `technology_multiplier` in `BuildingService` / `TroopService.getEarningsBySecond`). The breakdowns expose it as `faction_production_multiplier`, and the readout shows a « Faction » column when it is not neutral.
+
 ### Warehouses (Économie)
 
 City `plastic_warehouse` and `mushroom_warehouse` capacity × `1 + 0.10 × storage_compression`. Plasma storage stays unlimited.

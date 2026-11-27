@@ -90,6 +90,7 @@ Extend `MovementAction` with `ATTACK = 'attack'` (see [`010`](../010-troop-movem
   - **Humans** (`the_confederation`): `PUT /troop/recruit` for all four confederation combat codes ([`009`](../009-troops-stationary/spec.md)).
   - **System AI** (`the_technological_singularity`): same recruit pipeline for all four singularity combat codes on Alpha’s cities ([`016`](../016-system-controlled-players/spec.md)).
 - **Stat uniqueness**: all **eight** `TroopCode`s have **distinct** `attack_capacity`, `defense_capacity`, `life_capacity`, and `speed`. Cross-faction pairs sharing a `combat_troop_class` are **not** numeric mirrors.
+- **Later factions**: the Ash Liturgy ([`025`](../025-lawless-human-faction/spec.md)) and La Symbiose ([`036`](../036-faction-symbiosis/spec.md): `root_warden`, `spore_swarm`, `fungal_colossus`, `toxic_howler`, a mass profile ≈ 0.8 × the Confederation stats with the same speeds) add four combat codes each. Speeds can repeat across factions; the rule kept and enforced by `core/troop/constant/faction.spec.ts` is that no combat code has the same `speed / attack / defense / life` tuple as another.
 
 ### Web: translations and artwork convention
 
