@@ -25,6 +25,30 @@ describe('ProductionTerrainReadout', () => {
     expect(screen.getByText('—')).toBeInTheDocument()
   })
 
+  it('shows the faction column only when the faction modifier is not neutral (slice 036)', () => {
+    const { unmount } = render(
+      <ProductionTerrainReadout
+        current={rates}
+        terrain={terrain}
+        faction={{ plastic: 0.9, mushroom: 1.1 }}
+      />
+    )
+
+    expect(screen.getByText('Faction')).toBeInTheDocument()
+    expect(screen.getByText('-10 %')).toBeInTheDocument()
+    expect(screen.getByText('+10 %')).toBeInTheDocument()
+    unmount()
+
+    render(
+      <ProductionTerrainReadout
+        current={rates}
+        terrain={terrain}
+        faction={{ plastic: 1, mushroom: 1 }}
+      />
+    )
+    expect(screen.queryByText('Faction')).not.toBeInTheDocument()
+  })
+
   it('hides the technology column without multipliers', () => {
     render(<ProductionTerrainReadout current={rates} terrain={terrain} />)
 

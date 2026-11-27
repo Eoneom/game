@@ -10,6 +10,7 @@ import {
   defenseLosses,
   formatCombatModifiers,
   formatShieldReduction,
+  regrowthLines,
   ReportTypeLabels,
 } from '#communication/report/translations'
 import { DefenseTranslations } from '#defense/translations'
@@ -141,6 +142,8 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
     const destroyed_defenses = defenseLosses(battle.casualties_defender)
     const has_plasma = battle.round_summaries.some(row => (row.defender_plasma_spent ?? 0) > 0)
     const has_shield = battle.round_summaries.some(row => (row.shield_reduction ?? 0) > 0)
+    const has_spores = battle.round_summaries.some(row => (row.spore_reduction ?? 0) > 0)
+    const regrowth = battle.perspective === 'defender' ? regrowthLines(battle.outcome.regrown_defenses) : []
     return (
       <LayoutDetailsContent>
         <h1>{ReportTypeLabels[report.type]}</h1>
@@ -215,6 +218,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
               <th>Déf. (attaque / vie)</th>
               {has_plasma && <th>Plasma dépensé</th>}
               {has_shield && <th>Bouclier</th>}
+              {has_spores && <th>Spores</th>}
             </tr>
           </thead>
           <tbody>
@@ -225,6 +229,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
                 <td>{row.defender_attack_pool} / {row.defender_life_pool}</td>
                 {has_plasma && <td>{row.defender_plasma_spent ?? 0}</td>}
                 {has_shield && <td>{formatShieldReduction(row.shield_reduction) ?? '—'}</td>}
+                {has_spores && <td>{formatShieldReduction(row.spore_reduction) ?? '—'}</td>}
               </tr>
             ))}
           </tbody>
@@ -234,6 +239,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
           {battle.outcome.loot_applied && <li>Butin prélevé</li>}
           {battle.outcome.destroyed_temp_outpost && <li>Avant-poste temporaire détruit</li>}
           {battle.outcome.attacker_retreated && <li>Retraite de l&apos;attaquant</li>}
+          {regrowth.map(line => <li key={line}>{line}</li>)}
         </ul>
       </LayoutDetailsContent>
     )

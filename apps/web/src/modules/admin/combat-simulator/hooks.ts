@@ -21,6 +21,7 @@ export type CombatSimulatorFaction =
   | FactionCode.THE_CONFEDERATION
   | FactionCode.THE_TECHNOLOGICAL_SINGULARITY
   | FactionCode.THE_ASH_LITURGY
+  | FactionCode.THE_SYMBIOSIS
 
 export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   code: CombatSimulatorFaction
@@ -37,6 +38,10 @@ export const COMBAT_SIMULATOR_FACTION_OPTIONS: {
   {
     code: FactionCode.THE_ASH_LITURGY,
     label: 'Liturgie des cendres',
+  },
+  {
+    code: FactionCode.THE_SYMBIOSIS,
+    label: 'Symbiose',
   },
 ]
 
@@ -61,6 +66,12 @@ export const PVP_COMBAT_TROOP_CODES_BY_FACTION: Record<
     TroopCode.WRAITH_LANCER,
     TroopCode.CINDER_TITAN,
     TroopCode.HEMORRHAGE_CULTIST,
+  ],
+  [FactionCode.THE_SYMBIOSIS]: [
+    TroopCode.ROOT_WARDEN,
+    TroopCode.SPORE_SWARM,
+    TroopCode.FUNGAL_COLOSSUS,
+    TroopCode.TOXIC_HOWLER,
   ],
 }
 

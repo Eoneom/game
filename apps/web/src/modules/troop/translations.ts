@@ -142,4 +142,49 @@ export const TroopTranslations: Record<TroopCode, TroopTranslation> = {
     description: 'Colosse de braises mortes ; avance comme une chute lente.',
     effect: 'ATK 9 · DEF 18 · VIE 20',
   },
+  [TroopCode.DRIFTING_SPORE]: {
+    name: 'Spore errante',
+    description: 'Spore portée par le vent, qui s\'infiltre partout et voit tout.',
+    effect: 'Éclaireur de la Symbiose.',
+  },
+  [TroopCode.SEED_BEARER]: {
+    name: 'Porte-germe',
+    description: 'Porte une graine de mycélium pour planter une nouvelle colonie.',
+    effect: 'Permet de coloniser un emplacement en créant une nouvelle ville.',
+  },
+  [TroopCode.MYCELIAL_PORTER]: {
+    name: 'Portefaix mycélien',
+    description: 'Bête de somme fongique, lente et infatigable.',
+    effect: '',
+  },
+  [TroopCode.SYMBIONT_GROWER]: {
+    name: 'Cultivateur symbiote',
+    description: 'Fait pousser les champignons à même sa peau.',
+    effect: 'Récolte des champignons.',
+  },
+  [TroopCode.DECOMPOSER]: {
+    name: 'Décomposeur',
+    description: 'Digère les déchets plastiques des ruines.',
+    effect: 'Récolte du plastique.',
+  },
+  [TroopCode.ROOT_WARDEN]: {
+    name: 'Garde-racine',
+    description: 'Infanterie enracinée dans le sol, qui tient les lignes.',
+    effect: 'ATK 9 · DEF 10 · VIE 12',
+  },
+  [TroopCode.SPORE_SWARM]: {
+    name: 'Essaim de spores',
+    description: 'Nuage rapide de spores chasseresses.',
+    effect: 'ATK 14 · DEF 3 · VIE 4',
+  },
+  [TroopCode.FUNGAL_COLOSSUS]: {
+    name: 'Colosse fongique',
+    description: 'Masse de mycélium qui écrase les murailles.',
+    effect: 'ATK 10 · DEF 12 · VIE 13',
+  },
+  [TroopCode.TOXIC_HOWLER]: {
+    name: 'Hurleur toxique',
+    description: 'Crache des toxines paralysantes.',
+    effect: 'ATK 11 · DEF 5 · VIE 5',
+  },
 }

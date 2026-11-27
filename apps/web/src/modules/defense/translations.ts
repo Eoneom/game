@@ -26,4 +26,14 @@ export const DefenseTranslations: Record<DefenseCode, { name: string, descriptio
     description: 'Un champ de force diffus qui dévie une partie des tirs ennemis.',
     effect: 'Chaque générateur réduit l\'attaque ennemie de 2 %, jusqu\'à 30 %.',
   },
+  [DefenseCode.MYCELIUM_WALL]: {
+    name: 'Mur de mycélium',
+    description: 'Un rempart vivant de filaments entrelacés, qui repousse là où on l\'a tranché.',
+    effect: 'Aucune attaque. Encaisse les pertes en premier. Si la ville tient, 30 % des murs détruits repoussent.',
+  },
+  [DefenseCode.SPORE_CLOUD]: {
+    name: 'Nuage de spores',
+    description: 'Des spores toxiques en suspension, qui brûlent les poumons et voilent la vue des assaillants.',
+    effect: 'Défense armée. Chaque nuage réduit l\'attaque ennemie de 1 %, jusqu\'à 15 % (40 % au total avec les boucliers).',
+  },
 }

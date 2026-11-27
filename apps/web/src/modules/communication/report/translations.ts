@@ -1,4 +1,5 @@
 import { DefenseCode, ReportBattleMetadata, ReportType } from '@eoneom/api-client'
+import { DefenseTranslations } from '#defense/translations'
 
 export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.EXPLORATION]: 'Exploration',
@@ -56,6 +57,12 @@ export const defenseLosses = (lines: LossLine[]): { code: DefenseCode, count: nu
 /** Shield share of the attacker's attack pool, e.g. "-12 %"; null when no shield absorbed anything. */
 export const formatShieldReduction = (reduction?: number): string | null =>
   reduction && reduction > 0 ? `-${Math.round(reduction * 100)} %` : null
+
+/** Defender report lines for defenses that grew back (slice 036), e.g. "Mur de mycélium : +3 repoussés". */
+export const regrowthLines = (regrown?: { code: DefenseCode, count: number }[]): string[] =>
+  (regrown ?? [])
+    .filter(line => line.count > 0)
+    .map(line => `${DefenseTranslations[line.code].name} : +${line.count} repoussé${line.count > 1 ? 's' : ''}`)
 
 /** Arsenal technology bonus for one side, e.g. "+9 % attaque, +6 % vie"; null when neutral. */
 export const formatCombatModifiers = (modifiers?: CombatModifiers): string | null => {

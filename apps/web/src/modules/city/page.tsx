@@ -158,6 +158,7 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
             base={city.pre_cell_earnings_per_second}
             terrain={city.cell_resource_coefficient}
             technology={city.technology_production_multiplier}
+            faction={city.faction_production_multiplier}
           />
           <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-sm">
             <span className="flex items-center gap-1 text-amber-dim">

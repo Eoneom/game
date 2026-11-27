@@ -350,9 +350,10 @@ const RoundResultCard: React.FC<{ row: AdminCombatSimulatorRoundSummaryWire }> =
     <p className="m-0 leading-tight">
       Déf. ATK {row.defender_attack_pool} / VIE {row.defender_life_pool}
     </p>
-    {(row.defender_plasma_spent ?? 0) > 0 || (row.shield_reduction ?? 0) > 0 ? (
+    {(row.defender_plasma_spent ?? 0) > 0 || (row.shield_reduction ?? 0) > 0 || (row.spore_reduction ?? 0) > 0 ? (
       <p className="m-0 leading-tight">
         Plasma {row.defender_plasma_spent ?? 0} · Bouclier -{Math.round((row.shield_reduction ?? 0) * 100)} %
+        {(row.spore_reduction ?? 0) > 0 ? ` · Spores -${Math.round((row.spore_reduction ?? 0) * 100)} %` : null}
       </p>
     ) : null}
     <div>

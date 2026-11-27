@@ -1,5 +1,6 @@
 import React, { FormEvent, useState } from 'react'
 import { toast } from 'react-toastify'
+import classNames from 'classnames'
 import { FactionCode, playableFactionCodes } from '@eoneom/api-client'
 
 import { useSignup } from '#auth/hooks'
@@ -75,21 +76,36 @@ export const AuthSignupForm: React.FC<Props> = ({ onGoToLogin }) => {
       </label>
       <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
         <legend className="px-0 text-xs uppercase tracking-wider text-label">Faction</legend>
-        {playableFactionCodes().map(code => (
-          <label
-            key={code}
-            className="flex cursor-pointer items-center gap-2 text-sm normal-case tracking-normal text-amber"
-          >
-            <input
-              type="radio"
-              name="faction"
-              value={code}
-              checked={factionCode === code}
-              onChange={() => setFactionCode(code)}
-            />
-            {FactionTranslations[code].name}
-          </label>
-        ))}
+        {playableFactionCodes().map(code => {
+          const translation = FactionTranslations[code]
+          return (
+            <label
+              key={code}
+              className={classNames(
+                'flex cursor-pointer gap-2 rounded-sm border p-3 text-sm normal-case tracking-normal text-amber',
+                factionCode === code ? 'border-amber bg-chrome/60' : 'border-rust/50'
+              )}
+            >
+              <input
+                type="radio"
+                name="faction"
+                value={code}
+                checked={factionCode === code}
+                onChange={() => setFactionCode(code)}
+                aria-labelledby={`faction-${code}-name`}
+                aria-describedby={`faction-${code}-details`}
+                className="mt-1 self-start"
+              />
+              <span className="flex flex-col gap-1">
+                <span id={`faction-${code}-name`}>{translation.name}</span>
+                <span id={`faction-${code}-details`} className="flex flex-col gap-1 text-xs text-amber-dim">
+                  {translation.lore ? <span>{translation.lore}</span> : null}
+                  {translation.playstyle ? <span className="text-terminal">{translation.playstyle}</span> : null}
+                </span>
+              </span>
+            </label>
+          )
+        })}
       </fieldset>
       <Button type="submit" className="w-full">
         S'inscrire

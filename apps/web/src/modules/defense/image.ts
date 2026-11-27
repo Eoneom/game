@@ -10,6 +10,8 @@ const placeholder_image_src: Record<DefenseCode, string> = {
   [DefenseCode.MINEFIELD]: '/troops/reclaimer.png',
   [DefenseCode.PLASMA_BATTERY]: '/buildings/central_inductor.png',
   [DefenseCode.SHIELD_GENERATOR]: '/buildings/solar_panel.png',
+  [DefenseCode.MYCELIUM_WALL]: '/buildings/mushroom_farm.png',
+  [DefenseCode.SPORE_CLOUD]: '/troops/spore_acolyte.png',
 }
 
 export const defenseImageSrc = (code: DefenseCode): string => placeholder_image_src[code]

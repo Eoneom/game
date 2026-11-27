@@ -37,6 +37,8 @@ interface Props {
   terrain: Rates
   /** Économie technology multipliers (slice 027); adds a "Techno" column when set. */
   technology?: Rates
+  /** Faction production modifier (slice 036); adds a "Faction" column when it is not neutral. */
+  faction?: Rates
   lede?: string
 }
 
@@ -51,6 +53,7 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
   base,
   terrain,
   technology,
+  faction,
   lede = 'Débits par heure. Le terrain multiplie la production de base.',
 }) => {
   const rows: Array<{
@@ -60,6 +63,7 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
     baseRate?: number
     terrainCoeff: number
     technologyMultiplier?: number
+    factionMultiplier?: number
   }> = [
     {
       kind: 'plastic',
@@ -68,6 +72,7 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
       baseRate: base?.plastic,
       terrainCoeff: terrain.plastic,
       technologyMultiplier: technology?.plastic,
+      factionMultiplier: faction?.plastic,
     },
     {
       kind: 'mushroom',
@@ -76,16 +81,20 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
       baseRate: base?.mushroom,
       terrainCoeff: terrain.mushroom,
       technologyMultiplier: technology?.mushroom,
+      factionMultiplier: faction?.mushroom,
     },
   ]
 
   const showBase = Boolean(base)
   const showTechnology = Boolean(technology)
-  const gridCols = showBase && showTechnology
-    ? 'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)_minmax(3.5rem,0.7fr)]'
-    : showBase || showTechnology
-      ? 'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)]'
-      : 'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)]'
+  const showFaction = Boolean(faction) && (faction?.plastic !== 1 || faction?.mushroom !== 1)
+  const optionalColumns = [ showBase, showTechnology, showFaction ].filter(Boolean).length
+  const gridCols = [
+    'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)]',
+    'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)]',
+    'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)_minmax(3.5rem,0.7fr)]',
+    'grid-cols-[minmax(0,1.4fr)_minmax(4.5rem,1fr)_minmax(4.5rem,1fr)_minmax(3.5rem,0.7fr)_minmax(3.5rem,0.7fr)_minmax(3.5rem,0.7fr)]',
+  ][optionalColumns]
 
   return (
     <div className="space-y-3">
@@ -99,6 +108,7 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
           <span className="text-right">Actuelle</span>
           {showBase ? <span className="text-right">Base</span> : null}
           <span className="text-right">Terrain</span>
+          {showFaction ? <span className="text-right">Faction</span> : null}
           {showTechnology ? <span className="text-right">Techno</span> : null}
         </div>
 
@@ -123,6 +133,11 @@ export const ProductionTerrainReadout: React.FC<Props> = ({
               <span className="text-right font-mono text-sm tabular-nums text-label">
                 {formatTerrainCoeff(row.terrainCoeff)}
               </span>
+              {showFaction ? (
+                <span className="text-right font-mono text-sm tabular-nums text-label">
+                  {formatTechnologyBonus(row.factionMultiplier ?? 1)}
+                </span>
+              ) : null}
               {showTechnology ? (
                 <span className="text-right font-mono text-sm tabular-nums text-terminal">
                   {formatTechnologyBonus(row.technologyMultiplier ?? 1)}

@@ -75,6 +75,7 @@ const ErrorTranslations: Record<string, string> = {
   [DefenseError.CAPACITY_EXCEEDED]: 'Capacité de défense de l\'enceinte dépassée',
   [DefenseError.QUEUE_FULL]: 'La file de fortification est pleine',
   [DefenseError.QUEUE_ITEM_NOT_FOUND]: 'Élément de file de fortification introuvable',
+  [DefenseError.NOT_IN_FACTION_ROSTER]: 'Cette défense n\'appartient pas à votre faction',
 
   [CommunicationError.REPORT_NOT_FOUND]: 'Rapport introuvable',
   [CommunicationError.REPORT_NOT_OWNER]: 'Vous n\'êtes pas propriétaire de ce rapport',

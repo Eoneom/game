@@ -182,6 +182,7 @@ export const OutpostPage: React.FC<Props> = ({ outpostId }) => {
                 current={outpost.earnings_per_second}
                 terrain={outpost.cell_resource_coefficient}
                 technology={outpost.technology_production_multiplier}
+                faction={outpost.faction_production_multiplier}
               />
             </div>
           </article>
