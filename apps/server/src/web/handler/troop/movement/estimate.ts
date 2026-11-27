@@ -9,7 +9,10 @@ import {
   TroopMovementEstimateResponse
 } from '@eoneom/api-client/src/endpoints/troop/movement/estimate'
 import { TroopMovementEstimateQuery } from '#query/troop/movement/estimate'
-import { getPlayerIdFromContext } from '#web/helpers'
+import {
+  getPlayerIdFromContext,
+  getResourcesFromBody
+} from '#web/helpers'
 
 export const troopEstimateMovementHandler = async (
   req: Request<TroopMovementEstimateRequest>,
@@ -54,7 +57,7 @@ export const troopEstimateMovementHandler = async (
       troop_codes,
       troops: req.body.troops,
       player_id,
-      resources: req.body.resources,
+      resources: getResourcesFromBody(req.body.resources),
     })
 
     const response: TroopMovementEstimateResponse = {

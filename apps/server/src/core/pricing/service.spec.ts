@@ -428,12 +428,14 @@ describe('PricingService military and economy technologies (slice 027)', () => {
     assert.deepStrictEqual(level_one(TechnologyCode.TACTICAL_PROPULSION).resource, {
       plastic: 10000,
       mushroom: 8000,
-      plasma: 800
+      plasma: 800,
+      water: 0
     })
     assert.deepStrictEqual(level_one(TechnologyCode.STORAGE_COMPRESSION).resource, {
       plastic: 5000,
       mushroom: 5000,
-      plasma: 0
+      plasma: 0,
+      water: 0
     })
     assert.strictEqual(
       level_one(TechnologyCode.PLASMA_CONTAINMENT).duration,
@@ -454,6 +456,7 @@ describe('PricingService city defenses (slice 029)', () => {
       plastic: 4500,
       mushroom: 3000,
       plasma: 900,
+      water: 0
     })
     assert.strictEqual(result.duration, scaleGameDurationSeconds(540))
   })
@@ -492,6 +495,7 @@ describe('PricingService city defenses (slice 029)', () => {
       plastic: 1500,
       mushroom: 1000,
       plasma: 0,
+      water: 0
     })
     assert.strictEqual(wall.duration, scaleGameDurationSeconds(150))
 
@@ -504,6 +508,7 @@ describe('PricingService city defenses (slice 029)', () => {
       plastic: Math.ceil(7000 * 1.7),
       mushroom: Math.ceil(7000 * 1.7),
       plasma: Math.ceil(400 * 1.7),
+      water: 0
     })
   })
   it('prices the Renseignement technologies without plasma (slice 030)', () => {
@@ -520,6 +525,7 @@ describe('PricingService city defenses (slice 029)', () => {
         plastic: 3000,
         mushroom: 3000,
         plasma: 0,
+        water: 0
       })
       assert.strictEqual(first.duration, scaleGameDurationSeconds(120))
 
@@ -532,7 +538,53 @@ describe('PricingService city defenses (slice 029)', () => {
         plastic: Math.ceil(3000 * 1.7),
         mushroom: Math.ceil(3000 * 1.7),
         plasma: 0,
+        water: 0
       })
     }
+  })
+})
+
+describe('PricingService water buildings (slice 035)', () => {
+  it('prices the water purifier at plastic 2500 / mushroom 2000 / 200 s, ×1.7 per level, without water', () => {
+    const first = PricingService.getBuildingLevelCost({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 1,
+      architecture_level: 0,
+    })
+    assert.deepStrictEqual(first.resource, {
+      plastic: 2500,
+      mushroom: 2000,
+      plasma: 0,
+      water: 0
+    })
+    assert.strictEqual(first.duration, scaleGameDurationSeconds(200))
+
+    const second = PricingService.getBuildingLevelCost({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 2,
+      architecture_level: 0,
+    })
+    assert.strictEqual(second.resource.plastic, Math.ceil(2500 * 1.7))
+    assert.strictEqual(second.resource.mushroom, Math.ceil(2000 * 1.7))
+  })
+
+  it('prices the trading post at plastic 1500 / mushroom 1500 / 150 s, ×1.8 per level', () => {
+    const first = PricingService.getBuildingLevelCost({
+      code: BuildingCode.TRADING_POST,
+      level: 1,
+      architecture_level: 0,
+    })
+    assert.deepStrictEqual(first.resource, {
+      plastic: 1500,
+      mushroom: 1500,
+      plasma: 0,
+      water: 0
+    })
+    assert.strictEqual(first.duration, scaleGameDurationSeconds(150))
+    assert.strictEqual(PricingService.getBuildingLevelCost({
+      code: BuildingCode.TRADING_POST,
+      level: 2,
+      architecture_level: 0,
+    }).resource.plastic, Math.ceil(1500 * 1.8))
   })
 })

@@ -23,12 +23,14 @@ const queryResult = {
   earnings_per_second: {
     plastic: 1.5,
     mushroom: 2.0 ,
-    plasma: 0
+    plasma: 0,
+    water: 0.05
   },
   pre_cell_earnings_per_second: {
     plastic: 1.0,
     mushroom: 1.5 ,
-    plasma: 0
+    plasma: 0,
+    water: 0.05
   },
   cell_resource_coefficient: {
     plastic: 1.2,
@@ -38,7 +40,8 @@ const queryResult = {
   technology_production_multiplier: {
     plastic: 1.1,
     mushroom: 1.05,
-    plasma: 1.15
+    plasma: 1.15,
+    water: 1
   },
   cell: {
     coordinates: {
@@ -48,7 +51,8 @@ const queryResult = {
   resource_stock: {
     plastic: 500,
     mushroom: 300 ,
-    plasma: 0
+    plasma: 0,
+    water: 42
   },
   warehouses_capacity: {
     plastic: 2000,
@@ -120,17 +124,20 @@ describe('cityGetHandler', () => {
         plastic: 500,
         mushroom: 300,
         plasma: 0,
+        water: 42,
         maximum_building_levels: 10,
         building_levels_used: 3,
         earnings_per_second: {
           plastic: 1.5,
           mushroom: 2.0 ,
-          plasma: 0
+          plasma: 0,
+          water: 0.05
         },
         pre_cell_earnings_per_second: {
           plastic: 1.0,
           mushroom: 1.5 ,
-          plasma: 0
+          plasma: 0,
+          water: 0.05
         },
         cell_resource_coefficient: {
           plastic: 1.2,
@@ -139,7 +146,8 @@ describe('cityGetHandler', () => {
         technology_production_multiplier: {
           plastic: 1.1,
           mushroom: 1.05,
-          plasma: 1.15
+          plasma: 1.15,
+          water: 1
         },
         warehouses_capacity: {
           plastic: 2000,

@@ -31,11 +31,13 @@ const queryResult = {
       plastic: 100,
       mushroom: 50,
       plasma: 0,
+      water: 30,
     },
     remaining_resources: {
       plastic: 25,
       mushroom: 0,
       plasma: 0,
+      water: 5,
     },
   }
 }
@@ -99,11 +101,13 @@ describe('communicationGetReportHandler', () => {
           plastic: 100,
           mushroom: 50,
           plasma: 0,
+          water: 30,
         },
         remaining_resources: {
           plastic: 25,
           mushroom: 0,
           plasma: 0,
+          water: 5,
         },
       }
     })

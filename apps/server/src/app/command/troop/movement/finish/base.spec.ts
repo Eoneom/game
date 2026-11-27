@@ -417,7 +417,8 @@ describe('finishTroopBaseMovement', () => {
       resources: {
         plastic: 400,
         mushroom: 100,
-        plasma: 0 
+        plasma: 0,
+        water: 25
       } 
     })
 
@@ -433,8 +434,10 @@ describe('finishTroopBaseMovement', () => {
       plastic: 100,
       mushroom: 50,
       plasma: 0,
+      water: 5,
       last_plastic_gather: now(),
-      last_mushroom_gather: now() 
+      last_mushroom_gather: now(),
+      last_water_gather: now()
     })
     const stockUpdateOne = vi.fn().mockResolvedValue(undefined)
 
@@ -460,17 +463,20 @@ describe('finishTroopBaseMovement', () => {
     const updated = stockUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated.plastic, 500)
     assert.strictEqual(updated.mushroom, 150)
+    assert.strictEqual(updated.water, 30)
 
     const report = reportCreate.mock.calls[0][0]
     assert.deepStrictEqual(report.resources, {
       plastic: 400,
       mushroom: 100,
-      plasma: 0 
+      plasma: 0,
+      water: 25
     })
     assert.deepStrictEqual(report.remaining_resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0 
+      plasma: 0,
+      water: 0
     })
   })
 })

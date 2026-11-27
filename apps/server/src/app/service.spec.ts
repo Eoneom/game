@@ -287,6 +287,65 @@ describe('AppService', () => {
         technology_multiplier: 1.15
       }))
     })
+
+    it('produces water from the water purifier, unaffected by Économie technologies (slice 035)', async () => {
+      const player_id = id()
+      const repository = {
+        building: {
+          getLevel: vi.fn().mockImplementation(({ code }: { code: BuildingCode }) => {
+            if (code === BuildingCode.WATER_PURIFIER) {
+              return Promise.resolve(3)
+            }
+            if (code === BuildingCode.SOLAR_PANEL) {
+              return Promise.resolve(20)
+            }
+            return Promise.resolve(0)
+          })
+        },
+        city: { get: vi.fn().mockResolvedValue(city) },
+        cell: { getById: vi.fn().mockResolvedValue(city_cell) },
+        technology: {
+          get: vi.fn().mockResolvedValue(TechnologyEntity.create({
+            id: id(),
+            player_id,
+            code: TechnologyCode.PHOTOVOLTAIC_OPTIMIZATION,
+            level: 0
+          })),
+          list: technologyList({
+            [TechnologyCode.ADVANCED_RECYCLING]: 5,
+            [TechnologyCode.AGRONOMY]: 5,
+            [TechnologyCode.PLASMA_CONTAINMENT]: 5
+          })
+        }
+      } as unknown as Repository
+      setRepositoryMock(repository)
+
+      const [
+        breakdown,
+        energy
+      ] = await Promise.all([
+        AppService.getCityProductionBreakdown({
+          city_id,
+          player_id
+        }),
+        AppService.getCityEnergyConsumptionBreakdown({
+          city_id,
+          player_id
+        })
+      ])
+
+      expect(breakdown.technology_production_multiplier.water).toBe(1)
+      expect(breakdown.earnings_per_second.water).toBe(BuildingService.getEarningsBySecond({
+        code: BuildingCode.WATER_PURIFIER,
+        level: 3,
+        coefficients: resource_coefficient
+      }))
+      expect(breakdown.earnings_per_second.water).toBeGreaterThan(0)
+      expect(energy.production_consumption).toBe(BuildingService.getEnergyConsumption({
+        code: BuildingCode.WATER_PURIFIER,
+        level: 3
+      }))
+    })
   })
 
   describe('getOutpostProductionBreakdown', () => {
@@ -399,12 +458,14 @@ describe('AppService', () => {
       expect(breakdown.earnings_per_second).toEqual({
         plastic: 0,
         mushroom: 0 ,
-        plasma: 0
+        plasma: 0,
+        water: 0
       })
       expect(breakdown.pre_cell_earnings_per_second).toEqual({
         plastic: 0,
         mushroom: 0 ,
-        plasma: 0
+        plasma: 0,
+        water: 0
       })
       expect(breakdown.cell_resource_coefficient).toEqual(resource_coefficient)
     })

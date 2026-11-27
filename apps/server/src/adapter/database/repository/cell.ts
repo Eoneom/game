@@ -81,7 +81,8 @@ export class PostgresCellRepository
       resource_coefficient: {
         plastic: row.plastic_coefficient,
         mushroom: row.mushroom_coefficient,
-        plasma: 1
+        plasma: 1,
+        water: 1
       },
       solar_coefficient: row.solar_coefficient
     })

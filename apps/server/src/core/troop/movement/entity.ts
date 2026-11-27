@@ -27,7 +27,12 @@ export class MovementEntity extends BaseEntity {
     action,
     origin,
     destination,
-    resources = { plastic: 0, mushroom: 0, plasma: 0 },
+    resources = {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 0,
+    },
     combat_strategy = null,
   }: MovementEntityProps) {
     super({ id })
@@ -49,6 +54,9 @@ export class MovementEntity extends BaseEntity {
   }
 
   hasResources(): boolean {
-    return this.resources.plastic > 0 || this.resources.mushroom > 0 || this.resources.plasma > 0
+    return this.resources.plastic > 0
+      || this.resources.mushroom > 0
+      || this.resources.plasma > 0
+      || this.resources.water > 0
   }
 }

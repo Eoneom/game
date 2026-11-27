@@ -347,6 +347,9 @@ function maxAffordableRecruitCount(stock: Resource, unit_cost: Resource): number
   if (unit_cost.plasma > 0) {
     limits.push(Math.floor(stock.plasma / unit_cost.plasma))
   }
+  if (unit_cost.water > 0) {
+    limits.push(Math.floor(stock.water / unit_cost.water))
+  }
   if (limits.length === 0) {
     return Number.MAX_SAFE_INTEGER
   }

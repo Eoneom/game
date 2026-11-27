@@ -178,6 +178,8 @@ export class PostgresReportRepository
               remaining_plastic: row.remaining_plastic,
               remaining_mushroom: row.remaining_mushroom,
               remaining_plasma: row.remaining_plasma,
+              water: row.water,
+              remaining_water: row.remaining_water,
             }))
           .execute()
         report_id = with_id.id
@@ -228,6 +230,8 @@ export class PostgresReportRepository
               remaining_plastic: row.remaining_plastic,
               remaining_mushroom: row.remaining_mushroom,
               remaining_plasma: row.remaining_plasma,
+              water: row.water,
+              remaining_water: row.remaining_water,
             }))
           .execute()
       } else {
@@ -248,6 +252,8 @@ export class PostgresReportRepository
             remaining_plastic: row.remaining_plastic,
             remaining_mushroom: row.remaining_mushroom,
             remaining_plasma: row.remaining_plasma,
+            water: row.water,
+            remaining_water: row.remaining_water,
           })
           .where('id', '=', entity.id)
           .execute()
@@ -357,10 +363,13 @@ export class PostgresReportRepository
       casualties_attacker: row.casualties_attacker_json as ReportBattleMetadata['casualties_attacker'],
       casualties_defender: row.casualties_defender_json as ReportBattleMetadata['casualties_defender'],
       round_summaries: row.round_summaries_json as ReportBattleMetadata['round_summaries'],
-      sheltered: (row.sheltered_json as ReportBattleMetadata['sheltered'] | null) ?? {
+      sheltered: {
         plastic: 0,
         mushroom: 0,
         plasma: 0,
+        // Reports written before slice 035 have no water entry.
+        water: 0,
+        ...(row.sheltered_json as Partial<ReportBattleMetadata['sheltered']> | null),
       },
     }
   }
@@ -427,11 +436,13 @@ export class PostgresReportRepository
         plastic: row.plastic,
         mushroom: row.mushroom,
         plasma: row.plasma,
+        water: row.water,
       },
       remaining_resources: {
         plastic: row.remaining_plastic,
         mushroom: row.remaining_mushroom,
         plasma: row.remaining_plasma,
+        water: row.remaining_water,
       },
     })
   }
@@ -479,11 +490,13 @@ export class PostgresReportRepository
         plastic: row.plastic,
         mushroom: row.mushroom,
         plasma: row.plasma,
+        water: row.water,
       },
       remaining_resources: {
         plastic: row.remaining_plastic,
         mushroom: row.remaining_mushroom,
         plasma: row.remaining_plasma,
+        water: row.remaining_water,
       },
     })
   }
@@ -505,6 +518,8 @@ export class PostgresReportRepository
       remaining_plastic: entity.remaining_resources.plastic,
       remaining_mushroom: entity.remaining_resources.mushroom,
       remaining_plasma: entity.remaining_resources.plasma,
+      water: entity.resources.water,
+      remaining_water: entity.remaining_resources.water,
     }
   }
 }

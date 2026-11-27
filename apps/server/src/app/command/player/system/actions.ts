@@ -131,6 +131,7 @@ function canAfford(stock: Resource, cost: Resource): boolean {
   return stock.plastic >= cost.plastic
     && stock.mushroom >= cost.mushroom
     && stock.plasma >= cost.plasma
+    && stock.water >= cost.water
 }
 
 function sameCoordinates(left: Coordinates, right: Coordinates): boolean {
@@ -474,6 +475,7 @@ async function tryRecruit(player_id: string): Promise<Record<string, unknown> | 
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     }
   const combat_hints = combatRecruitHints({
     army_counts,

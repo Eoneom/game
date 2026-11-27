@@ -66,5 +66,23 @@ export const BuildingRequirement: Record<BuildingCode, RequirementValue> = {
         level: 2
       }
     ]
+  },
+  [BuildingCode.WATER_PURIFIER]: {
+    buildings: [],
+    technologies: [
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 3
+      }
+    ]
+  },
+  [BuildingCode.TRADING_POST]: {
+    buildings: [],
+    technologies: [
+      {
+        code: TechnologyCode.ARCHITECTURE,
+        level: 2
+      }
+    ]
   }
 }

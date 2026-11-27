@@ -411,8 +411,24 @@ describe('TroopService', () => {
   describe('getTransportLoad', () => {
     it('counts plasma as 100 times heavier than plastic or mushroom', () => {
       assert.strictEqual(TroopService.getTransportLoad({
-        resources: { plastic: 10, mushroom: 5, plasma: 2 }
+        resources: {
+          plastic: 10,
+          mushroom: 5,
+          plasma: 2,
+          water: 0,
+        }
       }), 215)
+    })
+
+    it('counts water as 2 times heavier than plastic or mushroom (slice 035)', () => {
+      assert.strictEqual(TroopService.getTransportLoad({
+        resources: {
+          plastic: 10,
+          mushroom: 0,
+          plasma: 0,
+          water: 30,
+        }
+      }), 70)
     })
   })
 
@@ -421,7 +437,12 @@ describe('TroopService', () => {
       assert.throws(
         () => TroopService.assertTransportResources({
           action: MovementAction.TRANSPORT,
-          resources: { plastic: 0, mushroom: 0, plasma: 3 },
+          resources: {
+            plastic: 0,
+            mushroom: 0,
+            plasma: 3,
+            water: 0,
+          },
           move_troops: [{ code: TroopCode.EXPLORER, count: 1 }],
         }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
@@ -431,9 +452,43 @@ describe('TroopService', () => {
     it('allows plasma that fits within weighted capacity', () => {
       assert.doesNotThrow(() => TroopService.assertTransportResources({
         action: MovementAction.TRANSPORT,
-        resources: { plastic: 0, mushroom: 0, plasma: 2 },
+        resources: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 2,
+          water: 0,
+        },
         move_troops: [{ code: TroopCode.EXPLORER, count: 1 }],
       }))
+    })
+
+    it('accepts a water-only cargo and weighs it at 2 per unit (slice 035)', () => {
+      const move_troops = [
+        {
+          code: TroopCode.EXPLORER,
+          count: 1,
+        },
+      ]
+      const capacity = TroopService.getTotalTransportCapacity({ troops: move_troops })
+      const water_only = (water: number) => ({
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water,
+      })
+      assert.doesNotThrow(() => TroopService.assertTransportResources({
+        action: MovementAction.TRANSPORT,
+        resources: water_only(Math.floor(capacity / 2)),
+        move_troops,
+      }))
+      assert.throws(
+        () => TroopService.assertTransportResources({
+          action: MovementAction.TRANSPORT,
+          resources: water_only(Math.floor(capacity / 2) + 1),
+          move_troops,
+        }),
+        new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
+      )
     })
   })
 

@@ -47,6 +47,7 @@ export async function finishTroopTransportMovement({
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     }
 
     const deposit_target = await resolveOwnedDepositTarget({

@@ -241,7 +241,12 @@ export class TroopService {
     destination,
     player_id,
     action,
-    resources = { plastic: 0, mushroom: 0, plasma: 0 },
+    resources = {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 0,
+    },
     combat_strategy = null,
     propulsion_level = 0,
   }: {
@@ -334,6 +339,7 @@ export class TroopService {
       resources.plastic * resource_transport_weight.plastic
       + resources.mushroom * resource_transport_weight.mushroom
       + resources.plasma * resource_transport_weight.plasma
+      + resources.water * resource_transport_weight.water
     )
   }
 
@@ -346,10 +352,13 @@ export class TroopService {
     resources: Resource
     move_troops: TroopCount[]
   }): void {
-    const total = resources.plastic + resources.mushroom + resources.plasma
+    const total = resources.plastic + resources.mushroom + resources.plasma + resources.water
     const load = this.getTransportLoad({ resources })
     const has_resources = total > 0
-    const has_negative = resources.plastic < 0 || resources.mushroom < 0 || resources.plasma < 0
+    const has_negative = resources.plastic < 0
+      || resources.mushroom < 0
+      || resources.plasma < 0
+      || resources.water < 0
 
     if (has_negative) {
       throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)

@@ -69,20 +69,32 @@ const NO_SHELTER: Resource = {
   plastic: 0,
   mushroom: 0,
   plasma: 0,
+  water: 0,
 }
 
 /**
- * Carriers take `floor(max(0, stock − sheltered) × ratio)` of each resource, plastic → mushroom → plasma,
- * until their capacity runs out. Only city targets have a shelter (slice 028).
+ * Carriers take `floor(max(0, stock − sheltered) × ratio)` of each resource, plastic → mushroom → plasma → water
+ * (slice 035), until their capacity runs out. Only city targets have a shelter (slice 028).
+ * Capacity counts units, not transport weight, as for plasma.
  */
 function lootFromStock(stock: ResourceStockEntity, capacity: number, sheltered: Resource = NO_SHELTER): {
   loot: Resource
   stock: ResourceStockEntity
 } {
   let remaining = capacity
-  const loot: Resource = { plastic: 0, mushroom: 0, plasma: 0 }
-  const keys = ['plastic', 'mushroom', 'plasma'] as const
-  const next = { plastic: stock.plastic, mushroom: stock.mushroom, plasma: stock.plasma }
+  const loot: Resource = { ...NO_SHELTER }
+  const keys = [
+    'plastic',
+    'mushroom',
+    'plasma',
+    'water',
+  ] as const
+  const next = {
+    plastic: stock.plastic,
+    mushroom: stock.mushroom,
+    plasma: stock.plasma,
+    water: stock.water,
+  }
 
   for (const key of keys) {
     const unsheltered = Math.max(0, next[key] - sheltered[key])
@@ -101,9 +113,11 @@ function lootFromStock(stock: ResourceStockEntity, capacity: number, sheltered: 
       plastic: next.plastic,
       mushroom: next.mushroom,
       plasma: next.plasma,
+      water: next.water,
       last_plastic_gather: stock.last_plastic_gather,
       last_mushroom_gather: stock.last_mushroom_gather,
       last_plasma_gather: stock.last_plasma_gather,
+      last_water_gather: stock.last_water_gather,
     }),
   }
 }
@@ -183,11 +197,12 @@ export async function applyBattleOutcomes({
       loot_applied: false,
       attacker_retreated: false,
     }
-    let loot: Resource = { plastic: 0, mushroom: 0, plasma: 0 }
+    let loot: Resource = { ...NO_SHELTER }
     let sheltered: Resource = {
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     }
 
     const troop_deletes: string[] = []
@@ -231,9 +246,10 @@ export async function applyBattleOutcomes({
             plastic: Math.min(stock.plastic, city_sheltered.plastic),
             mushroom: Math.min(stock.mushroom, city_sheltered.mushroom),
             plasma: Math.min(stock.plasma, city_sheltered.plasma),
+            water: Math.min(stock.water, city_sheltered.water),
           }
           const result = lootFromStock(stock, capacity, city_sheltered)
-          if (result.loot.plastic + result.loot.mushroom + result.loot.plasma > 0) {
+          if (result.loot.plastic + result.loot.mushroom + result.loot.plasma + result.loot.water > 0) {
             loot = result.loot
             stock_update = result.stock
             outcome.loot_applied = true

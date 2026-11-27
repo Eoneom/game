@@ -18,9 +18,11 @@ export class ResourceStockEntity extends BaseEntity {
   readonly plastic: number
   readonly mushroom: number
   readonly plasma: number
+  readonly water: number
   readonly last_plastic_gather: number
   readonly last_mushroom_gather: number
   readonly last_plasma_gather: number
+  readonly last_water_gather: number
 
   private constructor(props: ResourceStockEntityProps) {
     super({ id: props.id })
@@ -28,9 +30,11 @@ export class ResourceStockEntity extends BaseEntity {
     this.plastic = props.plastic
     this.mushroom = props.mushroom
     this.plasma = props.plasma
+    this.water = props.water
     this.last_plastic_gather = props.last_plastic_gather
     this.last_mushroom_gather = props.last_mushroom_gather
     this.last_plasma_gather = props.last_plasma_gather
+    this.last_water_gather = props.last_water_gather
   }
 
   static create(props: ResourceStockEntityProps): ResourceStockEntity {
@@ -150,9 +154,11 @@ export class ResourceStockEntity extends BaseEntity {
       plastic: this.plastic,
       mushroom: this.mushroom,
       plasma: this.plasma,
+      water: this.water,
       last_plastic_gather: this.last_plastic_gather,
       last_mushroom_gather: this.last_mushroom_gather,
-      last_plasma_gather: this.last_plasma_gather
+      last_plasma_gather: this.last_plasma_gather,
+      last_water_gather: this.last_water_gather
     }
   }
 }

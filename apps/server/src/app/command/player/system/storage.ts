@@ -104,6 +104,12 @@ export function shouldSystemUpgradeCityWall<
   return city_wall_level < capital_city_wall_level
 }
 
+/** System players never trade, so they build neither the water purifier nor the trading post (slice 035). */
+const SYSTEM_EXCLUDED_BUILDING_CODES: ReadonlySet<BuildingCode> = new Set([
+  BuildingCode.WATER_PURIFIER,
+  BuildingCode.TRADING_POST,
+])
+
 const CORE_PRODUCTION_BUILDING_CODES = [
   BuildingCode.RECYCLING_PLANT,
   BuildingCode.MUSHROOM_FARM,
@@ -442,7 +448,9 @@ export function sortBuildingsForSystemUpgrade<
     recycling_plant_level,
   } = getCoreProductionLevels(buildings)
 
-  return [ ...buildings ].sort((left, right) => {
+  const candidates = buildings.filter(building => !SYSTEM_EXCLUDED_BUILDING_CODES.has(building.code))
+
+  return candidates.sort((left, right) => {
     const rank_difference = systemUpgradeRank({
       building_code: left.code,
       resource_stock,
@@ -506,6 +514,8 @@ export function resourcesForTransportToDestination({
     plastic: Math.min(origin_stock.plastic, destination_space_remaining.plastic),
     mushroom: Math.min(origin_stock.mushroom, destination_space_remaining.mushroom),
     plasma: origin_stock.plasma,
+    // System players never move water (slice 035).
+    water: 0,
   }
 }
 

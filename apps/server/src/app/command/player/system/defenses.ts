@@ -51,7 +51,7 @@ function affordableCount({
   const budget = (key: keyof Resource): number => unit_cost[key] > 0
     ? Math.floor((stock[key] * SYSTEM_DEFENSE_STOCK_SHARE) / unit_cost[key])
     : Number.POSITIVE_INFINITY
-  return Math.max(0, Math.min(budget('plastic'), budget('mushroom'), budget('plasma')))
+  return Math.max(0, Math.min(budget('plastic'), budget('mushroom'), budget('plasma'), budget('water')))
 }
 
 /**

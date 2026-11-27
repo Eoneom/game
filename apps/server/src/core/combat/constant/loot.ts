@@ -5,4 +5,5 @@ export const combat_loot_ratio: Resource = {
   plastic: 0.5,
   mushroom: 0.5,
   plasma: 0.25,
+  water: 0.25,
 }

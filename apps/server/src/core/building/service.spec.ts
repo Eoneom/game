@@ -3,6 +3,11 @@ import { BuildingCode } from '#core/building/constant/code'
 import { BOOTSTRAP_LEVEL_ONE_BUILDING_CODES } from '#core/building/constant/initial-level'
 import { BuildingService } from '#core/building/service'
 import { WorldService } from '#core/world/service'
+import {
+  isConsumingBuildingCode,
+  isProductionBuildingCode
+} from '#core/building/helper'
+import { gameTimeScale } from '#shared/game-time-scale'
 
 describe('BuildingService.getEnergy', () => {
   it('returns 0 at level 0', () => {
@@ -195,6 +200,82 @@ describe('BuildingService.getEarningsBySecond', () => {
   })
 })
 
+describe('BuildingService water purifier (slice 035)', () => {
+  const coefficients = {
+    plastic: 1,
+    mushroom: 1,
+    plasma: 1,
+    water: 1
+  }
+
+  it('produces nothing at level 0', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 0,
+      coefficients
+    }), 0)
+  })
+
+  it('produces 0.05 water/s at level 1 and ×1.15 per level, game time scaled', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 1,
+      coefficients
+    }), Math.round(0.05 * gameTimeScale * 100) / 100)
+    const per_game_second = Math.round(0.05 * Math.pow(1.15, 4) * 100) / 100
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 5,
+      coefficients
+    }), Math.round(per_game_second * gameTimeScale * 100) / 100)
+  })
+
+  it('ignores cell coefficients (fixed at 1)', () => {
+    assert.strictEqual(BuildingService.getEarningsBySecond({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 3,
+      coefficients: {
+        plastic: 9,
+        mushroom: 9,
+        plasma: 9,
+        water: 9
+      }
+    }), BuildingService.getEarningsBySecond({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 3,
+      coefficients
+    }))
+  })
+
+  it('consumes 40 energy at level 1, ×1.25 per level', () => {
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 1
+    }), 40)
+    assert.strictEqual(BuildingService.getEnergyConsumption({
+      code: BuildingCode.WATER_PURIFIER,
+      level: 3
+    }), Math.round(40 * Math.pow(1.25, 2)))
+  })
+
+  it('is a production building and the trading post consumes no energy', () => {
+    assert.strictEqual(isProductionBuildingCode(BuildingCode.WATER_PURIFIER), true)
+    assert.strictEqual(isConsumingBuildingCode(BuildingCode.WATER_PURIFIER), true)
+    assert.strictEqual(isProductionBuildingCode(BuildingCode.TRADING_POST), false)
+    assert.strictEqual(isConsumingBuildingCode(BuildingCode.TRADING_POST), false)
+  })
+
+  it('creates both buildings at level 0 in a new city', () => {
+    const buildings = BuildingService.init({ city_id: 'city-id' })
+    for (const code of [
+      BuildingCode.WATER_PURIFIER,
+      BuildingCode.TRADING_POST
+    ]) {
+      assert.strictEqual(buildings.find(building => building.code === code)?.level, 0)
+    }
+  })
+})
+
 describe('BuildingService.getProductionEnergyRatio', () => {
   it('returns 1 when production consumption is 0', () => {
     assert.strictEqual(BuildingService.getProductionEnergyRatio({
@@ -254,7 +335,8 @@ describe('BuildingService.getShelteredResources', () => {
     assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 0 }), {
       plastic: 0,
       mushroom: 0,
-      plasma: 0
+      plasma: 0,
+      water: 0
     })
   })
 
@@ -262,7 +344,8 @@ describe('BuildingService.getShelteredResources', () => {
     assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 1 }), {
       plastic: 2000,
       mushroom: 1500,
-      plasma: 200
+      plasma: 200,
+      water: 100
     })
   })
 
@@ -270,12 +353,14 @@ describe('BuildingService.getShelteredResources', () => {
     assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 3 }), {
       plastic: 5120,
       mushroom: 3840,
-      plasma: 512
+      plasma: 512,
+      water: 256
     })
     assert.deepStrictEqual(BuildingService.getShelteredResources({ level: 4 }), {
       plastic: 8192,
       mushroom: 6144,
-      plasma: 820
+      plasma: 820,
+      water: 410
     })
   })
 })

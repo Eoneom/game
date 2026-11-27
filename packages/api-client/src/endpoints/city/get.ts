@@ -14,6 +14,7 @@ export interface CityGetDataResponse {
   plastic: number
   mushroom: number
   plasma: number
+  water: number
   maximum_building_levels: number
   building_levels_used: number
   coordinates: Coordinates
@@ -21,21 +22,24 @@ export interface CityGetDataResponse {
     plastic: number
     mushroom: number
     plasma: number
+    water: number
   }
   pre_cell_earnings_per_second: {
     plastic: number
     mushroom: number
     plasma: number
+    water: number
   }
   cell_resource_coefficient: {
     plastic: number
     mushroom: number
   }
-  /** Économie technology multipliers (`advanced_recycling`, `agronomy`, `plasma_containment`); 1 = no bonus. */
+  /** Économie technology multipliers (`advanced_recycling`, `agronomy`, `plasma_containment`); 1 = no bonus (always 1 for water). */
   technology_production_multiplier: {
     plastic: number
     mushroom: number
     plasma: number
+    water: number
   }
   warehouses_capacity: {
     plastic: number

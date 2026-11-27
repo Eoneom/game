@@ -227,7 +227,8 @@ describe('systemTickActions', () => {
         resource: {
           plastic: 10,
           mushroom: 10,
-          plasma: 0
+          plasma: 0,
+          water: 0
         },
         duration: 1
       },
@@ -305,6 +306,7 @@ describe('systemTickActions', () => {
         plastic: 10,
         mushroom: 10,
         plasma: 0,
+        water: 0
       },
       duration: 1,
     }
@@ -385,7 +387,8 @@ describe('systemTickActions', () => {
       resource: {
         plastic: 10,
         mushroom: 10,
-        plasma: 0
+        plasma: 0,
+        water: 0
       },
       duration: 1
     }
@@ -477,7 +480,8 @@ describe('systemTickActions', () => {
         resource: {
           plastic: 10,
           mushroom: 10,
-          plasma: 0
+          plasma: 0,
+          water: 0
         },
         duration: 1
       },
@@ -545,7 +549,8 @@ describe('systemTickActions', () => {
         resource: {
           plastic: 10,
           mushroom: 10,
-          plasma: 0
+          plasma: 0,
+          water: 0
         },
         duration: 1
       },
@@ -623,7 +628,8 @@ describe('systemTickActions', () => {
       resource: {
         plastic: 10,
         mushroom: 10,
-        plasma: 0
+        plasma: 0,
+        water: 0
       },
       duration: 1
     }
@@ -757,6 +763,7 @@ describe('systemTickActions', () => {
             plastic: 1,
             mushroom: 0,
             plasma: 0,
+            water: 0
           },
           duration: 1,
         },
@@ -765,6 +772,7 @@ describe('systemTickActions', () => {
             plastic: 1,
             mushroom: 0,
             plasma: 0,
+            water: 0
           },
           duration: 1,
         },
@@ -849,6 +857,7 @@ describe('systemTickActions', () => {
               plastic: 100,
               mushroom: 0,
               plasma: 0,
+              water: 0
             },
             duration: 1,
           },
@@ -1881,6 +1890,7 @@ describe('systemTickActions', () => {
       plastic: 500,
       mushroom: 0,
       plasma: 0,
+      water: 0
     })
   })
 
@@ -1950,7 +1960,8 @@ describe('systemTickActions', () => {
     assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].resources, {
       plastic: 100,
       mushroom: 200,
-      plasma: 0
+      plasma: 0,
+      water: 0
     })
     assert.deepStrictEqual(vi.mocked(createTroopMovement).mock.calls[0][0].move_troops, [
       {

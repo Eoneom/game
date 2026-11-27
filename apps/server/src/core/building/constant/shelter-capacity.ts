@@ -18,5 +18,9 @@ export const underground_shelter_capacity: Record<keyof Resource, ShelterCapacit
   plasma: {
     base: 200,
     multiplier: 1.6
+  },
+  water: {
+    base: 100,
+    multiplier: 1.6
   }
 }

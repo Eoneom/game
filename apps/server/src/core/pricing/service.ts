@@ -59,7 +59,9 @@ export class PricingService {
       resource: {
         plastic: cost.plastic * count,
         mushroom: cost.mushroom * count,
-        plasma: (cost.plasma ?? 0) * count
+        plasma: (cost.plasma ?? 0) * count,
+        // Water is a currency: no content costs water (slice 035).
+        water: 0
       },
       duration: scaleGameDurationSeconds(reduced_duration)
     }
@@ -89,7 +91,9 @@ export class PricingService {
       resource: {
         plastic: cost.plastic * count,
         mushroom: cost.mushroom * count,
-        plasma: (cost.plasma ?? 0) * count
+        plasma: (cost.plasma ?? 0) * count,
+        // Water is a currency: no content costs water (slice 035).
+        water: 0
       },
       duration: scaleGameDurationSeconds(reduced_duration)
     }
@@ -122,7 +126,8 @@ export class PricingService {
       resource: {
         plastic: this.computeLevelResourceCost(plastic, level),
         mushroom: this.computeLevelResourceCost(mushroom, level),
-        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0
+        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0,
+        water: 0
       },
       duration: this.computeLevelDurationCost(duration, level, architecture_reduction)
     }
@@ -144,7 +149,8 @@ export class PricingService {
     return {
       plastic: Math.round(costs.resource.plastic/2),
       mushroom: Math.round(costs.resource.mushroom/2),
-      plasma: Math.round(costs.resource.plasma/2)
+      plasma: Math.round(costs.resource.plasma/2),
+      water: 0
     }
   }
 
@@ -166,7 +172,8 @@ export class PricingService {
     return {
       plastic: Math.round(costs.resource.plastic / 2),
       mushroom: Math.round(costs.resource.mushroom / 2),
-      plasma: Math.round(costs.resource.plasma / 2)
+      plasma: Math.round(costs.resource.plasma / 2),
+      water: 0
     }
   }
 
@@ -197,7 +204,8 @@ export class PricingService {
       resource: {
         plastic: this.computeLevelResourceCost(plastic, level),
         mushroom: this.computeLevelResourceCost(mushroom, level),
-        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0
+        plasma: plasma ? this.computeLevelResourceCost(plasma, level) : 0,
+        water: 0
       },
       duration: this.computeLevelDurationCost(duration, level, research_lab_reduction)
     }

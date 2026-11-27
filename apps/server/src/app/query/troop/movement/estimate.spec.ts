@@ -157,7 +157,8 @@ describe('TroopMovementEstimateQuery', () => {
       resources: {
         plastic: 0,
         mushroom: 0,
-        plasma: 0
+        plasma: 0,
+        water: 0
       } })
 
     expect(result.destination_capacity_exceeded).toBe(false)
@@ -235,5 +236,68 @@ describe('TroopMovementEstimateQuery', () => {
       } })
 
     expect(result.destination_capacity_exceeded).toBe(true)
+  })
+
+  it('returns destination_capacity_exceeded true when water goes to an outpost, which stores none (slice 035)', async () => {
+    vi.spyOn(shared, 'resolveOwnedDepositTarget').mockResolvedValue({
+      cell_id: destination_cell_id,
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+        water: 0,
+      },
+    })
+    vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 0,
+    } as never)
+
+    const result = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes: [ TroopCode.EXPLORER ],
+      player_id,
+      resources: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water: 10,
+      },
+    })
+
+    expect(result.destination_capacity_exceeded).toBe(true)
+  })
+
+  it('returns destination_capacity_exceeded false for water to a city (unlimited storage, slice 035)', async () => {
+    vi.spyOn(shared, 'resolveOwnedDepositTarget').mockResolvedValue({
+      cell_id: destination_cell_id,
+      warehouses_capacity: {
+        plastic: 1000,
+        mushroom: 1000,
+      },
+    })
+    vi.mocked(repository.resource_stock.getByCellId).mockResolvedValue({
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 1_000_000,
+    } as never)
+
+    const result = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes: [ TroopCode.EXPLORER ],
+      player_id,
+      resources: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water: 10,
+      },
+    })
+
+    expect(result.destination_capacity_exceeded).toBe(false)
   })
 })

@@ -241,17 +241,20 @@ describe('system transport helpers', () => {
         plastic: 500,
         mushroom: 200,
         plasma: 1,
+        water: 0,
       },
       persisted: {
         plastic: 120,
         mushroom: 200,
         plasma: 0,
+        water: 0,
       },
     })
     assert.deepStrictEqual(clamped, {
       plastic: 120,
       mushroom: 200,
       plasma: 0,
+      water: 0,
     })
   })
 

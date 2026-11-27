@@ -18,7 +18,8 @@ export function testCityCell({
     resource_coefficient: {
       plastic: 1,
       mushroom: 1,
-      plasma: 1
+      plasma: 1,
+      water: 1
     },
     solar_coefficient: 1
   })
@@ -29,18 +30,22 @@ export function testResourceStock({
   plastic,
   mushroom,
   plasma = 0,
+  water = 0,
   last_plastic_gather = 0,
   last_mushroom_gather = 0,
   last_plasma_gather = 0,
+  last_water_gather = 0,
   id = 'test-stock-id'
 }: {
   cell_id: string
   plastic: number
   mushroom: number
   plasma?: number
+  water?: number
   last_plastic_gather?: number
   last_mushroom_gather?: number
   last_plasma_gather?: number
+  last_water_gather?: number
   id?: string
 }): ResourceStockEntity {
   return ResourceStockEntity.create({
@@ -49,9 +54,11 @@ export function testResourceStock({
     plastic,
     mushroom,
     plasma,
+    water,
     last_plastic_gather,
     last_mushroom_gather,
-    last_plasma_gather
+    last_plasma_gather,
+    last_water_gather
   })
 }
 

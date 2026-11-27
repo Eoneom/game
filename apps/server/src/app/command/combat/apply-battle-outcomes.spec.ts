@@ -169,13 +169,14 @@ describe('applyBattleOutcomes loot', () => {
     vi.restoreAllMocks()
   })
 
-  it('loots half of plastic and mushroom but only a quarter of plasma', async () => {
+  it('loots half of plastic and mushroom but only a quarter of plasma and water', async () => {
     setup({
       stock: testResourceStock({
         cell_id: destination_cell.id,
         plastic: 1000,
         mushroom: 1000,
         plasma: 1000,
+        water: 1000,
       }),
       transporters: 1,
     })
@@ -193,21 +194,54 @@ describe('applyBattleOutcomes loot', () => {
       plastic: 500,
       mushroom: 500,
       plasma: 250,
+      water: 250,
     })
     assert.strictEqual(outcome.loot_applied, true)
     const updated_stock = stockUpdateOne.mock.calls[0][0]
     assert.strictEqual(updated_stock.plastic, 500)
     assert.strictEqual(updated_stock.mushroom, 500)
     assert.strictEqual(updated_stock.plasma, 750)
+    assert.strictEqual(updated_stock.water, 750)
   })
 
-  it('loots no plasma when plastic and mushroom exhaust carrier capacity', async () => {
+  it('loots water alone when it is the only stock (slice 035)', async () => {
+    setup({
+      stock: testResourceStock({
+        cell_id: destination_cell.id,
+        plastic: 0,
+        mushroom: 0,
+        water: 400,
+      }),
+      transporters: 1,
+    })
+
+    await applyBattleOutcomes({
+      battle_id: 'battle-id',
+      winner: BattleWinner.ATTACKER,
+      finished_at: 5_000,
+    })
+
+    const {
+      loot, outcome
+    } = vi.mocked(createBattleReports).mock.calls[0][0]
+    assert.deepStrictEqual(loot, {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 100,
+    })
+    assert.strictEqual(outcome.loot_applied, true)
+    assert.strictEqual(stockUpdateOne.mock.calls[0][0].water, 300)
+  })
+
+  it('loots no plasma nor water when plastic and mushroom exhaust carrier capacity', async () => {
     setup({
       stock: testResourceStock({
         cell_id: destination_cell.id,
         plastic: 12000,
         mushroom: 8000,
         plasma: 1000,
+        water: 1000,
       }),
       transporters: 1,
     })
@@ -223,8 +257,10 @@ describe('applyBattleOutcomes loot', () => {
       plastic: 6000,
       mushroom: 4000,
       plasma: 0,
+      water: 0,
     })
     assert.strictEqual(stockUpdateOne.mock.calls[0][0].plasma, 1000)
+    assert.strictEqual(stockUpdateOne.mock.calls[0][0].water, 1000)
   })
 
   describe('underground shelter', () => {
@@ -254,11 +290,13 @@ describe('applyBattleOutcomes loot', () => {
         plastic: 500,
         mushroom: 500,
         plasma: 250,
+        water: 0,
       })
       assert.deepStrictEqual(sheltered, {
         plastic: 0,
         mushroom: 0,
         plasma: 0,
+        water: 0,
       })
     })
 
@@ -269,6 +307,7 @@ describe('applyBattleOutcomes loot', () => {
           plastic: 3000,
           mushroom: 1000,
           plasma: 1000,
+          water: 1000,
         }),
         transporters: 1,
         shelter_level: 1,
@@ -284,16 +323,19 @@ describe('applyBattleOutcomes loot', () => {
         loot,
         sheltered,
       } = vi.mocked(createBattleReports).mock.calls[0][0]
-      // plastic: (3000 − 2000) × 50 %, mushroom fully sheltered (1500), plasma: (1000 − 200) × 25 %.
+      // plastic: (3000 − 2000) × 50 %, mushroom fully sheltered (1500), plasma: (1000 − 200) × 25 %,
+      // water: (1000 − 100) × 25 % (slice 035).
       assert.deepStrictEqual(loot, {
         plastic: 500,
         mushroom: 0,
         plasma: 200,
+        water: 225,
       })
       assert.deepStrictEqual(sheltered, {
         plastic: 2000,
         mushroom: 1000,
         plasma: 200,
+        water: 100,
       })
       expect(buildingGetLevel).toHaveBeenCalledWith({
         city_id,
@@ -303,6 +345,7 @@ describe('applyBattleOutcomes loot', () => {
       assert.strictEqual(updated_stock.plastic, 2500)
       assert.strictEqual(updated_stock.mushroom, 1000)
       assert.strictEqual(updated_stock.plasma, 800)
+      assert.strictEqual(updated_stock.water, 775)
     })
 
     it('does not shelter outposts', async () => {
@@ -343,6 +386,7 @@ describe('applyBattleOutcomes loot', () => {
         plastic: 0,
         mushroom: 0,
         plasma: 0,
+        water: 0,
       })
       expect(buildingGetLevel).not.toHaveBeenCalled()
     })

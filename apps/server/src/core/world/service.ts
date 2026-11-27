@@ -40,7 +40,8 @@ export class WorldService {
           coefficient: {
             plastic: plastic_coefficient,
             mushroom: mushroom_coefficient,
-            plasma: 1
+            plasma: 1,
+            water: 1
           },
           solar_coefficient
         }))

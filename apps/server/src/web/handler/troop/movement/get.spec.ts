@@ -95,7 +95,8 @@ describe('troopGetMovementHandler', () => {
         resources: {
           plastic: 0,
           mushroom: 0,
-          plasma: 0 },
+          plasma: 0,
+          water: 0 },
         troops: [
           {
             code: 'WARRIOR',

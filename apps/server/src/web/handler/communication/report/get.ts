@@ -67,11 +67,13 @@ const response_mapper = ({
       plastic: report.resources.plastic,
       mushroom: report.resources.mushroom,
       plasma: report.resources.plasma,
+      water: report.resources.water,
     },
     remaining_resources: {
       plastic: report.remaining_resources.plastic,
       mushroom: report.remaining_resources.mushroom,
       plasma: report.remaining_resources.plasma,
+      water: report.remaining_resources.water,
     },
     battle,
     battle_players,

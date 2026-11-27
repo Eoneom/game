@@ -133,7 +133,9 @@ describe('troopEstimateMovementHandler', () => {
       resources: {
         plastic: 10,
         mushroom: 5,
-        plasma: 0
+        plasma: 0,
+        // Omitted by the request body: normalized to 0 (slice 035).
+        water: 0
       } })
     expect(res.status).toHaveBeenCalledWith(200)
     expect(res.json).toHaveBeenCalledWith({

@@ -14,10 +14,11 @@ import { MovementEntity } from '#core/troop/movement/entity'
 import { Resource } from '#shared/resource'
 import { id } from '#shared/identification'
 
-const NOTHING_SHELTERED: Resource = {
+const NOTHING: Resource = {
   plastic: 0,
   mushroom: 0,
   plasma: 0,
+  water: 0,
 }
 
 export type CreatedBattleReports = {
@@ -56,7 +57,7 @@ export async function createBattleReports({
   movement,
   outcome,
   loot,
-  sheltered = NOTHING_SHELTERED,
+  sheltered = NOTHING,
   finished_at,
 }: {
   battle: BattleEntity
@@ -102,8 +103,8 @@ export async function createBattleReports({
     recorded_at: finished_at,
     origin: movement.origin,
     destination: movement.destination,
-    resources: outcome.loot_applied ? loot : { plastic: 0, mushroom: 0, plasma: 0 },
-    remaining_resources: { plastic: 0, mushroom: 0, plasma: 0 },
+    resources: outcome.loot_applied ? loot : NOTHING,
+    remaining_resources: NOTHING,
   })
 
   const defender_report = ReportEntity.create({
@@ -117,8 +118,8 @@ export async function createBattleReports({
     recorded_at: finished_at,
     origin: movement.origin,
     destination: movement.destination,
-    resources: { plastic: 0, mushroom: 0, plasma: 0 },
-    remaining_resources: { plastic: 0, mushroom: 0, plasma: 0 },
+    resources: NOTHING,
+    remaining_resources: NOTHING,
   })
 
   const owner_ids = reinforcementOwners(
@@ -135,13 +136,13 @@ export async function createBattleReports({
       recorded_at: finished_at,
       origin: movement.origin,
       destination: movement.destination,
-      resources: NOTHING_SHELTERED,
-      remaining_resources: NOTHING_SHELTERED,
+      resources: NOTHING,
+      remaining_resources: NOTHING,
     }),
     metadata: {
       ...shared,
       perspective: ReportPerspective.REINFORCEMENT,
-      sheltered: NOTHING_SHELTERED,
+      sheltered: NOTHING,
     },
   }))
 
@@ -151,7 +152,7 @@ export async function createBattleReports({
     attacker_metadata: {
       ...shared,
       perspective: ReportPerspective.ATTACKER,
-      sheltered: NOTHING_SHELTERED,
+      sheltered: NOTHING,
     },
     defender_metadata: {
       ...shared,

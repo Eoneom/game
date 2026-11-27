@@ -67,9 +67,11 @@ export class PostgresResourceStockRepository
       plastic: row.plastic,
       mushroom: row.mushroom,
       plasma: row.plasma,
+      water: row.water,
       last_plastic_gather: fromTimestampRequired(row.last_plastic_gather),
       last_mushroom_gather: fromTimestampRequired(row.last_mushroom_gather),
-      last_plasma_gather: fromTimestampRequired(row.last_plasma_gather)
+      last_plasma_gather: fromTimestampRequired(row.last_plasma_gather),
+      last_water_gather: fromTimestampRequired(row.last_water_gather)
     })
   }
 
@@ -80,9 +82,11 @@ export class PostgresResourceStockRepository
       plastic: entity.plastic,
       mushroom: entity.mushroom,
       plasma: entity.plasma,
+      water: entity.water,
       last_plastic_gather: toTimestampRequired(entity.last_plastic_gather),
       last_mushroom_gather: toTimestampRequired(entity.last_mushroom_gather),
-      last_plasma_gather: toTimestampRequired(entity.last_plasma_gather)
+      last_plasma_gather: toTimestampRequired(entity.last_plasma_gather),
+      last_water_gather: toTimestampRequired(entity.last_water_gather)
     }
   }
 }

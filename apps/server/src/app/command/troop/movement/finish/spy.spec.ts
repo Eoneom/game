@@ -213,7 +213,8 @@ describe('finishTroopSpyMovement', () => {
         getByCellId: vi.fn().mockResolvedValue({
           plastic: 1200.7,
           mushroom: 800.2,
-          plasma: 15.9 
+          plasma: 15.9,
+          water: 42.5
         }) 
       },
       exploration: {
@@ -387,7 +388,8 @@ describe('finishTroopSpyMovement', () => {
       assert.deepStrictEqual(metadata.resources, {
         plastic: 1200,
         mushroom: 800,
-        plasma: 15 
+        plasma: 15,
+        water: 42
       })
       assert.deepStrictEqual(metadata.buildings, [
         {

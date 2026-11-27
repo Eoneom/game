@@ -40,7 +40,8 @@ export type ProductionBuilding = BaseBuilding & {
 export const isProductionBuilding = (b: BaseBuilding): b is ProductionBuilding => {
   return b.code === BuildingCode.RECYCLING_PLANT ||
     b.code === BuildingCode.MUSHROOM_FARM ||
-    b.code === BuildingCode.CENTRAL_INDUCTOR
+    b.code === BuildingCode.CENTRAL_INDUCTOR ||
+    b.code === BuildingCode.WATER_PURIFIER
 }
 
 export type ConsumingBuilding = BaseBuilding & {
@@ -76,6 +77,7 @@ type ShelteredResources = {
   plastic: number
   mushroom: number
   plasma: number
+  water: number
 }
 
 export type ShelterBuilding = BaseBuilding & {

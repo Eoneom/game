@@ -11,5 +11,7 @@ export const building_order: Record<BuildingCode, number> = {
   [BuildingCode.CENTRAL_INDUCTOR]: 8,
   [BuildingCode.COMMAND_CENTER]: 9,
   [BuildingCode.UNDERGROUND_SHELTER]: 10,
-  [BuildingCode.CITY_WALL]: 11
+  [BuildingCode.CITY_WALL]: 11,
+  [BuildingCode.WATER_PURIFIER]: 12,
+  [BuildingCode.TRADING_POST]: 13
 }

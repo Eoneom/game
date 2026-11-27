@@ -384,6 +384,7 @@ async function collectSpyIntel({
       plastic: Math.floor(stock.plastic),
       mushroom: Math.floor(stock.mushroom),
       plasma: Math.floor(stock.plasma),
+      water: Math.floor(stock.water),
     }
   }
 

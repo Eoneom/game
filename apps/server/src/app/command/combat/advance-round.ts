@@ -72,6 +72,7 @@ export async function advanceCombatRound({
           plastic: 0,
           mushroom: 0,
           plasma: plasma_spent,
+          water: 0,
         },
       }))
     }

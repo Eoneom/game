@@ -76,11 +76,17 @@ describe('createBattleReports', () => {
         loot_applied: false,
         attacker_retreated: false,
       },
-      loot: { plastic: 0, mushroom: 0, plasma: 0 },
+      loot: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water: 0,
+      },
       sheltered: {
         plastic: 2000,
         mushroom: 400,
         plasma: 200,
+        water: 100,
       },
       finished_at: 2_000,
     })
@@ -97,11 +103,13 @@ describe('createBattleReports', () => {
       plastic: 2000,
       mushroom: 400,
       plasma: 200,
+      water: 100,
     })
     assert.deepStrictEqual(call.attacker_metadata.sheltered, {
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     })
   })
 })

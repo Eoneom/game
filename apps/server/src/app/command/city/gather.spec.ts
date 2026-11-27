@@ -182,6 +182,39 @@ describe('cityGather', () => {
     assert.strictEqual(updated_stock.mushroom, STARTING_MUSHROOM + time_elapsed * mushroom_earnings)
   })
 
+  it('should gather water from the purifier into the city stock, with no warehouse cap (slice 035)', async () => {
+    const gather_at_time = now()
+    vi.spyOn(AppService, 'getCityEarningsBySecond').mockResolvedValue({
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 0.5
+    })
+
+    const seeded = testResourceStock({
+      cell_id: city_cell.id,
+      plastic: 0,
+      mushroom: 0,
+      water: 100_000,
+      last_plastic_gather: gather_at_time,
+      last_mushroom_gather: gather_at_time,
+      last_plasma_gather: gather_at_time,
+      last_water_gather: gather_at_time - 20_000
+    })
+    repository.resource_stock.getByCellId = vi.fn().mockResolvedValue(seeded)
+
+    await cityGather({
+      city_id: city.id,
+      player_id,
+      gather_at_time
+    })
+
+    assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
+    const updated_stock = stockUpdateOne.mock.calls[0][0]
+    assert.strictEqual(updated_stock.water, 100_010)
+    assert.strictEqual(updated_stock.last_water_gather, gather_at_time)
+  })
+
   it('should emit CityResourcesGathered event after a successful gather', async () => {
     const time_elapsed = 2
     const gather_at_time = now()

@@ -4,7 +4,10 @@ import {
   Request,
   Response
 } from 'express'
-import { getPlayerIdFromContext } from '#web/helpers'
+import {
+  getPlayerIdFromContext,
+  getResourcesFromBody
+} from '#web/helpers'
 import {
   TroopMovementCreateRequest,
   TroopMovementCreateResponse
@@ -56,7 +59,7 @@ export const troopCreateMovementHandler = async (
       origin,
       destination,
       move_troops: troops,
-      resources: req.body.resources,
+      resources: getResourcesFromBody(req.body.resources),
       combat_strategy: req.body.combat_strategy,
     })
     const response: TroopMovementCreateResponse = {

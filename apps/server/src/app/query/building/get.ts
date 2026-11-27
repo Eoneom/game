@@ -139,7 +139,9 @@ export class BuildingGetQuery extends GenericQuery<BuildingGetQueryRequest, Buil
         ? technology_production_multiplier.plastic
         : building.code === BuildingCode.MUSHROOM_FARM
           ? technology_production_multiplier.mushroom
-          : technology_production_multiplier.plasma
+          : building.code === BuildingCode.WATER_PURIFIER
+            ? technology_production_multiplier.water
+            : technology_production_multiplier.plasma
 
       const base_current_production = BuildingService.getEarningsBySecond({
         level: building.level,

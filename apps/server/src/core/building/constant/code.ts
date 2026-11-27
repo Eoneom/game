@@ -10,4 +10,6 @@ export enum BuildingCode {
   COMMAND_CENTER = 'command_center',
   UNDERGROUND_SHELTER = 'underground_shelter',
   CITY_WALL = 'city_wall',
+  WATER_PURIFIER = 'water_purifier',
+  TRADING_POST = 'trading_post',
 }

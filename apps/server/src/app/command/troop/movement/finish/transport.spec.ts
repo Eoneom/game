@@ -53,7 +53,10 @@ describe('finishTroopTransportMovement', () => {
       resources: {
         plastic: 1000,
         mushroom: 500,
-        plasma: 0 } })
+        plasma: 0,
+        water: 0,
+      },
+    })
 
     troop = TroopEntity.create({
       id: troop_id,
@@ -69,8 +72,11 @@ describe('finishTroopTransportMovement', () => {
       plastic: 2900,
       mushroom: 0,
       plasma: 0,
+      water: 0,
       last_plastic_gather: now(),
-      last_mushroom_gather: now() })
+      last_mushroom_gather: now(),
+      last_water_gather: now(),
+    })
 
     movementDelete = vi.fn().mockResolvedValue(undefined)
     movementCreate = vi.fn().mockResolvedValue(undefined)
@@ -107,12 +113,12 @@ describe('finishTroopTransportMovement', () => {
     vi.spyOn(Factory, 'getJobQueue').mockReturnValue({ scheduleTroopMovementFinish } as unknown as JobQueue)
     vi.spyOn(AppService, 'getCityWarehousesCapacity').mockResolvedValue({
       plastic: 3000,
-      mushroom: 4000,
-      plasma: 0 })
+      mushroom: 4000 })
     vi.spyOn(AppService, 'getOutpostWarehousesCapacity').mockResolvedValue({
       plastic: 10000,
       mushroom: 10000,
-      plasma: 0 })
+      water: 0,
+    })
   })
 
   afterEach(() => {
@@ -150,17 +156,20 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 900,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.strictEqual(result.base_movement.id, base_movement.id)
     assert.strictEqual(reportCreate.mock.calls[0][0].type, ReportType.TRANSPORT)
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 100,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 900,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
   })
 
   it('should deposit full cargo into owned outpost', async () => {
@@ -184,15 +193,18 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
   })
 
   it('should bounce full cargo when destination is empty', async () => {
@@ -209,15 +221,18 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
   })
 
   it('should bounce full cargo when destination is not owned', async () => {
@@ -237,14 +252,74 @@ describe('finishTroopTransportMovement', () => {
     assert.deepStrictEqual(base_movement.resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].resources, {
       plastic: 0,
       mushroom: 0,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
     assert.deepStrictEqual(reportCreate.mock.calls[0][0].remaining_resources, {
       plastic: 1000,
       mushroom: 500,
-      plasma: 0 })
+      plasma: 0,
+      water: 0 })
+  })
+
+  it('should deposit all water into an owned city, warehouses notwithstanding (slice 035)', async () => {
+    repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
+      ...movement,
+      resources: {
+        plastic: 0,
+        mushroom: 0,
+        plasma: 0,
+        water: 300,
+      },
+    }))
+
+    await finishTroopTransportMovement({
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+
+    assert.strictEqual(stockUpdateOne.mock.calls[0][0].water, 300)
+    assert.strictEqual(reportCreate.mock.calls[0][0].resources.water, 300)
+    assert.strictEqual(movementCreate.mock.calls[0][0].resources.water, 0)
+  })
+
+  it('should bring water back from an owned outpost, which stores none (slice 035)', async () => {
+    repository.movement.getById = vi.fn().mockResolvedValue(MovementEntity.create({
+      ...movement,
+      resources: {
+        plastic: 100,
+        mushroom: 0,
+        plasma: 0,
+        water: 300,
+      },
+    }))
+    repository.city.searchByCell = vi.fn().mockResolvedValue(null)
+    repository.outpost.searchByCell = vi.fn().mockResolvedValue(OutpostEntity.create({
+      id: id(),
+      player_id,
+      cell_id: destination_cell_id,
+      type: OutpostType.PERMANENT,
+    }))
+
+    await finishTroopTransportMovement({
+      player_id,
+      movement_id,
+      arrived_at,
+    })
+
+    const updated_stock = stockUpdateOne.mock.calls[0][0]
+    assert.strictEqual(updated_stock.plastic, 3000)
+    assert.strictEqual(updated_stock.water, 0)
+    assert.deepStrictEqual(movementCreate.mock.calls[0][0].resources, {
+      plastic: 0,
+      mushroom: 0,
+      plasma: 0,
+      water: 300,
+    })
   })
 })

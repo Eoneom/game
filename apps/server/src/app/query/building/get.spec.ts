@@ -210,12 +210,14 @@ describe('BuildingGetQuery', () => {
       current_sheltered: {
         plastic: 2000,
         mushroom: 1500,
-        plasma: 200
+        plasma: 200,
+        water: 100
       },
       next_sheltered: {
         plastic: 3200,
         mushroom: 2400,
-        plasma: 320
+        plasma: 320,
+        water: 160
       }
     })
     expect(result.requirement).toEqual({

@@ -61,6 +61,7 @@ export type ReportBattleMetadata = {
     plastic: number
     mushroom: number
     plasma: number
+    water: number
   }
   /** Arsenal technology multipliers for each side's `combat`-role stacks (1 = no bonus). */
   attacker_modifiers?: ReportBattleModifiers

@@ -1,5 +1,8 @@
 import { BuildingCode } from '#core/building/constant/code'
-import { building_earnings } from '#core/building/constant/earnings'
+import {
+  building_earnings,
+  ProductionBuildingCode
+} from '#core/building/constant/earnings'
 import {
   building_energy,
   building_energy_consumption,
@@ -34,10 +37,13 @@ export class BuildingService {
     coefficients,
     technology_multiplier = 1,
   }: {
-    code: BuildingCode.MUSHROOM_FARM | BuildingCode.RECYCLING_PLANT | BuildingCode.CENTRAL_INDUCTOR
+    code: ProductionBuildingCode
     level: number
     coefficients: Resource
-    /** Économie technology bonus (slice 027), applied after cell coefficient and game time scale. */
+    /**
+     * Économie technology bonus (slice 027), applied after cell coefficient and game time scale.
+     * Water (slice 035) has none: callers pass 1.
+     */
     technology_multiplier?: number
   }): number {
     if (level === 0) {
@@ -50,6 +56,7 @@ export class BuildingService {
     } = building_earnings[code]
     const base_value = Math.pow(multiplier, level - 1) * base
 
+    // Plasma and water use a fixed cell coefficient of 1 until the map rework.
     const coefficient = code === BuildingCode.MUSHROOM_FARM
       ? coefficients.mushroom
       : code === BuildingCode.RECYCLING_PLANT
@@ -161,7 +168,8 @@ export class BuildingService {
       return {
         plastic: 0,
         mushroom: 0,
-        plasma: 0
+        plasma: 0,
+        water: 0
       }
     }
 
@@ -177,7 +185,8 @@ export class BuildingService {
     return {
       plastic: sheltered('plastic'),
       mushroom: sheltered('mushroom'),
-      plasma: sheltered('plasma')
+      plasma: sheltered('plasma'),
+      water: sheltered('water')
     }
   }
 

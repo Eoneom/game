@@ -80,7 +80,9 @@ export class TechnologyService {
       plasma: this.getBonusMultiplier({
         code: TechnologyCode.PLASMA_CONTAINMENT,
         level: plasma_containment_level
-      })
+      }),
+      // No Économie technology boosts water (slice 035).
+      water: 1
     }
   }
 }

@@ -9,9 +9,11 @@ export type ResourceStockState = {
   plastic: number
   mushroom: number
   plasma: number
+  water: number
   last_plastic_gather: number
   last_mushroom_gather: number
   last_plasma_gather: number
+  last_water_gather: number
 }
 
 export class ResourcesService {
@@ -43,9 +45,11 @@ export class ResourcesService {
         random 
       }),
       plasma: 0,
+      water: 0,
       last_plastic_gather: gather_at,
       last_mushroom_gather: gather_at,
-      last_plasma_gather: gather_at
+      last_plasma_gather: gather_at,
+      last_water_gather: gather_at
     }
   }
 
@@ -56,9 +60,11 @@ export class ResourcesService {
       plastic: STARTING_PLASTIC,
       mushroom: STARTING_MUSHROOM,
       plasma: 0,
+      water: 0,
       last_plastic_gather: gather_at,
       last_mushroom_gather: gather_at,
-      last_plasma_gather: gather_at
+      last_plasma_gather: gather_at,
+      last_water_gather: gather_at
     }
   }
 
@@ -69,9 +75,11 @@ export class ResourcesService {
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
       last_plastic_gather: gather_at,
       last_mushroom_gather: gather_at,
-      last_plasma_gather: gather_at
+      last_plasma_gather: gather_at,
+      last_water_gather: gather_at
     }
   }
 
@@ -104,7 +112,15 @@ export class ResourcesService {
       last_gather_time: state.last_plasma_gather,
       gather_at_time
     })
-    const updated = Boolean(plastic_earnings) || Boolean(mushroom_earnings) || Boolean(plasma_earnings)
+    const water_earnings = ResourcesService.getEarnings({
+      earnings_per_second: earnings_per_second.water,
+      last_gather_time: state.last_water_gather,
+      gather_at_time
+    })
+    const updated = Boolean(plastic_earnings)
+      || Boolean(mushroom_earnings)
+      || Boolean(plasma_earnings)
+      || Boolean(water_earnings)
     let next = state
 
     if (plastic_earnings) {
@@ -141,6 +157,14 @@ export class ResourcesService {
       }
     }
 
+    if (water_earnings) {
+      next = {
+        ...next,
+        last_water_gather: gather_at_time,
+        water: next.water + water_earnings
+      }
+    }
+
     return {
       next: ResourcesService.normalizeResourceStockState(next),
       updated 
@@ -154,6 +178,7 @@ export class ResourcesService {
       plastic: Math.floor(state.plastic),
       mushroom: Math.floor(state.mushroom),
       plasma: Math.floor(state.plasma),
+      water: Math.floor(state.water),
     }
   }
 
@@ -167,7 +192,8 @@ export class ResourcesService {
     if (
       state.plastic < resource.plastic ||
       state.mushroom < resource.mushroom ||
-      state.plasma < resource.plasma
+      state.plasma < resource.plasma ||
+      state.water < resource.water
     ) {
       throw new Error(CityError.NOT_ENOUGH_RESOURCES)
     }
@@ -175,7 +201,8 @@ export class ResourcesService {
       ...state,
       plastic: state.plastic - resource.plastic,
       mushroom: state.mushroom - resource.mushroom,
-      plasma: state.plasma - resource.plasma
+      plasma: state.plasma - resource.plasma,
+      water: state.water - resource.water
     }
   }
 
@@ -190,7 +217,8 @@ export class ResourcesService {
       ...state,
       plastic: state.plastic + resource.plastic,
       mushroom: state.mushroom + resource.mushroom,
-      plasma: state.plasma + resource.plasma
+      plasma: state.plasma + resource.plasma,
+      water: state.water + resource.water
     }
   }
 
@@ -216,23 +244,30 @@ export class ResourcesService {
       Math.max(0, warehouses_capacity.mushroom - state.mushroom)
     )
     const plasma_deposited = resource.plasma
+    // Cities store unlimited water; outposts pass `water: 0` (they do not store water, slice 035).
+    const water_deposited = warehouses_capacity.water === undefined
+      ? resource.water
+      : Math.min(resource.water, Math.max(0, warehouses_capacity.water - state.water))
 
     return {
       next: {
         ...state,
         plastic: state.plastic + plastic_deposited,
         mushroom: state.mushroom + mushroom_deposited,
-        plasma: state.plasma + plasma_deposited
+        plasma: state.plasma + plasma_deposited,
+        water: state.water + water_deposited
       },
       deposited: {
         plastic: plastic_deposited,
         mushroom: mushroom_deposited,
-        plasma: plasma_deposited
+        plasma: plasma_deposited,
+        water: water_deposited
       },
       remaining: {
         plastic: resource.plastic - plastic_deposited,
         mushroom: resource.mushroom - mushroom_deposited,
-        plasma: 0
+        plasma: 0,
+        water: resource.water - water_deposited
       }
     }
   }
@@ -263,8 +298,9 @@ export class ResourcesService {
     capacity: number
     current_resource: number
   }): number {
+    // A stock already above capacity (e.g. an exchange delivery, slice 035) gains nothing and never shrinks.
     const capped = earnings + current_resource > capacity
-      ? capacity - current_resource
+      ? Math.max(0, capacity - current_resource)
       : earnings
     return Math.floor(capped)
   }

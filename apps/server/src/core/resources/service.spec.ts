@@ -38,9 +38,11 @@ describe('ResourcesService', () => {
     plastic: STARTING_PLASTIC,
     mushroom: STARTING_MUSHROOM,
     plasma: 0,
+    water: 0,
     last_plastic_gather: 1_000,
     last_mushroom_gather: 1_000,
-    last_plasma_gather: 1_000
+    last_plasma_gather: 1_000,
+    last_water_gather: 1_000
   }
 
   describe('purchaseResourceStock', () => {
@@ -224,6 +226,100 @@ describe('ResourcesService', () => {
       assert.strictEqual(updated, true)
       assert.strictEqual(next.plasma, 10_000 + 500)
       assert.strictEqual(next.last_plasma_gather, state.last_plasma_gather + 5_000)
+    })
+
+    it('gathers water without warehouse cap (slice 035)', () => {
+      const state = {
+        ...base_state,
+        water: 50_000
+      }
+      const {
+        next, updated
+      } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: state.last_water_gather + 10_000,
+        earnings_per_second: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 0,
+          water: 0.05
+        },
+        warehouses_capacity: {
+          plastic: 1,
+          mushroom: 1
+        }
+      })
+      // floor(10 s × 0.05) = 0: nothing yet, and the last gather time is kept so the fraction is not lost.
+      assert.strictEqual(updated, false)
+      assert.strictEqual(next.water, 50_000)
+      assert.strictEqual(next.last_water_gather, state.last_water_gather)
+      const later = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: state.last_water_gather + 100_000,
+        earnings_per_second: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 0,
+          water: 0.05
+        },
+        warehouses_capacity: {
+          plastic: 1,
+          mushroom: 1
+        }
+      })
+      assert.strictEqual(later.updated, true)
+      assert.strictEqual(later.next.water, 50_005)
+      assert.strictEqual(later.next.last_water_gather, state.last_water_gather + 100_000)
+    })
+
+    it('produces nothing and never shrinks a stock already above warehouse capacity (slice 035)', () => {
+      const state = {
+        ...base_state,
+        plastic: 12_000,
+        mushroom: 500
+      }
+      const {
+        next, updated
+      } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: state.last_plastic_gather + 10_000,
+        earnings_per_second: {
+          plastic: 100,
+          mushroom: 100,
+          plasma: 0,
+          water: 0
+        },
+        warehouses_capacity: {
+          plastic: 10_000,
+          mushroom: 10_000
+        }
+      })
+      assert.strictEqual(updated, true)
+      assert.strictEqual(next.plastic, 12_000)
+      assert.strictEqual(next.last_plastic_gather, state.last_plastic_gather + 10_000)
+      assert.strictEqual(next.mushroom, 1_500)
+    })
+
+    it('fills up to capacity exactly when the stock sits at capacity (slice 035)', () => {
+      const state = {
+        ...base_state,
+        plastic: 10_000
+      }
+      const { next } = ResourcesService.gatherResourceStock({
+        state,
+        gather_at_time: state.last_plastic_gather + 10_000,
+        earnings_per_second: {
+          plastic: 100,
+          mushroom: 0,
+          plasma: 0,
+          water: 0
+        },
+        warehouses_capacity: {
+          plastic: 10_000,
+          mushroom: 10_000
+        }
+      })
+      assert.strictEqual(next.plastic, 10_000)
     })
   })
 

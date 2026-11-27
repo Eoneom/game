@@ -29,12 +29,14 @@ export function resourceFromStockRow(
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     }
   }
   return {
     plastic: stock_row.plastic,
     mushroom: stock_row.mushroom,
     plasma: stock_row.plasma,
+    water: stock_row.water,
   }
 }
 
@@ -74,6 +76,7 @@ export function clampResourcesToTransportCapacity({
       plastic: 0,
       mushroom: 0,
       plasma: 0,
+      water: 0,
     }
   }
 
@@ -92,6 +95,8 @@ export function clampResourcesToTransportCapacity({
     plastic,
     mushroom,
     plasma,
+    // System players never move water (slice 035).
+    water: 0,
   }
 }
 
@@ -206,6 +211,7 @@ export function clampResourcesToPersistedStock({
     plastic: Math.min(resources.plastic, persisted.plastic),
     mushroom: Math.min(resources.mushroom, persisted.mushroom),
     plasma: Math.min(resources.plasma, persisted.plasma),
+    water: Math.min(resources.water, persisted.water),
   }
 }
 
@@ -228,6 +234,7 @@ export async function projectPermanentOutpostResourceStocks({
         plastic: 0,
         mushroom: 0,
         plasma: 0,
+        water: 0,
       }
     }
     if (outpost.type !== OutpostType.PERMANENT) {
@@ -235,6 +242,7 @@ export async function projectPermanentOutpostResourceStocks({
         plastic: stock_row.plastic,
         mushroom: stock_row.mushroom,
         plasma: stock_row.plasma,
+        water: stock_row.water,
       }
     }
     const production = await AppService.getOutpostProductionBreakdown({ outpost_id: outpost.id })
@@ -247,6 +255,7 @@ export async function projectPermanentOutpostResourceStocks({
       plastic: stock.plastic,
       mushroom: stock.mushroom,
       plasma: stock.plasma,
+      water: stock.water,
     }
   }))
 }

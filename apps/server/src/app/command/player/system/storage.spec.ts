@@ -121,6 +121,39 @@ describe('system player storage policy', () => {
     }), false)
   })
 
+  it('never ranks the water purifier nor the trading post (slice 035)', () => {
+    const sorted = sortBuildingsForSystemUpgrade({
+      buildings: [
+        {
+          id: 'purifier',
+          code: BuildingCode.WATER_PURIFIER,
+          level: 0
+        },
+        {
+          id: 'trading-post',
+          code: BuildingCode.TRADING_POST,
+          level: 0
+        },
+        {
+          id: 'farm',
+          code: BuildingCode.MUSHROOM_FARM,
+          level: 1
+        },
+      ],
+      resource_stock: {
+        plastic: 100_000,
+        mushroom: 100_000,
+        plasma: 0,
+        water: 0
+      },
+      warehouses_capacity: {
+        plastic: 1_000_000,
+        mushroom: 1_000_000
+      }
+    })
+    assert.deepStrictEqual(sorted.map(building => building.code), [ BuildingCode.MUSHROOM_FARM ])
+  })
+
   it('bootstraps core production before a pressured warehouse when levels are still 0', () => {
     const sorted = sortBuildingsForSystemUpgrade({
       buildings: [
@@ -573,7 +606,8 @@ describe('system player storage policy', () => {
       origin_stock: {
         plastic: 500,
         mushroom: 800,
-        plasma: 3
+        plasma: 3,
+        water: 50
       },
       destination_space_remaining: {
         plastic: 100,
@@ -582,7 +616,9 @@ describe('system player storage policy', () => {
     }), {
       plastic: 100,
       mushroom: 200,
-      plasma: 3
+      plasma: 3,
+      // System players never move water (slice 035).
+      water: 0
     })
   })
 })

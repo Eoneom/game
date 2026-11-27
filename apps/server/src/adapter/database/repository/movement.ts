@@ -93,6 +93,7 @@ export class PostgresMovementRepository
         plastic: row.plastic,
         mushroom: row.mushroom,
         plasma: row.plasma,
+        water: row.water,
       },
       combat_strategy: row.combat_strategy as CombatStrategy | null,
     })
@@ -110,6 +111,7 @@ export class PostgresMovementRepository
       plastic: entity.resources.plastic,
       mushroom: entity.resources.mushroom,
       plasma: entity.resources.plasma,
+      water: entity.resources.water,
       combat_strategy: entity.combat_strategy,
     }
   }

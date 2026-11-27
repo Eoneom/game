@@ -369,9 +369,12 @@ describe('createTroopMovement', () => {
         plastic: 5000,
         mushroom: 5000,
         plasma: 10,
+        water: 40,
         last_plastic_gather: now(),
         last_mushroom_gather: now(),
-        last_plasma_gather: now() })
+        last_plasma_gather: now(),
+        last_water_gather: now(),
+      })
       stockUpdateOne = vi.fn().mockResolvedValue(undefined)
       repository = {
         ...repository,
@@ -397,7 +400,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 0,
             mushroom: 0,
-            plasma: 0
+            plasma: 0,
+            water: 0
           } }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_REQUIRED)
       )
@@ -419,7 +423,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 201,
             mushroom: 0,
-            plasma: 0
+            plasma: 0,
+            water: 0
           } }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
@@ -441,7 +446,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 0,
             mushroom: 0,
-            plasma: 3
+            plasma: 3,
+            water: 0
           } }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
@@ -462,7 +468,8 @@ describe('createTroopMovement', () => {
         resources: {
           plastic: 0,
           mushroom: 0,
-          plasma: 2
+          plasma: 2,
+          water: 0
         } })
 
       assert.strictEqual(movementCreate.mock.calls.length, 1)
@@ -470,11 +477,63 @@ describe('createTroopMovement', () => {
       assert.deepStrictEqual(movement.resources, {
         plastic: 0,
         mushroom: 0,
-        plasma: 2
+        plasma: 2,
+        water: 0
       })
       assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
       const updated = stockUpdateOne.mock.calls[0][0]
       assert.strictEqual(updated.plasma, 8)
+    })
+
+    it('should carry water, deduct it from the origin stock and store it as cargo (slice 035)', async () => {
+      await createTroopMovement({
+        player_id,
+        origin,
+        destination,
+        action: MovementAction.TRANSPORT,
+        move_troops: [
+          {
+            code: TroopCode.EXPLORER,
+            count: 1
+          }
+        ],
+        resources: {
+          plastic: 0,
+          mushroom: 0,
+          plasma: 0,
+          water: 30,
+        },
+      })
+
+      const movement = movementCreate.mock.calls[0][0]
+      assert.strictEqual(movement.resources.water, 30)
+      const updated = stockUpdateOne.mock.calls[0][0]
+      assert.strictEqual(updated.water, 10)
+    })
+
+    it('should reject water beyond the origin stock (slice 035)', async () => {
+      const { CityError } = await import('#core/city/error')
+      await assert.rejects(
+        createTroopMovement({
+          player_id,
+          origin,
+          destination,
+          action: MovementAction.TRANSPORT,
+          move_troops: [
+            {
+              code: TroopCode.EXPLORER,
+              count: 1
+            }
+          ],
+          resources: {
+            plastic: 0,
+            mushroom: 0,
+            plasma: 0,
+            water: 41,
+          },
+        }),
+        new RegExp(CityError.NOT_ENOUGH_RESOURCES)
+      )
     })
 
     it('should reject resources on non-transport actions', async () => {
@@ -493,7 +552,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 10,
             mushroom: 0,
-            plasma: 0
+            plasma: 0,
+            water: 0
           } }),
         new RegExp(TroopError.TRANSPORT_RESOURCES_NOT_ALLOWED)
       )
@@ -530,7 +590,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 100,
             mushroom: 0,
-            plasma: 0
+            plasma: 0,
+            water: 0
           }
         }),
         new RegExp(TroopError.MOVEMENT_LIMIT_REACHED)
@@ -563,7 +624,8 @@ describe('createTroopMovement', () => {
         resources: {
           plastic: 1000,
           mushroom: 500,
-          plasma: 0
+          plasma: 0,
+          water: 0
         } })
 
       assert.strictEqual(movementCreate.mock.calls.length, 1)
@@ -572,7 +634,8 @@ describe('createTroopMovement', () => {
       assert.deepStrictEqual(movement.resources, {
         plastic: 1000,
         mushroom: 500,
-        plasma: 0
+        plasma: 0,
+        water: 0
       })
       assert.strictEqual(stockUpdateOne.mock.calls.length, 1)
       const updated = stockUpdateOne.mock.calls[0][0]
@@ -623,7 +686,8 @@ describe('createTroopMovement', () => {
           resources: {
             plastic: 100,
             mushroom: 0,
-            plasma: 0
+            plasma: 0,
+            water: 0
           } }),
         new RegExp(CityError.NOT_ENOUGH_RESOURCES)
       )

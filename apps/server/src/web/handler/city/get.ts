@@ -74,6 +74,7 @@ const response_mapper = ({
     plastic: resource_stock.plastic,
     mushroom: resource_stock.mushroom,
     plasma: resource_stock.plasma,
+    water: resource_stock.water,
     energy,
     pre_cell_energy,
     neutral_photovoltaic_energy,
@@ -86,12 +87,14 @@ const response_mapper = ({
     earnings_per_second: {
       plastic: earnings_per_second.plastic,
       mushroom: earnings_per_second.mushroom,
-      plasma: earnings_per_second.plasma
+      plasma: earnings_per_second.plasma,
+      water: earnings_per_second.water
     },
     pre_cell_earnings_per_second: {
       plastic: pre_cell_earnings_per_second.plastic,
       mushroom: pre_cell_earnings_per_second.mushroom,
-      plasma: pre_cell_earnings_per_second.plasma
+      plasma: pre_cell_earnings_per_second.plasma,
+      water: pre_cell_earnings_per_second.water
     },
     cell_resource_coefficient: {
       plastic: cell_resource_coefficient.plastic,
@@ -100,7 +103,8 @@ const response_mapper = ({
     technology_production_multiplier: {
       plastic: technology_production_multiplier.plastic,
       mushroom: technology_production_multiplier.mushroom,
-      plasma: technology_production_multiplier.plasma
+      plasma: technology_production_multiplier.plasma,
+      water: technology_production_multiplier.water
     },
     warehouses_capacity: {
       plastic: warehouses_capacity.plastic,

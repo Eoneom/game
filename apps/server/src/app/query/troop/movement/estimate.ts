@@ -92,7 +92,7 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
     player_id: string
     resources?: Resource
   }): Promise<boolean> {
-    if (!resources || (resources.plastic === 0 && resources.mushroom === 0)) {
+    if (!resources || (resources.plastic === 0 && resources.mushroom === 0 && resources.water === 0)) {
       return false
     }
 
@@ -109,7 +109,11 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
       cell_id: deposit_target.cell_id,
     })
 
+    const water_capacity = deposit_target.warehouses_capacity.water
+
     return resources.plastic + stock.plastic > deposit_target.warehouses_capacity.plastic
       || resources.mushroom + stock.mushroom > deposit_target.warehouses_capacity.mushroom
+      // Outposts store no water (slice 035); cities have no water cap.
+      || (water_capacity !== undefined && resources.water + stock.water > water_capacity)
   }
 }

@@ -157,5 +157,33 @@ export const building_costs: Record<BuildingCode, LevelCosts> = {
       base: 150,
       multiplier: 1.7
     }
+  },
+  [BuildingCode.WATER_PURIFIER]: {
+    plastic: {
+      base: 2500,
+      multiplier: 1.7
+    },
+    mushroom: {
+      base: 2000,
+      multiplier: 1.7
+    },
+    duration: {
+      base: 200,
+      multiplier: 1.7
+    }
+  },
+  [BuildingCode.TRADING_POST]: {
+    plastic: {
+      base: 1500,
+      multiplier: 1.8
+    },
+    mushroom: {
+      base: 1500,
+      multiplier: 1.8
+    },
+    duration: {
+      base: 150,
+      multiplier: 1.8
+    }
   }
 }

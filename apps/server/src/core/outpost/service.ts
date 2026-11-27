@@ -33,7 +33,8 @@ export class OutpostService {
   static getWarehousesCapacity({ logistics_level }: { logistics_level: number }): WarehouseCapacity {
     return {
       plastic: Math.pow(outpost_capacity.plastic.multiplier, logistics_level) * outpost_capacity.plastic.base,
-      mushroom: Math.pow(outpost_capacity.mushroom.multiplier, logistics_level) * outpost_capacity.mushroom.base
+      mushroom: Math.pow(outpost_capacity.mushroom.multiplier, logistics_level) * outpost_capacity.mushroom.base,
+      water: 0
     }
   }
 }

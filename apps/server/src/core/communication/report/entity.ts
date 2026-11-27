@@ -13,6 +13,7 @@ const EMPTY_RESOURCES: Resource = {
   plastic: 0,
   mushroom: 0,
   plasma: 0,
+  water: 0,
 }
 
 type ReportEntityProps = BaseEntity & {

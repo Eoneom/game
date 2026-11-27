@@ -24,6 +24,7 @@ function resourceFromStock(stock: ResourceStockEntity): Resource {
     plastic: stock.plastic,
     mushroom: stock.mushroom,
     plasma: stock.plasma,
+    water: stock.water,
   }
 }
 
@@ -213,6 +214,7 @@ export async function listOngoingMovementsForPlayer({
         plastic: movement.resources.plastic,
         mushroom: movement.resources.mushroom,
         plasma: movement.resources.plasma,
+        water: movement.resources.water,
       },
       troops: TroopService.sortTroops({ troops }).map(troop => ({
         code: troop.code,
@@ -249,6 +251,7 @@ async function outpostSummary({
     plastic: 0,
     mushroom: 0,
     plasma: 0,
+    water: 0,
   }
   let warehouses_capacity: WarehouseCapacity = {
     plastic: 0,

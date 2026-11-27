@@ -20,6 +20,7 @@ export type ConsumingBuildingCode =
   | BuildingCode.RESEARCH_LAB
   | BuildingCode.CLONING_FACTORY
   | BuildingCode.COMMAND_CENTER
+  | BuildingCode.WATER_PURIFIER
 
 export const building_energy_consumption: Record<ConsumingBuildingCode, Energy> = {
   [BuildingCode.RECYCLING_PLANT]: {
@@ -45,6 +46,10 @@ export const building_energy_consumption: Record<ConsumingBuildingCode, Energy> 
   [BuildingCode.COMMAND_CENTER]: {
     base: 30,
     multiplier: 1.2
+  },
+  [BuildingCode.WATER_PURIFIER]: {
+    base: 40,
+    multiplier: 1.25
   }
 }
 

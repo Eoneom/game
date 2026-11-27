@@ -203,6 +203,7 @@ export interface Movement {
   plasma: Generated<number>;
   plastic: Generated<number>;
   player_id: string;
+  water: Generated<number>;
 }
 
 export interface Outpost {
@@ -394,8 +395,10 @@ export interface Report {
   remaining_mushroom: Generated<number>;
   remaining_plasma: Generated<number>;
   remaining_plastic: Generated<number>;
+  remaining_water: Generated<number>;
   type: string;
   was_read: Generated<boolean>;
+  water: Generated<number>;
 }
 
 export interface ReportBattle {
@@ -447,9 +450,11 @@ export interface ResourceStock {
   last_mushroom_gather: Timestamp;
   last_plasma_gather: Generated<Timestamp>;
   last_plastic_gather: Timestamp;
+  last_water_gather: Generated<Timestamp>;
   mushroom: number;
   plasma: Generated<number>;
   plastic: number;
+  water: Generated<number>;
 }
 
 export interface Technology {
