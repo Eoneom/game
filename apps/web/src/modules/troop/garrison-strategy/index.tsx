@@ -7,16 +7,12 @@ interface Props {
   strategy: CombatStrategy
   pending: boolean
   onChange: (strategy: CombatStrategy) => void
+  /** `false` drops the panel frame and title (outpost dashboard card, slice 042). */
+  framed?: boolean
 }
 
-export const GarrisonCombatStrategy: React.FC<Props> = ({ strategy, pending, onChange }) => (
-  <article className="surface-panel space-y-3 p-3">
-    <div>
-      <h2 className="m-0 text-heading text-amber">Défense de la garnison</h2>
-      <p className="m-0 mt-1 text-body text-amber-dim">
-        Stratégie appliquée par vos troupes stationnées ici lorsqu&apos;elles sont attaquées.
-      </p>
-    </div>
+export const GarrisonCombatStrategy: React.FC<Props> = ({ strategy, pending, onChange, framed = true }) => {
+  const control = (
     <MovementCreateCombatStrategy
       name="garrison_combat_strategy"
       legend="Stratégie défensive"
@@ -26,5 +22,21 @@ export const GarrisonCombatStrategy: React.FC<Props> = ({ strategy, pending, onC
         if (next !== strategy) onChange(next)
       }}
     />
-  </article>
-)
+  )
+
+  if (!framed) {
+    return control
+  }
+
+  return (
+    <article className="surface-panel space-y-3 p-3">
+      <div>
+        <h2 className="m-0 text-heading text-amber">Défense de la garnison</h2>
+        <p className="m-0 mt-1 text-body text-amber-dim">
+          Stratégie appliquée par vos troupes stationnées ici lorsqu&apos;elles sont attaquées.
+        </p>
+      </div>
+      {control}
+    </article>
+  )
+}

@@ -64,7 +64,7 @@ const App: React.FC = () => {
             <main
               id="workspace"
               tabIndex={-1}
-              className="workspace relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto border border-rust/55 bg-chrome p-6"
+              className="workspace @container relative flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto border border-rust/55 bg-chrome p-6"
             >
               <Outlet />
             </main>

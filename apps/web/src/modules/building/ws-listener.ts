@@ -5,6 +5,7 @@ import { queryClient } from '#helpers/query-client'
 import { translateError } from '#helpers/error-translations'
 import { buildingKeys } from '#building/hooks'
 import { cityKeys } from '#city/hooks'
+import { defenseKeys } from '#defense/hooks'
 import { troopKeys } from '#troop/hooks'
 import { activityKeys } from '#location/activity-hooks'
 
@@ -13,6 +14,8 @@ export function registerBuildingWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: buildingKeys.list(city_id) })
     queryClient.invalidateQueries({ queryKey: ['building', city_id] })
     queryClient.invalidateQueries({ queryKey: cityKeys.detail(city_id) })
+    // Enceinte level → defense capacity (city dashboard « Défense » / « Fortification », slice 042).
+    queryClient.invalidateQueries({ queryKey: defenseKeys.list(city_id) })
     queryClient.invalidateQueries({ queryKey: ['technology'] })
     queryClient.invalidateQueries({ queryKey: ['troop'] })
     queryClient.invalidateQueries({ queryKey: troopKeys.cityList(city_id) })

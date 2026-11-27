@@ -1,11 +1,11 @@
 import React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
-import { CityPage } from '#city/page'
+import { CityDashboard } from '#city/dashboard'
 
 const CityBaseRoute: React.FC = () => {
   const { cityId } = Route.useParams()
-  return <CityPage cityId={cityId} />
+  return <CityDashboard cityId={cityId} />
 }
 
 export const Route = createFileRoute('/city/$cityId/base/')({

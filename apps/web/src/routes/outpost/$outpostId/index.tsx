@@ -1,11 +1,11 @@
 import React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
-import { OutpostPage } from '#outpost/page'
+import { OutpostDashboard } from '#outpost/dashboard'
 
 const OutpostRoute: React.FC = () => {
   const { outpostId } = Route.useParams()
-  return <OutpostPage outpostId={outpostId} />
+  return <OutpostDashboard outpostId={outpostId} />
 }
 
 export const Route = createFileRoute('/outpost/$outpostId/')({
