@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { CombatStrategy, Coordinates, MovementAction, TroopCode, TroopListDataResponse } from '@eoneom/api-client'
+import { CombatStrategy, Coordinates, MovementAction, Resource, TroopCode, TroopListDataResponse } from '@eoneom/api-client'
 
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
@@ -223,7 +223,7 @@ export const useCreateMovement = () => {
       origin: Coordinates
       destination: Coordinates
       troops: { code: TroopCode; count: number }[]
-      resources?: { plastic: number; mushroom: number; plasma: number }
+      resources?: Resource
       combat_strategy?: CombatStrategy
     }) => {
       if (!token) throw new Error('no token')

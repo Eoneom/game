@@ -56,11 +56,21 @@ export const BuildingTranslations: Record<BuildingCode, BuildingTranslation> = {
   [BuildingCode.UNDERGROUND_SHELTER]: {
     name: 'Abri souterrain',
     description: 'Sous les ruines, des caves scellées où l\'on enterre une part des réserves avant que les pillards ne franchissent les murs.',
-    effect: 'Protège une quantité fixe de plastique, de champignons et de plasma contre le pillage'
+    effect: 'Protège une quantité fixe de plastique, de champignons, de plasma et d\'eau pure contre le pillage'
   },
   [BuildingCode.CITY_WALL]: {
     name: 'Enceinte',
     description: 'Fossés, talus et murs de ferraille soudée : une ville qui veut durer commence par tracer sa limite.',
     effect: 'Chaque niveau donne 20 points de défense et réduit le temps de fortification de 10%. Hors des 100 niveaux de bâtiments de la ville'
+  },
+  [BuildingCode.WATER_PURIFIER]: {
+    name: 'Purificateur d\'eau',
+    description: 'Filtres de charbon, membranes récupérées et bouilloires solaires : l\'eau pure est devenue rare, et ce qui est rare devient monnaie.',
+    effect: 'Consomme de l\'énergie. Produit de l\'eau pure, la monnaie de la bourse de faction. Stockage illimité'
+  },
+  [BuildingCode.TRADING_POST]: {
+    name: 'Comptoir d\'échange',
+    description: 'Un guichet blindé, des registres et des coursiers : de quoi traiter avec les autres colonies de la faction sans quitter ses murs.',
+    effect: 'Donne accès à la bourse de faction. Chaque niveau permet un ordre ouvert de plus dans la ville'
   }
 }

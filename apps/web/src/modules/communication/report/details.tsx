@@ -20,14 +20,18 @@ interface Props {
   report?: Report
 }
 
-const hasResources = (resources: { plastic: number; mushroom: number; plasma: number }) =>
-  resources.plastic > 0 || resources.mushroom > 0 || resources.plasma > 0
+/** `water` (slice 035) may be absent from reports written before it existed. */
+type ReportResources = { plastic: number; mushroom: number; plasma: number; water?: number }
 
-const formatResources = (resources: { plastic: number; mushroom: number; plasma: number }) => {
+const hasResources = (resources: ReportResources) =>
+  resources.plastic > 0 || resources.mushroom > 0 || resources.plasma > 0 || (resources.water ?? 0) > 0
+
+const formatResources = (resources: ReportResources) => {
   const parts = [
     resources.plastic > 0 ? `${resources.plastic} plastique` : null,
     resources.mushroom > 0 ? `${resources.mushroom} champignon` : null,
     resources.plasma > 0 ? `${resources.plasma} plasma` : null,
+    (resources.water ?? 0) > 0 ? `${resources.water} eau pure` : null,
   ].filter(Boolean)
   return parts.join(', ')
 }

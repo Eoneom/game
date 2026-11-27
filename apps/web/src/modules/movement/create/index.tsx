@@ -72,13 +72,15 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   const initial_action = allowedActions?.[0] ?? MovementAction.BASE
   const [ action, setAction ] = useState<MovementAction>(initial_action)
   const [ combatStrategy, setCombatStrategy ] = useState<CombatStrategy>(CombatStrategy.BALANCED)
-  const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0, plasma: 0 })
+  const [ resources, setResources ] = useState({ plastic: 0, mushroom: 0, plasma: 0, water: 0 })
 
   const cityCoordinates = city?.coordinates ?? null
   const outpostCoordinates = outpost?.coordinates ?? null
   const availablePlastic = city?.plastic ?? outpost?.plastic ?? 0
   const availableMushroom = city?.mushroom ?? outpost?.mushroom ?? 0
   const availablePlasma = city?.plasma ?? outpost?.plasma ?? 0
+  // Outposts hold no water (slice 035).
+  const availableWater = city?.water ?? 0
 
   const selectedTroopList = useMemo(() => {
     return Object.keys(selectedTroops).reduce((acc, key) => {
@@ -96,12 +98,17 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
     resources.plastic * resource_transport_weight.plastic
     + resources.mushroom * resource_transport_weight.mushroom
     + resources.plasma * resource_transport_weight.plasma
+    + resources.water * resource_transport_weight.water
   const remainingCapacity = Math.max(0, capacity - usedCapacity)
   const maxPlastic = Math.min(availablePlastic, resources.plastic + remainingCapacity)
   const maxMushroom = Math.min(availableMushroom, resources.mushroom + remainingCapacity)
   const maxPlasma = Math.min(
     availablePlasma,
     resources.plasma + Math.floor(remainingCapacity / resource_transport_weight.plasma)
+  )
+  const maxWater = Math.min(
+    availableWater,
+    resources.water + Math.floor(remainingCapacity / resource_transport_weight.water)
   )
   const estimateResources = action === MovementAction.TRANSPORT ? resources : undefined
 
@@ -135,17 +142,19 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
 
   useEffect(() => {
     launchMovementEstimation()
-  }, [selectedTroops, destination, estimateResources?.plastic, estimateResources?.mushroom, estimateResources?.plasma])
+  }, [selectedTroops, destination, estimateResources?.plastic, estimateResources?.mushroom, estimateResources?.plasma, estimateResources?.water])
 
   useEffect(() => {
     setResources(current => {
       const nextPlastic = Math.min(current.plastic, maxPlastic)
       const nextMushroom = Math.min(current.mushroom, maxMushroom)
       const nextPlasma = Math.min(current.plasma, maxPlasma)
+      const nextWater = Math.min(current.water, maxWater)
       if (
         nextPlastic === current.plastic &&
         nextMushroom === current.mushroom &&
-        nextPlasma === current.plasma
+        nextPlasma === current.plasma &&
+        nextWater === current.water
       ) {
         return current
       }
@@ -153,9 +162,10 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
         plastic: nextPlastic,
         mushroom: nextMushroom,
         plasma: nextPlasma,
+        water: nextWater,
       }
     })
-  }, [maxPlastic, maxMushroom, maxPlasma])
+  }, [maxPlastic, maxMushroom, maxPlasma, maxWater])
 
   const launchMovementEstimation = async () => {
     if (!token) return
@@ -277,9 +287,12 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
               plastic={resources.plastic}
               mushroom={resources.mushroom}
               plasma={resources.plasma}
+              water={resources.water}
               maxPlastic={maxPlastic}
               maxMushroom={maxMushroom}
               maxPlasma={maxPlasma}
+              maxWater={maxWater}
+              showWater={Boolean(city)}
               capacity={capacity}
               usedCapacity={usedCapacity}
               onChange={setResources}

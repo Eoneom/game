@@ -1,6 +1,6 @@
 import { client } from '#helpers/api'
 import { isError } from '#helpers/assertion'
-import { Coordinates, TroopCode, TroopMovementEstimateDataResponse } from '@eoneom/api-client'
+import { Coordinates, Resource, TroopCode, TroopMovementEstimateDataResponse } from '@eoneom/api-client'
 
 export const estimateMovement = async ({
   token,
@@ -15,7 +15,7 @@ export const estimateMovement = async ({
   destination: Coordinates
   troopCodes: TroopCode[]
   troops?: { code: TroopCode; count: number }[]
-  resources?: { plastic: number; mushroom: number; plasma: number }
+  resources?: Resource
 }): Promise<TroopMovementEstimateDataResponse | null> => {
   const res = await client.troop.estimateMovement(token, {
     origin,

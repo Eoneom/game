@@ -12,7 +12,8 @@ const ShelteredLine: React.FC<{ label: string, sheltered: Resource }> = ({ label
   return <>
     {label} : <strong>{transformDecimals(sheltered.plastic)}</strong> plastique,{' '}
     <strong>{transformDecimals(sheltered.mushroom)}</strong> champignons,{' '}
-    <strong>{transformDecimals(sheltered.plasma)}</strong> plasma
+    <strong>{transformDecimals(sheltered.plasma)}</strong> plasma,{' '}
+    <strong>{transformDecimals(sheltered.water)}</strong> eau pure
   </>
 }
 

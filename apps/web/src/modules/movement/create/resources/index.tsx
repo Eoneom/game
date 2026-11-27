@@ -3,26 +3,35 @@ import React from 'react'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconPlasma } from '#ui/icon/plasma'
+import { IconWater } from '#ui/icon/water'
+import { Resource } from '@eoneom/api-client'
 
 interface Props {
   plastic: number
   mushroom: number
   plasma: number
+  water: number
   maxPlastic: number
   maxMushroom: number
   maxPlasma: number
+  maxWater: number
+  /** Water leaves cities only: outposts hold none (slice 035). */
+  showWater: boolean
   capacity: number
   usedCapacity: number
-  onChange: (resources: { plastic: number; mushroom: number; plasma: number }) => void
+  onChange: (resources: Resource) => void
 }
 
 export const MovementCreateResources: React.FC<Props> = ({
   plastic,
   mushroom,
   plasma,
+  water,
   maxPlastic,
   maxMushroom,
   maxPlasma,
+  maxWater,
+  showWater,
   capacity,
   usedCapacity,
   onChange,
@@ -50,6 +59,7 @@ export const MovementCreateResources: React.FC<Props> = ({
                 plastic: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxPlastic),
                 mushroom,
                 plasma,
+                water,
               })
             }}
           />
@@ -70,6 +80,7 @@ export const MovementCreateResources: React.FC<Props> = ({
                 plastic,
                 mushroom: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxMushroom),
                 plasma,
+                water,
               })
             }}
           />
@@ -90,10 +101,34 @@ export const MovementCreateResources: React.FC<Props> = ({
                 plastic,
                 mushroom,
                 plasma: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxPlasma),
+                water,
               })
             }}
           />
         </li>
+        {showWater && (
+          <li className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-1.5 text-sm text-amber-dim">
+              <IconWater /> Eau pure
+            </span>
+            <input
+              type="number"
+              className="field-input field-input--number w-28"
+              min={0}
+              max={maxWater}
+              value={water}
+              onChange={event => {
+                const next = Number.parseInt(event.target.value, 10)
+                onChange({
+                  plastic,
+                  mushroom,
+                  plasma,
+                  water: Number.isNaN(next) ? 0 : Math.min(Math.max(0, next), maxWater),
+                })
+              }}
+            />
+          </li>
+        )}
       </ul>
     </fieldset>
   )

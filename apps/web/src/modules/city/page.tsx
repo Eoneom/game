@@ -10,6 +10,7 @@ import { useGetCity } from '#city/hooks'
 import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconPlasma } from '#ui/icon/plasma'
+import { IconWater } from '#ui/icon/water'
 import {
   formatTechnologyBonus,
   ProductionTerrainReadout
@@ -94,6 +95,12 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
               </span>
               <span className="font-mono text-amber">{transformDecimals(city.plasma)}</span>
             </li>
+            <li className="flex justify-between gap-2">
+              <span className="flex items-center gap-1 text-amber-dim">
+                <IconWater /> Eau pure
+              </span>
+              <span className="font-mono text-amber">{transformDecimals(city.water)}</span>
+            </li>
           </ul>
 
           <div className="space-y-2 border-t border-rust/50 pt-3">
@@ -163,6 +170,14 @@ export const CityPage: React.FC<Props> = ({ cityId }) => {
                   {formatTechnologyBonus(city.technology_production_multiplier.plasma)} techno
                 </span>
               ) : null}
+            </span>
+          </p>
+          <p className="m-0 flex items-center justify-between gap-2 border-t border-rust/50 pt-3 text-sm">
+            <span className="flex items-center gap-1 text-amber-dim">
+              <IconWater /> Eau pure
+            </span>
+            <span className="font-mono text-amber">
+              {transformHourlyEarnings(city.earnings_per_second.water)}
             </span>
           </p>
           <div className="border-t border-rust/50 pt-3">

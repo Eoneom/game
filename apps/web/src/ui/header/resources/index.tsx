@@ -3,6 +3,7 @@ import { IconMushroom } from '#ui/icon/mushroom'
 import { IconPlastic } from '#ui/icon/plastic'
 import { IconEnergy } from '#ui/icon/energy'
 import { IconPlasma } from '#ui/icon/plasma'
+import { IconWater } from '#ui/icon/water'
 import { HeaderResourcesItem } from '#ui/header/resources/item'
 import { OutpostType } from '@eoneom/api-client'
 import React from 'react'
@@ -33,6 +34,12 @@ export const HeaderResources: React.FC<Props> = ({ city, outpost }) => {
         value={city.plasma}
         icon={<IconPlasma />}
         earnings_per_second={city.earnings_per_second.plasma}
+      />
+      {/* Eau pure (slice 035): cities only, unlimited storage. */}
+      <HeaderResourcesItem
+        value={city.water}
+        icon={<IconWater />}
+        earnings_per_second={city.earnings_per_second.water}
       />
       <HeaderResourcesItem
         value={city.energy_consumption}

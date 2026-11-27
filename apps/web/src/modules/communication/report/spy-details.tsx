@@ -57,7 +57,7 @@ const SpyIntel: React.FC<{ spy: ReportSpyMetadata }> = ({ spy }) => (
     )}
     {spy.resources && (
       <p className="details-meta">
-        Stock : {spy.resources.plastic} plastique, {spy.resources.mushroom} champignon, {spy.resources.plasma} plasma
+        Stock : {spy.resources.plastic} plastique, {spy.resources.mushroom} champignon, {spy.resources.plasma} plasma, {spy.resources.water ?? 0} eau pure
       </p>
     )}
     {spy.outpost_type && (
