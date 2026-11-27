@@ -98,6 +98,7 @@ const movement = (overrides: Partial<MovementItem>): MovementItem => ({
   id: 'm1',
   action: MovementAction.ATTACK,
   kind: MovementKind.OUTGOING,
+  departure_at: 0,
   origin: { x: 12, y: 7 },
   destination: { x: 15, y: 2 },
   arrive_at: NOW + 344_000,

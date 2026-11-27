@@ -76,6 +76,14 @@ export const MovementDetails: React.FC<Props> = ({ movement, mapPath }) => {
             <span className="font-mono tabular-nums text-amber">{remaining > 0 ? formatTime(remaining) : 'Arrivée…'}</span>
           </p>
         )}
+        {Number.isFinite(movement.departure_at) && (
+          <p className="details-meta">
+            Départ :{' '}
+            <time className="tabular-nums" dateTime={new Date(movement.departure_at).toISOString()}>
+              {pad(new Date(movement.departure_at).getHours())}:{pad(new Date(movement.departure_at).getMinutes())}
+            </time>
+          </p>
+        )}
         <p className="details-meta">
           {movement.battle_id ? 'Début de la bataille' : 'Arrivée prévue'} :{' '}
           <time className="tabular-nums" dateTime={started.toISOString()}>

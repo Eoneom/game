@@ -1,123 +1,189 @@
-export const WORLD_SIZE = 100
+import { Coordinates, WORLD_SIZE } from '@eoneom/api-client'
+
 /**
- * Must match `INITIAL_VIEWPORT_HALF_EXTENT` in `apps/server/src/core/world/constant/size.ts`
- * (server empire snapshot / AI). Not used for the in-game city map initial zoom.
+ * Map window (slice 044). Zoom is a number of rows (cells tall); columns follow the stage aspect so cells stay square.
+ * World units: cell (x, y) spans [x − 0.5, x + 0.5] × [y − 0.5, y + 0.5]; north (higher y) is drawn at the top.
  */
-export const INITIAL_VIEWPORT_HALF_EXTENT = 5
-/** Tighter zoom when opening or recentering the city/outpost world map (7×7 visible). Server AI still uses half extent 5 per slice 005. */
-export const CITY_MAP_INITIAL_HALF_EXTENT = 3
-export const PREFETCH_MARGIN_CELLS = 3
-/** Server `MAX_VIEWPORT_SIDE` — keep fetch bounds within one request. */
-export const MAX_VIEWPORT_SIDE = 20
+export const MAP_ZOOM_ROWS = [ 7, 11, 15, 21, 29, 41 ] as const
+export type MapZoomLevel = 1 | 2 | 3 | 4 | 5 | 6
+export const MIN_ZOOM_LEVEL: MapZoomLevel = 1
+export const MAX_ZOOM_LEVEL: MapZoomLevel = 6
+/** On open and on « Recentrer » (15 rows). */
+export const DEFAULT_ZOOM_LEVEL: MapZoomLevel = 3
+/** City names are drawn on the stage from level 1 to 3 (cells ≥ 40 px). */
+export const LABEL_MIN_CELL_PX = 40
 
-/** Inclusive cells per axis: 2 * half_extent + 1 (must be ≤ server MAX_VIEWPORT_SIDE). */
-export const MAP_MIN_HALF_EXTENT = 2
-/** Max half extent so side length 2 * half + 1 ≤ 20 (server `MAX_VIEWPORT_SIDE`). */
-export const MAP_MAX_HALF_EXTENT = 9
+export interface StageSize {
+  width: number
+  height: number
+}
 
-export type ViewportBounds = {
+/** Fractional centre in world units. */
+export type MapPoint = { x: number; y: number }
+
+export interface ViewportBounds {
   min_x: number
   max_x: number
   min_y: number
   max_y: number
 }
 
-export function viewportSideLength(half_extent: number): number {
-  return 2 * half_extent + 1
+export interface MapWindow {
+  zoom: MapZoomLevel
+  rows: number
+  columns: number
+  /** Edge of one cell in px. */
+  cellSize: number
+  /** Clamped centre (world units). */
+  center: MapPoint
+  /** World x of the stage's left edge and world y of its top edge. */
+  left: number
+  top: number
+  widthCells: number
+  heightCells: number
+  /** Integer cells drawn: the visible ones plus one cell of margin, clamped to the world. */
+  range: ViewportBounds
 }
 
-export function clampHalfExtent(half_extent: number): number {
-  return Math.max(
-    MAP_MIN_HALF_EXTENT,
-    Math.min(MAP_MAX_HALF_EXTENT, Math.round(half_extent)),
-  )
+export const clampZoomLevel = (level: number): MapZoomLevel =>
+  Math.max(MIN_ZOOM_LEVEL, Math.min(MAX_ZOOM_LEVEL, Math.round(level))) as MapZoomLevel
+
+const zoomRows = (level: MapZoomLevel): number => MAP_ZOOM_ROWS[level - 1]
+
+export const zoomColumns = (level: MapZoomLevel, stage: StageSize): number =>
+  stage.height > 0 ? Math.ceil(zoomRows(level) * stage.width / stage.height) : zoomRows(level)
+
+const clampAxis = (value: number, span: number): number => {
+  const min = 0.5 + span / 2
+  const max = WORLD_SIZE + 0.5 - span / 2
+  if (min > max) return (WORLD_SIZE + 1) / 2
+  return Math.max(min, Math.min(max, value))
 }
 
-export function viewportBoundsAround(
-  center: { x: number; y: number },
-  half_extent: number = INITIAL_VIEWPORT_HALF_EXTENT,
-): ViewportBounds {
-  const half = clampHalfExtent(half_extent)
+/** Keeps the window inside the world (no space outside 1–100). */
+export const clampCenter = (center: MapPoint, zoom: MapZoomLevel, stage: StageSize): MapPoint => {
+  const cellSize = stage.height > 0 ? stage.height / zoomRows(zoom) : 1
   return {
-    min_x: Math.max(1, center.x - half),
-    max_x: Math.min(WORLD_SIZE, center.x + half),
-    min_y: Math.max(1, center.y - half),
-    max_y: Math.min(WORLD_SIZE, center.y + half),
+    x: clampAxis(center.x, stage.width / cellSize),
+    y: clampAxis(center.y, stage.height / cellSize),
   }
 }
 
-export type PanDirection = {
-  dx: number
-  dy: number
-}
+const clampCell = (value: number): number => Math.max(1, Math.min(WORLD_SIZE, value))
 
-const clampBoundsSide = (bounds: ViewportBounds): ViewportBounds => {
-  let { min_x, max_x, min_y, max_y } = bounds
-  while (max_x - min_x + 1 > MAX_VIEWPORT_SIDE) {
-    min_x += 1
-  }
-  while (max_y - min_y + 1 > MAX_VIEWPORT_SIDE) {
-    min_y += 1
-  }
+export const mapWindow = ({
+  center,
+  zoom,
+  stage,
+}: {
+  center: MapPoint
+  zoom: MapZoomLevel
+  stage: StageSize
+}): MapWindow => {
+  const rows = zoomRows(zoom)
+  const cellSize = stage.height > 0 ? stage.height / rows : 1
+  const widthCells = stage.width / cellSize
+  const heightCells = stage.height / cellSize
+  const clamped = clampCenter(center, zoom, stage)
+  const left = clamped.x - widthCells / 2
+  const top = clamped.y + heightCells / 2
   return {
-    min_x,
-    max_x,
-    min_y,
-    max_y,
+    zoom,
+    rows,
+    columns: zoomColumns(zoom, stage),
+    cellSize,
+    center: clamped,
+    left,
+    top,
+    widthCells,
+    heightCells,
+    range: {
+      min_x: clampCell(Math.floor(left + 0.5) - 1),
+      max_x: clampCell(Math.ceil(left + widthCells - 0.5) + 1),
+      min_y: clampCell(Math.floor(top - heightCells + 0.5) - 1),
+      max_y: clampCell(Math.ceil(top - 0.5) + 1),
+    },
   }
 }
 
-/** Visible bounds expanded by prefetch margin, clamped to `MAX_VIEWPORT_SIDE` per axis. */
-export function fetchBoundsAround(
-  center: { x: number; y: number },
-  half_extent: number,
-  panDirection?: PanDirection | null,
-): ViewportBounds {
-  const visibleHalf = clampHalfExtent(half_extent)
-  let fetchHalf = visibleHalf + PREFETCH_MARGIN_CELLS
-  while (viewportSideLength(fetchHalf) > MAX_VIEWPORT_SIDE) {
-    fetchHalf -= 1
-  }
-  fetchHalf = Math.max(visibleHalf, fetchHalf)
-  let bounds = viewportBoundsAround(center, fetchHalf)
+/** Stage pixel of a world point. */
+export const worldToStage = (point: MapPoint, view: MapWindow): { px: number; py: number } => ({
+  px: (point.x - view.left) * view.cellSize,
+  py: (view.top - point.y) * view.cellSize,
+})
 
-  if (panDirection && (panDirection.dx !== 0 || panDirection.dy !== 0)) {
-    if (panDirection.dx > 0) {
-      bounds = {
-        ...bounds,
-        max_x: Math.min(WORLD_SIZE, bounds.max_x + 1),
-      }
-    } else if (panDirection.dx < 0) {
-      bounds = {
-        ...bounds,
-        min_x: Math.max(1, bounds.min_x - 1),
-      }
-    }
-    if (panDirection.dy > 0) {
-      bounds = {
-        ...bounds,
-        max_y: Math.min(WORLD_SIZE, bounds.max_y + 1),
-      }
-    } else if (panDirection.dy < 0) {
-      bounds = {
-        ...bounds,
-        min_y: Math.max(1, bounds.min_y - 1),
-      }
-    }
-    bounds = clampBoundsSide(bounds)
-  }
+/** World point under a stage pixel. */
+export const stageToWorld = (px: number, py: number, view: MapWindow): MapPoint => ({
+  x: view.left + px / view.cellSize,
+  y: view.top - py / view.cellSize,
+})
 
-  return bounds
+/** Cell under a stage pixel, `null` outside the world. */
+export const cellAtStagePoint = (px: number, py: number, view: MapWindow): Coordinates | null => {
+  const world = stageToWorld(px, py, view)
+  const x = Math.round(world.x)
+  const y = Math.round(world.y)
+  if (x < 1 || x > WORLD_SIZE || y < 1 || y > WORLD_SIZE) return null
+  return { x, y }
 }
 
-export function expandBoundsBy(
-  bounds: ViewportBounds,
-  margin: number,
-): ViewportBounds {
+/** New centre after a zoom so the world point under the pointer stays under it (`centerAfterZoom`). */
+export const centerAfterZoom = ({
+  anchor,
+  center,
+  fromZoom,
+  toZoom,
+  stage,
+}: {
+  anchor: MapPoint
+  center: MapPoint
+  fromZoom: MapZoomLevel
+  toZoom: MapZoomLevel
+  stage: StageSize
+}): MapPoint => {
+  const ratio = zoomRows(toZoom) / zoomRows(fromZoom)
+  return clampCenter({
+    x: anchor.x + (center.x - anchor.x) * ratio,
+    y: anchor.y + (center.y - anchor.y) * ratio,
+  }, toZoom, stage)
+}
+
+/** Drag: the world follows the pointer. */
+export const panByPixels = (center: MapPoint, delta: { dx: number; dy: number }, cellSize: number): MapPoint => ({
+  x: center.x - delta.dx / cellSize,
+  y: center.y + delta.dy / cellSize,
+})
+
+/** Arrow keys: 1 cell, 5 with `Shift`. */
+const PAN_KEYS: Record<string, { dx: number; dy: number }> = {
+  ArrowLeft: { dx: -1, dy: 0 },
+  ArrowRight: { dx: 1, dy: 0 },
+  ArrowUp: { dx: 0, dy: 1 },
+  ArrowDown: { dx: 0, dy: -1 },
+}
+
+export const panByKey = (center: MapPoint, key: string, shift: boolean): MapPoint | null => {
+  const step = PAN_KEYS[key]
+  if (!step) return null
+  const cells = shift ? 5 : 1
+  return { x: center.x + step.dx * cells, y: center.y + step.dy * cells }
+}
+
+/** Markers bounds: the drawn range padded by half its size on each side, clamped to the world (side ≤ 100). */
+export const paddedBounds = (range: ViewportBounds): ViewportBounds => {
+  const padX = Math.ceil((range.max_x - range.min_x + 1) / 2)
+  const padY = Math.ceil((range.max_y - range.min_y + 1) / 2)
   return {
-    min_x: Math.max(1, bounds.min_x - margin),
-    max_x: Math.min(WORLD_SIZE, bounds.max_x + margin),
-    min_y: Math.max(1, bounds.min_y - margin),
-    max_y: Math.min(WORLD_SIZE, bounds.max_y + margin),
+    min_x: clampCell(range.min_x - padX),
+    max_x: clampCell(range.max_x + padX),
+    min_y: clampCell(range.min_y - padY),
+    max_y: clampCell(range.max_y + padY),
   }
 }
+
+export const boundsContain = (outer: ViewportBounds, inner: ViewportBounds): boolean =>
+  inner.min_x >= outer.min_x && inner.max_x <= outer.max_x && inner.min_y >= outer.min_y && inner.max_y <= outer.max_y
+
+export const isInBounds = (coordinates: Coordinates, bounds: ViewportBounds): boolean =>
+  coordinates.x >= bounds.min_x && coordinates.x <= bounds.max_x
+  && coordinates.y >= bounds.min_y && coordinates.y <= bounds.max_y

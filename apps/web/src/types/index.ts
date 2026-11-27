@@ -13,7 +13,6 @@ import {
   TroopGetMovementDataResponse,
   TroopListDataResponse,
   TroopListMovementDataResponse,
-  WorldGetCellsDataResponse,
 } from '@eoneom/api-client'
 
 export type City = CityGetDataResponse
@@ -26,15 +25,6 @@ export type BuildingUpgradeQueueItem = BuildingListDataResponse['upgrade_queue']
 export type Technology = TechnologyGetDataResponse
 export type TechnologyItem = TechnologyListDataResponse['technologies'][number]
 export type TechnologyResearchQueueItem = TechnologyListDataResponse['research_queue'][number]
-
-export type WorldViewport = WorldGetCellsDataResponse & {
-  bounds: {
-    min_x: number
-    max_x: number
-    min_y: number
-    max_y: number
-  }
-}
 
 export type Troop = TroopGetDataResponse
 export type TroopItem = TroopListDataResponse['troops'][number]

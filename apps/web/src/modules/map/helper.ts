@@ -1,90 +1,94 @@
-import { CellType } from '@eoneom/api-client'
+import { MovementAction, WorldMarkerRelation } from '@eoneom/api-client'
 
-/** Edge length of one cell in Konva group space (before zoom). */
-export const CELL_WORLD_SIZE = 100
+/** Terrain chars of `GET /world/terrain` (slice 044). */
+export type TerrainChar = 'f' | 'r' | 'l'
 
-export const getCellFillStyle = ({ type }: { type?: CellType }): string => {
-  switch (type) {
-  case CellType.FOREST:
-    return '#2d6a4f'
-  case CellType.RUINS:
-    return '#8d6e63'
-  case CellType.LAKE:
-    return '#457b9d'
-  }
-
-  return '#3d3d4a'
+export const TERRAIN_COLORS: Record<TerrainChar, string> = {
+  f: '#2d5a43',
+  r: '#6f5a4c',
+  l: '#3c6684',
 }
 
-export const getCellStrokeStyle = ({ type }: { type?: CellType }): string => {
-  switch (type) {
-  case CellType.FOREST:
-    return '#1b4332'
-  case CellType.RUINS:
-    return '#5d4037'
-  case CellType.LAKE:
-    return '#1d3557'
-  }
-
-  return '#2a2a32'
+/** Darker blocks of the minimap. */
+export const MINIMAP_TERRAIN_COLORS: Record<TerrainChar, string> = {
+  f: '#22422f',
+  r: '#4f4036',
+  l: '#2b4a60',
 }
 
-export type TerrainLegendKey = CellType
+export const GRID_COLOR = 'rgba(20, 16, 12, 0.45)'
 
-export const terrainLegend: { key: TerrainLegendKey; label: string; color: string }[] = [
-  { key: CellType.FOREST, label: 'Forêt', color: getCellFillStyle({ type: CellType.FOREST }) },
-  { key: CellType.RUINS, label: 'Ruines', color: getCellFillStyle({ type: CellType.RUINS }) },
-  { key: CellType.LAKE, label: 'Lac', color: getCellFillStyle({ type: CellType.LAKE }) },
+export const terrainLegend: { key: TerrainChar; label: string; color: string }[] = [
+  { key: 'f', label: 'Forêt', color: TERRAIN_COLORS.f },
+  { key: 'r', label: 'Ruines', color: TERRAIN_COLORS.r },
+  { key: 'l', label: 'Lac', color: TERRAIN_COLORS.l },
 ]
 
-export type SettlementOwnership = 'self' | 'ally' | 'enemy'
+export const terrainLabel = (char: TerrainChar | undefined): string =>
+  terrainLegend.find(entry => entry.key === char)?.label ?? 'Inconnu'
 
-export const getSettlementOwnership = ({
-  owner_player_id,
-  owner_faction_code,
-  viewer_player_id,
-  viewer_faction_code,
-}: {
-  owner_player_id: string
-  owner_faction_code: string
-  viewer_player_id: string
-  viewer_faction_code: string
-}): SettlementOwnership => {
-  if (owner_player_id === viewer_player_id) {
-    return 'self'
-  }
-  if (owner_faction_code === viewer_faction_code) {
-    return 'ally'
-  }
-  return 'enemy'
+interface RelationStyle {
+  fill: string
+  stroke: string
+  label: string
 }
 
-export const settlementMarkerStyles: Record<
-  SettlementOwnership,
-  { cityFill: string; cityStroke: string; outpostFill: string; outpostStroke: string }
-> = {
-  self: {
-    cityFill: 'rgba(241,196,15,0.45)',
-    cityStroke: '#f1c40f',
-    outpostFill: 'rgba(212,137,74,0.5)',
-    outpostStroke: '#D4894A',
-  },
-  ally: {
-    cityFill: 'rgba(46,204,113,0.35)',
-    cityStroke: '#2ecc71',
-    outpostFill: 'rgba(39,174,96,0.35)',
-    outpostStroke: '#27ae60',
-  },
-  enemy: {
-    cityFill: 'rgba(231,76,60,0.35)',
-    cityStroke: '#e74c3c',
-    outpostFill: 'rgba(192,57,43,0.35)',
-    outpostStroke: '#c0392b',
-  },
+/** Marker colours by relation (040 palette hues), legend order. */
+export const RELATION_STYLES: Record<WorldMarkerRelation, RelationStyle> = {
+  mine: { fill: '#e8c547', stroke: '#7a5e12', label: 'Vos emplacements' },
+  ally: { fill: '#7dcea0', stroke: '#2a6b47', label: 'Alliance' },
+  faction: { fill: '#5ec4c0', stroke: '#1f6664', label: 'Même faction' },
+  enemy: { fill: '#ff7a68', stroke: '#8a2418', label: 'Factions ennemies' },
+  system: { fill: '#b79cf0', stroke: '#563f8c', label: 'Système' },
 }
 
-export const settlementLegend: { key: SettlementOwnership; label: string; color: string }[] = [
-  { key: 'self', label: 'Vos emplacements', color: settlementMarkerStyles.self.cityStroke },
-  { key: 'ally', label: 'Alliés (même faction)', color: settlementMarkerStyles.ally.cityStroke },
-  { key: 'enemy', label: 'Autres factions', color: settlementMarkerStyles.enemy.cityStroke },
+export const RELATION_ORDER: WorldMarkerRelation[] = [ 'mine', 'ally', 'faction', 'enemy', 'system' ]
+
+/** Short relation names for the hover card and the drawer. */
+export const RELATION_NAMES: Record<WorldMarkerRelation, string> = {
+  mine: 'Vous',
+  ally: 'Alliance',
+  faction: 'Même faction',
+  enemy: 'Faction ennemie',
+  system: 'Système',
+}
+
+export const CURRENT_LOCATION_RING = '#e8c547'
+export const SELECTION_COLOR = '#ffe27a'
+export const HOVER_COLOR = 'rgba(255, 255, 255, 0.85)'
+export const DANGER_COLOR = '#ff5a44'
+
+interface MovementStyle {
+  color: string
+  width: number
+  dash: number[]
+}
+
+/** Arrow style per action; return trips use the `base` style. */
+export const MOVEMENT_STYLES: Record<MovementAction, MovementStyle> = {
+  [MovementAction.ATTACK]: { color: '#ff5a44', width: 2.5, dash: [] },
+  [MovementAction.SPY]: { color: '#b79cf0', width: 2, dash: [ 2, 5 ] },
+  [MovementAction.TRANSPORT]: { color: '#5ec8e6', width: 2.5, dash: [] },
+  [MovementAction.REINFORCE]: { color: '#7dcea0', width: 2.5, dash: [] },
+  [MovementAction.EXPLORE]: { color: '#d8d2c4', width: 2, dash: [ 2, 5 ] },
+  [MovementAction.BASE]: { color: '#a59c8e', width: 2, dash: [ 8, 6 ] },
+  [MovementAction.EXCHANGE]: { color: '#e8c547', width: 1.5, dash: [] },
+}
+
+export const INCOMING_STYLE: MovementStyle = { color: '#ff3b2a', width: 4, dash: [] }
+
+export const movementLegend: { key: string; label: string; style: MovementStyle }[] = [
+  { key: 'attack', label: 'Attaque', style: MOVEMENT_STYLES[MovementAction.ATTACK] },
+  { key: 'spy', label: 'Espionnage', style: MOVEMENT_STYLES[MovementAction.SPY] },
+  { key: 'transport', label: 'Transport', style: MOVEMENT_STYLES[MovementAction.TRANSPORT] },
+  { key: 'reinforce', label: 'Renfort', style: MOVEMENT_STYLES[MovementAction.REINFORCE] },
+  { key: 'explore', label: 'Exploration', style: MOVEMENT_STYLES[MovementAction.EXPLORE] },
+  { key: 'base', label: 'Base / retour', style: MOVEMENT_STYLES[MovementAction.BASE] },
+  { key: 'exchange', label: 'Convoi de bourse', style: MOVEMENT_STYLES[MovementAction.EXCHANGE] },
+  { key: 'incoming', label: 'Attaque entrante', style: INCOMING_STYLE },
 ]
+
+/** Canvas fonts: never below 12 px (040). */
+const CANVAS_FONT_FAMILY = 'Oxanium, system-ui, sans-serif'
+export const LABEL_FONT = `600 13px ${CANVAS_FONT_FAMILY}`
+export const SMALL_FONT = `600 12px ${CANVAS_FONT_FAMILY}`

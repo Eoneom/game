@@ -2,28 +2,23 @@ import React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { MapPage } from '#map/page'
-
-type MapSearch = {
-  x?: number
-  y?: number
-}
+import { MapSearch, validateMapSearch } from '#map/search'
 
 const MapRoute: React.FC = () => {
   const { cityId } = Route.useParams()
-  const { x, y } = Route.useSearch()
-  const focus = x !== undefined && y !== undefined ? { x, y } : null
-  return <MapPage key={focus ? `${focus.x}.${focus.y}` : 'home'} cityId={cityId} focus={focus} />
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  return (
+    <MapPage
+      origin={{ kind: 'city', id: cityId }}
+      search={search}
+      onSearchChange={patch => navigate({ search: (previous: MapSearch) => ({ ...previous, ...patch }), replace: true })}
+    />
+  )
 }
 
-const optionalInteger = (value: unknown): number | undefined => {
-  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number.parseInt(value, 10) : NaN
-  return Number.isInteger(parsed) ? parsed : undefined
-}
-
+/** `?x=&y=&zoom=&layers=` (slice 044); alliance links pass `x` / `y` (slice 033). */
 export const Route = createFileRoute('/city/$cityId/world/map')({
-  validateSearch: (search: Record<string, unknown>): MapSearch => ({
-    x: optionalInteger(search.x),
-    y: optionalInteger(search.y),
-  }),
+  validateSearch: (search: Record<string, unknown>): MapSearch => validateMapSearch(search),
   component: MapRoute,
 })

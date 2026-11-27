@@ -1,345 +1,167 @@
-/** Konva pan model: world-anchored cells; the stage group offset resets each drag move (see `geometry.panCenterByPixels`). Pixi is not used on this map. */
-import { MapCells } from '#map/cells'
-import {
-  centerAfterZoom,
-  gameCellAtStagePoint,
-  mapViewScaleAndPosition,
-  panCenterByPixels,
-} from '#map/geometry'
-import { MapLegendOverlay } from '#map/legend-overlay'
-import { MapMarkers } from '#map/markers'
-import {
-  clampHalfExtent,
-  MAP_MAX_HALF_EXTENT,
-  MAP_MIN_HALF_EXTENT,
-} from '#map/viewport'
-import { WorldViewport } from '#types'
-import { Coordinates } from '@eoneom/api-client'
-import Konva from 'konva'
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { Group, Layer, Stage } from 'react-konva'
+import React, { useEffect, useRef, useState } from 'react'
+import classNames from 'classnames'
+import { Stage } from 'react-konva'
 
-export interface MapNavigationProps {
-  center: Coordinates
-  half_extent: number
-  homeCenter?: Coordinates | null
-  onPan: (center: Coordinates) => void
-  onPanEnd: (center: Coordinates) => void
-  onNavigate: (params: { center: Coordinates; half_extent: number }) => void
-  onRecenter?: () => void
+import { MapPoint, MapWindow, StageSize, panByPixels } from '#map/viewport'
+
+/** Pointer travel (px) below which a press is a click, not a drag. */
+const DRAG_THRESHOLD_PX = 4
+/** One zoom level per wheel notch; bursts from trackpads are throttled. */
+const WHEEL_THROTTLE_MS = 120
+
+interface Props {
+  view: MapWindow
+  onResize: (size: StageSize) => void
+  /** Drag: committed at most once per animation frame. */
+  onPan: (center: MapPoint) => void
+  onPanEnd: (center: MapPoint) => void
+  /** `direction` +1 zooms in, −1 out, anchored on the pointer. */
+  onWheelZoom: (direction: 1 | -1, point: { px: number; py: number }) => void
+  onPointerClick: (point: { px: number; py: number }) => void
+  onPointerHover: (point: { px: number; py: number } | null) => void
+  onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => void
+  children: React.ReactNode
 }
 
-export interface MapCanvasProps {
-  viewport: WorldViewport
-  navigation: MapNavigationProps
-  onCellClicked: (params: { x: number; y: number }) => void
-  selectedCoordinates?: { x: number; y: number } | null
-  highlightCity?: Coordinates | null
-  highlightOutpost?: Coordinates | null
-}
-
-type HoverTooltip = {
-  px: number
-  py: number
-  cx: number
-  cy: number
-}
-
-export const MapCanvas: React.FC<MapCanvasProps> = ({
-  viewport,
-  navigation,
-  onCellClicked,
-  selectedCoordinates,
-  highlightCity,
-  highlightOutpost,
+/**
+ * Konva stage of the map (slice 044). Layers do not listen: hover, click, drag and wheel are read on the container
+ * and hit-tested in math by the page (`geometry.hitTest`), so no shape carries an event handler.
+ */
+export const MapCanvas: React.FC<Props> = ({
+  view,
+  onResize,
+  onPan,
+  onPanEnd,
+  onWheelZoom,
+  onPointerClick,
+  onPointerHover,
+  onKeyDown,
+  children,
 }) => {
-  const {
-    center,
-    half_extent,
-    homeCenter,
-    onPan,
-    onPanEnd,
-    onNavigate,
-    onRecenter,
-  } = navigation
-
-  const wrapRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapGroupRef = useRef<Konva.Group>(null)
-  const [size, setSize] = useState({
-    width: 800,
-    height: 450,
-  })
-  const [hoverTooltip, setHoverTooltip] = useState<HoverTooltip | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-
-  const { scale, position } = useMemo(
-    () => mapViewScaleAndPosition(size.width, size.height, viewport.bounds),
-    [
-      size.height,
-      size.width,
-      viewport.bounds,
-    ],
-  )
+  const [ size, setSize ] = useState<StageSize>({ width: 0, height: 0 })
+  const [ dragging, setDragging ] = useState(false)
+  const press = useRef<{ x: number; y: number; center: MapPoint; moved: boolean; pointerId: number } | null>(null)
+  const frame = useRef<number | null>(null)
+  const pending = useRef<MapPoint | null>(null)
+  const lastWheel = useRef(0)
+  const viewRef = useRef(view)
+  viewRef.current = view
+  const handlers = useRef({ onWheelZoom })
+  handlers.current = { onWheelZoom }
 
   useEffect(() => {
-    const group = mapGroupRef.current
-    if (!group || isDragging) {
-      return
-    }
-    group.position({
-      x: position.x,
-      y: position.y,
+    const element = containerRef.current
+    if (!element) return
+    const observer = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect
+      if (!rect) return
+      const next = { width: Math.max(0, Math.floor(rect.width)), height: Math.max(0, Math.floor(rect.height)) }
+      setSize(previous => previous.width === next.width && previous.height === next.height ? previous : next)
     })
-    group.scale({
-      x: scale,
-      y: scale,
-    })
-  }, [
-    isDragging,
-    position.x,
-    position.y,
-    scale,
-  ])
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) {
-      return
-    }
-
-    const ro = new ResizeObserver(entries => {
-      const entry = entries[0]
-      if (!entry) {
-        return
-      }
-      const { width, height } = entry.contentRect
-      const nextW = Math.max(0, Math.floor(width))
-      const nextH = Math.max(0, Math.floor(height))
-      setSize(s => (s.width === nextW && s.height === nextH ? s : {
-        width: nextW,
-        height: nextH,
-      }))
-    })
-
-    ro.observe(el)
-    return () => ro.disconnect()
+    observer.observe(element)
+    return () => observer.disconnect()
   }, [])
 
   useEffect(() => {
-    const el = containerRef.current
-    if (!el) {
-      return
+    onResize(size)
+  }, [ size.width, size.height ])
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element) return
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const at = Date.now()
+      if (at - lastWheel.current < WHEEL_THROTTLE_MS || event.deltaY === 0) return
+      lastWheel.current = at
+      const rect = element.getBoundingClientRect()
+      handlers.current.onWheelZoom(event.deltaY < 0 ? 1 : -1, { px: event.clientX - rect.left, py: event.clientY - rect.top })
     }
+    element.addEventListener('wheel', onWheel, { passive: false })
+    return () => element.removeEventListener('wheel', onWheel)
+  }, [])
 
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault()
-      const zoomIn = e.deltaY < 0
-      const nextHalf = clampHalfExtent(
-        half_extent + (zoomIn ? -1 : 1),
-      )
-      if (nextHalf === half_extent) {
-        return
-      }
+  useEffect(() => () => {
+    if (frame.current !== null) cancelAnimationFrame(frame.current)
+  }, [])
 
-      const rect = el.getBoundingClientRect()
-      const px = e.clientX - rect.left
-      const py = e.clientY - rect.top
-      const anchor = gameCellAtStagePoint(
-        px,
-        py,
-        viewport.bounds,
-        scale,
-        position,
-      )
-      const nextCenter = centerAfterZoom(
-        anchor,
-        center,
-        half_extent,
-        nextHalf,
-      )
-      onNavigate({
-        center: nextCenter,
-        half_extent: nextHalf,
-      })
-    }
-
-    el.addEventListener('wheel', onWheel, { passive: false })
-    return () => el.removeEventListener('wheel', onWheel)
-  }, [
-    center,
-    half_extent,
-    onNavigate,
-    position,
-    scale,
-    viewport.bounds,
-  ])
-
-  const updateHoverTooltip = (
-    evt: { clientX: number; clientY: number },
-    cell: { coordinates: { x: number; y: number } },
-  ) => {
-    const box = wrapRef.current?.getBoundingClientRect()
-    if (!box) {
-      return
-    }
-    setHoverTooltip({
-      px: evt.clientX - box.left + 12,
-      py: evt.clientY - box.top + 12,
-      cx: cell.coordinates.x,
-      cy: cell.coordinates.y,
-    })
+  const localPoint = (event: React.PointerEvent<HTMLDivElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return { px: event.clientX - rect.left, py: event.clientY - rect.top }
   }
 
-  const hoverForCells =
-    hoverTooltip == null
-      ? null
-      : {
-        cx: hoverTooltip.cx,
-        cy: hoverTooltip.cy,
-      }
-
-  const handleZoomStep = (zoomIn: boolean) => {
-    const nextHalf = clampHalfExtent(
-      half_extent + (zoomIn ? -1 : 1),
-    )
-    if (nextHalf === half_extent) {
-      return
-    }
-    onNavigate({
-      center,
-      half_extent: nextHalf,
+  const schedulePan = (center: MapPoint) => {
+    pending.current = center
+    if (frame.current !== null) return
+    frame.current = requestAnimationFrame(() => {
+      frame.current = null
+      if (pending.current) onPan(pending.current)
     })
-  }
-
-  const canZoomIn = half_extent > MAP_MIN_HALF_EXTENT
-  const canZoomOut = half_extent < MAP_MAX_HALF_EXTENT
-
-  const applyDragDelta = (node: Konva.Group): Coordinates | null => {
-    const dx = node.x() - position.x
-    const dy = node.y() - position.y
-    node.position({
-      x: position.x,
-      y: position.y,
-    })
-    if (Math.abs(dx) < 2 && Math.abs(dy) < 2) {
-      return null
-    }
-    return panCenterByPixels(
-      center,
-      {
-        dx,
-        dy,
-      },
-      scale,
-    )
   }
 
   return (
-    <div className="map-root">
-      <div className="map-toolbar">
-        <h2>Carte</h2>
-        <p className="map-hint">
-          Glisser pour déplacer, molette pour zoomer. Cliquez une case pour les détails.
-        </p>
-        <div className="map-toolbar-actions">
-          <button
-            type="button"
-            className="map-zoom-btn"
-            disabled={!canZoomIn}
-            aria-label="Zoom avant"
-            onClick={() => handleZoomStep(true)}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="map-zoom-btn"
-            disabled={!canZoomOut}
-            aria-label="Zoom arrière"
-            onClick={() => handleZoomStep(false)}
-          >
-            −
-          </button>
-          {homeCenter && onRecenter && (
-            <button
-              type="button"
-              className="map-recenter-btn"
-              onClick={onRecenter}
-            >
-              Recentrer
-            </button>
-          )}
-        </div>
-      </div>
-      <div className="map-stage-wrap" ref={wrapRef}>
-        {hoverTooltip && (
-          <div
-            className="map-cell-tooltip"
-            style={{
-              left: hoverTooltip.px,
-              top: hoverTooltip.py,
-            }}
-          >
-            ({hoverTooltip.cx}, {hoverTooltip.cy})
-          </div>
-        )}
-        <div
-          id="map"
-          className={`map-stage-container${isDragging ? ' map-stage-container--grabbing' : ''}`}
-          ref={containerRef}
-        >
-          <Stage
-            width={size.width}
-            height={size.height}
-            onMouseLeave={() => setHoverTooltip(null)}
-          >
-            <Layer>
-              <Group
-                ref={mapGroupRef}
-                x={position.x}
-                y={position.y}
-                scaleX={scale}
-                scaleY={scale}
-                draggable
-                onDragStart={() => setIsDragging(true)}
-                onDragMove={e => {
-                  const nextCenter = applyDragDelta(e.target as Konva.Group)
-                  if (nextCenter) {
-                    onPan(nextCenter)
-                  }
-                }}
-                onDragEnd={e => {
-                  setIsDragging(false)
-                  const nextCenter = applyDragDelta(e.target as Konva.Group)
-                  if (nextCenter) {
-                    onPanEnd(nextCenter)
-                  } else {
-                    onPanEnd(center)
-                  }
-                }}
-              >
-                <MapCells
-                  viewport={viewport}
-                  hoverTooltip={hoverForCells}
-                  selectedCoordinates={selectedCoordinates}
-                  onCellClicked={onCellClicked}
-                  onHoverCell={updateHoverTooltip}
-                />
-                <MapMarkers
-                  bounds={viewport.bounds}
-                  viewer={viewport.viewer}
-                  cities={viewport.settlements.cities}
-                  outposts={viewport.settlements.outposts}
-                  highlightCity={highlightCity}
-                  highlightOutpost={highlightOutpost}
-                />
-              </Group>
-              <MapLegendOverlay stageHeight={size.height} />
-            </Layer>
-          </Stage>
-        </div>
-      </div>
+    <div
+      ref={containerRef}
+      id="map"
+      tabIndex={0}
+      role="application"
+      aria-label="Carte du monde : flèches pour déplacer, + et − pour zoomer, Échap pour fermer"
+      className={classNames('map-stage absolute inset-0 overflow-hidden focus-visible:-outline-offset-2', dragging ? 'cursor-grabbing' : 'cursor-pointer')}
+      style={{ touchAction: 'none' }}
+      onKeyDown={onKeyDown}
+      onPointerDown={event => {
+        if (event.button !== 0) return
+        const { px, py } = localPoint(event)
+        press.current = { x: px, y: py, center: viewRef.current.center, moved: false, pointerId: event.pointerId }
+      }}
+      onPointerMove={event => {
+        const { px, py } = localPoint(event)
+        const current = press.current
+        if (!current) {
+          onPointerHover({ px, py })
+          return
+        }
+        const dx = px - current.x
+        const dy = py - current.y
+        if (!current.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return
+        if (!current.moved) {
+          current.moved = true
+          setDragging(true)
+          onPointerHover(null)
+          event.currentTarget.setPointerCapture?.(current.pointerId)
+        }
+        schedulePan(panByPixels(current.center, { dx, dy }, viewRef.current.cellSize))
+      }}
+      onPointerUp={event => {
+        const current = press.current
+        press.current = null
+        if (!current) return
+        const { px, py } = localPoint(event)
+        if (!current.moved) {
+          onPointerClick({ px, py })
+          return
+        }
+        setDragging(false)
+        if (frame.current !== null) {
+          cancelAnimationFrame(frame.current)
+          frame.current = null
+        }
+        onPanEnd(panByPixels(current.center, { dx: px - current.x, dy: py - current.y }, viewRef.current.cellSize))
+      }}
+      onPointerLeave={() => {
+        if (!press.current) onPointerHover(null)
+      }}
+      onPointerCancel={() => {
+        press.current = null
+        setDragging(false)
+      }}
+    >
+      {size.width > 0 && size.height > 0 && (
+        <Stage width={size.width} height={size.height} listening={false}>
+          {children}
+        </Stage>
+      )}
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { cityKeys } from '#city/hooks'
 import { outpostKeys } from '#outpost/hooks'
 import { reportKeys } from '#communication/report/hooks'
 import { activityKeys } from '#location/activity-hooks'
+import { mapKeys } from '#map/hooks'
 
 export function registerTroopWsListeners(): void {
   wsClient.on(AppEvent.TroopMovementFinished, () => {
@@ -16,6 +17,10 @@ export function registerTroopWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: ['movement'] })
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
+    // Map (slice 044): explore / spy successes explore cells, spy reports feed the targets, settlements may change.
+    queryClient.invalidateQueries({ queryKey: mapKeys.exploration })
+    queryClient.invalidateQueries({ queryKey: mapKeys.targets })
+    queryClient.invalidateQueries({ queryKey: mapKeys.markers })
   })
 
   wsClient.on(AppEvent.BattleFinished, () => {
@@ -25,6 +30,8 @@ export function registerTroopWsListeners(): void {
     queryClient.invalidateQueries({ queryKey: reportKeys.unreadCount })
     queryClient.invalidateQueries({ queryKey: ['reports'] })
     queryClient.invalidateQueries({ queryKey: activityKeys.all })
+    queryClient.invalidateQueries({ queryKey: mapKeys.targets })
+    queryClient.invalidateQueries({ queryKey: mapKeys.markers })
   })
 
   // Slice 030: an attack was launched at one of our positions (only sent once detection ≥ 1).
@@ -58,10 +65,13 @@ export function registerTroopWsListeners(): void {
 
   wsClient.on(AppEvent.OutpostCreated, () => {
     queryClient.invalidateQueries({ queryKey: outpostKeys.all })
+    queryClient.invalidateQueries({ queryKey: mapKeys.exploration })
+    queryClient.invalidateQueries({ queryKey: mapKeys.markers })
   })
 
   wsClient.on<{ outpost_id: string }>(AppEvent.OutpostDeleted, ({ outpost_id }) => {
     queryClient.invalidateQueries({ queryKey: outpostKeys.all })
     queryClient.invalidateQueries({ queryKey: outpostKeys.detail(outpost_id) })
+    queryClient.invalidateQueries({ queryKey: mapKeys.markers })
   })
 }
