@@ -46,8 +46,9 @@ Every `TroopCode` has a `combat_role` (`core/troop/constant/characteristic.ts`);
 | `the_technological_singularity` | `prime_unit` | `striker_drone` | `war_machine` | `disruptor` |
 | `the_ash_liturgy` | `penitent_horde` | `wraith_lancer` | `cinder_titan` | `hemorrhage_cultist` |
 | `the_symbiosis` ([`036`](../036-faction-symbiosis/spec.md)) | `root_warden` | `spore_swarm` | `fungal_colossus` | `toxic_howler` |
+| `the_bastion_order` ([`037`](../037-faction-bastion-order/spec.md)) | `grenadier` | `dragoon` | `siege_tank` | `mobile_mortar` |
 
-Other roles: **scout** (`explorer`, `seeker`, `ash_emissary`, `drifting_spore`), **carrier** (`light_transporter`, `hauler`, `bone_cart`, `mycelial_porter`), **civilian** (settlers and gatherers, incl. `pyre_pilgrim`, `spore_acolyte`, `scrap_lector`, `seed_bearer`, `symbiont_grower`, `decomposer`). Role decides battle pools and whether a stack may join an attack ([`010`](../010-troop-movement-combat/spec.md)).
+Other roles: **scout** (`explorer`, `seeker`, `ash_emissary`, `drifting_spore`, `sentinel`), **carrier** (`light_transporter`, `hauler`, `bone_cart`, `mycelial_porter`, `supply_truck`), **civilian** (settlers and gatherers, incl. `pyre_pilgrim`, `spore_acolyte`, `scrap_lector`, `seed_bearer`, `symbiont_grower`, `decomposer`, `field_engineer`, `quartermaster`, `scrapper`). Role decides battle pools and whether a stack may join an attack ([`010`](../010-troop-movement-combat/spec.md)).
 
 ## Garrison defense strategy (024)
 

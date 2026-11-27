@@ -126,11 +126,12 @@ At battle start (`app/saga/finish/attack.ts`), when the target is a **city**, th
 | Rampart | 0 | `life × count × fortification` |
 | Turret | `attack × count × fortification` | `life × count × fortification` |
 | Minefield | Round 1: `attack × count × fortification`; later rounds: stack is gone | not counted |
+| Per-round defenses ([`037`](../037-faction-bastion-order/spec.md)) | `attack_by_round[r] × count × fortification` | as their row type |
 | Plasma battery | `attack × firing × fortification`, `firing = min(count, floor(city_plasma / 5))`; spends `5 × firing` plasma | `life × count × fortification` |
 | Shield generator | 0 | `life × count × fortification` |
 
 - Strategy multipliers and Arsenal modifiers ([`027`](../027-military-economy-technologies/spec.md)) do **not** apply to defenses; only Fortification does.
-- **Shield**: after computing the attacker's attack pool, multiply it by `1 − min(0.30, 0.02 × surviving_shield_generators)`. With spore clouds ([`036`](../036-faction-symbiosis/spec.md)) the two reductions add up, capped at **40 %** in total.
+- **Shield**: after computing the attacker's attack pool, multiply it by `1 − min(0.30, 0.02 × surviving_shield_generators)`. With spore clouds ([`036`](../036-faction-symbiosis/spec.md)) and barbed wire ([`037`](../037-faction-bastion-order/spec.md)) the reductions add up, capped at **40 %** in total.
 - **Exposure** (homogeneous army) ignores defense stacks when counting classes.
 - Plasma spent by batteries is debited from the city stock during the round. Loot is computed on the remaining stock.
 
@@ -141,7 +142,7 @@ At battle start (`app/saga/finish/attack.ts`), when the target is a **city**, th
 | Any except `siege_assault` | Rampart → combat troops (current focus rules) → turret → plasma battery → shield generator → carrier → civilian → scout |
 | `siege_assault` | Rampart → shield generator → plasma battery → turret → combat troops → carrier → civilian → scout |
 
-Within a defense type, whole units are removed as for troops.
+Within a defense type, whole units are removed as for troops. Barbed wire ([`037`](../037-faction-bastion-order/spec.md)) comes **before** ramparts in both orders.
 
 ### Victory
 
@@ -230,10 +231,14 @@ Migration (next free number):
 | --- | --- | --- | --- | --- | --- |
 | `mycelium_wall` | `the_symbiosis` | 1 / 0 / 50 | no | with `rampart` (both orders) | Regrowth: on a defender win or draw, `floor(30 % × destroyed)` units are not removed from the city; the defender report lists them |
 | `spore_cloud` | `the_symbiosis` | 2 / 12 / 10 | yes | with `turret` (both orders) | Each surviving unit lowers the attacker attack pool by 1 %, max 15 %; with shields max 40 % in total; round summaries carry `spore_reduction` |
+| `field_artillery` ([`037`](../037-faction-bastion-order/spec.md)) | `the_bastion_order` | 4 / 60·50·25·20·20 / 35 | yes | with `turret` (both orders) | Per-round attack table `attack_by_round` (rounds 1–5) |
+| `barbed_wire` ([`037`](../037-faction-bastion-order/spec.md)) | `the_bastion_order` | 1 / 0 / 15 | no | **first**, before `rampart` (both orders) | Each surviving unit lowers the attacker attack pool by 1 % in round 1 (max 10 %) and 0.5 % in round 2 (max 5 %), nothing afterwards; inside the 40 % combined cap after shields and spores; round summaries carry `barbed_wire_reduction` |
+
+**Per-round attack** ([`037`](../037-faction-bastion-order/spec.md)): `defense_characteristics` takes an optional `attack_by_round` table (rounds 1–5; rounds past it use its last value) that replaces the flat `attack` in combat (`DefenseService.getAttackForRound`). The minefield is expressed as `[40, 0, 0, 0, 0]` (behaviour unchanged: it is still consumed after round 1); `GET /city/:city_id/defense` exposes the table as `attack_by_round`.
 
 ## Out of scope
 
-- Faction-specific defenses (with the new factions: La Symbiose implemented in [`036`](../036-faction-symbiosis/spec.md), see [Faction defenses](#faction-defenses-036); `037` / `039` later).
+- Faction-specific defenses (with the new factions: La Symbiose implemented in [`036`](../036-faction-symbiosis/spec.md) and L'Ordre du Bastion in [`037`](../037-faction-bastion-order/spec.md), see [Faction defenses](#faction-defenses-036); `039` later).
 - Defenses on outposts.
 - Repairing damaged units (whole-unit model only).
 - Shield upkeep or energy-based shields.
@@ -252,7 +257,7 @@ Migration (next free number):
 
 ## Implementation notes
 
-- **Casualty mechanics**: the engine has no per-unit damage; each side loses `loss_budget = max(1, floor(attack_pool / max(1, life_pool)))` **whole units** per round ([`024`](../024-player-combat-pvp/spec.md), [`027`](../027-military-economy-technologies/spec.md)). Defenses take part as units: their life raises the defender life pool (fewer units lost), their attack raises the defender attack pool, and the budget is spent in the casualty order of this spec (tiers: rampart → combat troops (dominant-class focus kept) → turret → plasma battery → shield generator → carrier → civilian → scout; `siege_assault` swaps in rampart → shield → battery → turret → combat). Minefields are not candidates. Without defenses the order and pools are exactly the former ones.
+- **Casualty mechanics**: the engine has no per-unit damage; each side loses `loss_budget = max(1, floor(attack_pool / max(1, life_pool)))` **whole units** per round ([`024`](../024-player-combat-pvp/spec.md), [`027`](../027-military-economy-technologies/spec.md)). Defenses take part as units: their life raises the defender life pool (fewer units lost), their attack raises the defender attack pool, and the budget is spent in the casualty order of this spec (tiers: rampart → combat troops (dominant-class focus kept) → turret → plasma battery → shield generator → carrier → civilian → scout; `siege_assault` swaps in rampart → shield → battery → turret → combat). Minefields are not candidates. Barbed wire ([`037`](../037-faction-bastion-order/spec.md)) gets its own tier before the ramparts in both orders. Without defenses the order and pools are exactly the former ones.
 - **Minefields**: consumed at the end of the round they fired in (round 1); the consumed units are added to that round's `defender_losses` (`kind: 'defense'`), so reports count them and the post-battle decrement removes them from the city.
 - **Shield**: the reduction uses the shield generators alive at the start of the round; `attacker_attack_pool` in the round summary is the reduced pool (the one that converts into defender losses), `shield_reduction` carries the share.
 - **Exposure**: the 0.85 multiplier applies to the troop part of the life pool only; defense life is added after it (unchanged behaviour without defenses).

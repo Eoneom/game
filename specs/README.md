@@ -37,7 +37,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 034 | Rankings | Implemented | [spec](./034-rankings/spec.md) |
 | 035 | Faction exchange and water | Implemented | [spec](./035-faction-exchange/spec.md) |
 | 036 | Playable faction: La Symbiose | Implemented | [spec](./036-faction-symbiosis/spec.md) |
-| 037 | Playable faction: L'Ordre du Bastion | Planned | [spec](./037-faction-bastion-order/spec.md) |
+| 037 | Playable faction: L'Ordre du Bastion | Implemented | [spec](./037-faction-bastion-order/spec.md) |
 | 038 | Security pass before public launch | Planned | [spec](./038-security-pass/spec.md) |
 | 039 | Confederation identity: defenses and logistics bonus | Planned | [spec](./039-confederation-identity/spec.md) |
 

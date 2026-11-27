@@ -85,7 +85,7 @@ Stat uniqueness ([`024`](../024-player-combat-pvp/spec.md)) holds: no combat cod
 | `mycelium_wall` | `city_wall` 1 | 400 / 700 | 60 |
 | `spore_cloud` | `city_wall` 2, `fortification` 1 | 500 / 700 | 60 |
 
-**Combined reduction cap**: the shield generator (up to 30 %) and the spore cloud (up to 15 %) add up, capped at **40 %** in total.
+**Combined reduction cap**: the shield generator (up to 30 %) and the spore cloud (up to 15 %) add up, capped at **40 %** in total. Barbed wire ([`037`](../037-faction-bastion-order/spec.md), up to 10 % in round 1 and 5 % in round 2) joins the same cap, granted after shields and spores.
 
 Casualty order: `mycelium_wall` sits with `rampart` (first); `spore_cloud` sits with `turret`. Under `siege_assault`, with ramparts.
 
