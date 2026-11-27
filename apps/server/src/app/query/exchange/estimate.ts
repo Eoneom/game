@@ -3,6 +3,7 @@ import { BuildingCode } from '#core/building/constant/code'
 import { CityError } from '#core/city/error'
 import { EXCHANGE_FALLBACK_TYPICAL_DISTANCE } from '#core/exchange/constant/limits'
 import { ExchangeService } from '#core/exchange/service'
+import { FactionService } from '#core/faction/service'
 import { TroopService } from '#core/troop/service'
 import { TroopCount } from '#core/troop/type'
 import { WorldService } from '#core/world/service'
@@ -82,12 +83,15 @@ export class ExchangeEstimateQuery extends GenericQuery<ExchangeEstimateQueryReq
       }),
     ])
 
+    // Faction logistics bonus (slice 039): fewer carriers reserved, faster deliveries.
+    const logistics = FactionService.getLogisticsModifier(player.faction_code)
     const reserved_carriers = ExchangeService.allocateCarriers({
       stacks: ExchangeService.availableTroops({
         troops,
         reservations: cell_reservations
       }),
       resources: reserved_resources,
+      carrier_capacity_multiplier: logistics.transport_capacity,
     })
 
     let typical_delivery_duration: number | null = null
@@ -102,6 +106,7 @@ export class ExchangeEstimateQuery extends GenericQuery<ExchangeEstimateQueryReq
           destinations
         }),
         troop_codes: reserved_carriers.map(carrier => carrier.code),
+        non_combat_speed_multiplier: logistics.non_combat_speed,
       })
     }
 

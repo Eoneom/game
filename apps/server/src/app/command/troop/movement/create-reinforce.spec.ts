@@ -108,6 +108,10 @@ describe('createTroopMovement reinforce and recall (slice 033)', () => {
     }
 
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
       used: 0,
       limit: 5

@@ -134,6 +134,13 @@ describe('battle outcomes credit military value (slice 034)', () => {
       defense_build_queue: { deleteByCity: vi.fn().mockResolvedValue(undefined) },
       exchange: { listOpenByCityForUpdate: vi.fn().mockResolvedValue([]) },
       player: {
+        // Loot capacity reads the attacker's faction logistics bonus (slice 039).
+        get: vi.fn(async (id: string) => PlayerEntity.create({
+          id,
+          name: id,
+          faction_code: FactionCode.THE_CONFEDERATION,
+          system_controlled: system_player_ids.includes(id),
+        })),
         listByIds: vi.fn(async (ids: string[]) => ids.map(id => PlayerEntity.create({
           id,
           name: id,

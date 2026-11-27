@@ -90,6 +90,10 @@ describe('finishTroopReinforceMovement (slice 033)', () => {
     ])
 
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     vi.spyOn(Factory, 'getRepository').mockReturnValue({
       movement: {
         getById: vi.fn().mockResolvedValue(movement),

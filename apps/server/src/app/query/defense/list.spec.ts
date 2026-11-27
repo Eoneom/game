@@ -106,6 +106,15 @@ describe('DefenseListQuery', () => {
         DefenseCode.PLASMA_BATTERY,
         0 
       ],
+      // Confederation defenses (slice 039).
+      [
+        DefenseCode.RAILGUN,
+        0
+      ],
+      [
+        DefenseCode.HOLO_DECOY,
+        0
+      ],
     ])
     assert.deepStrictEqual(result.capacity, {
       total: 40,
@@ -153,6 +162,34 @@ describe('DefenseListQuery', () => {
       DefenseCode.BARBED_WIRE,
     ])
     assert.strictEqual(result.costs[DefenseCode.FIELD_ARTILLERY].resource.plastic, 1600)
+  })
+
+  it('adds the Confederation defenses for a Confederation player only (slice 039)', async () => {
+    for (const other of [
+      FactionCode.THE_SYMBIOSIS,
+      FactionCode.THE_BASTION_ORDER
+    ]) {
+      faction_code = other
+      const result = await new DefenseListQuery().run({
+        player_id,
+        city_id: city.id
+      })
+      const codes = result.defenses.map(defense => defense.code)
+      assert.ok(!codes.includes(DefenseCode.RAILGUN) && !codes.includes(DefenseCode.HOLO_DECOY))
+    }
+
+    faction_code = FactionCode.THE_CONFEDERATION
+    const result = await new DefenseListQuery().run({
+      player_id,
+      city_id: city.id
+    })
+    assert.deepStrictEqual(result.costs[DefenseCode.RAILGUN].resource, {
+      plastic: 1400,
+      mushroom: 800,
+      plasma: 100,
+      water: 0,
+    })
+    assert.strictEqual(result.costs[DefenseCode.HOLO_DECOY].resource.plastic, 150)
   })
 
   it('rejects another player', async () => {

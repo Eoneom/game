@@ -51,6 +51,16 @@ export type BattleRoundSummary = {
    * with `shield_reduction` and `spore_reduction` it never exceeds 0.40. Absent on older rounds (= 0).
    */
   barbed_wire_reduction?: number
+  /**
+   * Defender losses absorbed by holo decoys this round (slice 039), at most `floor(30 % × loss budget)` in rounds 1–2,
+   * 0 afterwards. Decoys that vanish unused are not counted here. Absent on older rounds (= 0).
+   */
+  decoy_absorbed?: number
+  /**
+   * The defender's railguns fired doubled this round (slice 039): the attacker used `siege_assault`, or `war_machine`
+   * units made up at least 50 % of its combat attack pool. Absent on older rounds (= false).
+   */
+  railgun_doubled?: boolean
 }
 
 /** Technology multipliers snapshotted for one side (slice 027 / 029). */

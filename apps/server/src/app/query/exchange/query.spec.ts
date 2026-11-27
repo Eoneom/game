@@ -180,7 +180,7 @@ describe('exchange queries (slice 035)', () => {
         open_order_count: 0,
         open_order_limit: 2,
       })
-      // Median of 4, 10 and 30 cells.
+      // Median of 4, 10 and 30 cells; a Confederation convoy gets the logistics speed bonus (slice 039).
       expect(estimate.typical_delivery_duration).toBe(TroopService.getMovementDuration({
         distance: WorldService.getDistance({
           origin: {
@@ -193,6 +193,7 @@ describe('exchange queries (slice 035)', () => {
           }
         }),
         troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+        non_combat_speed_multiplier: 1.05,
       }))
     })
 

@@ -53,4 +53,15 @@ export const defense_costs: Record<DefenseCode, CountCosts> = {
     mushroom: 100,
     duration: 20
   },
+  [DefenseCode.RAILGUN]: {
+    plastic: 1400,
+    mushroom: 800,
+    plasma: 100,
+    duration: 120
+  },
+  [DefenseCode.HOLO_DECOY]: {
+    plastic: 150,
+    mushroom: 150,
+    duration: 15
+  },
 }

@@ -127,10 +127,12 @@ export interface BattleRound {
   attacker_losses: Json;
   barbed_wire_reduction: Generated<number>;
   battle_id: string;
+  decoy_absorbed: Generated<number>;
   defender_attack_pool: number;
   defender_life_pool: number;
   defender_losses: Json;
   defender_plasma_spent: Generated<number>;
+  railgun_doubled: Generated<boolean>;
   round: number;
   shield_reduction: Generated<number>;
   spore_reduction: Generated<number>;

@@ -20,6 +20,8 @@ import {
   ReportTradeMetadata
 } from '#core/exchange/type'
 import { ExchangeOrderStatus } from '#core/exchange/value/order-status'
+import { FactionLogisticsModifier } from '#core/faction/constant/logistics-modifier'
+import { FactionService } from '#core/faction/service'
 import { ExchangeSide } from '#core/exchange/value/side'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopEntity } from '#core/troop/entity'
@@ -108,6 +110,7 @@ export async function placeExchangeOrder(params: PlaceExchangeOrderParams): Prom
         reservations: cell_reservations
       }),
       resources: escrow,
+      carrier_capacity_multiplier: FactionService.getLogisticsModifier(player.faction_code).transport_capacity,
     })
     if (!carriers) {
       throw new Error(ExchangeError.NOT_ENOUGH_CARRIERS)
@@ -169,6 +172,8 @@ interface OrderSide {
   reservations: CarrierReservation[]
   /** Carriers of the city that no open order reserves. */
   free: TroopCount[]
+  /** The order owner's faction logistics bonus (slice 039), from the order's `faction_code`. */
+  logistics: FactionLogisticsModifier
 }
 
 async function loadCityCarriers({
@@ -230,6 +235,7 @@ async function loadOrderSide(order: ExchangeOrderEntity): Promise<OrderSide> {
       troops,
       reservations: cell_reservations
     }),
+    logistics: FactionService.getLogisticsModifier(order.faction_code),
   }
 }
 
@@ -347,12 +353,14 @@ async function executeFill({
   const seller_carriers = ExchangeService.convoyCarriers({
     reservations: seller.reservations,
     free: seller.free,
-    resources: goods
+    resources: goods,
+    carrier_capacity_multiplier: seller.logistics.transport_capacity,
   })
   const buyer_carriers = ExchangeService.convoyCarriers({
     reservations: buyer.reservations,
     free: buyer.free,
-    resources: payment
+    resources: payment,
+    carrier_capacity_multiplier: buyer.logistics.transport_capacity,
   })
   const incoming_carriers = incoming === seller ? seller_carriers : buyer_carriers
   const resting_carriers = incoming === seller ? buyer_carriers : seller_carriers
@@ -552,6 +560,7 @@ async function sendConvoy({
     action: MovementAction.EXCHANGE,
     resources: cargo,
     exchange_trade_id: trade_id,
+    non_combat_speed_multiplier: from.logistics.non_combat_speed,
   })
   await repository.movement.create(movement)
 
@@ -592,6 +601,7 @@ async function sendConvoy({
             count: reservation.count
           })),
           resources: ExchangeService.remainingEscrow(filled_order),
+          carrier_capacity_multiplier: from.logistics.transport_capacity,
         })
         : [],
     }),

@@ -8,4 +8,6 @@ export enum DefenseCode {
   SPORE_CLOUD = 'spore_cloud',
   FIELD_ARTILLERY = 'field_artillery',
   BARBED_WIRE = 'barbed_wire',
+  RAILGUN = 'railgun',
+  HOLO_DECOY = 'holo_decoy',
 }

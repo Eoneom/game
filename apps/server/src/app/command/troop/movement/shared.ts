@@ -35,7 +35,14 @@ export async function createReturnBaseTrip({
     destination,
   })
 
-  const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id: inbound_movement.player_id })
+  const [
+    propulsion_level,
+    logistics
+  ] = await Promise.all([
+    AppService.getTacticalPropulsionLevel({ player_id: inbound_movement.player_id }),
+    // Returns without combat units get the faction logistics speed bonus (slice 039).
+    AppService.getLogisticsModifier({ player_id: inbound_movement.player_id }),
+  ])
 
   const { movement: base_movement, arrive_at: base_arrive_at } = TroopService.createMovement({
     troops,
@@ -47,6 +54,7 @@ export async function createReturnBaseTrip({
     action: MovementAction.BASE,
     resources,
     propulsion_level,
+    non_combat_speed_multiplier: logistics.non_combat_speed,
     // The carriers' return trip of an exchange convoy stays out of the movement cap (slice 035).
     exchange_trade_id: inbound_movement.exchange_trade_id,
   })

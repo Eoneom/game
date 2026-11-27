@@ -143,7 +143,10 @@ export class ExchangeService {
     return TroopService.roleFor(code) === TroopRole.CARRIER && TroopService.getTransportCapacity(code) > 0
   }
 
-  /** Carrier stacks with units, largest `transport_capacity` first (troop order breaks ties). */
+  /**
+   * Carrier stacks with units, largest `transport_capacity` first (troop order breaks ties). The owner's faction
+   * logistics multiplier (slice 039) is the same for every carrier, so it never changes the order.
+   */
   static carrierStacks(troops: TroopCount[]): TroopCount[] {
     return troops
       .filter(troop => troop.count > 0 && this.isCarrier(troop.code))
@@ -182,10 +185,12 @@ export class ExchangeService {
   /** Takes carriers from `stacks` (any order), largest capacity first, until `load` fits. */
   private static allocatePartial({
     stacks,
-    load
+    load,
+    carrier_capacity_multiplier,
   }: {
     stacks: TroopCount[]
     load: number
+    carrier_capacity_multiplier: number
   }): { taken: TroopCount[], remaining_load: number } {
     let remaining_load = load
     const taken: TroopCount[] = []
@@ -193,7 +198,7 @@ export class ExchangeService {
       if (remaining_load <= 0) {
         break
       }
-      const capacity = TroopService.getTransportCapacity(stack.code)
+      const capacity = TroopService.getTransportCapacity(stack.code, carrier_capacity_multiplier)
       const count = Math.min(stack.count, Math.ceil(remaining_load / capacity))
       taken.push({
         code: stack.code,
@@ -207,19 +212,25 @@ export class ExchangeService {
     }
   }
 
-  /** Just enough carriers for `resources`, largest capacity first; `null` when the stacks cannot carry them. */
+  /**
+   * Just enough carriers for `resources`, largest capacity first; `null` when the stacks cannot carry them.
+   * `carrier_capacity_multiplier` is the owner's faction logistics bonus (slice 039).
+   */
   static allocateCarriers({
     stacks,
-    resources
+    resources,
+    carrier_capacity_multiplier = 1,
   }: {
     stacks: TroopCount[]
     resources: Resource
+    carrier_capacity_multiplier?: number
   }): TroopCount[] | null {
     const {
       taken, remaining_load
     } = this.allocatePartial({
       stacks,
-      load: TroopService.getTransportLoad({ resources })
+      load: TroopService.getTransportLoad({ resources }),
+      carrier_capacity_multiplier,
     })
     return remaining_load > 0 ? null : taken
   }
@@ -231,18 +242,21 @@ export class ExchangeService {
   static convoyCarriers({
     reservations,
     free,
-    resources
+    resources,
+    carrier_capacity_multiplier = 1,
   }: {
     reservations: CarrierReservation[]
     free: TroopCount[]
     resources: Resource
+    carrier_capacity_multiplier?: number
   }): ConvoyCarriers | null {
     const from_reserved = this.allocatePartial({
       stacks: reservations.map(reservation => ({
         code: reservation.troop_code,
         count: reservation.count
       })),
-      load: TroopService.getTransportLoad({ resources })
+      load: TroopService.getTransportLoad({ resources }),
+      carrier_capacity_multiplier,
     })
     if (from_reserved.remaining_load <= 0) {
       return {
@@ -252,7 +266,8 @@ export class ExchangeService {
     }
     const from_free = this.allocatePartial({
       stacks: free,
-      load: from_reserved.remaining_load
+      load: from_reserved.remaining_load,
+      carrier_capacity_multiplier,
     })
     if (from_free.remaining_load > 0) {
       return null
@@ -270,17 +285,20 @@ export class ExchangeService {
   static topUpReservations({
     reservations,
     free,
-    resources
+    resources,
+    carrier_capacity_multiplier = 1,
   }: {
     reservations: CarrierReservation[]
     free: TroopCount[]
     resources: Resource
+    carrier_capacity_multiplier?: number
   }): CarrierReservation[] {
     const capacity = TroopService.getTotalTransportCapacity({
       troops: reservations.map(reservation => ({
         code: reservation.troop_code,
         count: reservation.count
-      }))
+      })),
+      carrier_capacity_multiplier,
     })
     const shortfall = TroopService.getTransportLoad({ resources }) - capacity
     if (shortfall <= 0) {
@@ -288,7 +306,8 @@ export class ExchangeService {
     }
     const { taken } = this.allocatePartial({
       stacks: free,
-      load: shortfall
+      load: shortfall,
+      carrier_capacity_multiplier,
     })
     return [
       ...this.reservedByCode([

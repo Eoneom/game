@@ -24,6 +24,10 @@ describe('TroopMovementEstimateQuery', () => {
 
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     const origin_cell = CellEntity.create({
       id: id(),
       coordinates: origin,
@@ -90,6 +94,51 @@ describe('TroopMovementEstimateQuery', () => {
     expect(result.destination_capacity_exceeded).toBe(false)
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: origin })
     expect(repository.cell.getCell).toHaveBeenCalledWith({ coordinates: destination })
+  })
+
+  it('shows the Confederation logistics bonus on non-combat movements and carriers (slice 039)', async () => {
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1.1,
+      non_combat_speed: 1.05
+    })
+    const distance = WorldService.getDistance({
+      origin: destination,
+      destination: origin
+    })
+
+    const transport = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+      troops: [
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ],
+      player_id
+    })
+    expect(AppService.getLogisticsModifier).toHaveBeenCalledWith({ player_id })
+    expect(transport.speed).toBe(TroopService.getSpeed(TroopCode.LIGHT_TRANSPORTER) * 1.05)
+    expect(transport.transport_capacity).toBe(2 * 11000)
+    expect(transport.duration).toBe(TroopService.getMovementDuration({
+      distance,
+      troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+      non_combat_speed_multiplier: 1.05
+    }) / 1000)
+
+    // A combat unit in the movement: normal speed, carriers still carry more.
+    const attack = await new TroopMovementEstimateQuery().run({
+      origin,
+      destination,
+      troop_codes: [
+        TroopCode.LEGIONNAIRE,
+        TroopCode.LIGHT_TRANSPORTER
+      ],
+      player_id
+    })
+    expect(attack.speed).toBe(TroopService.getSpeed(TroopCode.LIGHT_TRANSPORTER))
+    expect(attack.transport_capacity).toBe(11000)
   })
 
   it('applies the player tactical_propulsion level to combat troops', async () => {

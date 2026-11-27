@@ -1,5 +1,9 @@
 import { FactionCode } from '#core/faction/constant/code'
 import { faction_garrison_life_modifier } from '#core/faction/constant/garrison-modifier'
+import {
+  faction_logistics_modifier,
+  FactionLogisticsModifier
+} from '#core/faction/constant/logistics-modifier'
 import { non_playable_faction_codes } from '#core/faction/constant/playable'
 import { faction_production_modifier } from '#core/faction/constant/production-modifier'
 import { FactionError } from '#core/faction/error'
@@ -43,5 +47,14 @@ export class FactionService {
   /** Garrison life multiplier (slice 037) for the city owner's own combat stacks, neutral (1) for most factions. */
   static getGarrisonLifeMultiplier(faction_code: FactionCode): number {
     return faction_garrison_life_modifier[faction_code] ?? 1
+  }
+
+  /** Logistics multipliers (slice 039) for carriers and non-combat movements, neutral (1) for most factions. */
+  static getLogisticsModifier(faction_code: FactionCode): FactionLogisticsModifier {
+    const modifier = faction_logistics_modifier[faction_code]
+    return {
+      transport_capacity: modifier?.transport_capacity ?? 1,
+      non_combat_speed: modifier?.non_combat_speed ?? 1,
+    }
   }
 }

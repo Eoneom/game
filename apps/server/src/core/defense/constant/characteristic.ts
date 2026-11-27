@@ -10,7 +10,7 @@ interface DefenseCharacteristic {
    * table use its last value.
    */
   attack_by_round?: readonly number[]
-  /** Life per unit; minefields are not in the life pool and cannot be targeted. */
+  /** Life per unit; minefields and holo decoys (slice 039) are not in the life pool and cannot be targeted. */
   life: number
   /** Armed defenses keep the defender in the fight without combat troops. */
   armed: boolean
@@ -90,6 +90,20 @@ export const defense_characteristics: Record<DefenseCode, DefenseCharacteristic>
     life: 15,
     armed: false,
   },
+  // La Confédération (slice 039).
+  [DefenseCode.RAILGUN]: {
+    points: 3,
+    attack: 30,
+    life: 25,
+    armed: true,
+  },
+  // Not in the life pool and never targeted: decoys absorb part of the loss budget in rounds 1-2.
+  [DefenseCode.HOLO_DECOY]: {
+    points: 1,
+    attack: 0,
+    life: 0,
+    armed: false,
+  },
 }
 
 /** Plasma each firing `plasma_battery` unit spends per round from the city stock. */
@@ -121,6 +135,20 @@ export const BARBED_WIRE_REDUCTION_CAP_BY_ROUND: readonly number[] = [
 
 /** Shield generators, spore clouds and barbed wire add up, capped at this total share of the attacker's attack pool. */
 export const ATTACK_REDUCTION_CAP = 0.4
+
+/**
+ * `railgun` attack multiplier in a round where the attacker uses `siege_assault`, or where `war_machine` units make
+ * up at least `RAILGUN_WAR_MACHINE_SHARE` of the attacker's combat attack pool (slice 039).
+ */
+export const RAILGUN_SIEGE_ATTACK_MULTIPLIER = 2
+export const RAILGUN_WAR_MACHINE_SHARE = 0.5
+
+/**
+ * `holo_decoy` (slice 039): in rounds 1 to `HOLO_DECOY_LAST_ROUND`, up to `floor(HOLO_DECOY_LOSS_SHARE × loss budget)`
+ * defender losses are taken from decoys first, one decoy per unit loss; the decoys left vanish after that round.
+ */
+export const HOLO_DECOY_LOSS_SHARE = 0.3
+export const HOLO_DECOY_LAST_ROUND = 2
 
 /** Share of the `mycelium_wall` units destroyed in a battle that grow back when the defender wins or draws. */
 export const MYCELIUM_WALL_REGROWTH_RATIO = 0.3

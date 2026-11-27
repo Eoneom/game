@@ -73,6 +73,8 @@ export class PostgresBattleRepository implements BattleRepository {
       shield_reduction: row.shield_reduction,
       spore_reduction: row.spore_reduction,
       barbed_wire_reduction: row.barbed_wire_reduction,
+      decoy_absorbed: row.decoy_absorbed,
+      railgun_doubled: row.railgun_doubled,
     }))
   }
 
@@ -91,6 +93,8 @@ export class PostgresBattleRepository implements BattleRepository {
       shield_reduction: summary.shield_reduction ?? 0,
       spore_reduction: summary.spore_reduction ?? 0,
       barbed_wire_reduction: summary.barbed_wire_reduction ?? 0,
+      decoy_absorbed: summary.decoy_absorbed ?? 0,
+      railgun_doubled: summary.railgun_doubled ?? false,
     }
   }
 

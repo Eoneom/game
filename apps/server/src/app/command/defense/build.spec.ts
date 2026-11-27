@@ -200,6 +200,56 @@ describe('buildDefense', () => {
     })
   })
 
+  describe('faction defenses (slice 039)', () => {
+    it('rejects the Confederation defenses for Symbiose and Bastion players', async () => {
+      for (const player_faction of [
+        FactionCode.THE_SYMBIOSIS,
+        FactionCode.THE_BASTION_ORDER
+      ]) {
+        faction_code = player_faction
+        for (const defense_code of [
+          DefenseCode.RAILGUN,
+          DefenseCode.HOLO_DECOY
+        ]) {
+          await assert.rejects(buildDefense({
+            player_id,
+            city_id: city.id,
+            defense_code,
+            count: 1
+          }), new Error(DefenseError.NOT_IN_FACTION_ROSTER))
+        }
+      }
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls.length, 0)
+    })
+
+    it('lets a Confederation player build railguns, paid in plasma too', async () => {
+      await buildDefense({
+        player_id,
+        city_id: city.id,
+        defense_code: DefenseCode.RAILGUN,
+        count: 2
+      })
+
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls[0][0].defense_code, DefenseCode.RAILGUN)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plastic, 100_000 - 2 * 1400)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].mushroom, 100_000 - 2 * 800)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plasma, 1_000 - 2 * 100)
+    })
+
+    it('lets a Confederation player build holo decoys', async () => {
+      await buildDefense({
+        player_id,
+        city_id: city.id,
+        defense_code: DefenseCode.HOLO_DECOY,
+        count: 5
+      })
+
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls[0][0].defense_code, DefenseCode.HOLO_DECOY)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plastic, 100_000 - 5 * 150)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].mushroom, 100_000 - 5 * 150)
+    })
+  })
+
   it('starts the batch and pays for it when nothing is being built', async () => {
     await buildDefense({
       player_id,

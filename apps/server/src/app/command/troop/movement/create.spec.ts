@@ -15,6 +15,7 @@ import { CombatError } from '#core/combat/error'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { FactionCode } from '#core/faction/constant/code'
 import { TroopError } from '#core/troop/error'
+import { TroopService } from '#core/troop/service'
 import { CellEntity } from '#core/world/cell/entity'
 import { CellType } from '#core/world/value/cell-type'
 import { id } from '#shared/identification'
@@ -47,6 +48,10 @@ describe('createTroopMovement', () => {
 
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
       used: 0,
       limit: 5
@@ -497,6 +502,50 @@ describe('createTroopMovement', () => {
           } }),
         new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       )
+    })
+
+    it('carries 10 % more with Confederation carriers and snapshots the non-combat speed bonus (slice 039)', async () => {
+      listInCell.mockResolvedValue([
+        TroopEntity.create({
+          id: id(),
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 1,
+          player_id,
+          cell_id,
+          movement_id: null
+        })
+      ])
+      // 5 000 + 5 000 + 40 water × 2 = 10 080: above one light transporter (10 000), within 11 000.
+      const params = {
+        player_id,
+        origin,
+        destination,
+        action: MovementAction.TRANSPORT,
+        move_troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 1
+          }
+        ],
+        resources: {
+          plastic: 5000,
+          mushroom: 5000,
+          plasma: 0,
+          water: 40
+        }
+      }
+      await assert.rejects(() => createTroopMovement(params), new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED))
+
+      vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+        transport_capacity: 1.1,
+        non_combat_speed: 1.05
+      })
+      const createMovement = vi.spyOn(TroopService, 'createMovement')
+      await createTroopMovement(params)
+
+      assert.strictEqual(movementCreate.mock.calls.length, 1)
+      assert.strictEqual(createMovement.mock.calls[0][0].non_combat_speed_multiplier, 1.05)
+      assert.strictEqual(createMovement.mock.calls[0][0].propulsion_level, 0)
     })
 
     it('should reject when weighted plasma load exceeds transport capacity', async () => {

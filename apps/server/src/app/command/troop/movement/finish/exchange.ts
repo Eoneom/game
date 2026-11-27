@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { Factory } from '#adapter/factory'
 import { createReturnBaseTrip } from '#app/command/troop/movement/shared'
+import { AppService } from '#app/service'
 import { runCommand } from '#command/run'
 import { CityEntity } from '#core/city/entity'
 import { MovementAction } from '#core/troop/constant/movement-action'
@@ -108,6 +109,8 @@ export async function finishExchangeMovement({
       }
     }
 
+    // Redirected convoy leg: carriers only, so the faction logistics speed bonus applies (slice 039).
+    const logistics = await AppService.getLogisticsModifier({ player_id })
     const {
       movement: next_movement, arrive_at 
     } = TroopService.createMovement({
@@ -123,6 +126,7 @@ export async function finishExchangeMovement({
       action: MovementAction.EXCHANGE,
       resources: movement.resources,
       exchange_trade_id: movement.exchange_trade_id,
+      non_combat_speed_multiplier: logistics.non_combat_speed,
     })
     await repository.movement.create(next_movement)
     await Promise.all([

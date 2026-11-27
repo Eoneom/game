@@ -12,6 +12,7 @@ import { ReportType } from '#core/communication/value/report-type'
 import { TroopCode } from '#core/troop/constant/code'
 import { MovementAction } from '#core/troop/constant/movement-action'
 import { TroopEntity } from '#core/troop/entity'
+import { TroopService } from '#core/troop/service'
 
 describe('placeExchangeOrder (slice 035)', () => {
   let world: ExchangeWorld
@@ -196,6 +197,55 @@ describe('placeExchangeOrder (slice 035)', () => {
       ])
       // The carriers stay on the cell.
       expect(world.stackCount(city)).toBe(5)
+    })
+
+    it('reserves fewer carriers and sends faster convoys for a Confederation player (slice 039)', async () => {
+      const seller = world.addPlayer({ faction_code: FactionCode.THE_CONFEDERATION })
+      const seller_city = world.addCity({
+        player: seller,
+        x: 0,
+        stock: { plastic: 30000 },
+        carriers: 5
+      })
+
+      // 220 lots = 22 000 plastic → 2 light transporters at 11 000 (3 without the logistics bonus).
+      const { order_id } = await placeExchangeOrder({
+        player_id: seller.id,
+        city_id: seller_city.id,
+        side: ExchangeSide.SELL,
+        resource: ExchangeResource.PLASTIC,
+        lots: 220,
+        price: 1
+      })
+      expect(world.reservations.get(order_id)).toEqual([
+        {
+          troop_code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ])
+
+      const createMovement = vi.spyOn(TroopService, 'createMovement')
+      const buyer = world.addPlayer({ faction_code: FactionCode.THE_CONFEDERATION })
+      const buyer_city = world.addCity({
+        player: buyer,
+        x: 4,
+        stock: { water: 1000 },
+        carriers: 2
+      })
+      await placeExchangeOrder({
+        player_id: buyer.id,
+        city_id: buyer_city.id,
+        side: ExchangeSide.BUY,
+        resource: ExchangeResource.PLASTIC,
+        lots: 220,
+        price: 1
+      })
+
+      expect(createMovement).toHaveBeenCalledTimes(2)
+      for (const [ params ] of createMovement.mock.calls) {
+        expect(params.action).toBe(MovementAction.EXCHANGE)
+        expect(params.non_combat_speed_multiplier).toBe(1.05)
+      }
     })
 
     it('reserves the water of a buy at its limit price', async () => {

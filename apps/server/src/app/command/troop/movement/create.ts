@@ -106,10 +106,14 @@ export async function createTroopMovement({
       TroopService.assertReinforcementArmy({ move_troops })
     }
 
+    // Faction logistics bonus (slice 039): carrier capacity now, non-combat speed at creation below.
+    const logistics = await AppService.getLogisticsModifier({ player_id })
+
     TroopService.assertTransportResources({
       action,
       resources,
       move_troops,
+      carrier_capacity_multiplier: logistics.transport_capacity,
     })
 
     await AppService.assertMovementCapacity({ player_id })
@@ -191,6 +195,7 @@ export async function createTroopMovement({
       resources,
       combat_strategy: action === MovementAction.ATTACK ? combat_strategy ?? null : null,
       propulsion_level,
+      non_combat_speed_multiplier: logistics.non_combat_speed,
     })
 
     const movement_troops = TroopService.assignToMovement({

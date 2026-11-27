@@ -55,6 +55,19 @@ describe('FactionService', () => {
     }
   })
 
+  it('gives la Confédération +10 % carrier capacity and +5 % non-combat speed, every other faction neutral (slice 039)', () => {
+    assert.deepStrictEqual(FactionService.getLogisticsModifier(FactionCode.THE_CONFEDERATION), {
+      transport_capacity: 1.1,
+      non_combat_speed: 1.05,
+    })
+    for (const code of Object.values(FactionCode).filter(faction => faction !== FactionCode.THE_CONFEDERATION)) {
+      assert.deepStrictEqual(FactionService.getLogisticsModifier(code), {
+        transport_capacity: 1,
+        non_combat_speed: 1,
+      })
+    }
+  })
+
   it('gives la Symbiose +10 % mushroom and -10 % plastic, every other faction neutral (slice 036)', () => {
     assert.deepStrictEqual(FactionService.getProductionMultipliers(FactionCode.THE_SYMBIOSIS), {
       plastic: 0.9,

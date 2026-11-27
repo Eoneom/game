@@ -40,6 +40,10 @@ describe('finishTroopTransportMovement', () => {
 
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     movement = MovementEntity.create({
       id: movement_id,
       player_id,

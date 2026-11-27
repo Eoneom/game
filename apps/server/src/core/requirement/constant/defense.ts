@@ -114,4 +114,31 @@ export const DefenseRequirement: Record<DefenseCode, RequirementValue> = {
     ],
     technologies: []
   },
+  [DefenseCode.RAILGUN]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 3
+      },
+      {
+        code: BuildingCode.CENTRAL_INDUCTOR,
+        level: 1
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.FORTIFICATION,
+        level: 2
+      }
+    ]
+  },
+  [DefenseCode.HOLO_DECOY]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
 }

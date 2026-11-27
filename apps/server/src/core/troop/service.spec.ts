@@ -492,6 +492,137 @@ describe('TroopService', () => {
     })
   })
 
+  describe('faction logistics bonus (slice 039)', () => {
+    const distance = 10_000
+
+    it('raises the transport capacity of carrier-role units only', () => {
+      assert.strictEqual(TroopService.getTransportCapacity(TroopCode.LIGHT_TRANSPORTER, 1.1), 11_000)
+      assert.strictEqual(TroopService.getTransportCapacity(TroopCode.LIGHT_TRANSPORTER), 10_000)
+      // Settlers and explorers carry a little, but are not carriers.
+      assert.strictEqual(TroopService.getTransportCapacity(TroopCode.SETTLER, 1.1), 1000)
+      assert.strictEqual(TroopService.getTransportCapacity(TroopCode.EXPLORER, 1.1), 200)
+      assert.strictEqual(TroopService.getTotalTransportCapacity({
+        troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 3
+          },
+          {
+            code: TroopCode.SETTLER,
+            count: 1
+          },
+        ],
+        carrier_capacity_multiplier: 1.1,
+      }), 3 * 11_000 + 1000)
+    })
+
+    it('accepts a transport load that only fits with the bonus', () => {
+      const params = {
+        action: MovementAction.TRANSPORT,
+        resources: {
+          plastic: 10_500,
+          mushroom: 0,
+          plasma: 0,
+          water: 0
+        },
+        move_troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 1
+          }
+        ],
+      }
+      assert.throws(() => TroopService.assertTransportResources(params), new RegExp(TroopError.TRANSPORT_CAPACITY_EXCEEDED))
+      assert.doesNotThrow(() => TroopService.assertTransportResources({
+        ...params,
+        carrier_capacity_multiplier: 1.1,
+      }))
+    })
+
+    it('speeds up movements without combat units by the multiplier', () => {
+      for (const troop_codes of [
+        [ TroopCode.LIGHT_TRANSPORTER ],
+        [ TroopCode.EXPLORER ],
+        [
+          TroopCode.SETTLER,
+          TroopCode.FARMER
+        ],
+      ]) {
+        const base = TroopService.getSlowestSpeed({ troop_codes })
+        assert.strictEqual(TroopService.getSlowestSpeed({
+          troop_codes,
+          non_combat_speed_multiplier: 1.05,
+        }), base * 1.05)
+        assert.ok(TroopService.getMovementDuration({
+          distance,
+          troop_codes,
+          non_combat_speed_multiplier: 1.05,
+        }) < TroopService.getMovementDuration({
+          distance,
+          troop_codes
+        }))
+      }
+    })
+
+    it('leaves movements with a combat unit to the normal rule and Propulsion tactique', () => {
+      const troop_codes = [
+        TroopCode.LEGIONNAIRE,
+        TroopCode.LIGHT_TRANSPORTER
+      ]
+      assert.strictEqual(TroopService.getSlowestSpeed({
+        troop_codes,
+        non_combat_speed_multiplier: 1.05,
+      }), TroopService.getSlowestSpeed({ troop_codes }))
+      assert.strictEqual(TroopService.getSlowestSpeed({
+        troop_codes: [ TroopCode.LEGIONNAIRE ],
+        propulsion_level: 5,
+        non_combat_speed_multiplier: 1.05,
+      }), TroopService.getSpeed(TroopCode.LEGIONNAIRE) * 1.2)
+    })
+
+    it('never stacks with Propulsion tactique on non-combat movements', () => {
+      assert.strictEqual(TroopService.getSlowestSpeed({
+        troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+        propulsion_level: 10,
+        non_combat_speed_multiplier: 1.05,
+      }), TroopService.getSpeed(TroopCode.LIGHT_TRANSPORTER) * 1.05)
+    })
+
+    it('createMovement snapshots the bonus into the arrival time', () => {
+      const params = {
+        troops: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 1
+          }
+        ],
+        start_at: 0,
+        distance,
+        origin: {
+          x: 1,
+          y: 1
+        },
+        destination: {
+          x: 5,
+          y: 5
+        },
+        player_id,
+        action: MovementAction.TRANSPORT
+      }
+      const { arrive_at: base_arrive_at } = TroopService.createMovement(params)
+      const { arrive_at: boosted_arrive_at } = TroopService.createMovement({
+        ...params,
+        non_combat_speed_multiplier: 1.05,
+      })
+      assert.strictEqual(boosted_arrive_at, TroopService.getMovementDuration({
+        distance,
+        troop_codes: [ TroopCode.LIGHT_TRANSPORTER ],
+        non_combat_speed_multiplier: 1.05,
+      }))
+      assert.ok(boosted_arrive_at < base_arrive_at)
+    })
+  })
+
   describe('movement cap', () => {
     it('allows 5 movements without a command center', () => {
       assert.strictEqual(TroopService.getMovementLimit({ command_center_levels: 0 }), 5)

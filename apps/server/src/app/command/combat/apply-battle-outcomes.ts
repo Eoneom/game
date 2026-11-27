@@ -4,6 +4,7 @@ import {
   cancelCityExchangeOrders,
   emitExchangeBookUpdated
 } from '#app/command/exchange/shared'
+import { AppService } from '#app/service'
 import { runCommand } from '#command/run'
 import { combat_loot_ratio } from '#core/combat/constant/loot'
 import { combatRoleFor } from '#core/combat/troop-combat'
@@ -243,7 +244,12 @@ export async function applyBattleOutcomes({
       const carriers = troopStacks(attacker_stacks).filter(
         s => s.count > 0 && combatRoleFor(s.code) === CombatRole.CARRIER
       )
-      const capacity = TroopService.getTotalTransportCapacity({ troops: carriers })
+      // Faction logistics bonus of the attacker's carriers (slice 039).
+      const logistics = await AppService.getLogisticsModifier({ player_id: battle.attacker_player_id })
+      const capacity = TroopService.getTotalTransportCapacity({
+        troops: carriers,
+        carrier_capacity_multiplier: logistics.transport_capacity,
+      })
       if (capacity > 0) {
         try {
           const stock = await repository.resource_stock.getByCellId({ cell_id: destination_cell.id })

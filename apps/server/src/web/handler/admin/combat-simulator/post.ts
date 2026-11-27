@@ -243,6 +243,8 @@ export const adminCombatSimulatorPostHandler = async (
         ...(summary.shield_reduction !== undefined ? { shield_reduction: summary.shield_reduction } : {}),
         ...(summary.spore_reduction !== undefined ? { spore_reduction: summary.spore_reduction } : {}),
         ...(summary.barbed_wire_reduction !== undefined ? { barbed_wire_reduction: summary.barbed_wire_reduction } : {}),
+        ...(summary.decoy_absorbed !== undefined ? { decoy_absorbed: summary.decoy_absorbed } : {}),
+        ...(summary.railgun_doubled !== undefined ? { railgun_doubled: summary.railgun_doubled } : {}),
       })),
       final_attacker_stacks: toWireStacks(result.final_attacker_stacks),
       final_defender_stacks: toWireStacks(result.final_defender_stacks),

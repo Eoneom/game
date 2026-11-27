@@ -33,6 +33,10 @@ export type AdminCombatSimulatorRoundSummaryWire = {
   spore_reduction?: number
   /** Barbed wire (slice 037), 0–0.10 in round 1 and 0–0.05 in round 2; within the 0.40 combined cap. */
   barbed_wire_reduction?: number
+  /** Defender losses absorbed by holo decoys (slice 039), rounds 1–2 only. */
+  decoy_absorbed?: number
+  /** The defender's railguns fired doubled against a siege (slice 039). */
+  railgun_doubled?: boolean
 }
 
 /** Arsenal levels applied to one side's `combat`-role stacks (slice 027); omitted = 0. */

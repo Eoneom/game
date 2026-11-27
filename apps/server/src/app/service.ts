@@ -14,6 +14,7 @@ import {
 } from '#core/requirement/service'
 import { RequirementValue } from '#core/requirement/value/requirement'
 import { CombatModifiers } from '#core/combat/type/battle-stack'
+import { FactionLogisticsModifier } from '#core/faction/constant/logistics-modifier'
 import { FactionService } from '#core/faction/service'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyService } from '#core/technology/service'
@@ -418,6 +419,12 @@ export class AppService {
   static async getProductionFactionMultipliers({ player_id }: { player_id: string }): Promise<Resource> {
     const player = await Factory.getRepository().player.get(player_id)
     return FactionService.getProductionMultipliers(player.faction_code)
+  }
+
+  /** The player's faction logistics modifier (slice 039): carrier capacity and non-combat movement speed. */
+  static async getLogisticsModifier({ player_id }: { player_id: string }): Promise<FactionLogisticsModifier> {
+    const player = await Factory.getRepository().player.get(player_id)
+    return FactionService.getLogisticsModifier(player.faction_code)
   }
 
   /** Arsenal attack / life multipliers for `combat`-role stacks (slice 027). */

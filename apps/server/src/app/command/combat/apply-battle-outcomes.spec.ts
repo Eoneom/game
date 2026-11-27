@@ -13,6 +13,8 @@ import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { TroopCode } from '#core/troop/constant/code'
+import { FactionCode } from '#core/faction/constant/code'
+import { PlayerEntity } from '#core/player/entity'
 import { BuildingCode } from '#core/building/constant/code'
 import { ResourceStockEntity } from '#core/resources/resource-stock/entity'
 import {
@@ -52,9 +54,12 @@ describe('applyBattleOutcomes loot', () => {
     target_kind = BattleTargetKind.CITY,
     defender_stacks = [],
     cumulative_defender_losses = [],
+    // A faction without logistics bonus by default (slice 039).
+    attacker_faction_code = FactionCode.THE_SYMBIOSIS,
   }: {
     stock: ResourceStockEntity
     transporters: number
+    attacker_faction_code?: FactionCode
     shelter_level?: number
     target_kind?: BattleTargetKind
     defender_stacks?: BattleStack[]
@@ -158,6 +163,12 @@ describe('applyBattleOutcomes loot', () => {
       defense_build_queue: { deleteByCity: defenseQueueDeleteByCity },
       exchange: { listOpenByCityForUpdate: exchangeListOpenByCity },
       player: {
+        get: vi.fn().mockResolvedValue(PlayerEntity.create({
+          id: attacker_player_id,
+          name: 'attacker',
+          faction_code: attacker_faction_code,
+          system_controlled: false,
+        })),
         listByIds: vi.fn().mockResolvedValue([]),
         addMilitaryValue: vi.fn().mockResolvedValue(undefined),
       },
@@ -264,6 +275,30 @@ describe('applyBattleOutcomes loot', () => {
     })
     assert.strictEqual(stockUpdateOne.mock.calls[0][0].plasma, 1000)
     assert.strictEqual(stockUpdateOne.mock.calls[0][0].water, 1000)
+  })
+
+  it('hauls 10 % more with Confederation carriers (slice 039)', async () => {
+    const lootWith = async (attacker_faction_code: FactionCode) => {
+      vi.mocked(createBattleReports).mockClear()
+      setup({
+        stock: testResourceStock({
+          cell_id: destination_cell.id,
+          plastic: 30000,
+          mushroom: 0,
+        }),
+        transporters: 1,
+        attacker_faction_code,
+      })
+      await applyBattleOutcomes({
+        battle_id: 'battle-id',
+        winner: BattleWinner.ATTACKER,
+        finished_at: 5_000,
+      })
+      return vi.mocked(createBattleReports).mock.calls[0][0].loot.plastic
+    }
+
+    assert.strictEqual(await lootWith(FactionCode.THE_SYMBIOSIS), 10000)
+    assert.strictEqual(await lootWith(FactionCode.THE_CONFEDERATION), 11000)
   })
 
   describe('underground shelter', () => {

@@ -73,12 +73,13 @@ describe('DefenseService', () => {
     assert.ok(defenses.every(defense => defense.count === 0 && defense.city_id === 'c' && defense.player_id === 'p'))
   })
 
-  it('arms only turrets, plasma batteries, spore clouds and field artillery', () => {
+  it('arms only turrets, plasma batteries, spore clouds, field artillery and railguns', () => {
     assert.deepStrictEqual(
       Object.values(DefenseCode).filter(code => DefenseService.isArmed(code)).sort(),
       [
         DefenseCode.FIELD_ARTILLERY,
         DefenseCode.PLASMA_BATTERY,
+        DefenseCode.RAILGUN,
         DefenseCode.SPORE_CLOUD,
         DefenseCode.TURRET 
       ]
@@ -86,7 +87,7 @@ describe('DefenseService', () => {
   })
 
   describe('faction defenses (slice 036)', () => {
-    it('keeps the five common defenses for every faction and adds each faction\'s own (slices 036 / 037)', () => {
+    it('keeps the five common defenses for every faction and adds each faction\'s own (slices 036 / 037 / 039)', () => {
       const common = [
         DefenseCode.RAMPART,
         DefenseCode.TURRET,
@@ -94,7 +95,12 @@ describe('DefenseService', () => {
         DefenseCode.PLASMA_BATTERY,
         DefenseCode.SHIELD_GENERATOR,
       ]
-      for (const faction_code of Object.values(FactionCode).filter(code => code !== FactionCode.THE_SYMBIOSIS && code !== FactionCode.THE_BASTION_ORDER)) {
+      const with_own = [
+        FactionCode.THE_SYMBIOSIS,
+        FactionCode.THE_BASTION_ORDER,
+        FactionCode.THE_CONFEDERATION
+      ]
+      for (const faction_code of Object.values(FactionCode).filter(code => !with_own.includes(code))) {
         assert.deepStrictEqual(DefenseService.codesForFaction(faction_code).sort(), [ ...common ].sort())
       }
       assert.deepStrictEqual(DefenseService.codesForFaction(FactionCode.THE_SYMBIOSIS).sort(), [
@@ -107,6 +113,29 @@ describe('DefenseService', () => {
         DefenseCode.FIELD_ARTILLERY,
         DefenseCode.BARBED_WIRE,
       ].sort())
+      assert.deepStrictEqual(DefenseService.codesForFaction(FactionCode.THE_CONFEDERATION).sort(), [
+        ...common,
+        DefenseCode.RAILGUN,
+        DefenseCode.HOLO_DECOY,
+      ].sort())
+    })
+
+    it('keeps the Confederation defenses to the Confederation (slice 039)', () => {
+      for (const defense_code of [
+        DefenseCode.RAILGUN,
+        DefenseCode.HOLO_DECOY
+      ]) {
+        for (const faction_code of Object.values(FactionCode).filter(code => code !== FactionCode.THE_CONFEDERATION)) {
+          assert.throws(() => DefenseService.assertInRoster({
+            faction_code,
+            defense_code
+          }), new RegExp(DefenseError.NOT_IN_FACTION_ROSTER))
+        }
+        assert.doesNotThrow(() => DefenseService.assertInRoster({
+          faction_code: FactionCode.THE_CONFEDERATION,
+          defense_code
+        }))
+      }
     })
 
     it('keeps the Bastion defenses to the Bastion (slice 037)', () => {

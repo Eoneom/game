@@ -187,6 +187,9 @@ describe('createBattleReports city defenses (slice 029)', () => {
           defender_losses: [],
           shield_reduction: 0.3,
           spore_reduction: 0.1,
+          // Confederation defenses (slice 039).
+          decoy_absorbed: 3,
+          railgun_doubled: true,
         },
       ],
       started_at: 1_000,
@@ -243,5 +246,7 @@ describe('createBattleReports city defenses (slice 029)', () => {
     })
     assert.deepEqual(call.attacker_metadata.outcome, outcome)
     assert.equal(call.defender_metadata.round_summaries[0].spore_reduction, 0.1)
+    assert.equal(call.attacker_metadata.round_summaries[0].decoy_absorbed, 3)
+    assert.equal(call.defender_metadata.round_summaries[0].railgun_doubled, true)
   })
 })

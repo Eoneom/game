@@ -63,6 +63,10 @@ export type ReportBattleMetadata = {
     spore_reduction?: number
     /** Share absorbed by barbed wire, 0–0.10 in round 1, 0–0.05 in round 2; within the 0.40 combined cap (slice 037). */
     barbed_wire_reduction?: number
+    /** Defender losses absorbed by holo decoys, at most 30 % of the loss budget in rounds 1–2 (slice 039). */
+    decoy_absorbed?: number
+    /** The defender's railguns fired doubled: `siege_assault` or ≥ 50 % `war_machine` attack (slice 039). */
+    railgun_doubled?: boolean
   }[]
   /** Defender perspective: resources the underground shelter kept out of loot (slice 028); zero otherwise. */
   sheltered: {

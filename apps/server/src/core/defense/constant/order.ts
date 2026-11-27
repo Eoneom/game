@@ -10,4 +10,6 @@ export const defense_order: Record<DefenseCode, number> = {
   [DefenseCode.SPORE_CLOUD]: 7,
   [DefenseCode.FIELD_ARTILLERY]: 8,
   [DefenseCode.BARBED_WIRE]: 9,
+  [DefenseCode.RAILGUN]: 10,
+  [DefenseCode.HOLO_DECOY]: 11,
 }

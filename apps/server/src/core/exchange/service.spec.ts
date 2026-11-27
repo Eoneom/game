@@ -256,6 +256,79 @@ describe('ExchangeService (slice 035)', () => {
         resources: water(10)
       })).toBe(covered)
     })
+
+    it('sizes reservations and convoys with the owner\'s carrier capacity bonus (slice 039)', () => {
+      const stacks = [
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 5
+        }
+      ]
+      const plastic = (amount: number) => ({
+        plastic: amount,
+        mushroom: 0,
+        plasma: 0,
+        water: 0
+      })
+      // 22 000 plastic: 3 carriers at 10 000, 2 at 11 000.
+      expect(ExchangeService.allocateCarriers({
+        stacks,
+        resources: plastic(22000),
+      })).toEqual([
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 3
+        }
+      ])
+      expect(ExchangeService.allocateCarriers({
+        stacks,
+        resources: plastic(22000),
+        carrier_capacity_multiplier: 1.1,
+      })).toEqual([
+        {
+          code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ])
+
+      const reservations = [
+        {
+          troop_code: TroopCode.LIGHT_TRANSPORTER,
+          count: 1
+        }
+      ]
+      // One reserved carrier at 11 000 covers a 10 500 cargo on its own.
+      expect(ExchangeService.convoyCarriers({
+        reservations,
+        free: stacks,
+        resources: plastic(10500),
+        carrier_capacity_multiplier: 1.1,
+      })).toEqual({
+        from_reservation: [
+          {
+            code: TroopCode.LIGHT_TRANSPORTER,
+            count: 1
+          }
+        ],
+        from_free: [],
+      })
+      expect(ExchangeService.topUpReservations({
+        reservations,
+        free: stacks,
+        resources: plastic(10500),
+        carrier_capacity_multiplier: 1.1,
+      })).toBe(reservations)
+      expect(ExchangeService.topUpReservations({
+        reservations,
+        free: stacks,
+        resources: plastic(10500),
+      })).toEqual([
+        {
+          troop_code: TroopCode.LIGHT_TRANSPORTER,
+          count: 2
+        }
+      ])
+    })
   })
 
   describe('matching', () => {

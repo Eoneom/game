@@ -249,6 +249,7 @@ export class TroopService {
     },
     combat_strategy = null,
     propulsion_level = 0,
+    non_combat_speed_multiplier = 1,
     exchange_trade_id = null,
   }: {
     troops: TroopCount[]
@@ -262,13 +263,16 @@ export class TroopService {
     combat_strategy?: CombatStrategy | null
     /** Owner's `tactical_propulsion` level at creation time (slice 027). */
     propulsion_level?: number
+    /** Owner's faction logistics speed bonus at creation time, for movements without combat units (slice 039). */
+    non_combat_speed_multiplier?: number
     /** Exchange convoy or its return trip (slice 035). */
     exchange_trade_id?: string | null
   }): { movement: MovementEntity; arrive_at: number } {
     const duration = this.getMovementDuration({
       distance,
       troop_codes: troops.map(troop => troop.code),
-      propulsion_level
+      propulsion_level,
+      non_combat_speed_multiplier,
     })
 
     const arrive_at = start_at + duration
@@ -332,9 +336,16 @@ export class TroopService {
     }
   }
 
-  static getTotalTransportCapacity({ troops }: { troops: TroopCount[] }): number {
+  static getTotalTransportCapacity({
+    troops,
+    carrier_capacity_multiplier = 1,
+  }: {
+    troops: TroopCount[]
+    /** Owner's faction logistics bonus on `carrier`-role units (slice 039). */
+    carrier_capacity_multiplier?: number
+  }): number {
     return troops.reduce((total, troop) => {
-      return total + this.getTransportCapacity(troop.code) * troop.count
+      return total + this.getTransportCapacity(troop.code, carrier_capacity_multiplier) * troop.count
     }, 0)
   }
 
@@ -351,10 +362,13 @@ export class TroopService {
     action,
     resources,
     move_troops,
+    carrier_capacity_multiplier = 1,
   }: {
     action: MovementAction
     resources: Resource
     move_troops: TroopCount[]
+    /** Owner's faction logistics bonus on `carrier`-role units (slice 039). */
+    carrier_capacity_multiplier?: number
   }): void {
     const total = resources.plastic + resources.mushroom + resources.plasma + resources.water
     const load = this.getTransportLoad({ resources })
@@ -372,7 +386,10 @@ export class TroopService {
       if (!has_resources) {
         throw new Error(TroopError.TRANSPORT_RESOURCES_REQUIRED)
       }
-      const capacity = this.getTotalTransportCapacity({ troops: move_troops })
+      const capacity = this.getTotalTransportCapacity({
+        troops: move_troops,
+        carrier_capacity_multiplier,
+      })
       if (load > capacity) {
         throw new Error(TroopError.TRANSPORT_CAPACITY_EXCEEDED)
       }
@@ -391,27 +408,39 @@ export class TroopService {
   static getMovementDuration({
     distance,
     troop_codes,
-    propulsion_level = 0
+    propulsion_level = 0,
+    non_combat_speed_multiplier = 1,
   }: {
     distance: number
     troop_codes: TroopCode[]
     propulsion_level?: number
+    /** Faction logistics bonus (slice 039), applied only when no troop code is `combat`-role. */
+    non_combat_speed_multiplier?: number
   }): number {
     const slowest_speed = this.getSlowestSpeed({
       troop_codes,
-      propulsion_level
+      propulsion_level,
+      non_combat_speed_multiplier,
     })
     return scaleGameDurationMs(distance / slowest_speed)
   }
 
+  /**
+   * Speed of the slowest unit. A movement without any `combat`-role unit gets the faction logistics bonus
+   * (slice 039); Propulsion tactique only boosts `combat`-role units (slice 027), so the two never stack.
+   */
   static getSlowestSpeed({
     troop_codes,
-    propulsion_level = 0
+    propulsion_level = 0,
+    non_combat_speed_multiplier = 1,
   }: {
     troop_codes: TroopCode[]
     propulsion_level?: number
+    non_combat_speed_multiplier?: number
   }): number {
-    return troop_codes.reduce((acc, code) => {
+    const has_combat = troop_codes.some(code => this.combatRoleFor(code) === CombatRole.COMBAT)
+    const multiplier = has_combat ? 1 : non_combat_speed_multiplier
+    return multiplier * troop_codes.reduce((acc, code) => {
       const speed = this.getEffectiveSpeed({
         code,
         propulsion_level
@@ -450,8 +479,16 @@ export class TroopService {
     return !troops.some(troop => troop.count)
   }
 
-  static getTransportCapacity(code: TroopCode): number {
-    return troop_characteristics[code].transport_capacity
+  /**
+   * Transport capacity per unit. `carrier_capacity_multiplier` (faction logistics bonus, slice 039) applies to
+   * `carrier`-role units only, rounded to a whole capacity.
+   */
+  static getTransportCapacity(code: TroopCode, carrier_capacity_multiplier = 1): number {
+    const capacity = troop_characteristics[code].transport_capacity
+    if (carrier_capacity_multiplier === 1 || this.roleFor(code) !== TroopRole.CARRIER) {
+      return capacity
+    }
+    return Math.round(capacity * carrier_capacity_multiplier)
   }
 
   static getSpeed(code: TroopCode): number {

@@ -169,3 +169,37 @@ describe('system combat policy against l\'Ordre du Bastion (slice 037)', () => {
     }), BattleWinner.ATTACKER)
   })
 })
+
+describe('system combat policy against la Confédération (slice 039)', () => {
+  it('includes the railgun, doubled against war machines, and the decoys in the attack simulation', () => {
+    const move_troops = [
+      {
+        code: TroopCode.WAR_MACHINE,
+        count: 10
+      }
+    ]
+    assert.notStrictEqual(simulateAttackCommit({
+      move_troops,
+      defender_stacks: [
+        {
+          kind: 'defense',
+          code: DefenseCode.RAILGUN,
+          count: 10
+        },
+      ],
+      attacker_strategy: CombatStrategy.BALANCED,
+    }), BattleWinner.ATTACKER)
+    // Decoys alone never hold the city.
+    assert.strictEqual(simulateAttackCommit({
+      move_troops,
+      defender_stacks: [
+        {
+          kind: 'defense',
+          code: DefenseCode.HOLO_DECOY,
+          count: 50
+        },
+      ],
+      attacker_strategy: CombatStrategy.BALANCED,
+    }), BattleWinner.ATTACKER)
+  })
+})

@@ -47,17 +47,26 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
       destination: origin
     })
 
-    const propulsion_level = await AppService.getTacticalPropulsionLevel({ player_id })
+    const [
+      propulsion_level,
+      logistics
+    ] = await Promise.all([
+      AppService.getTacticalPropulsionLevel({ player_id }),
+      // The estimate shows the faction logistics bonus (slice 039), as the movement will get it.
+      AppService.getLogisticsModifier({ player_id }),
+    ])
 
     const duration = TroopService.getMovementDuration({
       distance,
       troop_codes,
-      propulsion_level
+      propulsion_level,
+      non_combat_speed_multiplier: logistics.non_combat_speed,
     })
 
     const speed = TroopService.getSlowestSpeed({
       troop_codes,
-      propulsion_level
+      propulsion_level,
+      non_combat_speed_multiplier: logistics.non_combat_speed,
     })
     const transport_capacity = TroopService.getTotalTransportCapacity({
       troops: troops.length
@@ -65,7 +74,8 @@ export class TroopMovementEstimateQuery extends GenericQuery<TroopMovementEstima
         : troop_codes.map(code => ({
           code,
           count: 1
-        }))
+        })),
+      carrier_capacity_multiplier: logistics.transport_capacity,
     })
 
     const destination_capacity_exceeded = await this.isDestinationCapacityExceeded({

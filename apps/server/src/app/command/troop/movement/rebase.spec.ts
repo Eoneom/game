@@ -31,6 +31,10 @@ describe('rebaseTroopMovement', () => {
 
   beforeEach(() => {
     vi.spyOn(AppService, 'getTacticalPropulsionLevel').mockResolvedValue(0)
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
     getMovementCapacity = vi.spyOn(AppService, 'getMovementCapacity').mockResolvedValue({
       used: 1,
       limit: 5
@@ -192,6 +196,59 @@ describe('rebaseTroopMovement', () => {
 
     expect(AppService.getTacticalPropulsionLevel).toHaveBeenCalledWith({ player_id })
     assert.ok(boosted_execute_at < base_execute_at)
+  })
+
+  it('should give a return trip without combat units the owner logistics speed bonus (slice 039)', async () => {
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    const base_execute_at = scheduleTroopMovementFinish.mock.calls[0][0].execute_at
+
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1.1,
+      non_combat_speed: 1.05
+    })
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    const boosted_execute_at = scheduleTroopMovementFinish.mock.calls[1][0].execute_at
+
+    expect(AppService.getLogisticsModifier).toHaveBeenCalledWith({ player_id })
+    assert.ok(boosted_execute_at < base_execute_at)
+
+    // With a combat unit the bonus does not apply.
+    repository.troop.listByMovement = vi.fn().mockResolvedValue([
+      TroopEntity.create({
+        id: id(),
+        code: TroopCode.LEGIONNAIRE,
+        count: 1,
+        player_id,
+        cell_id: null,
+        movement_id: initial_base_movement.id
+      })
+    ])
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    vi.spyOn(AppService, 'getLogisticsModifier').mockResolvedValue({
+      transport_capacity: 1,
+      non_combat_speed: 1
+    })
+    await rebaseTroopMovement({
+      player_id,
+      movement_id: initial_base_movement.id,
+      arrived_at
+    })
+    assert.strictEqual(
+      scheduleTroopMovementFinish.mock.calls[2][0].execute_at,
+      scheduleTroopMovementFinish.mock.calls[3][0].execute_at
+    )
   })
 
   it('should create a report indicating that a rebase was needed', async () => {
