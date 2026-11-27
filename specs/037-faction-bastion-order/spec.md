@@ -120,7 +120,6 @@ No schema change for the faction. Backfill `defense` rows for the two new codes 
 - Elite plasma unit.
 - Faction-exclusive buildings or technologies.
 - Bastion system player; faction spawn zones.
-- Confederation faction defenses (still to design).
 
 ## Spec cross-links to update on implementation
 

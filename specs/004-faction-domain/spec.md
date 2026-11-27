@@ -37,6 +37,7 @@ Exported to clients as `FactionCode` from `packages/api-client/src/index.ts` (re
 | `isPlayable` / `assertPlayable` | Known and not in `non_playable_faction_codes` |
 | `getProductionMultipliers` | Per-resource production multiplier of a faction from `faction_production_modifier` (`constant/production-modifier.ts`, slice [`036`](../036-faction-symbiosis/spec.md)); neutral (1) when unset |
 | `getGarrisonLifeMultiplier` | Life multiplier of the city owner's own combat stacks when their city is attacked, from `faction_garrison_life_modifier` (`constant/garrison-modifier.ts`, slice [`037`](../037-faction-bastion-order/spec.md): Bastion 1.15); neutral (1) when unset |
+| `getLogisticsModifier` | Carrier capacity and non-combat movement speed multipliers of a faction, from `faction_logistics_modifier` (`constant/logistics-modifier.ts`, slice [`039`](../039-confederation-identity/spec.md): Confederation 1.10 / 1.05); neutral (1 / 1) when unset |
 
 **Errors** (`apps/server/src/core/faction/error.ts`, exported as `FactionError`):
 

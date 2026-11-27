@@ -142,7 +142,7 @@ At battle start (`app/saga/finish/attack.ts`), when the target is a **city**, th
 | Any except `siege_assault` | Rampart → combat troops (current focus rules) → turret → plasma battery → shield generator → carrier → civilian → scout |
 | `siege_assault` | Rampart → shield generator → plasma battery → turret → combat troops → carrier → civilian → scout |
 
-Within a defense type, whole units are removed as for troops. Barbed wire ([`037`](../037-faction-bastion-order/spec.md)) comes **before** ramparts in both orders.
+Within a defense type, whole units are removed as for troops. Barbed wire ([`037`](../037-faction-bastion-order/spec.md)) comes **before** ramparts in both orders. Holo decoys ([`039`](../039-confederation-identity/spec.md)) take up to 30 % of the loss budget in rounds 1–2 **before every stack**, barbed wire included; railguns sit with turrets.
 
 ### Victory
 
@@ -233,12 +233,14 @@ Migration (next free number):
 | `spore_cloud` | `the_symbiosis` | 2 / 12 / 10 | yes | with `turret` (both orders) | Each surviving unit lowers the attacker attack pool by 1 %, max 15 %; with shields max 40 % in total; round summaries carry `spore_reduction` |
 | `field_artillery` ([`037`](../037-faction-bastion-order/spec.md)) | `the_bastion_order` | 4 / 60·50·25·20·20 / 35 | yes | with `turret` (both orders) | Per-round attack table `attack_by_round` (rounds 1–5) |
 | `barbed_wire` ([`037`](../037-faction-bastion-order/spec.md)) | `the_bastion_order` | 1 / 0 / 15 | no | **first**, before `rampart` (both orders) | Each surviving unit lowers the attacker attack pool by 1 % in round 1 (max 10 %) and 0.5 % in round 2 (max 5 %), nothing afterwards; inside the 40 % combined cap after shields and spores; round summaries carry `barbed_wire_reduction` |
+| `railgun` ([`039`](../039-confederation-identity/spec.md)) | `the_confederation` | 3 / 30 / 25 | yes | with `turret` (both orders) | Attack doubled in a round where the attacker uses `siege_assault` or `war_machine` units are ≥ 50 % of its combat attack pool (before shield-type reductions); round summaries carry `railgun_doubled` |
+| `holo_decoy` ([`039`](../039-confederation-identity/spec.md)) | `the_confederation` | 1 / 0 / — | no | never a candidate: absorbs losses **before every stack** in rounds 1–2 | Up to `floor(30 % × loss budget)` losses taken one decoy per loss; the rest vanish after round 2 (or when the battle ends earlier) and count as lost, like minefields; round summaries carry `decoy_absorbed` |
 
 **Per-round attack** ([`037`](../037-faction-bastion-order/spec.md)): `defense_characteristics` takes an optional `attack_by_round` table (rounds 1–5; rounds past it use its last value) that replaces the flat `attack` in combat (`DefenseService.getAttackForRound`). The minefield is expressed as `[40, 0, 0, 0, 0]` (behaviour unchanged: it is still consumed after round 1); `GET /city/:city_id/defense` exposes the table as `attack_by_round`.
 
 ## Out of scope
 
-- Faction-specific defenses (with the new factions: La Symbiose implemented in [`036`](../036-faction-symbiosis/spec.md) and L'Ordre du Bastion in [`037`](../037-faction-bastion-order/spec.md), see [Faction defenses](#faction-defenses-036); `039` later).
+- Faction-specific defenses (with the new factions: La Symbiose implemented in [`036`](../036-faction-symbiosis/spec.md) and L'Ordre du Bastion in [`037`](../037-faction-bastion-order/spec.md), and La Confédération in [`039`](../039-confederation-identity/spec.md), see [Faction defenses](#faction-defenses-036)).
 - Defenses on outposts.
 - Repairing damaged units (whole-unit model only).
 - Shield upkeep or energy-based shields.

@@ -131,7 +131,6 @@ Regrowth is applied in the outcome step and shown in the defender's battle repor
 - Faction-exclusive buildings or technologies.
 - Symbiose system player.
 - Faction spawn zones (wait for the map rework).
-- Confederation faction defenses (two to design later, see brainstorm).
 
 ## Spec cross-links to update on implementation
 

@@ -39,7 +39,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 036 | Playable faction: La Symbiose | Implemented | [spec](./036-faction-symbiosis/spec.md) |
 | 037 | Playable faction: L'Ordre du Bastion | Implemented | [spec](./037-faction-bastion-order/spec.md) |
 | 038 | Security pass before public launch | Planned | [spec](./038-security-pass/spec.md) |
-| 039 | Confederation identity: defenses and logistics bonus | Planned | [spec](./039-confederation-identity/spec.md) |
+| 039 | Confederation identity: defenses and logistics bonus | Implemented | [spec](./039-confederation-identity/spec.md) |
 
 **Merged slices** (stubs point to canonical spec): **003** → [002](./003-player-registration-signup/spec.md); **020** → [021](./020-system-player-observability/spec.md); **023** → [008](./023-technology-research-queue/spec.md).
 
