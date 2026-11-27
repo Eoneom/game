@@ -5,15 +5,32 @@ import {
 import { Server } from 'http'
 import { authorizeAuth } from '#app/command/auth/authorize'
 import { isObservabilityAdmin } from '#app/query/admin/observability-access'
+import { getPlayerFactionCode } from '#app/query/player/faction'
 import { AppEventBus } from '#app/event-bus'
 import { AppLogger } from '#app/port/logger'
 import { AppEvent } from '#core/events'
+import { FactionCode } from '#core/faction/constant/code'
 import { now } from '#shared/time'
 
 const ADMIN_OBSERVABILITY_WS_PATH = '/admin/observability/ws'
 
 const game_connections = new Map<string, WebSocket>()
+/** Faction of each connected player, for faction chat fan-out (slice 032). */
+const game_connection_factions = new Map<string, FactionCode>()
 const admin_observability_connections = new Map<string, WebSocket>()
+
+/** Sends one message to several connected players (chat fan-out, slice 032). */
+function sendToGamePlayers(
+  message: Record<string, unknown>,
+  is_recipient: (player_id: string) => boolean
+): void {
+  const data = JSON.stringify(message)
+  game_connections.forEach((ws, player_id) => {
+    if (ws.readyState === WebSocket.OPEN && is_recipient(player_id)) {
+      ws.send(data)
+    }
+  })
+}
 
 async function authorizeWsPlayerId(token: string | null): Promise<string | null> {
   if (!token) {
@@ -63,21 +80,39 @@ export function setupWebSocketServer(
       return
     }
 
+    let player_id: string | null
     try {
-      const player_id = await authorizeWsPlayerId(token)
-      if (!player_id) {
-        ws.close(4001, RequestError.TOKEN_NOT_FOUND)
-        return
-      }
-      game_connections.set(player_id, ws)
-      logger.info('game player connected', { player_id })
-
-      ws.on('close', () => {
-        game_connections.delete(player_id)
-        logger.info('game player disconnected', { player_id })
-      })
+      player_id = await authorizeWsPlayerId(token)
     } catch {
       ws.close(4001, 'unauthorized')
+      return
+    }
+    if (!player_id) {
+      ws.close(4001, RequestError.TOKEN_NOT_FOUND)
+      return
+    }
+
+    const connected_player_id = player_id
+    game_connections.set(connected_player_id, ws)
+    logger.info('game player connected', { player_id: connected_player_id })
+
+    ws.on('close', () => {
+      game_connections.delete(connected_player_id)
+      game_connection_factions.delete(connected_player_id)
+      logger.info('game player disconnected', { player_id: connected_player_id })
+    })
+
+    try {
+      const faction_code = await getPlayerFactionCode({ player_id })
+      if (game_connections.get(player_id) === ws) {
+        game_connection_factions.set(player_id, faction_code)
+      }
+    } catch (err) {
+      // Without a faction the player still gets every event except faction chat.
+      logger.warn('game player faction unavailable', {
+        player_id,
+        err
+      })
     }
   })
 
@@ -213,6 +248,33 @@ export function setupWebSocketServer(
         arrive_at,
       }))
     }
+  })
+
+  eventBus.on(AppEvent.MailReceived, ({
+    player_id, mail_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.MailReceived,
+        mail_id,
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.ChatMessage, ({
+    channel, faction_code, excluded_player_ids, message
+  }) => {
+    const excluded = new Set(excluded_player_ids)
+    sendToGamePlayers(
+      {
+        type: AppEvent.ChatMessage,
+        channel,
+        message,
+      },
+      (player_id) => !excluded.has(player_id)
+        && (faction_code === null || game_connection_factions.get(player_id) === faction_code)
+    )
   })
 
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({

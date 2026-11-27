@@ -42,6 +42,11 @@ export {
 } from '#adapter/job-queue/communication/cleanup-old-read-reports'
 
 export {
+  CHAT_CLEANUP_QUEUE,
+  type ChatCleanupJobData
+} from '#adapter/job-queue/communication/cleanup-chat'
+
+export {
   SYSTEM_PLAYER_TICK_QUEUE,
   SYSTEM_PLAYER_TICK_SINGLETON_KEY,
   type SystemPlayerTickJobData

@@ -47,6 +47,18 @@ export class Fetcher {
     })
   }
 
+  public async delete<T>(path: string, {
+    token
+  }: {
+    token?: string
+  }): Promise<T> {
+    return this.request({
+      method: 'DELETE',
+      path,
+      token
+    })
+  }
+
   private async request<T>({
     method,
     path,

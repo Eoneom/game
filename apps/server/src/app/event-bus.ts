@@ -8,6 +8,8 @@ import type { SystemTickCategory } from '#core/player/system/tick-category'
 import type { SystemPlayerTickAttempt } from '#core/system-player/observability/attempt'
 import type { BattleWinner } from '#core/combat/value/battle-winner'
 import type { ReportPerspective } from '#core/combat/value/report-perspective'
+import type { ChatChannel } from '#core/communication/chat/channel'
+import type { FactionCode } from '#core/faction/constant/code'
 import { AppLogger } from '#app/port/logger'
 
 export type CityResourcesGatheredPayload = {
@@ -54,6 +56,35 @@ type MovementIncomingPayload = {
   player_id: string
   movement_id: string
   arrive_at: number
+}
+
+/** Sent to the recipient when a letter is delivered (slice 032). */
+type MailReceivedPayload = {
+  player_id: string
+  mail_id: string
+}
+
+export type ChatMessageView = {
+  id: string
+  author: {
+    id: string
+    name: string
+    faction_code: FactionCode
+  }
+  body: string
+  created_at: number
+}
+
+/**
+ * Fanned out to every connected player allowed in the channel (slice 032):
+ * everyone for `global`, members of `faction_code` for `faction`, minus `excluded_player_ids`
+ * (players who blocked the author).
+ */
+type ChatMessagePayload = {
+  channel: ChatChannel
+  faction_code: FactionCode | null
+  excluded_player_ids: string[]
+  message: ChatMessageView
 }
 
 export type TroopRecruitmentUpdatedPayload = {
@@ -125,6 +156,8 @@ export type AppEventMap = {
   [AppEvent.TroopMovementFinished]: TroopMovementFinishedPayload
   [AppEvent.BattleFinished]: BattleFinishedPayload
   [AppEvent.MovementIncoming]: MovementIncomingPayload
+  [AppEvent.MailReceived]: MailReceivedPayload
+  [AppEvent.ChatMessage]: ChatMessagePayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.TroopQueueItemDropped]: TroopQueueItemDroppedPayload
   [AppEvent.DefenseBuildUpdated]: DefenseBuildUpdatedPayload

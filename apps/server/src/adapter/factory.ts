@@ -12,12 +12,15 @@ import { JobQueue } from '#app/port/job-queue'
 import { createJobQueue } from '#adapter/job-queue'
 import { withTransaction } from '#adapter/database/context'
 import { getAdminPlayerNamesFromEnv } from '#adapter/admin/player-names'
+import { RateLimiter } from '#app/port/rate-limiter'
+import { RateLimiterInMemory } from '#adapter/rate-limiter'
 
 export class Factory {
   private static repository: Repository
   private static lock: Lock
   private static eventBus: AppEventBus
   private static jobQueue: JobQueue
+  private static rateLimiter: RateLimiter
 
   static getRepository(): Repository {
     if (!this.repository) {
@@ -57,6 +60,14 @@ export class Factory {
     }
 
     return this.jobQueue
+  }
+
+  static getRateLimiter(): RateLimiter {
+    if (!this.rateLimiter) {
+      this.rateLimiter = new RateLimiterInMemory()
+    }
+
+    return this.rateLimiter
   }
 
   static runInTransaction<T>(fn: () => Promise<T>): Promise<T> {

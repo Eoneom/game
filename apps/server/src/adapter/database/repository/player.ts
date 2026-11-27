@@ -69,6 +69,26 @@ export class PostgresPlayerRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async searchHumansByNamePrefix({
+    prefix,
+    limit
+  }: {
+    prefix: string
+    limit: number
+  }): Promise<PlayerEntity[]> {
+    const escaped = prefix.replace(/[\\%_]/g, char => `\\${char}`)
+    const rows = await this.db
+      .selectFrom('player')
+      .selectAll()
+      .where('system_controlled', '=', false)
+      .where('name', 'ilike', `${escaped}%`)
+      .orderBy('name', 'asc')
+      .limit(limit)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
   protected buildFromRow(row: Selectable<DB['player']>): PlayerEntity {
     return PlayerEntity.create({
       id: row.id,

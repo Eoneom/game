@@ -18,6 +18,10 @@ import { SystemPlayerMemoryRepository } from '#app/port/repository/system-player
 import { TroopRecruitQueueRepository } from '#app/port/repository/troop-recruit-queue'
 import { DefenseRepository } from '#app/port/repository/defense'
 import { DefenseBuildQueueRepository } from '#app/port/repository/defense-build-queue'
+import { MailRepository } from '#app/port/repository/mail'
+import { ChatMessageRepository } from '#app/port/repository/chat-message'
+import { PlayerBlockRepository } from '#app/port/repository/player-block'
+import { AbuseReportRepository } from '#app/port/repository/abuse-report'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -47,4 +51,8 @@ export interface Repository {
   defense_build_queue: DefenseBuildQueueRepository
   battle: BattleRepository
   system_player_memory: SystemPlayerMemoryRepository
+  mail: MailRepository
+  chat_message: ChatMessageRepository
+  player_block: PlayerBlockRepository
+  abuse_report: AbuseReportRepository
 }

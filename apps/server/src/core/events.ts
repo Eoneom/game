@@ -16,4 +16,6 @@ export enum AppEvent {
   SystemPlayerStatsUpdated = 'system-player:stats-updated',
   BattleFinished = 'battle:finished',
   MovementIncoming = 'movement:incoming',
+  MailReceived = 'mail:received',
+  ChatMessage = 'chat:message',
 }

@@ -7,4 +7,6 @@ export type PlayerRepository = GenericRepository<PlayerEntity> & {
   getByName(name: string): Promise<PlayerEntity>
   listByIds(ids: string[]): Promise<PlayerEntity[]>
   listSystemControlled(): Promise<PlayerEntity[]>
+  /** Human players whose name starts with `prefix` (case-insensitive), sorted by name. */
+  searchHumansByNamePrefix(args: { prefix: string, limit: number }): Promise<PlayerEntity[]>
 }

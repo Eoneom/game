@@ -1,4 +1,16 @@
 export enum CommunicationError {
   REPORT_NOT_FOUND = 'communication:report-not-found',
-  REPORT_NOT_OWNER = 'communication:report-not-owner'
+  REPORT_NOT_OWNER = 'communication:report-not-owner',
+  SUBJECT_INVALID = 'communication:subject-invalid',
+  BODY_INVALID = 'communication:body-invalid',
+  REASON_INVALID = 'communication:reason-invalid',
+  RECIPIENT_NOT_FOUND = 'communication:recipient-not-found',
+  RECIPIENT_IS_SELF = 'communication:recipient-is-self',
+  RECIPIENT_SYSTEM = 'communication:recipient-system',
+  RATE_LIMITED = 'communication:rate-limited',
+  MAIL_NOT_FOUND = 'communication:mail-not-found',
+  MAIL_NOT_OWNER = 'communication:mail-not-owner',
+  CHANNEL_FORBIDDEN = 'communication:channel-forbidden',
+  CHAT_MESSAGE_NOT_FOUND = 'communication:chat-message-not-found',
+  BLOCK_INVALID = 'communication:block-invalid',
 }

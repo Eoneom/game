@@ -5,6 +5,10 @@ import {
 } from './login'
 import { LogoutResponse } from './logout'
 import {
+  PlayerSearchRequest,
+  PlayerSearchResponse
+} from './search'
+import {
   SignupRequest,
   SignupResponse
 } from './signup'
@@ -26,5 +30,12 @@ export class PlayerEndpoint {
 
   logout(token: string): Promise<LogoutResponse> {
     return this.fetcher.post('/player/logout', { token })
+  }
+
+  search(token: string, { q }: PlayerSearchRequest): Promise<PlayerSearchResponse> {
+    return this.fetcher.get('/player/search', {
+      token,
+      searchParams: { q }
+    })
   }
 }

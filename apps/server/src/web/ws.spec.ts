@@ -11,6 +11,7 @@ vi.mock('ws', () => ({
 
 vi.mock('#app/command/auth/authorize', () => ({ authorizeAuth: vi.fn() }))
 vi.mock('#app/query/admin/observability-access', () => ({ isObservabilityAdmin: vi.fn().mockResolvedValue(false) }))
+vi.mock('#app/query/player/faction', () => ({ getPlayerFactionCode: vi.fn() }))
 
 import { setupWebSocketServer } from './ws'
 import {
@@ -19,6 +20,7 @@ import {
 import { AppEvent } from '#core/events'
 import { authorizeAuth } from '#app/command/auth/authorize'
 import { isObservabilityAdmin } from '#app/query/admin/observability-access'
+import { getPlayerFactionCode } from '#app/query/player/faction'
 import { Server } from 'http'
 
 function makeMockWs(readyState: number = WebSocket.OPEN) {
@@ -446,5 +448,110 @@ describe('setupWebSocketServer', () => {
     })
 
     expect(mockWs.send).not.toHaveBeenCalled()
+  })
+
+  it('forwards MailReceived to the recipient WebSocket (slice 032)', async () => {
+    const player_id = 'player-mail'
+    ;(authorizeAuth as MockInstance).mockResolvedValue({ player_id })
+    const mockWs = makeMockWs(WebSocket.OPEN)
+
+    await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+    capturedEventListeners.get(AppEvent.MailReceived)?.({
+      player_id,
+      mail_id: 'mail-1'
+    })
+
+    expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.MailReceived,
+      mail_id: 'mail-1',
+    }))
+  })
+
+  describe('ChatMessage fan-out (slice 032)', () => {
+    const connect = async (player_id: string, faction_code: string) => {
+      (authorizeAuth as MockInstance).mockResolvedValueOnce({ player_id })
+      ;(getPlayerFactionCode as unknown as MockInstance).mockResolvedValueOnce(faction_code)
+      const mockWs = makeMockWs(WebSocket.OPEN)
+      await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+      return mockWs
+    }
+
+    const message = {
+      id: 'chat-1',
+      author: {
+        id: 'chat-author',
+        name: 'Alice',
+        faction_code: 'the_confederation'
+      },
+      body: 'salut',
+      created_at: 1
+    }
+
+    it('sends a faction message to connected members of that faction except blockers', async () => {
+      const author = await connect('chat-author', 'the_confederation')
+      const ally = await connect('chat-ally', 'the_confederation')
+      const blocker = await connect('chat-blocker', 'the_confederation')
+      const enemy = await connect('chat-enemy', 'the_ash_liturgy')
+
+      capturedEventListeners.get(AppEvent.ChatMessage)?.({
+        channel: 'faction',
+        faction_code: 'the_confederation',
+        excluded_player_ids: [ 'chat-blocker' ],
+        message
+      })
+
+      const expected = JSON.stringify({
+        type: AppEvent.ChatMessage,
+        channel: 'faction',
+        message
+      })
+      expect(author.send).toHaveBeenCalledWith(expected)
+      expect(ally.send).toHaveBeenCalledWith(expected)
+      expect(blocker.send).not.toHaveBeenCalled()
+      expect(enemy.send).not.toHaveBeenCalled()
+    })
+
+    it('sends a global message to every faction except blockers', async () => {
+      const ally = await connect('chat-global-ally', 'the_confederation')
+      const enemy = await connect('chat-global-enemy', 'the_ash_liturgy')
+      const blocker = await connect('chat-global-blocker', 'the_ash_liturgy')
+
+      capturedEventListeners.get(AppEvent.ChatMessage)?.({
+        channel: 'global',
+        faction_code: null,
+        excluded_player_ids: [ 'chat-global-blocker' ],
+        message
+      })
+
+      expect(ally.send).toHaveBeenCalledTimes(1)
+      expect(enemy.send).toHaveBeenCalledTimes(1)
+      expect(blocker.send).not.toHaveBeenCalled()
+    })
+
+    it('keeps a connection whose faction cannot be read, without faction chat', async () => {
+      (authorizeAuth as MockInstance).mockResolvedValueOnce({ player_id: 'chat-no-faction' })
+      ;(getPlayerFactionCode as unknown as MockInstance).mockRejectedValueOnce(new Error('db down'))
+      const mockWs = makeMockWs(WebSocket.OPEN)
+      await gameConnectionHandler(mockWs, makeReq('/?token=valid-token'))
+
+      expect(mockWs.close).not.toHaveBeenCalled()
+
+      capturedEventListeners.get(AppEvent.ChatMessage)?.({
+        channel: 'faction',
+        faction_code: 'the_confederation',
+        excluded_player_ids: [],
+        message
+      })
+      expect(mockWs.send).not.toHaveBeenCalled()
+
+      capturedEventListeners.get(AppEvent.ChatMessage)?.({
+        channel: 'global',
+        faction_code: null,
+        excluded_player_ids: [],
+        message
+      })
+      expect(mockWs.send).toHaveBeenCalledTimes(1)
+    })
   })
 })

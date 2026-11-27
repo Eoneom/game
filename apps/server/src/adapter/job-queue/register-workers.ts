@@ -8,6 +8,8 @@ import {
   type OutpostResourcesGatherJobData,
   REPORT_CLEANUP_QUEUE,
   type ReportCleanupJobData,
+  CHAT_CLEANUP_QUEUE,
+  type ChatCleanupJobData,
   SYSTEM_PLAYER_TICK_QUEUE,
   type SystemPlayerTickJobData,
   TECHNOLOGY_RESEARCH_FINISH_QUEUE,
@@ -30,6 +32,7 @@ import { progressDefenseBuild } from '#app/command/defense/progress-build'
 import { progressGatherAllCities } from '#app/command/city/progress-gather-all'
 import { progressGatherAllPermanentOutposts } from '#app/command/outpost/progress-gather-all'
 import { cleanupOldReadReports } from '#app/command/communication/report/cleanup-old-read'
+import { cleanupCommunicationChat } from '#app/command/communication/chat/cleanup'
 import { tickSystemPlayers } from '#app/command/player/system/tick'
 import { advanceCombatRound } from '#app/command/combat/advance-round'
 import { Factory } from '#adapter/factory'
@@ -217,6 +220,17 @@ export const registerJobWorkers = async (jobQueue: JobQueue = Factory.getJobQueu
       for (const job of jobs) {
         logger.info('processing report cleanup', { job_id: job.id })
         await cleanupOldReadReports()
+      }
+    }
+  )
+
+  await queue.work<ChatCleanupJobData, void, { includeMetadata: true }>(
+    CHAT_CLEANUP_QUEUE,
+    { includeMetadata: true },
+    async (jobs) => {
+      for (const job of jobs) {
+        logger.info('processing chat cleanup', { job_id: job.id })
+        await cleanupCommunicationChat()
       }
     }
   )

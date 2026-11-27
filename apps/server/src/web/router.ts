@@ -31,6 +31,19 @@ import { communicationCountUnreadReportHandler } from '#web/handler/communicatio
 import { communicationMarkReportHandler } from '#web/handler/communication/report/mark'
 import { communicationMarkAllReportsHandler } from '#web/handler/communication/report/mark-all'
 import { logoutHandler } from '#web/handler/player/logout'
+import { playerSearchHandler } from '#web/handler/player/search'
+import { communicationSendMailHandler } from '#web/handler/communication/mail/send'
+import { communicationListMailHandler } from '#web/handler/communication/mail/list'
+import { communicationGetMailHandler } from '#web/handler/communication/mail/get'
+import { communicationCountUnreadMailHandler } from '#web/handler/communication/mail/count-unread'
+import { communicationMarkMailHandler } from '#web/handler/communication/mail/mark'
+import { communicationDeleteMailHandler } from '#web/handler/communication/mail/delete'
+import { communicationChatHistoryHandler } from '#web/handler/communication/chat/history'
+import { communicationPostChatMessageHandler } from '#web/handler/communication/chat/post'
+import { communicationBlockPlayerHandler } from '#web/handler/communication/block/create'
+import { communicationUnblockPlayerHandler } from '#web/handler/communication/block/delete'
+import { communicationListBlockHandler } from '#web/handler/communication/block/list'
+import { communicationCreateAbuseReportHandler } from '#web/handler/communication/abuse-report/create'
 import { troopGetMovementHandler } from '#web/handler/troop/movement/get'
 import { troopEstimateMovementHandler } from '#web/handler/troop/movement/estimate'
 import { troopCreateMovementHandler } from '#web/handler/troop/movement/create'
@@ -70,6 +83,8 @@ export const router = (): Router => {
   r.post('/player/logout', logoutHandler)
 
   // Authenticated routes
+  r.get('/player/search', authMiddleware, playerSearchHandler)
+
   r.get('/city', authMiddleware, cityListHandler)
   r.get('/city/:city_id', authMiddleware, cityGetHandler)
   r.get('/city/:city_id/activity', authMiddleware, cityActivityHandler)
@@ -120,6 +135,22 @@ export const router = (): Router => {
   r.put('/communication/report/mark-all', authMiddleware, communicationMarkAllReportsHandler)
   r.get('/communication/report/unread/count', authMiddleware, communicationCountUnreadReportHandler)
   r.get('/communication/report/:report_id', authMiddleware, communicationGetReportHandler)
+
+  r.post('/communication/mail', authMiddleware, communicationSendMailHandler)
+  r.get('/communication/mail', authMiddleware, communicationListMailHandler)
+  r.get('/communication/mail/unread/count', authMiddleware, communicationCountUnreadMailHandler)
+  r.put('/communication/mail/mark', authMiddleware, communicationMarkMailHandler)
+  r.get('/communication/mail/:mail_id', authMiddleware, communicationGetMailHandler)
+  r.delete('/communication/mail/:mail_id', authMiddleware, communicationDeleteMailHandler)
+
+  r.get('/communication/chat/:channel', authMiddleware, communicationChatHistoryHandler)
+  r.post('/communication/chat/:channel', authMiddleware, communicationPostChatMessageHandler)
+
+  r.post('/communication/block', authMiddleware, communicationBlockPlayerHandler)
+  r.get('/communication/block', authMiddleware, communicationListBlockHandler)
+  r.delete('/communication/block/:player_id', authMiddleware, communicationUnblockPlayerHandler)
+
+  r.post('/communication/abuse-report', authMiddleware, communicationCreateAbuseReportHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)

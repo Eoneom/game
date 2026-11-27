@@ -25,6 +25,17 @@ export type PgbossJobState = "active" | "cancelled" | "completed" | "created" | 
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface AbuseReport {
+  author_id: string;
+  content: string;
+  created_at: Timestamp;
+  id: Generated<string>;
+  kind: string;
+  message_id: string;
+  reason: string | null;
+  reporter_id: string;
+}
+
 export interface Auth {
   id: Generated<string>;
   last_action_at: Timestamp;
@@ -87,6 +98,14 @@ export interface BattleRound {
   shield_reduction: Generated<number>;
 }
 
+export interface ChatMessage {
+  author_id: string;
+  body: string;
+  channel: string;
+  created_at: Timestamp;
+  id: Generated<string>;
+}
+
 export interface City {
   cell_id: string;
   default_combat_strategy: string | null;
@@ -120,6 +139,20 @@ export interface Exploration {
 export interface ExplorationCell {
   cell_id: string;
   exploration_id: string;
+}
+
+export interface Mail {
+  body: string;
+  deleted_by_recipient: Generated<boolean>;
+  deleted_by_sender: Generated<boolean>;
+  delivered: boolean;
+  id: Generated<string>;
+  in_reply_to: string | null;
+  read_at: Timestamp | null;
+  recipient_id: string;
+  sender_id: string;
+  sent_at: Timestamp;
+  subject: string;
 }
 
 export interface Movement {
@@ -288,6 +321,12 @@ export interface Player {
   system_controlled: boolean;
 }
 
+export interface PlayerBlock {
+  blocked_id: string;
+  blocker_id: string;
+  created_at: Timestamp;
+}
+
 export interface Report {
   destination_x: number;
   destination_y: number;
@@ -389,17 +428,20 @@ export interface TroopRecruitQueue {
 }
 
 export interface DB {
+  abuse_report: AbuseReport;
   auth: Auth;
   battle: Battle;
   battle_round: BattleRound;
   building: Building;
   building_upgrade_queue: BuildingUpgradeQueue;
   cell: Cell;
+  chat_message: ChatMessage;
   city: City;
   defense: Defense;
   defense_build_queue: DefenseBuildQueue;
   exploration: Exploration;
   exploration_cell: ExplorationCell;
+  mail: Mail;
   movement: Movement;
   outpost: Outpost;
   "pgboss.bam": PgbossBam;
@@ -412,6 +454,7 @@ export interface DB {
   "pgboss.version": PgbossVersion;
   "pgboss.warning": PgbossWarning;
   player: Player;
+  player_block: PlayerBlock;
   system_player_memory: SystemPlayerMemory;
   report: Report;
   report_battle: ReportBattle;

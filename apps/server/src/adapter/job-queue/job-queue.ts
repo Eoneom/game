@@ -10,6 +10,7 @@ import type {
   PendingCityResourcesGather,
   PendingOutpostResourcesGather,
   PendingReportCleanup,
+  PendingChatCleanup,
   PendingSystemPlayerTick,
   PendingTechnologyResearch,
   PendingTroopMovementFinish,
@@ -72,6 +73,12 @@ import {
   scheduleReportCleanup
 } from '#adapter/job-queue/communication/cleanup-old-read-reports'
 import {
+  CHAT_CLEANUP_QUEUE,
+  ensureChatCleanupScheduled,
+  getPendingChatCleanup,
+  scheduleChatCleanup
+} from '#adapter/job-queue/communication/cleanup-chat'
+import {
   SYSTEM_PLAYER_TICK_QUEUE,
   ensureSystemPlayerTickScheduled,
   getPendingSystemPlayerTick,
@@ -119,6 +126,7 @@ export class JobQueue implements JobQueuePort {
     await this.ctx.boss.createQueue(CITY_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(OUTPOST_RESOURCES_GATHER_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(REPORT_CLEANUP_QUEUE, { policy: 'stately' })
+    await this.ctx.boss.createQueue(CHAT_CLEANUP_QUEUE, { policy: 'stately' })
     await this.ctx.boss.createQueue(SYSTEM_PLAYER_TICK_QUEUE, { policy: 'stately' })
     this.ctx.logger.info('pg-boss started', { schema: PGBOSS_SCHEMA })
   }
@@ -267,6 +275,22 @@ export class JobQueue implements JobQueuePort {
     execute_at: number
   }): Promise<string | null> {
     return ensureReportCleanupScheduled(this.ctx, args)
+  }
+
+  async scheduleChatCleanup(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return scheduleChatCleanup(this.ctx, args)
+  }
+
+  async getPendingChatCleanup(): Promise<PendingChatCleanup | null> {
+    return getPendingChatCleanup(this.ctx)
+  }
+
+  async ensureChatCleanupScheduled(args: {
+    execute_at: number
+  }): Promise<string | null> {
+    return ensureChatCleanupScheduled(this.ctx, args)
   }
 
   async scheduleSystemPlayerTick(args: {

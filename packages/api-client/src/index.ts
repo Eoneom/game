@@ -23,6 +23,15 @@ export { playableFactionCodes } from '@server-core/faction/constant/playable'
 export { TroopCode } from '@server-core/troop/constant/code'
 export { TroopRole, troop_role } from '@server-core/troop/constant/role'
 export { ReportType } from '@server-core/communication/value/report-type'
+export { ChatChannel } from '@server-core/communication/chat/channel'
+export { AbuseReportKind } from '@server-core/communication/abuse-report/kind'
+export {
+  ABUSE_REPORT_REASON_MAX_LENGTH,
+  CHAT_BODY_MAX_LENGTH,
+  MAIL_BODY_MAX_LENGTH,
+  MAIL_SUBJECT_MAX_LENGTH,
+  PLAYER_SEARCH_MIN_LENGTH,
+} from '@server-core/communication/constant/limits'
 export { OutpostType } from '@server-core/outpost/constant/type'
 export { MovementAction } from '@server-core/troop/constant/movement-action'
 export { CombatStrategy } from '@server-core/combat/value/combat-strategy'

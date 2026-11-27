@@ -41,6 +41,14 @@ import { DefenseRepository } from '#app/port/repository/defense'
 import { PostgresDefenseRepository } from '#adapter/database/repository/defense'
 import { DefenseBuildQueueRepository } from '#app/port/repository/defense-build-queue'
 import { PostgresDefenseBuildQueueRepository } from '#adapter/database/repository/defense-build-queue'
+import { MailRepository } from '#app/port/repository/mail'
+import { PostgresMailRepository } from '#adapter/database/repository/mail'
+import { ChatMessageRepository } from '#app/port/repository/chat-message'
+import { PostgresChatMessageRepository } from '#adapter/database/repository/chat-message'
+import { PlayerBlockRepository } from '#app/port/repository/player-block'
+import { PostgresPlayerBlockRepository } from '#adapter/database/repository/player-block'
+import { AbuseReportRepository } from '#app/port/repository/abuse-report'
+import { PostgresAbuseReportRepository } from '#adapter/database/repository/abuse-report'
 import {
   Kysely,
   sql
@@ -66,6 +74,10 @@ export class PostgresRepository implements Repository {
   defense_build_queue: DefenseBuildQueueRepository
   battle: BattleRepository
   system_player_memory: SystemPlayerMemoryRepository
+  mail: MailRepository
+  chat_message: ChatMessageRepository
+  player_block: PlayerBlockRepository
+  abuse_report: AbuseReportRepository
 
   private db: Kysely<DB>
 
@@ -93,6 +105,10 @@ export class PostgresRepository implements Repository {
     this.defense_build_queue = new PostgresDefenseBuildQueueRepository(this.db)
     this.battle = new PostgresBattleRepository(this.db)
     this.system_player_memory = new PostgresSystemPlayerMemoryRepository(this.db)
+    this.mail = new PostgresMailRepository(this.db)
+    this.chat_message = new PostgresChatMessageRepository(this.db)
+    this.player_block = new PostgresPlayerBlockRepository()
+    this.abuse_report = new PostgresAbuseReportRepository()
   }
 
   async connect(): Promise<void> {
