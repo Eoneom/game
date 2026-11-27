@@ -4,7 +4,7 @@
 
 ## Summary
 
-The web SPA uses **TanStack Router** (file-based routes under `apps/web/src/routes/`). Unauthenticated users see login/signup (`AuthUnauthenticated`). Authenticated users with at least one city get the **app shell**: header, activity strip, nav menu, main workspace `Outlet`, location sidebar, FX layer, and toast notifications.
+The web SPA uses **TanStack Router** (file-based routes under `apps/web/src/routes/`). Unauthenticated users see login/signup (`AuthUnauthenticated`). Authenticated users with at least one city get the **app shell**: header, activity strip, nav menu, main workspace `Outlet`, location sidebar, collapsible chat panel ([`032`](../032-messaging/spec.md)), FX layer, and toast notifications.
 
 **Depends on**: auth ([`002`](../002-player-session-auth/spec.md)), city list bootstrap ([`002`](../002-player-session-auth/spec.md#registration-and-bootstrap)).
 
@@ -34,7 +34,7 @@ Flow:
 | City base | `/city/$cityId/base/`, building, technology, troop child routes |
 | City map/world | `/city/$cityId/map`, `/city/$cityId/world/map`, movement under `world/movement` |
 | Outpost | `/outpost/$outpostId`, map, movement, world variants |
-| Inbox | `/inbox/report` |
+| Inbox | `/inbox/report`, `/inbox/mail` (Courrier, [`032`](../032-messaging/spec.md); search `box`, `mail_id`, `view=compose\|blocked`, `to`, `reply_to`) |
 | Shared report | `_shared/report` |
 
 City layout: `routes/city/$cityId/route.tsx` + `modules/city/root.tsx`. Outpost: `routes/outpost/$outpostId/route.tsx`.
@@ -44,7 +44,8 @@ City layout: `routes/city/$cityId/route.tsx` + `modules/city/root.tsx`. Outpost:
 | Module | Role |
 | --- | --- |
 | `ui/header/` | Title links to city/outpost base |
-| `ui/nav/menu` | Section navigation (buildings, tech, troops, map, inbox) |
+| `ui/nav/menu` | Section navigation (buildings, tech, troops, map, inbox: Rapport and Courrier with unread counts) |
+| `modules/communication/chat/panel.tsx` | Chat panel at the bottom of the shell: Global / Faction tabs, open state and tab in `localStorage` ([`032`](../032-messaging/spec.md)) |
 | `ui/nav/location` | City/outpost switcher |
 | `ui/activity` | Polls location activity endpoints |
 | `ui/fx` | Visual effects layer |
@@ -62,7 +63,7 @@ Marketing site, server-side rendering.
 
 | Area | Paths |
 | --- | --- |
-| Shell | `apps/web/src/App.tsx`, `apps/web/src/index.tsx`, `apps/web/src/index.css` |
+| Shell | `apps/web/src/App.tsx` (incl. `ChatPanel`), `apps/web/src/index.tsx`, `apps/web/src/index.css` |
 | Routes | `apps/web/src/routes/`, `apps/web/src/routeTree.gen.ts` |
 | Shared | `apps/web/src/modules/shared/root.tsx` |
 | City/Outpost roots | `apps/web/src/modules/city/root.tsx`, outpost pages |

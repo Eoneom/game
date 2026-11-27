@@ -32,7 +32,7 @@ Feature specs live under `specs/<slice>-<name>/spec.md`. Status reflects **imple
 | 029 | City defenses | Implemented | [spec](./029-city-defenses/spec.md) |
 | 030 | Intelligence: espionage and detection | Implemented | [spec](./030-intelligence/spec.md) |
 | 031 | Empire overview | **Draft — needs refinement, not implementable** | [spec](./031-empire-overview/spec.md) |
-| 032 | Messaging: mail and chat | Planned | [spec](./032-messaging/spec.md) |
+| 032 | Messaging: mail and chat | Implemented | [spec](./032-messaging/spec.md) |
 | 033 | Alliances | Planned | [spec](./033-alliances/spec.md) |
 | 034 | Rankings | Planned | [spec](./034-rankings/spec.md) |
 | 035 | Faction exchange and water | Planned | [spec](./035-faction-exchange/spec.md) |

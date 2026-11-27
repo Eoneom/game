@@ -28,6 +28,14 @@ _Avoid_: army
 A stack of a single fixed structure type owned by a Player, built in a city. It never moves and only fights when its city is attacked.
 _Avoid_: building, troop, tower
 
+**Letter**:
+A private message with a subject, sent by one Player to another.
+_Avoid_: mail item, email, DM
+
+**Chat channel**:
+A real-time conversation shared by a set of Players (global, faction, alliance).
+_Avoid_: room, lobby
+
 **Role**:
 A job a unit type performs. Several unit types, each belonging to one Faction, can share a Role.
 _Avoid_: class, archetype, template, kind, job

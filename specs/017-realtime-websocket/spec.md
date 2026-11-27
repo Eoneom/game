@@ -16,7 +16,7 @@ The HTTP server hosts **game** WebSocket upgrades on the default path and a sepa
 | --- | --- | --- |
 | Missing `token` | `4001` | `token:not-found` (`RequestError.TOKEN_NOT_FOUND`) |
 | `authorizeAuth` failure | `4001` | `unauthorized` (literal string) |
-| Success | — | One game socket per `player_id` in memory map |
+| Success | — | One game socket per `player_id` in memory map; the player's faction is read once per connection for faction chat fan-out ([`032`](../032-messaging/spec.md)) |
 
 ### Admin observability socket (`/admin/observability/ws`)
 
@@ -36,6 +36,8 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 | `troop:movement-finished` | same | — |
 | `battle:finished` | same | `player_id`, `report_id`, `perspective` (`attacker` \| `defender`), `winner` (`attacker` \| `defender` \| `draw`) — once per participant, after the battle reports commit ([`024`](../024-player-combat-pvp/spec.md)) |
 | `movement:incoming` | same | `player_id`, `movement_id`, `arrive_at` — to the defender when an attack movement is created and their `detection` ≥ 1 ([`030`](../030-intelligence/spec.md)); the client refetches `GET /troop/movement/incoming` |
+| `mail:received` | same | `mail_id` — to the recipient when a letter is delivered (not when the recipient blocked the sender) ([`032`](../032-messaging/spec.md)) |
+| `chat:message` | same | `channel` (`global` \| `faction`), `message` (`id`, `author` `{ id, name, faction_code }`, `body`, `created_at`) — **multi-recipient fan-out**: every connected player allowed in the channel (all for `global`, the author's faction for `faction`), except players who blocked the author ([`032`](../032-messaging/spec.md)) |
 | `troop:recruitment-updated` | same | `city_id` |
 | `outpost:created` | same | — |
 | `outpost:deleted` | same | `outpost_id` |
@@ -43,7 +45,9 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 
 Bus implementation: `apps/server/src/app/event-bus.ts` (typed payloads, info logging). Tests: `apps/server/src/app/event-bus.spec.ts`.
 
-Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), `createTroopMovement` (`movement:incoming`), outpost lifecycle/gather.
+Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), `createTroopMovement` (`movement:incoming`), `sendCommunicationMail` (`mail:received`), `postCommunicationChatMessage` (`chat:message`), outpost lifecycle/gather.
+
+Multi-recipient fan-out (`sendToGamePlayers` in `ws.ts`) walks the in-memory connection map with a per-event filter; the event payload carries the channel faction (`null` for global) and `excluded_player_ids`. Single server process only.
 
 ## Web listeners
 
@@ -54,13 +58,15 @@ Registered in `startSession` (`apps/web/src/modules/auth/hooks.ts`):
 - `technology/ws-listener.ts`
 - `troop/ws-listener.ts` (incl. the « Attaque entrante » toast on `movement:incoming`, slice 030)
 - `outpost/ws-listener.ts`
-- `communication/ws-listener.ts` (battle report toast; registers once per page load)
+- `communication/ws-listener.ts` (battle report toast, « Nouvelle lettre » toast on `mail:received`, chat history cache on `chat:message` via `communication/chat/ws-listener.ts`; registers once per page load)
+
+`wsClient.on` returns an unsubscribe function, used by the chat panel for its activity dot.
 
 Client: `apps/web/src/helpers/websocket.ts` — connect/disconnect, parse `type`, dispatch to registered handlers.
 
 ## Out of scope
 
-Communication reports are not pushed over WS (HTTP polling/React Query only).
+Communication reports are not pushed over WS (HTTP polling/React Query only). Letters and chat are ([`032`](../032-messaging/spec.md)).
 
 ## Evidence index
 
