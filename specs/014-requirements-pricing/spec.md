@@ -17,6 +17,7 @@
 | `RequirementService.checkBuildingRequirement` | Uses `BuildingRequirement` map |
 | `RequirementService.checkTechnologyRequirement` | Uses `TechnologyRequirement` + research-lab offset |
 | `RequirementService.checkTroopRequirement` | Uses `TroopRequirement` map |
+| `RequirementService.checkDefenseRequirement` | Uses `DefenseRequirement` map ([`029`](../029-city-defenses/spec.md); buildings checked in the defense's city) |
 | `RequirementService.checkRequirement` | Shared evaluator on `RequirementValue` |
 
 | `RequirementError` | Meaning |
@@ -24,7 +25,7 @@
 | `requirement:building-not-fulfilled` | Missing building level |
 | `requirement:technology-not-fulfilled` | Missing technology level |
 
-Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`.
+Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`, `constant/defense.ts`.
 
 ## Domain — pricing (`core/pricing/`)
 
@@ -35,6 +36,7 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 | `PricingService.getTechnologyResearchRefund` | Partial refund on research cancel: `round(cost / 2)` per resource, plasma included |
 | `PricingService.getTechnologyLevelCost` | Plastic/mushroom/plasma; research lab duration reduction |
 | `PricingService.getTroopCost` | Per-count cost (plasma = per-unit plasma × count); cloning factory + replication catalyst reductions (duration only). Troop cancel refunds the full remaining cost, plasma included |
+| `PricingService.getDefenseCost` | Per-count defense cost ([`029`](../029-city-defenses/spec.md)): resources × count (plasma for shield generators and plasma batteries); duration × count × `(1 − 1/10)^city_wall_level`, game time scaled like troops. Fortification cancel refunds the full remaining cost |
 | `scaleGameDurationSeconds` | Applies `gameTimeScale` from `shared/game-time-scale` |
 
 Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`; values in `value/level.ts`, `value/count.ts`.
@@ -53,7 +55,17 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 | `storage_compression` | `research_lab` 4 | `architecture` 3 | 5000 / 1.7 | 5000 / 1.7 | — | 120 / 2 |
 | `plasma_containment` | `research_lab` 5, `central_inductor` 3 | — | 8000 / 1.6 | 8000 / 1.6 | — | 150 / 2 |
 
-Tests: `apps/server/src/core/pricing/service.spec.ts`; requirement checks exercised in building/technology/troop command specs.
+**Slice 029 defenses** ([`029`](../029-city-defenses/spec.md)): `city_wall` (`architecture` 2; plastic 1500 / 1.7, mushroom 1000 / 1.7, duration 150 / 1.7), `fortification` (see [`008`](../008-technology-research/spec.md)), and per-unit defense requirements and costs (`core/requirement/constant/defense.ts`, `core/pricing/constant/defense.ts`):
+
+| Code | Buildings | Technologies | Plastic | Mushroom | Plasma | Duration (s) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `rampart` | `city_wall` 1 | — | 800 | 400 | — | 60 |
+| `turret` | `city_wall` 2 | `fortification` 1 | 1000 | 600 | — | 90 |
+| `minefield` | `city_wall` 2 | — | 300 | 100 | — | 30 |
+| `shield_generator` | `city_wall` 4 | `fortification` 2 | 2000 | 1500 | 200 | 240 |
+| `plasma_battery` | `city_wall` 5, `central_inductor` 1 | `fortification` 3 | 1500 | 1000 | 300 | 180 |
+
+Tests: `apps/server/src/core/pricing/service.spec.ts`; requirement checks exercised in building/technology/troop/defense command specs.
 
 ## Web UI
 

@@ -212,7 +212,7 @@ Strategy multipliers apply **per `combat_troop_class` per round** (four independ
 | **Attacker** | Required field `combat_strategy` on `POST /troop/movement` when `action = attack` ([`010`](../010-troop-movement-combat/spec.md)). |
 | **Defender** | **City / outpost**: optional `default_combat_strategy` on garrison settings (persisted with location). **Field stack**: `balanced`. If unset, `balanced`. |
 
-Wire enum (example): `balanced`, `opening_strike`, `hold_the_line`. All factions share the same strategy definitions.
+Wire enum (example): `balanced`, `opening_strike`, `hold_the_line`. All factions share the same strategy definitions. Slice [`029`](../029-city-defenses/spec.md) adds `siege_assault` (**Assaut de siège**, flat on all rounds: war machine 1.25 / 1.00, other classes 0.85 / 0.95 attack / life); when the **attacker** uses it, defender defense life counts at 75 % and defender casualties follow the siege order. As a garrison default it only applies its multipliers.
 
 Each strategy provides **Attack %** and **Life %** multipliers per `combat_troop_class` for rounds **1–5** (values are factors on base capacities, e.g. `1.00` = 100%). For this spec the battle **never runs round 6+**; round **5** values apply only to round 5. Each of the **four** classes has its **own** multiplier row (curves may differ by role — e.g. `war_machine` gains less from `opening_strike` spike, more from `hold_the_line` durability).
 
@@ -336,6 +336,8 @@ Draw does **not** apply when one side eliminated the other’s **combat** force 
 
 All defender stacks on cell with `movement_id` null; no reinforcements; no building HP in v1.
 
+**City defenses** ([`029`](../029-city-defenses/spec.md)): when the target is a city, its defense stacks join the defender snapshot as `BattleStack`s with `kind: 'defense'` (stacks without `kind` are troops) and `defender_modifiers.fortification` is snapshotted (missing = 1). Defense pools use Fortification only (no strategy or Arsenal multiplier); ramparts add life only, minefields attack in round 1 then the whole stack is consumed (counted as lost, never targeted, not in the life pool), plasma batteries fire up to `floor(city_plasma / 5)` units and debit the city stock during the round (`round_summaries[].defender_plasma_spent`), and each shield generator lowers the attacker's attack pool by 2 % up to 30 % (`shield_reduction`). Exposure ignores defense stacks and applies to the troop life only. Casualty order: rampart → combat troops → turret → plasma battery → shield generator → carrier → civilian → scout (`siege_assault`: rampart → shield generator → plasma battery → turret → combat troops → …). **Victory** counts combat troops **plus armed defenses** (turret, plasma battery). An attacker win deletes every defense row of the city (with its fortification batch and queue) before the ownership transfer; on a defender win or draw the lost units are removed from the city's defense rows.
+
 ## Outcomes matrix
 
 | Target | Attacker **wins** | Attacker **loses** | **Draw** (after 5 rounds or mutual wipe) |
@@ -438,7 +440,7 @@ interface ReportBattleMetadata {
   }
   sheltered: { plastic: number; mushroom: number; plasma: number } // defender report: what the underground shelter kept out of loot (028); zeros otherwise
   casualties_attacker: { code: TroopCode; count: number }[] // units lost
-  casualties_defender: { code: TroopCode; count: number }[]
+  casualties_defender: ({ code: TroopCode; count: number } | { kind: 'defense'; code: DefenseCode; count: number })[] // city defense lines carry kind (029); report.troops keeps troop lines only
   round_summaries: {
     round: number
     attacker_attack_pool: number
@@ -447,6 +449,8 @@ interface ReportBattleMetadata {
     defender_life_pool: number
     attacker_losses: { code: TroopCode; count: number }[]
     defender_losses: { code: TroopCode; count: number }[]
+    defender_plasma_spent?: number // 029: plasma spent by the defender's batteries this round
+    shield_reduction?: number // 029: 0–0.30 share of the attacker's attack pool absorbed by shields
   }[] // required v1 — one row per round actually played (1..rounds_played)
 }
 ```
@@ -463,7 +467,7 @@ Follow `apps/web/src/modules/communication/` patterns:
 | --- | --- |
 | `report/translations.ts` | `ReportTypeLabels[ReportType.BATTLE] = 'Bataille'` (FR, like existing labels). |
 | `report/list.tsx` | No change required; list already shows `report.type` + origin → destination. |
-| `report/details.tsx` | Branch on `type === 'battle'`: show factions, **strategies**, technology modifiers when ≠ 1 (e.g. « +9 % attaque, +6 % vie », `attacker_modifiers` / `defender_modifiers` added to the report metadata from the battle snapshot, [`027`](../027-military-economy-technologies/spec.md)), winner, rounds, **round-by-round table** (`round_summaries`), outcome flags (loot / occupy / destroy / **attacker retreated**), casualty totals for both sides (from `battle` metadata), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
+| `report/details.tsx` | Branch on `type === 'battle'`: show factions, **strategies**, technology modifiers when ≠ 1 (e.g. « +9 % attaque, +6 % vie », `attacker_modifiers` / `defender_modifiers` added to the report metadata from the battle snapshot, [`027`](../027-military-economy-technologies/spec.md)), winner, rounds, **round-by-round table** (`round_summaries`), outcome flags (loot / occupy / destroy / **attacker retreated**), casualty totals for both sides (from `battle` metadata), city defense losses (« Défenses détruites » for the defender, « Défenses ennemies détruites » for the attacker) and **Plasma dépensé** / **Bouclier** round columns when non-zero ([`029`](../029-city-defenses/spec.md)), links: `movement_id` → movement detail route when route exists ([`019`](../019-web-shell-routing/spec.md)); `battle_id` for future dedicated battle page (optional v1). |
 | Troop lines | Use `TroopTranslations[troop.code].name` for all codes (confederation + singularity) per [Web artwork convention](#web-translations-and-artwork-convention). |
 
 Unread badge: existing `GET /communication/report/unread/count` includes new `battle` rows.

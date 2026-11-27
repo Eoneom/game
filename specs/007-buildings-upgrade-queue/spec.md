@@ -46,6 +46,7 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 - Energy consumption/supply helpers for UI warnings (`getEnergyConsumption`, `getProductionEnergyRatio`, etc.).
 - Display order: `building_order` constant.
 - Slice [`028`](../028-command-center-shelter/spec.md) adds `command_center` (non-production energy consumer, `architecture` 2; each level raises the player movement cap and level ≥ 1 unlocks a recruitment queue in the city) and `underground_shelter` (no energy; shelters a fixed amount of each resource from loot, `BuildingService.getShelteredResources`). Both start at level 0 and use this upgrade queue; existing cities got level-0 rows in migration `00011_command_center_shelter`.
+- Slice [`029`](../029-city-defenses/spec.md) adds `city_wall` (**Enceinte**, no energy, `architecture` 2): it uses this upgrade queue but is **excluded** from the city's building level cap (`building.getTotalLevels` skips it, so it is not in `building_levels_used`, and `startBuildingUpgrade` lets it start in a full city). It gives `20 × level` defense points and shortens defense build times. The web building list hides it (shown in the **Défense** tab). Existing cities got a level-0 row in migration `00012_city_defenses`.
 
 ## Web UI
 

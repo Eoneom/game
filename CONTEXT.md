@@ -24,6 +24,10 @@ _Avoid_: bot, NPC, AI, treating it as a separate type from Player
 A stack of a single unit type owned by a Player, stationed on a cell or a movement. Each unit type belongs to exactly one Faction.
 _Avoid_: army
 
+**Defense**:
+A stack of a single fixed structure type owned by a Player, built in a city. It never moves and only fights when its city is attacked.
+_Avoid_: building, troop, tower
+
 **Role**:
 A job a unit type performs. Several unit types, each belonging to one Faction, can share a Role.
 _Avoid_: class, archetype, template, kind, job
