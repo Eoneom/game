@@ -361,6 +361,67 @@ describe('recruitTroop', () => {
     })
   })
 
+  describe('Bastion roster (slice 037)', () => {
+    const bastion_codes = [
+      TroopCode.SENTINEL,
+      TroopCode.FIELD_ENGINEER,
+      TroopCode.SUPPLY_TRUCK,
+      TroopCode.QUARTERMASTER,
+      TroopCode.SCRAPPER,
+      TroopCode.GRENADIER,
+      TroopCode.DRAGOON,
+      TroopCode.SIEGE_TANK,
+      TroopCode.MOBILE_MORTAR,
+    ]
+
+    it('should reject every Bastion code for a Confederation player', async () => {
+      for (const troop_code of bastion_codes) {
+        await assert.rejects(
+          () => recruitTroop({
+            city_id: city.id,
+            player_id,
+            troop_code,
+            count: 1,
+          }),
+          new RegExp(TroopError.NOT_IN_FACTION_ROSTER)
+        )
+      }
+      assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 0)
+    })
+
+    it('should let a Bastion player recruit its own codes only', async () => {
+      repository.player.get = vi.fn().mockResolvedValue(PlayerEntity.create({
+        id: player_id,
+        name: 'dummy',
+        faction_code: FactionCode.THE_BASTION_ORDER,
+        system_controlled: false
+      }))
+
+      for (const troop_code of [
+        TroopCode.EXPLORER,
+        TroopCode.ROOT_WARDEN
+      ]) {
+        await assert.rejects(
+          () => recruitTroop({
+            city_id: city.id,
+            player_id,
+            troop_code,
+            count: 1,
+          }),
+          new RegExp(TroopError.NOT_IN_FACTION_ROSTER)
+        )
+      }
+
+      await recruitTroop({
+        city_id: city.id,
+        player_id,
+        troop_code: TroopCode.SENTINEL,
+        count: requested_troop_count,
+      })
+      assert.strictEqual(scheduleTroopRecruitProgress.mock.calls.length, 1)
+    })
+  })
+
   it('should purchase the troops in the city', async () => {
     await recruitTroop({
       city_id: city.id,

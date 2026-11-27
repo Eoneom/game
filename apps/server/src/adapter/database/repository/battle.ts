@@ -72,6 +72,7 @@ export class PostgresBattleRepository implements BattleRepository {
       defender_plasma_spent: row.defender_plasma_spent,
       shield_reduction: row.shield_reduction,
       spore_reduction: row.spore_reduction,
+      barbed_wire_reduction: row.barbed_wire_reduction,
     }))
   }
 
@@ -89,6 +90,7 @@ export class PostgresBattleRepository implements BattleRepository {
       defender_plasma_spent: summary.defender_plasma_spent ?? 0,
       shield_reduction: summary.shield_reduction ?? 0,
       spore_reduction: summary.spore_reduction ?? 0,
+      barbed_wire_reduction: summary.barbed_wire_reduction ?? 0,
     }
   }
 

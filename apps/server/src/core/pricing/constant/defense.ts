@@ -43,4 +43,14 @@ export const defense_costs: Record<DefenseCode, CountCosts> = {
     mushroom: 700,
     duration: 60
   },
+  [DefenseCode.FIELD_ARTILLERY]: {
+    plastic: 1600,
+    mushroom: 1000,
+    duration: 150
+  },
+  [DefenseCode.BARBED_WIRE]: {
+    plastic: 200,
+    mushroom: 100,
+    duration: 20
+  },
 }

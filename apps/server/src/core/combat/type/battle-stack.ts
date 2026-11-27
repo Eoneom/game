@@ -46,6 +46,11 @@ export type BattleRoundSummary = {
    * Absent on older rounds (= 0).
    */
   spore_reduction?: number
+  /**
+   * Share removed by the defender's barbed wire, 0–0.10 in round 1 and 0–0.05 in round 2, 0 afterwards (slice 037);
+   * with `shield_reduction` and `spore_reduction` it never exceeds 0.40. Absent on older rounds (= 0).
+   */
+  barbed_wire_reduction?: number
 }
 
 /** Technology multipliers snapshotted for one side (slice 027 / 029). */
@@ -56,6 +61,11 @@ export type CombatModifiers = {
   life: number
   /** Fortification multiplier for defense attack and life (slice 029); missing = 1. */
   fortification?: number
+  /**
+   * Garrison life multiplier (slice 037) for the side's own `combat`-role stacks (never reinforcements): set on the
+   * defender when the target is a city of a faction with a garrison bonus (Bastion 1.15); missing = 1.
+   */
+  garrison?: number
 }
 
 export const NEUTRAL_COMBAT_MODIFIERS: CombatModifiers = {

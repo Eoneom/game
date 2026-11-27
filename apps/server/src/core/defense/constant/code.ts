@@ -6,4 +6,6 @@ export enum DefenseCode {
   SHIELD_GENERATOR = 'shield_generator',
   MYCELIUM_WALL = 'mycelium_wall',
   SPORE_CLOUD = 'spore_cloud',
+  FIELD_ARTILLERY = 'field_artillery',
+  BARBED_WIRE = 'barbed_wire',
 }

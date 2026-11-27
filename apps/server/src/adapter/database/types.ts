@@ -125,6 +125,7 @@ export interface BattleRound {
   attacker_attack_pool: number;
   attacker_life_pool: number;
   attacker_losses: Json;
+  barbed_wire_reduction: Generated<number>;
   battle_id: string;
   defender_attack_pool: number;
   defender_life_pool: number;

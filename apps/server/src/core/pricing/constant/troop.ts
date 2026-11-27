@@ -185,4 +185,49 @@ export const troop_costs: Record<TroopCode, CountCosts> = {
     mushroom: 675,
     duration: 100
   },
+  [TroopCode.SENTINEL]: {
+    plastic: 5,
+    mushroom: 8,
+    duration: 30
+  },
+  [TroopCode.FIELD_ENGINEER]: {
+    plastic: 10000,
+    mushroom: 20000,
+    duration: 1800
+  },
+  [TroopCode.SUPPLY_TRUCK]: {
+    plastic: 1500,
+    mushroom: 1000,
+    duration: 120
+  },
+  [TroopCode.QUARTERMASTER]: {
+    plastic: 500,
+    mushroom: 1000,
+    duration: 50
+  },
+  [TroopCode.SCRAPPER]: {
+    plastic: 1000,
+    mushroom: 500,
+    duration: 50
+  },
+  [TroopCode.GRENADIER]: {
+    plastic: 1560,
+    mushroom: 1560,
+    duration: 125
+  },
+  [TroopCode.DRAGOON]: {
+    plastic: 2190,
+    mushroom: 1250,
+    duration: 175
+  },
+  [TroopCode.SIEGE_TANK]: {
+    plastic: 1750,
+    mushroom: 1375,
+    duration: 138
+  },
+  [TroopCode.MOBILE_MORTAR]: {
+    plastic: 2000,
+    mushroom: 1125,
+    duration: 166
+  },
 }

@@ -38,12 +38,21 @@ describe('FactionService', () => {
     )
   })
 
-  it('accepts la Symbiose as playable (slice 036)', () => {
+  it('accepts la Symbiose and l\'Ordre du Bastion as playable (slices 036 / 037)', () => {
     assert.doesNotThrow(() => FactionService.assertPlayable(FactionCode.THE_SYMBIOSIS))
+    assert.doesNotThrow(() => FactionService.assertPlayable(FactionCode.THE_BASTION_ORDER))
     assert.deepStrictEqual(playableFactionCodes(), [
       FactionCode.THE_CONFEDERATION,
       FactionCode.THE_SYMBIOSIS,
+      FactionCode.THE_BASTION_ORDER,
     ])
+  })
+
+  it('gives l\'Ordre du Bastion a 1.15 garrison life multiplier, every other faction neutral (slice 037)', () => {
+    assert.strictEqual(FactionService.getGarrisonLifeMultiplier(FactionCode.THE_BASTION_ORDER), 1.15)
+    for (const code of Object.values(FactionCode).filter(faction => faction !== FactionCode.THE_BASTION_ORDER)) {
+      assert.strictEqual(FactionService.getGarrisonLifeMultiplier(code), 1)
+    }
   })
 
   it('gives la Symbiose +10 % mushroom and -10 % plastic, every other faction neutral (slice 036)', () => {

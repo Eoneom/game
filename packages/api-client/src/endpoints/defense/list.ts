@@ -12,6 +12,8 @@ export interface DefenseListEntry {
   /** Defense points per unit. */
   points: number
   attack: number
+  /** Attack per unit for rounds 1 to 5 when it varies by round (minefield, field artillery; slice 037). */
+  attack_by_round?: number[]
   life: number
   /** Armed defenses keep the city in the fight without combat troops. */
   armed: boolean

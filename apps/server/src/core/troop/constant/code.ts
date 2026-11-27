@@ -35,4 +35,13 @@ export enum TroopCode {
   SPORE_SWARM = 'spore_swarm',
   FUNGAL_COLOSSUS = 'fungal_colossus',
   TOXIC_HOWLER = 'toxic_howler',
+  SENTINEL = 'sentinel',
+  FIELD_ENGINEER = 'field_engineer',
+  SUPPLY_TRUCK = 'supply_truck',
+  QUARTERMASTER = 'quartermaster',
+  SCRAPPER = 'scrapper',
+  GRENADIER = 'grenadier',
+  DRAGOON = 'dragoon',
+  SIEGE_TANK = 'siege_tank',
+  MOBILE_MORTAR = 'mobile_mortar',
 }

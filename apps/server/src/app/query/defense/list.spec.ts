@@ -136,6 +136,25 @@ describe('DefenseListQuery', () => {
     assert.strictEqual(result.costs[DefenseCode.MYCELIUM_WALL].resource.mushroom, 700)
   })
 
+  it('adds the Bastion defenses for a Bastion player only (slice 037)', async () => {
+    faction_code = FactionCode.THE_BASTION_ORDER
+    const result = await new DefenseListQuery().run({
+      player_id,
+      city_id: city.id
+    })
+
+    assert.deepStrictEqual(result.defenses.map(defense => defense.code), [
+      DefenseCode.RAMPART,
+      DefenseCode.TURRET,
+      DefenseCode.MINEFIELD,
+      DefenseCode.SHIELD_GENERATOR,
+      DefenseCode.PLASMA_BATTERY,
+      DefenseCode.FIELD_ARTILLERY,
+      DefenseCode.BARBED_WIRE,
+    ])
+    assert.strictEqual(result.costs[DefenseCode.FIELD_ARTILLERY].resource.plastic, 1600)
+  })
+
   it('rejects another player', async () => {
     await assert.rejects(new DefenseListQuery().run({
       player_id: id(),

@@ -24,6 +24,8 @@ import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { CombatTroopClass } from '#core/combat/value/combat-troop-class'
 import {
   ATTACK_REDUCTION_CAP,
+  BARBED_WIRE_REDUCTION_CAP_BY_ROUND,
+  BARBED_WIRE_REDUCTION_PER_UNIT_BY_ROUND,
   defense_characteristics,
   PLASMA_BATTERY_PLASMA_PER_ROUND,
   SHIELD_REDUCTION_CAP,
@@ -33,6 +35,7 @@ import {
   SPORE_REDUCTION_PER_UNIT,
 } from '#core/defense/constant/characteristic'
 import { DefenseCode } from '#core/defense/constant/code'
+import { DefenseService } from '#core/defense/service'
 import { CombatRole } from '#core/troop/constant/combat-role'
 
 /** Losses are kept per stack owner: reinforcement lines carry their `player_id` (slice 033). */
@@ -68,7 +71,8 @@ type SidePools = {
 
 /**
  * Defense pools (slice 029): only Fortification scales them (no strategy or Arsenal multiplier).
- * Minefields attack in round 1 only and have no life; batteries fire up to the available plasma.
+ * Attack follows each defense's per-round table when it has one (slice 037): minefields attack in round 1 only,
+ * field artillery hits hardest in rounds 1–2. Minefields have no life; batteries fire up to the available plasma.
  */
 function addDefensePools({
   stacks,
@@ -91,11 +95,13 @@ function addDefensePools({
       continue
     }
     const characteristic = defense_characteristics[stack.code]
+    const unit_attack = DefenseService.getAttackForRound({
+      code: stack.code,
+      round
+    })
 
     if (stack.code === DefenseCode.MINEFIELD) {
-      if (round === 1) {
-        attack += characteristic.attack * stack.count * fortification
-      }
+      attack += unit_attack * stack.count * fortification
       continue
     }
 
@@ -105,9 +111,9 @@ function addDefensePools({
         : Math.max(0, plasma_available - plasma_spent)
       const firing = Math.min(stack.count, Math.floor(plasma_left / PLASMA_BATTERY_PLASMA_PER_ROUND))
       plasma_spent += firing * PLASMA_BATTERY_PLASMA_PER_ROUND
-      attack += characteristic.attack * firing * fortification
+      attack += unit_attack * firing * fortification
     } else {
-      attack += characteristic.attack * stack.count * fortification
+      attack += unit_attack * stack.count * fortification
     }
     life += characteristic.life * stack.count * fortification
   }
@@ -149,6 +155,8 @@ function computePools({
         modifiers,
         owner_modifiers,
       })
+      // Garrison (slice 037): the side's own stacks only, never reinforcements (which carry a `player_id`).
+      const garrison = stack.player_id ? 1 : modifiers.garrison ?? 1
       const cls = combatTroopClassFor(stack.code)
       const mult = cls
         ? CombatStrategyService.getMultipliers({
@@ -169,7 +177,7 @@ function computePools({
       life_pool += lifeContribution({
         code: stack.code,
         count: stack.count,
-        life_multiplier: mult.life * arsenal.life,
+        life_multiplier: mult.life * arsenal.life * garrison,
       })
     } else {
       attack_pool += attackContribution({ code: stack.code, count: stack.count })
@@ -206,16 +214,22 @@ function countDefense(stacks: BattleStack[], code: DefenseCode): number {
 
 /**
  * Shares of the opposing attack pool removed by surviving defenses: shield generators `min(0.30, 0.02 × n)`
- * (slice 029) and spore clouds `min(0.15, 0.01 × n)` (slice 036), capped at 0.40 together. The spore share is
- * what is left under the combined cap once the shield share is counted.
+ * (slice 029), spore clouds `min(0.15, 0.01 × n)` (slice 036) and barbed wire `min(0.10, 0.01 × n)` in round 1,
+ * `min(0.05, 0.005 × n)` in round 2, nothing afterwards (slice 037), capped at 0.40 together. Shares are granted
+ * in that order: each one is what is left under the combined cap once the previous ones are counted.
  */
-function attackReductions(stacks: BattleStack[]): { shield: number; spore: number } {
+function attackReductions(stacks: BattleStack[], round: number): { shield: number; spore: number; barbed_wire: number } {
   const shield = Math.min(SHIELD_REDUCTION_CAP, SHIELD_REDUCTION_PER_UNIT * countDefense(stacks, DefenseCode.SHIELD_GENERATOR))
   const spore_raw = Math.min(SPORE_REDUCTION_CAP, SPORE_REDUCTION_PER_UNIT * countDefense(stacks, DefenseCode.SPORE_CLOUD))
   const spore = Math.max(0, Math.min(spore_raw, ATTACK_REDUCTION_CAP - shield))
+  const wire_per_unit = BARBED_WIRE_REDUCTION_PER_UNIT_BY_ROUND[round - 1] ?? 0
+  const wire_cap = BARBED_WIRE_REDUCTION_CAP_BY_ROUND[round - 1] ?? 0
+  const wire_raw = Math.min(wire_cap, wire_per_unit * countDefense(stacks, DefenseCode.BARBED_WIRE))
+  const barbed_wire = Math.max(0, Math.min(wire_raw, ATTACK_REDUCTION_CAP - shield - spore))
   return {
     shield,
     spore,
+    barbed_wire,
   }
 }
 
@@ -238,6 +252,7 @@ function dominantClass(class_attack: Map<CombatTroopClass, number>): CombatTroop
 }
 
 type CasualtyTiers = {
+  barbed_wire: number
   rampart: number
   combat: number
   turret: number
@@ -247,38 +262,42 @@ type CasualtyTiers = {
 
 /**
  * Casualty tiers (slice 029). Without defenses this is the former order:
- * combat → carrier → civilian → scout.
+ * combat → carrier → civilian → scout. Barbed wire stands in front of the walls (slice 037).
  */
 const NORMAL_TIER: CasualtyTiers = {
-  rampart: 0,
-  combat: 1,
-  turret: 2,
-  plasma_battery: 3,
-  shield_generator: 4,
+  barbed_wire: 0,
+  rampart: 1,
+  combat: 2,
+  turret: 3,
+  plasma_battery: 4,
+  shield_generator: 5,
 }
 
 const SIEGE_TIER: CasualtyTiers = {
-  rampart: 0,
-  shield_generator: 1,
-  plasma_battery: 2,
-  turret: 3,
-  combat: 4,
+  barbed_wire: 0,
+  rampart: 1,
+  shield_generator: 2,
+  plasma_battery: 3,
+  turret: 4,
+  combat: 5,
 }
 
-/** Tier group of each targetable defense: faction defenses share a common one (slice 036). */
+/** Tier group of each targetable defense: faction defenses share a common one (slices 036 / 037). */
 const DEFENSE_TIER_GROUP: Record<Exclude<DefenseCode, DefenseCode.MINEFIELD>, Exclude<keyof CasualtyTiers, 'combat'>> = {
   [DefenseCode.RAMPART]: 'rampart',
   [DefenseCode.MYCELIUM_WALL]: 'rampart',
   [DefenseCode.TURRET]: 'turret',
   [DefenseCode.SPORE_CLOUD]: 'turret',
+  [DefenseCode.FIELD_ARTILLERY]: 'turret',
+  [DefenseCode.BARBED_WIRE]: 'barbed_wire',
   [DefenseCode.PLASMA_BATTERY]: 'plasma_battery',
   [DefenseCode.SHIELD_GENERATOR]: 'shield_generator',
 }
 
 const NON_COMBAT_TIER: Record<Exclude<CombatRole, CombatRole.COMBAT>, number> = {
-  [CombatRole.CARRIER]: 5,
-  [CombatRole.CIVILIAN]: 6,
-  [CombatRole.SCOUT]: 7,
+  [CombatRole.CARRIER]: 6,
+  [CombatRole.CIVILIAN]: 7,
+  [CombatRole.SCOUT]: 8,
 }
 
 function casualtySortKey({
@@ -466,8 +485,9 @@ export class CombatService {
     const {
       shield: shield_reduction,
       spore: spore_reduction,
-    } = attackReductions(defender_stacks)
-    const attacker_attack_pool = att_pools.attack_pool * (1 - shield_reduction - spore_reduction)
+      barbed_wire: barbed_wire_reduction,
+    } = attackReductions(defender_stacks, round)
+    const attacker_attack_pool = att_pools.attack_pool * (1 - shield_reduction - spore_reduction - barbed_wire_reduction)
 
     const att_dominant = dominantClass(att_pools.class_attack)
     const def_dominant = dominantClass(def_pools.class_attack)
@@ -507,6 +527,7 @@ export class CombatService {
       defender_plasma_spent: def_pools.plasma_spent,
       shield_reduction,
       spore_reduction,
+      barbed_wire_reduction,
     }
 
     const winner = resolveBattleWinner({

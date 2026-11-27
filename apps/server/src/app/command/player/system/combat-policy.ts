@@ -17,8 +17,10 @@ import {
 } from '#core/combat/troop-combat'
 import {
   BattleStack,
+  CombatModifiers,
   isDefenseStack,
   isTroopStack,
+  NEUTRAL_COMBAT_MODIFIERS,
 } from '#core/combat/type/battle-stack'
 import { DefenseService } from '#core/defense/service'
 import { CombatRole } from '#core/troop/constant/combat-role'
@@ -185,15 +187,20 @@ export function attackStrategyCandidates(defender_stacks: BattleStack[]): Combat
     : [ default_strategy ]
 }
 
-/** Simulates with the target's defenses included (city plasma unknown: batteries fire freely). */
+/**
+ * Simulates with the target's defenses included (city plasma unknown: batteries fire freely) and, for a city
+ * target, the owner's garrison bonus (slice 037).
+ */
 export function simulateAttackCommit({
   move_troops,
   defender_stacks,
   attacker_strategy,
+  defender_modifiers,
 }: {
   move_troops: { code: TroopCode, count: number }[]
   defender_stacks: BattleStack[]
   attacker_strategy: CombatStrategy
+  defender_modifiers?: CombatModifiers
 }): BattleWinner | null {
   const defender_strategy = pickAttackerStrategyForDefender(defender_stacks)
   const result = simulateCombat({
@@ -201,8 +208,29 @@ export function simulateAttackCommit({
     defender_stacks,
     attacker_strategy,
     defender_strategy,
+    ...(defender_modifiers ? { defender_modifiers } : {}),
   })
   return result.winner
+}
+
+/** Neutral defender modifiers with the garrison bonus of a city target's owner (slice 037); `undefined` when neutral. */
+export function simulatedDefenderModifiers({
+  target_kind,
+  defender_faction_code,
+}: {
+  target_kind: BattleTargetKind
+  defender_faction_code: FactionCode
+}): CombatModifiers | undefined {
+  if (target_kind !== BattleTargetKind.CITY) {
+    return undefined
+  }
+  const garrison = FactionService.getGarrisonLifeMultiplier(defender_faction_code)
+  return garrison !== 1
+    ? {
+      ...NEUTRAL_COMBAT_MODIFIERS,
+      garrison,
+    }
+    : undefined
 }
 
 type AttackCandidate = {
@@ -216,10 +244,12 @@ type AttackCandidate = {
 async function defenderCombatStacksOnCell({
   cell_id,
   attacker_player_id,
+  defender_player_id,
   city_id,
 }: {
   cell_id: string
   attacker_player_id: string
+  defender_player_id: string
   /** City target: its defenses join the defender (slice 029). */
   city_id: string | null
 }): Promise<BattleStack[]> {
@@ -227,10 +257,17 @@ async function defenderCombatStacksOnCell({
   const stacks = await repository.troop.listAllInCell({ cell_id })
   const troops: BattleStack[] = stacks
     .filter(troop => troop.player_id !== attacker_player_id && troop.count > 0 && troop.movement_id === null)
-    .map(troop => ({
-      code: troop.code,
-      count: troop.count,
-    }))
+    // Other owners' stacks (reinforcements) carry their `player_id`, so the garrison bonus skips them (slice 037).
+    .map(troop => troop.player_id === defender_player_id
+      ? {
+        code: troop.code,
+        count: troop.count,
+      }
+      : {
+        code: troop.code,
+        count: troop.count,
+        player_id: troop.player_id,
+      })
   if (!city_id) {
     return troops
   }
@@ -337,13 +374,19 @@ export async function pickSystemAttack({
         const defender_stacks = await defenderCombatStacksOnCell({
           cell_id: target.destination_cell_id,
           attacker_player_id: player_id,
+          defender_player_id: target.defender_player_id,
           city_id: target.target_kind === BattleTargetKind.CITY ? target.target_id : null,
+        })
+        const defender_modifiers = simulatedDefenderModifiers({
+          target_kind: target.target_kind,
+          defender_faction_code: target.defender_faction_code,
         })
         const defender_combat_count = countCombatStacks(defender_stacks)
         const combat_strategy = attackStrategyCandidates(defender_stacks).find(strategy => simulateAttackCommit({
           move_troops,
           defender_stacks,
           attacker_strategy: strategy,
+          defender_modifiers,
         }) === BattleWinner.ATTACKER)
         if (!combat_strategy) {
           continue

@@ -72,3 +72,60 @@ describe('resolveAttackTarget with la Symbiose (slice 036)', () => {
     }), new RegExp(CombatError.SAME_FACTION_ATTACK))
   })
 })
+
+describe('resolveAttackTarget with l\'Ordre du Bastion (slice 037)', () => {
+  const attacker_player_id = id()
+  const defender_player_id = id()
+  const cell = testCityCell({ cell_id: id() })
+  const city = CityEntity.initCity({
+    name: 'Bastion',
+    player_id: defender_player_id,
+    cell_id: cell.id,
+  })
+
+  function setup(defender_faction_code: FactionCode): void {
+    vi.spyOn(Factory, 'getRepository').mockReturnValue({
+      cell: { getCell: vi.fn().mockResolvedValue(cell) },
+      city: { searchByCell: vi.fn().mockResolvedValue(city) },
+      player: { get: vi.fn().mockResolvedValue({ faction_code: defender_faction_code }) },
+    } as unknown as Repository)
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  for (const other of [
+    FactionCode.THE_CONFEDERATION,
+    FactionCode.THE_SYMBIOSIS,
+  ]) {
+    it(`lets ${other} attack a Bastion city and the Bastion attack a ${other} city`, async () => {
+      setup(FactionCode.THE_BASTION_ORDER)
+      const target = await resolveAttackTarget({
+        attacker_player_id,
+        attacker_faction_code: other,
+        destination: cell.coordinates,
+      })
+      assert.strictEqual(target.defender_faction_code, FactionCode.THE_BASTION_ORDER)
+
+      vi.restoreAllMocks()
+      setup(other)
+      const reverse = await resolveAttackTarget({
+        attacker_player_id,
+        attacker_faction_code: FactionCode.THE_BASTION_ORDER,
+        destination: cell.coordinates,
+      })
+      assert.strictEqual(reverse.defender_faction_code, other)
+    })
+  }
+
+  it('rejects an attack between two Bastion players', async () => {
+    setup(FactionCode.THE_BASTION_ORDER)
+
+    await assert.rejects(resolveAttackTarget({
+      attacker_player_id,
+      attacker_faction_code: FactionCode.THE_BASTION_ORDER,
+      destination: cell.coordinates,
+    }), new RegExp(CombatError.SAME_FACTION_ATTACK))
+  })
+})

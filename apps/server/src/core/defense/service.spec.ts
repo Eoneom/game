@@ -73,10 +73,11 @@ describe('DefenseService', () => {
     assert.ok(defenses.every(defense => defense.count === 0 && defense.city_id === 'c' && defense.player_id === 'p'))
   })
 
-  it('arms only turrets, plasma batteries and spore clouds', () => {
+  it('arms only turrets, plasma batteries, spore clouds and field artillery', () => {
     assert.deepStrictEqual(
       Object.values(DefenseCode).filter(code => DefenseService.isArmed(code)).sort(),
       [
+        DefenseCode.FIELD_ARTILLERY,
         DefenseCode.PLASMA_BATTERY,
         DefenseCode.SPORE_CLOUD,
         DefenseCode.TURRET 
@@ -85,7 +86,7 @@ describe('DefenseService', () => {
   })
 
   describe('faction defenses (slice 036)', () => {
-    it('keeps the five common defenses for every faction and adds the Symbiose ones to the Symbiose only', () => {
+    it('keeps the five common defenses for every faction and adds each faction\'s own (slices 036 / 037)', () => {
       const common = [
         DefenseCode.RAMPART,
         DefenseCode.TURRET,
@@ -93,7 +94,7 @@ describe('DefenseService', () => {
         DefenseCode.PLASMA_BATTERY,
         DefenseCode.SHIELD_GENERATOR,
       ]
-      for (const faction_code of Object.values(FactionCode).filter(code => code !== FactionCode.THE_SYMBIOSIS)) {
+      for (const faction_code of Object.values(FactionCode).filter(code => code !== FactionCode.THE_SYMBIOSIS && code !== FactionCode.THE_BASTION_ORDER)) {
         assert.deepStrictEqual(DefenseService.codesForFaction(faction_code).sort(), [ ...common ].sort())
       }
       assert.deepStrictEqual(DefenseService.codesForFaction(FactionCode.THE_SYMBIOSIS).sort(), [
@@ -101,6 +102,32 @@ describe('DefenseService', () => {
         DefenseCode.MYCELIUM_WALL,
         DefenseCode.SPORE_CLOUD,
       ].sort())
+      assert.deepStrictEqual(DefenseService.codesForFaction(FactionCode.THE_BASTION_ORDER).sort(), [
+        ...common,
+        DefenseCode.FIELD_ARTILLERY,
+        DefenseCode.BARBED_WIRE,
+      ].sort())
+    })
+
+    it('keeps the Bastion defenses to the Bastion (slice 037)', () => {
+      for (const defense_code of [
+        DefenseCode.FIELD_ARTILLERY,
+        DefenseCode.BARBED_WIRE
+      ]) {
+        for (const faction_code of [
+          FactionCode.THE_CONFEDERATION,
+          FactionCode.THE_SYMBIOSIS
+        ]) {
+          assert.throws(() => DefenseService.assertInRoster({
+            faction_code,
+            defense_code
+          }), new RegExp(DefenseError.NOT_IN_FACTION_ROSTER))
+        }
+        assert.doesNotThrow(() => DefenseService.assertInRoster({
+          faction_code: FactionCode.THE_BASTION_ORDER,
+          defense_code
+        }))
+      }
     })
 
     it('rejects a faction defense outside its faction', () => {
@@ -116,6 +143,45 @@ describe('DefenseService', () => {
         faction_code: FactionCode.THE_CONFEDERATION,
         defense_code: DefenseCode.RAMPART
       }))
+    })
+
+    it('reads per-round attack tables and falls back to the flat attack (slice 037)', () => {
+      assert.deepStrictEqual([
+        1,
+        2,
+        3,
+        4,
+        5
+      ].map(round => DefenseService.getAttackForRound({
+        code: DefenseCode.FIELD_ARTILLERY,
+        round
+      })), [
+        60,
+        50,
+        25,
+        20,
+        20
+      ])
+      assert.deepStrictEqual([
+        1,
+        2,
+        5
+      ].map(round => DefenseService.getAttackForRound({
+        code: DefenseCode.MINEFIELD,
+        round
+      })), [
+        40,
+        0,
+        0
+      ])
+      assert.strictEqual(DefenseService.getAttackForRound({
+        code: DefenseCode.TURRET,
+        round: 3
+      }), 25)
+      assert.strictEqual(DefenseService.getAttackForRound({
+        code: DefenseCode.FIELD_ARTILLERY,
+        round: 6
+      }), 20)
     })
 
     it('regrows floor(30 %) of the destroyed mycelium walls only when the defender holds', () => {

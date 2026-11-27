@@ -3,7 +3,13 @@ import { DefenseCode } from '#core/defense/constant/code'
 interface DefenseCharacteristic {
   /** Defense points used against the city's `city_wall` capacity, per unit. */
   points: number
+  /** Flat attack per unit; with `attack_by_round`, the headline (round 1) value. */
   attack: number
+  /**
+   * Attack per unit for rounds 1 to 5 (slice 037); when set it replaces `attack` in combat. Rounds past the
+   * table use its last value.
+   */
+  attack_by_round?: readonly number[]
   /** Life per unit; minefields are not in the life pool and cannot be targeted. */
   life: number
   /** Armed defenses keep the defender in the fight without combat troops. */
@@ -27,6 +33,14 @@ export const defense_characteristics: Record<DefenseCode, DefenseCharacteristic>
   [DefenseCode.MINEFIELD]: {
     points: 1,
     attack: 40,
+    // Fires in round 1 only (then the stack is consumed).
+    attack_by_round: [
+      40,
+      0,
+      0,
+      0,
+      0
+    ],
     life: 0,
     armed: false,
   },
@@ -55,6 +69,27 @@ export const defense_characteristics: Record<DefenseCode, DefenseCharacteristic>
     life: 10,
     armed: true,
   },
+  // L'Ordre du Bastion (slice 037).
+  [DefenseCode.FIELD_ARTILLERY]: {
+    points: 4,
+    attack: 60,
+    // Breaks assaults: most of its damage lands in rounds 1-2.
+    attack_by_round: [
+      60,
+      50,
+      25,
+      20,
+      20
+    ],
+    life: 35,
+    armed: true,
+  },
+  [DefenseCode.BARBED_WIRE]: {
+    points: 1,
+    attack: 0,
+    life: 15,
+    armed: false,
+  },
 }
 
 /** Plasma each firing `plasma_battery` unit spends per round from the city stock. */
@@ -70,7 +105,21 @@ export const SPORE_REDUCTION_PER_UNIT = 0.01
 /** ...up to this cap. */
 export const SPORE_REDUCTION_CAP = 0.15
 
-/** Shield generators and spore clouds add up, capped at this total share of the attacker's attack pool. */
+/**
+ * Each surviving `barbed_wire` lowers the attacker's attack pool by this share per round (slice 037): 1 % in
+ * round 1, 0.5 % in round 2, nothing afterwards...
+ */
+export const BARBED_WIRE_REDUCTION_PER_UNIT_BY_ROUND: readonly number[] = [
+  0.01,
+  0.005
+]
+/** ...up to these caps (10 % in round 1, 5 % in round 2). */
+export const BARBED_WIRE_REDUCTION_CAP_BY_ROUND: readonly number[] = [
+  0.1,
+  0.05
+]
+
+/** Shield generators, spore clouds and barbed wire add up, capped at this total share of the attacker's attack pool. */
 export const ATTACK_REDUCTION_CAP = 0.4
 
 /** Share of the `mycelium_wall` units destroyed in a battle that grow back when the defender wins or draws. */

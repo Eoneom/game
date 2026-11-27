@@ -163,6 +163,43 @@ describe('buildDefense', () => {
     })
   })
 
+  describe('faction defenses (slice 037)', () => {
+    it('rejects the Bastion defenses for Confederation and Symbiose players', async () => {
+      for (const player_faction of [
+        FactionCode.THE_CONFEDERATION,
+        FactionCode.THE_SYMBIOSIS
+      ]) {
+        faction_code = player_faction
+        for (const defense_code of [
+          DefenseCode.FIELD_ARTILLERY,
+          DefenseCode.BARBED_WIRE
+        ]) {
+          await assert.rejects(buildDefense({
+            player_id,
+            city_id: city.id,
+            defense_code,
+            count: 1
+          }), new Error(DefenseError.NOT_IN_FACTION_ROSTER))
+        }
+      }
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls.length, 0)
+    })
+
+    it('lets a Bastion player build barbed wire', async () => {
+      faction_code = FactionCode.THE_BASTION_ORDER
+      await buildDefense({
+        player_id,
+        city_id: city.id,
+        defense_code: DefenseCode.BARBED_WIRE,
+        count: 3
+      })
+
+      assert.strictEqual(scheduleDefenseBuildProgress.mock.calls[0][0].defense_code, DefenseCode.BARBED_WIRE)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].plastic, 100_000 - 3 * 200)
+      assert.strictEqual(stockUpdateOne.mock.calls[0][0].mushroom, 100_000 - 3 * 100)
+    })
+  })
+
   it('starts the batch and pays for it when nothing is being built', async () => {
     await buildDefense({
       player_id,

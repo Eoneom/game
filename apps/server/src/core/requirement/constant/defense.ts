@@ -91,4 +91,27 @@ export const DefenseRequirement: Record<DefenseCode, RequirementValue> = {
       }
     ]
   },
+  [DefenseCode.FIELD_ARTILLERY]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 3
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.FORTIFICATION,
+        level: 2
+      }
+    ]
+  },
+  [DefenseCode.BARBED_WIRE]: {
+    buildings: [
+      {
+        code: BuildingCode.CITY_WALL,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
 }

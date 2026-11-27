@@ -137,6 +137,25 @@ export class DefenseService {
     return defense_characteristics[code].armed
   }
 
+  /**
+   * Attack per unit in `round` (1-based, slice 037): the defense's per-round table when it has one (minefield,
+   * field artillery), its flat attack otherwise. Rounds past the table use its last value.
+   */
+  static getAttackForRound({
+    code,
+    round
+  }: {
+    code: DefenseCode
+    round: number
+  }): number {
+    const characteristic = defense_characteristics[code]
+    const table = characteristic.attack_by_round
+    if (!table || table.length === 0) {
+      return characteristic.attack
+    }
+    return table[Math.min(Math.max(round, 1), table.length) - 1]
+  }
+
   static sortDefenses<T extends { code: DefenseCode }>({ defenses }: { defenses: T[] }): T[] {
     return [ ...defenses ].sort((a, b) => defense_order[a.code] - defense_order[b.code])
   }

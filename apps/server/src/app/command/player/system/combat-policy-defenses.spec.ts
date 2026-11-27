@@ -1,13 +1,16 @@
 import assert from 'assert'
+import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import { BattleWinner } from '#core/combat/value/battle-winner'
 import { CombatStrategy } from '#core/combat/value/combat-strategy'
 import { DefenseCode } from '#core/defense/constant/code'
+import { FactionCode } from '#core/faction/constant/code'
 import { TroopCode } from '#core/troop/constant/code'
 import {
   attackStrategyCandidates,
   pickAttackerStrategyForDefender,
   shouldConsiderSiegeAssault,
   simulateAttackCommit,
+  simulatedDefenderModifiers,
 } from './combat-policy'
 
 describe('system combat policy with city defenses (slice 029)', () => {
@@ -119,5 +122,50 @@ describe('system combat policy with city defenses (slice 029)', () => {
         count: 1 
       } 
     ]), [ CombatStrategy.OPENING_STRIKE ])
+  })
+})
+
+describe('system combat policy against l\'Ordre du Bastion (slice 037)', () => {
+  it('simulates the garrison bonus for Bastion city targets only', () => {
+    assert.deepStrictEqual(simulatedDefenderModifiers({
+      target_kind: BattleTargetKind.CITY,
+      defender_faction_code: FactionCode.THE_BASTION_ORDER,
+    }), {
+      attack: 1,
+      life: 1,
+      garrison: 1.15,
+    })
+    assert.strictEqual(simulatedDefenderModifiers({
+      target_kind: BattleTargetKind.OUTPOST,
+      defender_faction_code: FactionCode.THE_BASTION_ORDER,
+    }), undefined)
+    assert.strictEqual(simulatedDefenderModifiers({
+      target_kind: BattleTargetKind.FIELD,
+      defender_faction_code: FactionCode.THE_BASTION_ORDER,
+    }), undefined)
+    assert.strictEqual(simulatedDefenderModifiers({
+      target_kind: BattleTargetKind.CITY,
+      defender_faction_code: FactionCode.THE_CONFEDERATION,
+    }), undefined)
+  })
+
+  it('includes the field artillery in the attack simulation', () => {
+    const move_troops = [
+      {
+        code: TroopCode.LEGIONNAIRE,
+        count: 10
+      }
+    ]
+    assert.notStrictEqual(simulateAttackCommit({
+      move_troops,
+      defender_stacks: [
+        {
+          kind: 'defense',
+          code: DefenseCode.FIELD_ARTILLERY,
+          count: 10
+        },
+      ],
+      attacker_strategy: CombatStrategy.BALANCED,
+    }), BattleWinner.ATTACKER)
   })
 })

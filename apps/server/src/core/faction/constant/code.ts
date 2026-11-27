@@ -3,4 +3,5 @@ export enum FactionCode {
   THE_TECHNOLOGICAL_SINGULARITY = 'the_technological_singularity',
   THE_ASH_LITURGY = 'the_ash_liturgy',
   THE_SYMBIOSIS = 'the_symbiosis',
+  THE_BASTION_ORDER = 'the_bastion_order',
 }

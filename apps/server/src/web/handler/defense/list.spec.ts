@@ -118,4 +118,44 @@ describe('defenseListResponseMapper', () => {
       build_queue_limit: 3,
     })
   })
+
+  it('exposes the per-round attack table of the field artillery (slice 037)', () => {
+    const response = defenseListResponseMapper({
+      defenses: [
+        DefenseEntity.create({
+          id: 'd1',
+          player_id: 'p',
+          city_id: 'c',
+          code: DefenseCode.FIELD_ARTILLERY,
+          count: 1
+        })
+      ],
+      costs,
+      requirements,
+      city_wall_level: 3,
+      capacity: {
+        total: 60,
+        used: 4,
+        queued: 0
+      },
+      pending_build: null,
+      build_queue: [],
+      build_queue_limit: 3,
+    })
+
+    expect(response.defenses[0]).toMatchObject({
+      code: DefenseCode.FIELD_ARTILLERY,
+      points: 4,
+      attack: 60,
+      attack_by_round: [
+        60,
+        50,
+        25,
+        20,
+        20
+      ],
+      life: 35,
+      armed: true,
+    })
+  })
 })

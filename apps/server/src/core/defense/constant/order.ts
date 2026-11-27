@@ -8,4 +8,6 @@ export const defense_order: Record<DefenseCode, number> = {
   [DefenseCode.PLASMA_BATTERY]: 5,
   [DefenseCode.MYCELIUM_WALL]: 6,
   [DefenseCode.SPORE_CLOUD]: 7,
+  [DefenseCode.FIELD_ARTILLERY]: 8,
+  [DefenseCode.BARBED_WIRE]: 9,
 }

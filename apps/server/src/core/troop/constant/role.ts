@@ -46,4 +46,13 @@ export const troop_role: Record<TroopCode, TroopRole> = {
   [TroopCode.SPORE_SWARM]: TroopRole.COMBAT,
   [TroopCode.FUNGAL_COLOSSUS]: TroopRole.COMBAT,
   [TroopCode.TOXIC_HOWLER]: TroopRole.COMBAT,
+  [TroopCode.SENTINEL]: TroopRole.SCOUT,
+  [TroopCode.FIELD_ENGINEER]: TroopRole.FOUNDER,
+  [TroopCode.SUPPLY_TRUCK]: TroopRole.CARRIER,
+  [TroopCode.QUARTERMASTER]: TroopRole.CULTIVATOR,
+  [TroopCode.SCRAPPER]: TroopRole.SALVAGER,
+  [TroopCode.GRENADIER]: TroopRole.COMBAT,
+  [TroopCode.DRAGOON]: TroopRole.COMBAT,
+  [TroopCode.SIEGE_TANK]: TroopRole.COMBAT,
+  [TroopCode.MOBILE_MORTAR]: TroopRole.COMBAT,
 }

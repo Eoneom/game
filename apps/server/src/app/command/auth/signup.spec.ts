@@ -214,6 +214,24 @@ describe('signupAuth', () => {
     assert.strictEqual(defenseCreate.mock.calls.length, Object.keys(DefenseCode).length)
   })
 
+  it('should accept l\'Ordre du Bastion and bootstrap its own roster (slice 037)', async () => {
+    await signupAuth({
+      player_name,
+      city_name,
+      faction_code: FactionCode.THE_BASTION_ORDER
+    })
+
+    const created_player = playerCreate.mock.calls[0][0]
+    assert.strictEqual(created_player.faction_code, FactionCode.THE_BASTION_ORDER)
+    const bastion_codes = TroopService.codesForFaction(FactionCode.THE_BASTION_ORDER)
+    assert.strictEqual(bastion_codes.length, 9)
+    assert.deepStrictEqual(
+      troopCreate.mock.calls.map(([ troop ]) => troop.code).sort(),
+      [ ...bastion_codes ].sort()
+    )
+    assert.strictEqual(defenseCreate.mock.calls.length, Object.keys(DefenseCode).length)
+  })
+
   it('should prevent user from settling a city with an existing name', async () => {
     cityExist.mockResolvedValue(true)
 

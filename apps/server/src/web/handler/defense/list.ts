@@ -35,6 +35,7 @@ export const defenseListResponseMapper = ({
       count: defense.count,
       points: characteristic.points,
       attack: characteristic.attack,
+      ...(characteristic.attack_by_round ? { attack_by_round: [ ...characteristic.attack_by_round ] } : {}),
       life: characteristic.life,
       armed: characteristic.armed,
       cost: {

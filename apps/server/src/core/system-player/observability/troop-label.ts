@@ -38,6 +38,15 @@ const TROOP_NAME: Record<TroopCode, string> = {
   [TroopCode.SPORE_SWARM]: 'Essaim de spores',
   [TroopCode.FUNGAL_COLOSSUS]: 'Colosse fongique',
   [TroopCode.TOXIC_HOWLER]: 'Hurleur toxique',
+  [TroopCode.SENTINEL]: 'Vigie',
+  [TroopCode.FIELD_ENGINEER]: 'Ingénieur de campagne',
+  [TroopCode.SUPPLY_TRUCK]: 'Camion de ravitaillement',
+  [TroopCode.QUARTERMASTER]: 'Intendant',
+  [TroopCode.SCRAPPER]: 'Ferrailleur',
+  [TroopCode.GRENADIER]: 'Grenadier',
+  [TroopCode.DRAGOON]: 'Dragon mécanisé',
+  [TroopCode.SIEGE_TANK]: 'Char de siège',
+  [TroopCode.MOBILE_MORTAR]: 'Mortier mobile',
 }
 
 export function translateTroopCodeForObservability(code: string): string {

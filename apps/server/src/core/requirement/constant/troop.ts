@@ -408,4 +408,105 @@ export const TroopRequirement: Record<TroopCode, RequirementValue> = {
       }
     ]
   },
+  [TroopCode.SENTINEL]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 1
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.FIELD_ENGINEER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 9
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.SUPPLY_TRUCK]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.QUARTERMASTER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.SCRAPPER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 3
+      }
+    ],
+    technologies: []
+  },
+  [TroopCode.GRENADIER]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 4
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 1
+      }
+    ]
+  },
+  [TroopCode.DRAGOON]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 6
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 3
+      }
+    ]
+  },
+  [TroopCode.SIEGE_TANK]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 5
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 2
+      }
+    ]
+  },
+  [TroopCode.MOBILE_MORTAR]: {
+    buildings: [
+      {
+        code: BuildingCode.CLONING_FACTORY,
+        level: 7
+      }
+    ],
+    technologies: [
+      {
+        code: TechnologyCode.REPLICATION_CATALYST,
+        level: 4
+      }
+    ]
+  },
 }

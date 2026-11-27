@@ -15,6 +15,7 @@ import {
   CombatStrategy,
   resolveDefaultCombatStrategy,
 } from '#core/combat/value/combat-strategy'
+import { FactionService } from '#core/faction/service'
 import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { id } from '#shared/identification'
@@ -57,6 +58,7 @@ export const sagaFinishAttack = async ({
 
   let defender_strategy = CombatStrategy.BALANCED
   let defender_owner_modifiers: Record<string, CombatModifiers> | undefined = undefined
+  let garrison = 1
   if (target.target_kind === BattleTargetKind.CITY && target.target_id) {
     const city = await repository.city.get(target.target_id)
     // The host's garrison default applies to every defender stack, reinforcements included (slice 033).
@@ -68,6 +70,8 @@ export const sagaFinishAttack = async ({
     })
     defender_stacks.push(...reinforcements.stacks)
     defender_owner_modifiers = reinforcements.owner_modifiers
+    // Garrison (slice 037): the owner's own combat stacks in their own city; reinforcements never get it.
+    garrison = FactionService.getGarrisonLifeMultiplier(target.defender_faction_code)
     // City defenses join the defender side (slice 029).
     const defenses = await repository.defense.listByCity({ city_id: city.id })
     defender_stacks.push(...defenses
@@ -93,9 +97,10 @@ export const sagaFinishAttack = async ({
     AppService.getCombatModifiers({ player_id: target.defender_player_id }),
     AppService.getFortificationMultiplier({ player_id: target.defender_player_id }),
   ])
-  const defender_modifiers = {
+  const defender_modifiers: CombatModifiers = {
     ...defender_combat_modifiers,
     fortification: defender_fortification,
+    ...(garrison !== 1 ? { garrison } : {}),
   }
 
   const state_json: BattleStateJson = {

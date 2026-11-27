@@ -17,6 +17,8 @@ type ReportBattleModifiers = {
   life: number
   /** Defender: Fortification multiplier of the city's defenses (slice 029); missing = 1. */
   fortification?: number
+  /** Defender: garrison life multiplier of the city owner's own troops (slice 037, Bastion 1.15); missing = 1. */
+  garrison?: number
 }
 
 /**
@@ -59,6 +61,8 @@ export type ReportBattleMetadata = {
     shield_reduction?: number
     /** Share absorbed by spore clouds, 0–0.15; never above 0.40 with `shield_reduction` (slice 036). */
     spore_reduction?: number
+    /** Share absorbed by barbed wire, 0–0.10 in round 1, 0–0.05 in round 2; within the 0.40 combined cap (slice 037). */
+    barbed_wire_reduction?: number
   }[]
   /** Defender perspective: resources the underground shelter kept out of loot (slice 028); zero otherwise. */
   sheltered: {

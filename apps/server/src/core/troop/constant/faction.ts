@@ -38,4 +38,13 @@ export const troop_faction: Record<TroopCode, FactionCode> = {
   [TroopCode.SPORE_SWARM]: FactionCode.THE_SYMBIOSIS,
   [TroopCode.FUNGAL_COLOSSUS]: FactionCode.THE_SYMBIOSIS,
   [TroopCode.TOXIC_HOWLER]: FactionCode.THE_SYMBIOSIS,
+  [TroopCode.SENTINEL]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.FIELD_ENGINEER]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.SUPPLY_TRUCK]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.QUARTERMASTER]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.SCRAPPER]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.GRENADIER]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.DRAGOON]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.SIEGE_TANK]: FactionCode.THE_BASTION_ORDER,
+  [TroopCode.MOBILE_MORTAR]: FactionCode.THE_BASTION_ORDER,
 }

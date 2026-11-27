@@ -1,4 +1,5 @@
 import { FactionCode } from '#core/faction/constant/code'
+import { faction_garrison_life_modifier } from '#core/faction/constant/garrison-modifier'
 import { non_playable_faction_codes } from '#core/faction/constant/playable'
 import { faction_production_modifier } from '#core/faction/constant/production-modifier'
 import { FactionError } from '#core/faction/error'
@@ -37,5 +38,10 @@ export class FactionService {
       plasma: modifier.plasma ?? 1,
       water: modifier.water ?? 1,
     }
+  }
+
+  /** Garrison life multiplier (slice 037) for the city owner's own combat stacks, neutral (1) for most factions. */
+  static getGarrisonLifeMultiplier(faction_code: FactionCode): number {
+    return faction_garrison_life_modifier[faction_code] ?? 1
   }
 }
