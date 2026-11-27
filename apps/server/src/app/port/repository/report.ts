@@ -15,13 +15,26 @@ export type SpyReportEntry = {
   metadata: ReportSpyMetadata | ReportSpyDetectedMetadata
 }
 
+/** A `battle` report with its `report_battle` row. */
+export type BattleReportEntry = {
+  report: ReportEntity
+  metadata: ReportBattleMetadata
+}
+
 export type ReportRepository = GenericRepository<ReportEntity> & {
   createBattleReports(args: {
     attacker_report: ReportEntity
     defender_report: ReportEntity
     attacker_metadata: ReportBattleMetadata
     defender_metadata: ReportBattleMetadata
+    /** `reinforcement` perspective reports, one per reinforcement owner (slice 033). */
+    reinforcement_reports?: BattleReportEntry[]
   }): Promise<void>
+
+  /** `reinforcement` arrival notice to the host with the troops' owner (slice 033). */
+  createReinforcementReport(args: { report: ReportEntity, owner_player_id: string }): Promise<void>
+
+  getReinforcementOwnerByReportId(report_id: string): Promise<string | null>
 
   getBattleMetadataByReportId(report_id: string): Promise<ReportBattleMetadata | null>
 

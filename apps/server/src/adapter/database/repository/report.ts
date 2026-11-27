@@ -1,5 +1,6 @@
 import { ReportEntity } from '#core/communication/report/entity'
 import {
+  BattleReportEntry,
   ReportRepository,
   SpyReportEntry,
 } from '#app/port/repository/report'
@@ -261,57 +262,75 @@ export class PostgresReportRepository
     defender_report,
     attacker_metadata,
     defender_metadata,
+    reinforcement_reports = [],
   }: {
     attacker_report: ReportEntity
     defender_report: ReportEntity
     attacker_metadata: ReportBattleMetadata
     defender_metadata: ReportBattleMetadata
+    reinforcement_reports?: BattleReportEntry[]
   }): Promise<void> {
     await withTransaction(async () => {
       await this.create(attacker_report)
       await this.create(defender_report)
-      await insertReportBattleRow(this.db, {
-        report_id: attacker_report.id,
-        battle_id: attacker_metadata.battle_id,
-        movement_id: attacker_metadata.movement_id,
-        perspective: attacker_metadata.perspective,
-        attacker_player_id: attacker_metadata.attacker_player_id,
-        defender_player_id: attacker_metadata.defender_player_id,
-        attacker_faction_code: attacker_metadata.attacker_faction_code,
-        defender_faction_code: attacker_metadata.defender_faction_code,
-        target_kind: attacker_metadata.target_kind,
-        target_id: attacker_metadata.target_id ?? null,
-        winner: attacker_metadata.winner,
-        attacker_strategy: attacker_metadata.attacker_strategy,
-        defender_strategy: attacker_metadata.defender_strategy,
-        rounds_played: attacker_metadata.rounds_played,
-        outcome_json: attacker_metadata.outcome,
-        casualties_attacker_json: attacker_metadata.casualties_attacker,
-        casualties_defender_json: attacker_metadata.casualties_defender,
-        round_summaries_json: attacker_metadata.round_summaries,
-        sheltered_json: attacker_metadata.sheltered,
-      })
-      await insertReportBattleRow(this.db, {
-        report_id: defender_report.id,
-        battle_id: defender_metadata.battle_id,
-        movement_id: defender_metadata.movement_id,
-        perspective: defender_metadata.perspective,
-        attacker_player_id: defender_metadata.attacker_player_id,
-        defender_player_id: defender_metadata.defender_player_id,
-        attacker_faction_code: defender_metadata.attacker_faction_code,
-        defender_faction_code: defender_metadata.defender_faction_code,
-        target_kind: defender_metadata.target_kind,
-        target_id: defender_metadata.target_id ?? null,
-        winner: defender_metadata.winner,
-        attacker_strategy: defender_metadata.attacker_strategy,
-        defender_strategy: defender_metadata.defender_strategy,
-        rounds_played: defender_metadata.rounds_played,
-        outcome_json: defender_metadata.outcome,
-        casualties_attacker_json: defender_metadata.casualties_attacker,
-        casualties_defender_json: defender_metadata.casualties_defender,
-        round_summaries_json: defender_metadata.round_summaries,
-        sheltered_json: defender_metadata.sheltered,
-      })
+      await this.insertBattleMetadata(attacker_report.id, attacker_metadata)
+      await this.insertBattleMetadata(defender_report.id, defender_metadata)
+      for (const entry of reinforcement_reports) {
+        await this.create(entry.report)
+        await this.insertBattleMetadata(entry.report.id, entry.metadata)
+      }
+    })
+  }
+
+  async createReinforcementReport({
+    report,
+    owner_player_id,
+  }: {
+    report: ReportEntity
+    owner_player_id: string
+  }): Promise<void> {
+    await withTransaction(async () => {
+      await this.create(report)
+      await this.db
+        .insertInto('report_reinforcement')
+        .values({
+          report_id: report.id,
+          owner_player_id,
+        })
+        .execute()
+    })
+  }
+
+  async getReinforcementOwnerByReportId(report_id: string): Promise<string | null> {
+    const row = await this.db
+      .selectFrom('report_reinforcement')
+      .select('owner_player_id')
+      .where('report_id', '=', report_id)
+      .executeTakeFirst()
+    return row?.owner_player_id ?? null
+  }
+
+  private async insertBattleMetadata(report_id: string, metadata: ReportBattleMetadata): Promise<void> {
+    await insertReportBattleRow(this.db, {
+      report_id,
+      battle_id: metadata.battle_id,
+      movement_id: metadata.movement_id,
+      perspective: metadata.perspective,
+      attacker_player_id: metadata.attacker_player_id,
+      defender_player_id: metadata.defender_player_id,
+      attacker_faction_code: metadata.attacker_faction_code,
+      defender_faction_code: metadata.defender_faction_code,
+      target_kind: metadata.target_kind,
+      target_id: metadata.target_id ?? null,
+      winner: metadata.winner,
+      attacker_strategy: metadata.attacker_strategy,
+      defender_strategy: metadata.defender_strategy,
+      rounds_played: metadata.rounds_played,
+      outcome_json: metadata.outcome,
+      casualties_attacker_json: metadata.casualties_attacker,
+      casualties_defender_json: metadata.casualties_defender,
+      round_summaries_json: metadata.round_summaries,
+      sheltered_json: metadata.sheltered,
     })
   }
 

@@ -7,13 +7,15 @@ import {
 import { BattleEntity } from '#core/combat/entity/battle'
 import {
   BattleStack,
-  BattleStateJson
+  BattleStateJson,
+  CombatModifiers,
 } from '#core/combat/type/battle-stack'
 import { BattleTargetKind } from '#core/combat/value/battle-target-kind'
 import {
   CombatStrategy,
   resolveDefaultCombatStrategy,
 } from '#core/combat/value/combat-strategy'
+import { TroopEntity } from '#core/troop/entity'
 import { TroopError } from '#core/troop/error'
 import { id } from '#shared/identification'
 
@@ -54,9 +56,18 @@ export const sagaFinishAttack = async ({
   const defender_stacks: BattleStack[] = stacksToBattleStacks(defender_troops)
 
   let defender_strategy = CombatStrategy.BALANCED
+  let defender_owner_modifiers: Record<string, CombatModifiers> | undefined = undefined
   if (target.target_kind === BattleTargetKind.CITY && target.target_id) {
     const city = await repository.city.get(target.target_id)
+    // The host's garrison default applies to every defender stack, reinforcements included (slice 033).
     defender_strategy = resolveDefaultCombatStrategy(city.default_combat_strategy)
+    const reinforcements = await snapshotReinforcements({
+      cell_troops,
+      host_player_id: target.defender_player_id,
+      attacker_player_id: player_id,
+    })
+    defender_stacks.push(...reinforcements.stacks)
+    defender_owner_modifiers = reinforcements.owner_modifiers
     // City defenses join the defender side (slice 029).
     const defenses = await repository.defense.listByCity({ city_id: city.id })
     defender_stacks.push(...defenses
@@ -95,6 +106,7 @@ export const sagaFinishAttack = async ({
     cumulative_defender_losses: [],
     attacker_modifiers,
     defender_modifiers,
+    ...(defender_owner_modifiers ? { defender_owner_modifiers } : {}),
   }
 
   const battle = BattleEntity.create({
@@ -123,4 +135,66 @@ export const sagaFinishAttack = async ({
     round: 1,
     execute_at: arrived_at,
   })
+}
+
+/**
+ * Reinforcement stacks on the attacked city cell (slice 033): stationed troops of the host's current
+ * alliance members, one stack per owner and code, carrying the owner's `player_id`, with each owner's
+ * Arsenal modifiers. `undefined` modifiers when the city holds no reinforcement (unchanged snapshot).
+ */
+async function snapshotReinforcements({
+  cell_troops,
+  host_player_id,
+  attacker_player_id,
+}: {
+  cell_troops: TroopEntity[]
+  host_player_id: string
+  attacker_player_id: string
+}): Promise<{ stacks: BattleStack[]; owner_modifiers: Record<string, CombatModifiers> | undefined }> {
+  const isForeignStationed = (troop: TroopEntity): boolean => troop.player_id !== host_player_id
+    && troop.player_id !== attacker_player_id
+    && troop.count > 0
+    && troop.movement_id === null
+  const foreign = cell_troops.filter(isForeignStationed)
+  if (foreign.length === 0) {
+    return {
+      stacks: [],
+      owner_modifiers: undefined,
+    }
+  }
+
+  const repository = Factory.getRepository()
+  const host_membership = await repository.alliance.findMembership(host_player_id)
+  if (!host_membership) {
+    return {
+      stacks: [],
+      owner_modifiers: undefined,
+    }
+  }
+  const member_ids = new Set((await repository.alliance.listMembers(host_membership.alliance_id)).map(member => member.player_id))
+  const allied = foreign.filter(troop => member_ids.has(troop.player_id))
+  if (allied.length === 0) {
+    return {
+      stacks: [],
+      owner_modifiers: undefined,
+    }
+  }
+
+  const owner_ids = [ ...new Set(allied.map(troop => troop.player_id)) ]
+  const stacks: BattleStack[] = owner_ids.flatMap(owner_id => {
+    const owned = allied.filter(troop => troop.player_id === owner_id)
+    return stacksToBattleStacks(owned).map(stack => ({
+      ...stack,
+      player_id: owner_id,
+    }))
+  })
+  const modifiers = await Promise.all(owner_ids.map(owner_id => AppService.getCombatModifiers({ player_id: owner_id })))
+
+  return {
+    stacks,
+    owner_modifiers: Object.fromEntries(owner_ids.map((owner_id, index) => [
+      owner_id,
+      modifiers[index]
+    ])),
+  }
 }

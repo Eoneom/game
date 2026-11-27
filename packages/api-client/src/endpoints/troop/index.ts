@@ -33,6 +33,11 @@ import {
   TroopCancelQueuedRequest,
   TroopCancelQueuedResponse
 } from './cancel-queued'
+import {
+  TroopReinforcementAbroadResponse,
+  TroopReinforcementListRequest,
+  TroopReinforcementListResponse
+} from './reinforcement/list'
 
 export class TroopEndpoint {
   private fetcher: Fetcher
@@ -102,5 +107,18 @@ export class TroopEndpoint {
       body,
       token
     })
+  }
+
+  /** Allied troops stationed in one of the caller's cities (slice 033). */
+  public async listReinforcement(token: string, { city_id }: TroopReinforcementListRequest): Promise<TroopReinforcementListResponse> {
+    return this.fetcher.get('/troop/reinforcement', {
+      token,
+      searchParams: { city_id }
+    })
+  }
+
+  /** The caller's troops stationed in allied cities (slice 033). */
+  public async listReinforcementAbroad(token: string): Promise<TroopReinforcementAbroadResponse> {
+    return this.fetcher.get('/troop/reinforcement/abroad', { token })
   }
 }

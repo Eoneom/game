@@ -468,6 +468,38 @@ describe('setupWebSocketServer', () => {
     }))
   })
 
+  it('forwards alliance:updated to members and reinforcement events to the host (slice 033)', async () => {
+    (authorizeAuth as unknown as MockInstance).mockResolvedValueOnce({ player_id: 'alliance-member' })
+    const member = makeMockWs(WebSocket.OPEN)
+    await gameConnectionHandler(member, makeReq('/?token=valid-token'))
+    ;(authorizeAuth as unknown as MockInstance).mockResolvedValueOnce({ player_id: 'alliance-outsider' })
+    const outsider = makeMockWs(WebSocket.OPEN)
+    await gameConnectionHandler(outsider, makeReq('/?token=valid-token'))
+
+    capturedEventListeners.get(AppEvent.AllianceUpdated)?.({
+      player_ids: [ 'alliance-member' ],
+      alliance_id: 'a1'
+    })
+    capturedEventListeners.get(AppEvent.ReinforcementArrived)?.({
+      player_id: 'alliance-member',
+      city_id: 'city-1',
+      owner_player_id: 'ally',
+      report_id: 'report-1'
+    })
+
+    expect(member.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.AllianceUpdated,
+      alliance_id: 'a1',
+    }))
+    expect(member.send).toHaveBeenCalledWith(JSON.stringify({
+      type: AppEvent.ReinforcementArrived,
+      city_id: 'city-1',
+      owner_player_id: 'ally',
+      report_id: 'report-1',
+    }))
+    expect(outsider.send).not.toHaveBeenCalled()
+  })
+
   describe('ChatMessage fan-out (slice 032)', () => {
     const connect = async (player_id: string, faction_code: string) => {
       (authorizeAuth as MockInstance).mockResolvedValueOnce({ player_id })
@@ -527,6 +559,22 @@ describe('setupWebSocketServer', () => {
       expect(ally.send).toHaveBeenCalledTimes(1)
       expect(enemy.send).toHaveBeenCalledTimes(1)
       expect(blocker.send).not.toHaveBeenCalled()
+    })
+
+    it('sends an alliance message to current members only (slice 033)', async () => {
+      const member = await connect('chat-alliance-member', 'the_confederation')
+      const outsider = await connect('chat-alliance-outsider', 'the_confederation')
+
+      capturedEventListeners.get(AppEvent.ChatMessage)?.({
+        channel: 'alliance',
+        faction_code: null,
+        member_ids: [ 'chat-alliance-member' ],
+        excluded_player_ids: [],
+        message
+      })
+
+      expect(member.send).toHaveBeenCalledTimes(1)
+      expect(outsider.send).not.toHaveBeenCalled()
     })
 
     it('keeps a connection whose faction cannot be read, without faction chat', async () => {

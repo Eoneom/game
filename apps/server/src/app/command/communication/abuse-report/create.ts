@@ -47,9 +47,11 @@ const getVisibleChatMessage = async ({
   const repository = Factory.getRepository()
   const message = await repository.chat_message.getById(message_id)
   const reporter = await repository.player.get(reporter_id)
+  const membership = await repository.alliance.findMembership(reporter_id)
   if (!CommunicationService.canAccessChannel({
     player: reporter,
-    channel_key: message.channel
+    channel_key: message.channel,
+    alliance_id: membership?.alliance_id ?? null
   })) {
     throw new Error(CommunicationError.CHANNEL_FORBIDDEN)
   }

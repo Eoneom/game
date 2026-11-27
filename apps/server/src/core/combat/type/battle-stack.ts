@@ -6,6 +6,11 @@ export type TroopBattleStack = {
   kind?: 'troop'
   code: TroopCode
   count: number
+  /**
+   * Owner of a defender reinforcement stack (slice 033). Missing = the side's own player
+   * (attacker, or the defender/host), which is every stack of battles without reinforcements.
+   */
+  player_id?: string
 }
 
 /** City defense stack on the defender side (slice 029). */
@@ -62,4 +67,24 @@ export type BattleStateJson = {
   /** Snapshot at battle start; absent on battles started before slice 027 (= neutral). */
   attacker_modifiers?: CombatModifiers
   defender_modifiers?: CombatModifiers
+  /**
+   * Arsenal modifiers of each defender reinforcement owner, keyed by `player_id` (slice 033).
+   * Stacks without `player_id`, or owners missing here, use `defender_modifiers`.
+   * Fortification always comes from `defender_modifiers` (the host's).
+   */
+  defender_owner_modifiers?: Record<string, CombatModifiers>
+}
+
+/** Arsenal modifiers of one troop stack: its owner's when keyed, the side's otherwise. */
+export const stackModifiers = ({
+  stack,
+  modifiers,
+  owner_modifiers,
+}: {
+  stack: TroopBattleStack
+  modifiers: CombatModifiers
+  owner_modifiers?: Record<string, CombatModifiers>
+}): CombatModifiers => {
+  const owner = stack.player_id ? owner_modifiers?.[stack.player_id] : undefined
+  return owner ?? modifiers
 }

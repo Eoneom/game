@@ -22,6 +22,7 @@ import { MailRepository } from '#app/port/repository/mail'
 import { ChatMessageRepository } from '#app/port/repository/chat-message'
 import { PlayerBlockRepository } from '#app/port/repository/player-block'
 import { AbuseReportRepository } from '#app/port/repository/abuse-report'
+import { AllianceRepository } from '#app/port/repository/alliance'
 
 export interface GenericRepository<Entity extends BaseEntity> {
   create(entity: Entity | Omit<Entity, 'id'>): Promise<string>
@@ -55,4 +56,5 @@ export interface Repository {
   chat_message: ChatMessageRepository
   player_block: PlayerBlockRepository
   abuse_report: AbuseReportRepository
+  alliance: AllianceRepository
 }

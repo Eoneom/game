@@ -12,6 +12,8 @@ export enum TroopError {
   TRANSPORT_RESOURCES_NOT_ALLOWED = 'troop:movement:transport-resources-not-allowed',
   NOT_IN_FACTION_ROSTER = 'troop:not-in-faction-roster',
   MOVEMENT_LIMIT_REACHED = 'troop:movement:limit-reached',
+  /** Only a `base` recall to an own city or outpost can start from another player's city (slice 033). */
+  MOVEMENT_FOREIGN_ORIGIN = 'troop:movement:foreign-origin',
   QUEUE_FULL = 'troop:queue-full',
   QUEUE_ITEM_NOT_FOUND = 'troop:queue-item-not-found'
 }

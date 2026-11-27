@@ -71,8 +71,10 @@ export async function startTroopRecruitment({
       player_id,
       troop_code,
     }),
+    // Own stack only: allied reinforcements of the same code may share the cell (slice 033).
     repository.troop.getInCell({
       cell_id: city_cell.id,
+      player_id,
       code: troop_code,
     }),
   ])

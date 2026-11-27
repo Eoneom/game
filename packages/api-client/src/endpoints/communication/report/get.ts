@@ -27,6 +27,16 @@ export interface CommunicationGetReportDataResponse {
   resources: Resource
   remaining_resources: Resource
   battle?: ReportBattleMetadata
+  /** Battle reports: `[TAG] Name` of both sides (slice 033). */
+  battle_players?: {
+    attacker_name: string
+    defender_name: string
+  }
+  /** `reinforcement` reports: who stationed the troops in the city (slice 033). */
+  reinforcement?: {
+    owner_player_id: string
+    owner_name: string
+  }
   /** `spy` reports (slice 030). */
   spy?: ReportSpyMetadata
   /** `spy_detected` reports (slice 030). */

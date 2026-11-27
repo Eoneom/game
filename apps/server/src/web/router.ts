@@ -63,6 +63,39 @@ import { adminForceSystemPlayerTickPostHandler } from '#web/handler/admin/system
 import { adminCombatSimulatorPostHandler } from '#web/handler/admin/combat-simulator/post'
 import { adminSystemPlayerStatsGetHandler } from '#web/handler/admin/system-player-stats/get'
 import { adminMiddleware } from '#web/middleware/admin'
+import {
+  allianceCreateHandler,
+  allianceDissolveHandler,
+  allianceUpdateDescriptionHandler
+} from '#web/handler/alliance/create'
+import {
+  allianceGetHandler,
+  allianceMineHandler,
+  allianceSearchHandler
+} from '#web/handler/alliance/get'
+import {
+  allianceAcceptInvitationHandler,
+  allianceInviteHandler,
+  allianceListInvitationHandler,
+  allianceRefuseInvitationHandler
+} from '#web/handler/alliance/invitation'
+import {
+  allianceAcceptApplicationHandler,
+  allianceApplyHandler,
+  allianceListApplicationHandler,
+  allianceRefuseApplicationHandler,
+  allianceWithdrawApplicationHandler
+} from '#web/handler/alliance/application'
+import {
+  allianceKickHandler,
+  allianceLeaveHandler,
+  allianceSetRoleHandler,
+  allianceTransferLeadershipHandler
+} from '#web/handler/alliance/member'
+import {
+  troopReinforcementAbroadHandler,
+  troopReinforcementListHandler
+} from '#web/handler/troop/reinforcement/list'
 
 const CANONICAL_HEALTH_PATH = '/api/v1/health'
 
@@ -110,6 +143,9 @@ export const router = (): Router => {
   r.get('/troop/movement/:movement_id', authMiddleware, troopGetMovementHandler)
   r.post('/troop/movement/estimate', authMiddleware, troopEstimateMovementHandler)
 
+  r.get('/troop/reinforcement', authMiddleware, troopReinforcementListHandler)
+  r.get('/troop/reinforcement/abroad', authMiddleware, troopReinforcementAbroadHandler)
+
   r.get('/troop/:troop_id', authMiddleware, troopGetHandler)
   r.put('/troop/cancel', authMiddleware, troopCancelHandler)
   r.put('/troop/queue/cancel', authMiddleware, troopCancelQueuedHandler)
@@ -151,6 +187,27 @@ export const router = (): Router => {
   r.delete('/communication/block/:player_id', authMiddleware, communicationUnblockPlayerHandler)
 
   r.post('/communication/abuse-report', authMiddleware, communicationCreateAbuseReportHandler)
+
+  // Alliances (slice 033): static paths before `/alliance/:alliance_id`.
+  r.post('/alliance', authMiddleware, allianceCreateHandler)
+  r.get('/alliance', authMiddleware, allianceSearchHandler)
+  r.delete('/alliance', authMiddleware, allianceDissolveHandler)
+  r.get('/alliance/mine', authMiddleware, allianceMineHandler)
+  r.put('/alliance/description', authMiddleware, allianceUpdateDescriptionHandler)
+  r.post('/alliance/invitation', authMiddleware, allianceInviteHandler)
+  r.get('/alliance/invitation', authMiddleware, allianceListInvitationHandler)
+  r.put('/alliance/invitation/:invitation_id/accept', authMiddleware, allianceAcceptInvitationHandler)
+  r.put('/alliance/invitation/:invitation_id/refuse', authMiddleware, allianceRefuseInvitationHandler)
+  r.get('/alliance/application', authMiddleware, allianceListApplicationHandler)
+  r.put('/alliance/application/:application_id/accept', authMiddleware, allianceAcceptApplicationHandler)
+  r.put('/alliance/application/:application_id/refuse', authMiddleware, allianceRefuseApplicationHandler)
+  r.delete('/alliance/application/:application_id', authMiddleware, allianceWithdrawApplicationHandler)
+  r.put('/alliance/member/:player_id/role', authMiddleware, allianceSetRoleHandler)
+  r.delete('/alliance/member/:player_id', authMiddleware, allianceKickHandler)
+  r.put('/alliance/leader', authMiddleware, allianceTransferLeadershipHandler)
+  r.post('/alliance/leave', authMiddleware, allianceLeaveHandler)
+  r.get('/alliance/:alliance_id', authMiddleware, allianceGetHandler)
+  r.post('/alliance/:alliance_id/application', authMiddleware, allianceApplyHandler)
 
   r.get('/admin/system-player-observability', authMiddleware, adminSystemPlayerObservabilityGetHandler)
   r.get('/admin/system-player-stats', authMiddleware, adminMiddleware, adminSystemPlayerStatsGetHandler)

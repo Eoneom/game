@@ -58,12 +58,14 @@ export class PostgresTroopRepository
 
   async getInCell({
     cell_id,
+    player_id,
     code
-  }: { cell_id: string; code: TroopCode }): Promise<TroopEntity> {
+  }: { cell_id: string; player_id: string; code: TroopCode }): Promise<TroopEntity> {
     const row = await this.db
       .selectFrom('troop')
       .selectAll()
       .where('cell_id', '=', cell_id)
+      .where('player_id', '=', player_id)
       .where('code', '=', code)
       .executeTakeFirst()
 
@@ -72,6 +74,36 @@ export class PostgresTroopRepository
     }
 
     return this.buildFromRow(row)
+  }
+
+  async listReinforcementsInCell({
+    cell_id,
+    host_player_id
+  }: { cell_id: string; host_player_id: string }): Promise<TroopEntity[]> {
+    const rows = await this.db
+      .selectFrom('troop')
+      .selectAll()
+      .where('cell_id', '=', cell_id)
+      .where('player_id', '!=', host_player_id)
+      .where('movement_id', 'is', null)
+      .where('count', '>', 0)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
+  }
+
+  async listStationedAbroad({ player_id }: { player_id: string }): Promise<TroopEntity[]> {
+    const rows = await this.db
+      .selectFrom('troop')
+      .innerJoin('city', 'city.cell_id', 'troop.cell_id')
+      .selectAll('troop')
+      .where('troop.player_id', '=', player_id)
+      .where('city.player_id', '!=', player_id)
+      .where('troop.movement_id', 'is', null)
+      .where('troop.count', '>', 0)
+      .execute()
+
+    return rows.map(row => this.buildFromRow(row))
   }
 
   protected buildFromRow(row: Selectable<DB['troop']>): TroopEntity {

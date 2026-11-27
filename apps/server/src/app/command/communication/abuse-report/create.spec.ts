@@ -54,6 +54,7 @@ describe('createCommunicationAbuseReport', () => {
       mail: { getById: vi.fn().mockResolvedValue(mail) },
       chat_message: { getById: vi.fn(async (message_id: string) => Object.values(chat_messages).find(message => message.id === message_id)) },
       abuse_report: { createIfAbsent },
+      alliance: { findMembership: vi.fn().mockResolvedValue(null) },
     } as unknown as Repository)
   })
 

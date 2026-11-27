@@ -39,7 +39,10 @@ function hasCombat(stacks: BattleStack[]): boolean {
   return troopStacks(stacks).some(s => s.count > 0 && combatRoleFor(s.code) === CombatRole.COMBAT)
 }
 
-/** Troop survivors become troop rows again; defense survivors stay in their `defense` rows. */
+/**
+ * Troop survivors become troop rows again; defense survivors stay in their `defense` rows.
+ * Reinforcement stacks go back to their owner (`stack.player_id`, slice 033), the others to `player_id`.
+ */
 function toEntities({
   stacks,
   player_id,
@@ -53,7 +56,7 @@ function toEntities({
     .filter(s => s.count > 0)
     .map(s => TroopEntity.create({
       id: id(),
-      player_id,
+      player_id: s.player_id ?? player_id,
       cell_id,
       code: s.code,
       count: s.count,
@@ -121,6 +124,8 @@ export type ApplyBattleOutcomesResult = {
   defender_player_id: string
   attacker_report_id: string
   defender_report_id: string
+  /** One `reinforcement` perspective report per reinforcement owner (slice 033). */
+  reinforcement_reports: { player_id: string; report_id: string }[]
 }
 
 export async function applyBattleOutcomes({
@@ -156,6 +161,8 @@ export async function applyBattleOutcomes({
     const troop_updates: TroopEntity[] = []
     let stock_update: ResourceStockEntity | null = null
 
+    // Every troop on the cell is rewritten from the battle state: survivors are re-created per owner
+    // (host and reinforcements, slice 033); on an attacker win the reinforcements die with the garrison.
     const on_cell = await repository.troop.listAllInCell({ cell_id: destination_cell.id })
     for (const t of on_cell) {
       troop_deletes.push(t.id)
@@ -280,7 +287,11 @@ export async function applyBattleOutcomes({
     }
     await Promise.all(promises)
 
-    const { attacker_report_id, defender_report_id } = await createBattleReports({
+    const {
+      attacker_report_id,
+      defender_report_id,
+      reinforcement_reports,
+    } = await createBattleReports({
       battle: finished_battle,
       movement,
       outcome,
@@ -294,6 +305,7 @@ export async function applyBattleOutcomes({
       defender_player_id: battle.defender_player_id,
       attacker_report_id,
       defender_report_id,
+      reinforcement_reports,
     }
   })
 }

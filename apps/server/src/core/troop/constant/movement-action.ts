@@ -4,4 +4,6 @@ export enum MovementAction {
   TRANSPORT = 'transport',
   ATTACK = 'attack',
   SPY = 'spy',
+  /** Station combat troops in an allied city (slice 033). */
+  REINFORCE = 'reinforce',
 }

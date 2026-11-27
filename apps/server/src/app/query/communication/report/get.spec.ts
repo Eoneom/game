@@ -103,6 +103,8 @@ describe('CommunicationGetReportQuery', () => {
           getBattleMetadataByReportId: vi.fn().mockResolvedValue(battle_metadata),
         },
         battle: { getById: battle_get },
+        player: { listByIds: vi.fn().mockResolvedValue([]) },
+        alliance: { listTagsByPlayerIds: vi.fn().mockResolvedValue([]) },
       } as unknown as Repository)
       return battle_get
     }

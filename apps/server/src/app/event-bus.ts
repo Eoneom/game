@@ -70,6 +70,8 @@ export type ChatMessageView = {
     id: string
     name: string
     faction_code: FactionCode
+    /** Author's alliance tag, shown as `[TAG] Name` (slice 033). */
+    alliance_tag: string | null
   }
   body: string
   created_at: number
@@ -77,14 +79,64 @@ export type ChatMessageView = {
 
 /**
  * Fanned out to every connected player allowed in the channel (slice 032):
- * everyone for `global`, members of `faction_code` for `faction`, minus `excluded_player_ids`
- * (players who blocked the author).
+ * everyone for `global`, members of `faction_code` for `faction`, the `member_ids` of the alliance
+ * for `alliance` (slice 033), minus `excluded_player_ids` (players who blocked the author).
  */
 type ChatMessagePayload = {
   channel: ChatChannel
   faction_code: FactionCode | null
+  /** Alliance channel only: current members; `null` for the other channels. */
+  member_ids: string[] | null
   excluded_player_ids: string[]
   message: ChatMessageView
+}
+
+/** Membership, role or description change: sent to every current member (slice 033). */
+type AllianceUpdatedPayload = {
+  player_ids: string[]
+  alliance_id: string
+}
+
+type AllianceInvitationReceivedPayload = {
+  player_id: string
+  invitation_id: string
+  alliance_id: string
+}
+
+/** Sent to the chef and officers. */
+type AllianceApplicationReceivedPayload = {
+  player_ids: string[]
+  application_id: string
+  alliance_id: string
+}
+
+type AllianceJoinedPayload = {
+  player_id: string
+  alliance_id: string
+}
+
+export type AllianceLeftReason = 'leave' | 'kick' | 'dissolve'
+
+type AllianceLeftPayload = {
+  player_id: string
+  alliance_id: string
+  reason: AllianceLeftReason
+}
+
+/** Sent to the host when allied troops are stationed in one of their cities. */
+type ReinforcementArrivedPayload = {
+  player_id: string
+  city_id: string
+  owner_player_id: string
+  report_id: string
+}
+
+/** Sent to the host when stationed troops leave (owner recall or automatic return). */
+type ReinforcementRecalledPayload = {
+  player_id: string
+  city_id: string
+  owner_player_id: string
+  movement_id: string
 }
 
 export type TroopRecruitmentUpdatedPayload = {
@@ -158,6 +210,13 @@ export type AppEventMap = {
   [AppEvent.MovementIncoming]: MovementIncomingPayload
   [AppEvent.MailReceived]: MailReceivedPayload
   [AppEvent.ChatMessage]: ChatMessagePayload
+  [AppEvent.AllianceUpdated]: AllianceUpdatedPayload
+  [AppEvent.AllianceInvitationReceived]: AllianceInvitationReceivedPayload
+  [AppEvent.AllianceApplicationReceived]: AllianceApplicationReceivedPayload
+  [AppEvent.AllianceJoined]: AllianceJoinedPayload
+  [AppEvent.AllianceLeft]: AllianceLeftPayload
+  [AppEvent.ReinforcementArrived]: ReinforcementArrivedPayload
+  [AppEvent.ReinforcementRecalled]: ReinforcementRecalledPayload
   [AppEvent.TroopRecruitmentUpdated]: TroopRecruitmentUpdatedPayload
   [AppEvent.TroopQueueItemDropped]: TroopQueueItemDroppedPayload
   [AppEvent.DefenseBuildUpdated]: DefenseBuildUpdatedPayload

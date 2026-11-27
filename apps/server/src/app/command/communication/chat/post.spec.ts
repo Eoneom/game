@@ -31,6 +31,10 @@ describe('postCommunicationChatMessage', () => {
       player: { get: vi.fn().mockResolvedValue(author) },
       chat_message: { create },
       player_block: { listBlockerIds },
+      alliance: {
+        listTagsByPlayerIds: vi.fn().mockResolvedValue([]),
+        listMembers: vi.fn().mockResolvedValue([])
+      },
     } as unknown as Repository)
     vi.spyOn(Factory, 'getEventBus').mockReturnValue({ emit } as unknown as AppEventBus)
     vi.spyOn(Factory, 'getRateLimiter').mockReturnValue(new RateLimiterInMemory({ clock: () => clock }))
@@ -55,7 +59,8 @@ describe('postCommunicationChatMessage', () => {
       author: {
         id: author.id,
         name: 'Alice',
-        faction_code: FactionCode.THE_CONFEDERATION
+        faction_code: FactionCode.THE_CONFEDERATION,
+        alliance_tag: null
       },
       body: 'salut',
       created_at: stored.created_at
@@ -64,6 +69,7 @@ describe('postCommunicationChatMessage', () => {
     expect(emit).toHaveBeenCalledWith(AppEvent.ChatMessage, {
       channel: ChatChannel.FACTION,
       faction_code: FactionCode.THE_CONFEDERATION,
+      member_ids: null,
       excluded_player_ids: [ 'blocker-1' ],
       message
     })
@@ -112,6 +118,10 @@ describe('postCommunicationChatMessage', () => {
       },
       chat_message: { create },
       player_block: { listBlockerIds },
+      alliance: {
+        listTagsByPlayerIds: vi.fn().mockResolvedValue([]),
+        listMembers: vi.fn().mockResolvedValue([])
+      },
     } as unknown as Repository)
 
     await expect(postCommunicationChatMessage({
@@ -136,5 +146,70 @@ describe('postCommunicationChatMessage', () => {
     clock += 2_000
     await post(ChatChannel.GLOBAL)
     expect(create).toHaveBeenCalledTimes(3)
+  })
+
+  describe('alliance channel (slice 033)', () => {
+    const useAlliance = (membership: boolean) => {
+      const repository = Factory.getRepository()
+      repository.alliance = {
+        listTagsByPlayerIds: vi.fn().mockResolvedValue(membership
+          ? [
+            {
+              player_id: author.id,
+              alliance_id: 'a1',
+              tag: 'VEIL'
+            } 
+          ]
+          : []),
+        listMembers: vi.fn().mockResolvedValue([
+          {
+            alliance_id: 'a1',
+            player_id: author.id,
+            role: 'chef',
+            joined_at: 0 
+          },
+          {
+            alliance_id: 'a1',
+            player_id: 'ally',
+            role: 'membre',
+            joined_at: 0 
+          },
+        ]),
+      } as unknown as Repository['alliance']
+    }
+
+    it('stores the message under the alliance key and fans it out to current members only', async () => {
+      useAlliance(true)
+
+      const message = await postCommunicationChatMessage({
+        player_id: author.id,
+        channel: ChatChannel.ALLIANCE,
+        body: 'rassemblement'
+      })
+
+      expect((create.mock.calls[0][0] as ChatMessageEntity).channel).toBe('alliance:a1')
+      expect(message.author.alliance_tag).toBe('VEIL')
+      expect(emit).toHaveBeenCalledWith(AppEvent.ChatMessage, {
+        channel: ChatChannel.ALLIANCE,
+        faction_code: null,
+        member_ids: [
+          author.id,
+          'ally' 
+        ],
+        excluded_player_ids: [ 'blocker-1' ],
+        message
+      })
+    })
+
+    it('rejects a player without alliance', async () => {
+      useAlliance(false)
+
+      await expect(postCommunicationChatMessage({
+        player_id: author.id,
+        channel: ChatChannel.ALLIANCE,
+        body: 'rassemblement'
+      })).rejects.toThrow(CommunicationError.CHANNEL_FORBIDDEN)
+      expect(create).not.toHaveBeenCalled()
+    })
   })
 })

@@ -17,15 +17,19 @@ type ReportBattleModifiers = {
   fortification?: number
 }
 
-/** Loss line: troop lines may omit `kind`; city defense lines carry `kind: 'defense'` (slice 029). */
+/**
+ * Loss line: troop lines may omit `kind`; city defense lines carry `kind: 'defense'` (slice 029).
+ * Defender reinforcement lines carry their owner's `player_id` (slice 033).
+ */
 export type ReportBattleLossLine =
-  | { kind?: 'troop'; code: TroopCode; count: number }
+  | { kind?: 'troop'; code: TroopCode; count: number; player_id?: string }
   | { kind: 'defense'; code: DefenseCode; count: number }
 
 export type ReportBattleMetadata = {
   battle_id: string
   movement_id: string
-  perspective: 'attacker' | 'defender'
+  /** `reinforcement`: an allied player whose troops were stationed in the attacked city (slice 033). */
+  perspective: 'attacker' | 'defender' | 'reinforcement'
   attacker_player_id: string
   defender_player_id: string
   attacker_faction_code: FactionCode

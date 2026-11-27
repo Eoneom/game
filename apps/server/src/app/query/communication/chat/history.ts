@@ -47,13 +47,17 @@ export class CommunicationChatHistoryQuery extends GenericQuery<CommunicationCha
     }
 
     const viewer = await this.repository.player.get(player_id)
+    const membership = await this.repository.alliance.findMembership(player_id)
+    const alliance_id = membership?.alliance_id ?? null
     const channel_key = chatChannelKey({
       channel,
-      faction_code: viewer.faction_code
+      faction_code: viewer.faction_code,
+      alliance_id
     })
-    if (!CommunicationService.canAccessChannel({
+    if (channel_key === null || !CommunicationService.canAccessChannel({
       player: viewer,
-      channel_key
+      channel_key,
+      alliance_id
     })) {
       throw new Error(CommunicationError.CHANNEL_FORBIDDEN)
     }
@@ -67,10 +71,21 @@ export class CommunicationChatHistoryQuery extends GenericQuery<CommunicationCha
     })
     const page = rows.slice(0, page_size)
 
-    const authors = await this.repository.player.listByIds([ ...new Set(page.map(message => message.author_id)) ])
+    const author_ids = [ ...new Set(page.map(message => message.author_id)) ]
+    const [
+      authors,
+      tags
+    ] = await Promise.all([
+      this.repository.player.listByIds(author_ids),
+      this.repository.alliance.listTagsByPlayerIds(author_ids)
+    ])
     const author_by_id = new Map(authors.map(author => [
       author.id,
       author
+    ]))
+    const tag_by_player_id = new Map(tags.map(entry => [
+      entry.player_id,
+      entry.tag
     ]))
 
     const messages = page.flatMap((message): ChatMessageView[] => {
@@ -84,7 +99,8 @@ export class CommunicationChatHistoryQuery extends GenericQuery<CommunicationCha
           author: {
             id: author.id,
             name: author.name,
-            faction_code: author.faction_code
+            faction_code: author.faction_code,
+            alliance_tag: tag_by_player_id.get(author.id) ?? null
           },
           body: message.body,
           created_at: message.created_at

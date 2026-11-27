@@ -263,9 +263,10 @@ export function setupWebSocketServer(
   })
 
   eventBus.on(AppEvent.ChatMessage, ({
-    channel, faction_code, excluded_player_ids, message
+    channel, faction_code, member_ids, excluded_player_ids, message
   }) => {
     const excluded = new Set(excluded_player_ids)
+    const members = member_ids ? new Set(member_ids) : null
     sendToGamePlayers(
       {
         type: AppEvent.ChatMessage,
@@ -274,7 +275,101 @@ export function setupWebSocketServer(
       },
       (player_id) => !excluded.has(player_id)
         && (faction_code === null || game_connection_factions.get(player_id) === faction_code)
+        && (members === null || members.has(player_id))
     )
+  })
+
+  eventBus.on(AppEvent.AllianceUpdated, ({
+    player_ids, alliance_id
+  }) => {
+    const recipients = new Set(player_ids)
+    sendToGamePlayers(
+      {
+        type: AppEvent.AllianceUpdated,
+        alliance_id,
+      },
+      (player_id) => recipients.has(player_id)
+    )
+  })
+
+  eventBus.on(AppEvent.AllianceInvitationReceived, ({
+    player_id, invitation_id, alliance_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.AllianceInvitationReceived,
+        invitation_id,
+        alliance_id,
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.AllianceApplicationReceived, ({
+    player_ids, application_id, alliance_id
+  }) => {
+    const recipients = new Set(player_ids)
+    sendToGamePlayers(
+      {
+        type: AppEvent.AllianceApplicationReceived,
+        application_id,
+        alliance_id,
+      },
+      (player_id) => recipients.has(player_id)
+    )
+  })
+
+  eventBus.on(AppEvent.AllianceJoined, ({
+    player_id, alliance_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.AllianceJoined,
+        alliance_id,
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.AllianceLeft, ({
+    player_id, alliance_id, reason
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.AllianceLeft,
+        alliance_id,
+        reason,
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.ReinforcementArrived, ({
+    player_id, city_id, owner_player_id, report_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.ReinforcementArrived,
+        city_id,
+        owner_player_id,
+        report_id,
+      }))
+    }
+  })
+
+  eventBus.on(AppEvent.ReinforcementRecalled, ({
+    player_id, city_id, owner_player_id, movement_id
+  }) => {
+    const ws = game_connections.get(player_id)
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: AppEvent.ReinforcementRecalled,
+        city_id,
+        owner_player_id,
+        movement_id,
+      }))
+    }
   })
 
   eventBus.on(AppEvent.TroopRecruitmentUpdated, ({

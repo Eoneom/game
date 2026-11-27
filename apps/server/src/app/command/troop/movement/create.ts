@@ -12,6 +12,7 @@ import {
   ResolvedAttackTarget,
 } from '#app/command/troop/movement/attack-target'
 import { resolveSpyTarget } from '#app/command/troop/movement/spy-target'
+import { resolveReinforceTarget } from '#app/command/troop/movement/reinforce-target'
 import {
   DETECTION_LEVEL_ALERT,
   IntelService,
@@ -86,6 +87,14 @@ export async function createTroopMovement({
       })
     }
 
+    if (action === MovementAction.REINFORCE) {
+      await resolveReinforceTarget({
+        player_id,
+        destination,
+      })
+      TroopService.assertReinforcementArmy({ move_troops })
+    }
+
     TroopService.assertTransportResources({
       action,
       resources,
@@ -95,6 +104,23 @@ export async function createTroopMovement({
     await AppService.assertMovementCapacity({ player_id })
 
     const origin_cell = await repository.cell.getCell({ coordinates: origin })
+
+    const [
+      origin_city,
+      outpost
+    ] = await Promise.all([
+      repository.city.searchByCell({ cell_id: origin_cell.id }),
+      repository.outpost.searchByCell({ cell_id: origin_cell.id }),
+    ])
+    // Stationed reinforcements only leave through their owner's recall (slice 033).
+    const is_foreign_city = Boolean(origin_city && !origin_city.isOwnedBy(player_id))
+    if (is_foreign_city) {
+      await assertRecallDestination({
+        player_id,
+        action,
+        destination,
+      })
+    }
 
     const origin_troops = await repository.troop.listInCell({
       cell_id: origin_cell.id,
@@ -160,9 +186,12 @@ export async function createTroopMovement({
       troops_to_delete: TroopEntity[]
     })
 
-    const outpost = await repository.outpost.searchByCell({ cell_id: origin_cell.id })
-
-    if (outpost?.type === OutpostType.TEMPORARY && TroopService.areTroopsEmpty({ troops: updated_origin_troops })) {
+    // Only the player's own temporary outpost disappears when they leave it empty.
+    if (
+      outpost?.type === OutpostType.TEMPORARY
+      && outpost.isOwnedBy(player_id)
+      && TroopService.areTroopsEmpty({ troops: updated_origin_troops })
+    ) {
       save = {
         type: 'delete',
         troops_to_create: movement_troops,
@@ -217,6 +246,15 @@ export async function createTroopMovement({
       })
     }
 
+    if (origin_city && is_foreign_city) {
+      Factory.getEventBus().emit(AppEvent.ReinforcementRecalled, {
+        player_id: origin_city.player_id,
+        city_id: origin_city.id,
+        owner_player_id: player_id,
+        movement_id: movement.id,
+      })
+    }
+
     if (attack_target) {
       await notifyIncomingAttack({
         defender_player_id: attack_target.defender_player_id,
@@ -227,6 +265,33 @@ export async function createTroopMovement({
 
     return { deleted_outpost_id }
   })
+}
+
+/** From another player's city only a `base` recall to one of the player's own cities or outposts is allowed. */
+async function assertRecallDestination({
+  player_id,
+  action,
+  destination,
+}: {
+  player_id: string
+  action: MovementAction
+  destination: Coordinates
+}): Promise<void> {
+  if (action !== MovementAction.BASE) {
+    throw new Error(TroopError.MOVEMENT_FOREIGN_ORIGIN)
+  }
+  const repository = Factory.getRepository()
+  const destination_cell = await repository.cell.getCell({ coordinates: destination })
+  const [
+    city,
+    outpost
+  ] = await Promise.all([
+    repository.city.searchByCell({ cell_id: destination_cell.id }),
+    repository.outpost.searchByCell({ cell_id: destination_cell.id }),
+  ])
+  if (!city?.isOwnedBy(player_id) && !outpost?.isOwnedBy(player_id)) {
+    throw new Error(TroopError.MOVEMENT_FOREIGN_ORIGIN)
+  }
 }
 
 /** Warns the defender of a new attack once they have `detection` ≥ 1 (slice 030). */

@@ -22,7 +22,7 @@ describe('WorldGetCellsQuery', () => {
   const cell_id_1 = id()
   const cell_id_2 = id()
   let cells: CellEntity[]
-  let repository: Pick<Repository, 'cell' | 'exploration' | 'player' | 'city' | 'outpost'>
+  let repository: Pick<Repository, 'cell' | 'exploration' | 'player' | 'city' | 'outpost' | 'alliance'>
 
   beforeEach(() => {
     cells = [
@@ -100,7 +100,8 @@ describe('WorldGetCellsQuery', () => {
             }
           }
         ])
-      } as unknown as Repository['outpost']
+      } as unknown as Repository['outpost'],
+      alliance: { listTagsByPlayerIds: vi.fn().mockResolvedValue([]) } as unknown as Repository['alliance'],
     }
     vi.spyOn(Factory, 'getRepository').mockReturnValue(repository as unknown as Repository)
   })

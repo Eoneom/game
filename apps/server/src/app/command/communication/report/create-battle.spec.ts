@@ -90,6 +90,7 @@ describe('createBattleReports', () => {
     assert.deepStrictEqual(result, {
       attacker_report_id: call.attacker_report.id,
       defender_report_id: call.defender_report.id,
+      reinforcement_reports: [],
     })
     // Only the defender learns what its shelter protected.
     assert.deepStrictEqual(call.defender_metadata.sheltered, {

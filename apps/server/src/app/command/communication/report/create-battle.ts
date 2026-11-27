@@ -1,7 +1,12 @@
 import { Factory } from '#adapter/factory'
 import { BattleOutcomeFlags } from '#app/command/combat/apply-battle-outcomes'
 import { BattleEntity } from '#core/combat/entity/battle'
-import { isTroopStack } from '#core/combat/type/battle-stack'
+import {
+  BattleCasualtyLine,
+  BattleStack,
+  isTroopStack,
+  TroopBattleStack,
+} from '#core/combat/type/battle-stack'
 import { ReportPerspective } from '#core/combat/value/report-perspective'
 import { ReportEntity } from '#core/communication/report/entity'
 import { ReportType } from '#core/communication/value/report-type'
@@ -18,6 +23,32 @@ const NOTHING_SHELTERED: Resource = {
 export type CreatedBattleReports = {
   attacker_report_id: string
   defender_report_id: string
+  reinforcement_reports: { player_id: string; report_id: string }[]
+}
+
+/** Troop loss lines of one owner; `owner_id` `null` = the side's own player (lines without `player_id`). */
+function troopLossesOf(lines: BattleCasualtyLine[], owner_id: string | null): { code: TroopBattleStack['code']; count: number }[] {
+  return lines
+    .filter(isTroopStack)
+    .filter(line => (line.player_id ?? null) === owner_id)
+    .map(line => ({
+      code: line.code,
+      count: line.count,
+    }))
+}
+
+/** Owners of the defender reinforcement stacks at battle start (slice 033). */
+function reinforcementOwners(stacks: BattleStack[], lines: BattleCasualtyLine[]): string[] {
+  const owners = new Set<string>()
+  for (const stack of [
+    ...stacks,
+    ...lines
+  ]) {
+    if (isTroopStack(stack) && stack.player_id) {
+      owners.add(stack.player_id)
+    }
+  }
+  return [ ...owners ]
 }
 
 export async function createBattleReports({
@@ -80,14 +111,39 @@ export async function createBattleReports({
     type: ReportType.BATTLE,
     was_read: false,
     player_id: battle.defender_player_id,
-    // Defense losses live in the battle metadata (`casualties_defender` lines with `kind: 'defense'`).
-    troops: battle.state_json.cumulative_defender_losses.filter(isTroopStack),
+    // Defense losses live in the battle metadata (`casualties_defender` lines with `kind: 'defense'`);
+    // reinforcement losses (lines with `player_id`) go to their owners' reports.
+    troops: troopLossesOf(battle.state_json.cumulative_defender_losses, null),
     recorded_at: finished_at,
     origin: movement.origin,
     destination: movement.destination,
     resources: { plastic: 0, mushroom: 0, plasma: 0 },
     remaining_resources: { plastic: 0, mushroom: 0, plasma: 0 },
   })
+
+  const owner_ids = reinforcementOwners(
+    battle.state_json.defender_stacks,
+    battle.state_json.cumulative_defender_losses
+  )
+  const reinforcement_entries = owner_ids.map(owner_id => ({
+    report: ReportEntity.create({
+      id: id(),
+      type: ReportType.BATTLE,
+      was_read: false,
+      player_id: owner_id,
+      troops: troopLossesOf(battle.state_json.cumulative_defender_losses, owner_id),
+      recorded_at: finished_at,
+      origin: movement.origin,
+      destination: movement.destination,
+      resources: NOTHING_SHELTERED,
+      remaining_resources: NOTHING_SHELTERED,
+    }),
+    metadata: {
+      ...shared,
+      perspective: ReportPerspective.REINFORCEMENT,
+      sheltered: NOTHING_SHELTERED,
+    },
+  }))
 
   await repository.report.createBattleReports({
     attacker_report,
@@ -102,10 +158,15 @@ export async function createBattleReports({
       perspective: ReportPerspective.DEFENDER,
       sheltered,
     },
+    ...(reinforcement_entries.length > 0 ? { reinforcement_reports: reinforcement_entries } : {}),
   })
 
   return {
     attacker_report_id: attacker_report.id,
     defender_report_id: defender_report.id,
+    reinforcement_reports: reinforcement_entries.map(entry => ({
+      player_id: entry.report.player_id,
+      report_id: entry.report.id,
+    })),
   }
 }

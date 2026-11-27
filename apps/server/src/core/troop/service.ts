@@ -10,6 +10,7 @@ import { troop_order } from '#core/troop/constant/order'
 import { TechnologyCode } from '#core/technology/constant/code'
 import { TechnologyService } from '#core/technology/service'
 import { CombatError } from '#core/combat/error'
+import { AllianceError } from '#core/alliance/error'
 import {
   EarningTroopCode,
   troop_earnings
@@ -310,6 +311,15 @@ export class TroopService {
     )
     if (has_scout) {
       throw new Error(CombatError.SCOUT_NOT_ALLOWED_ON_ATTACK)
+    }
+  }
+
+  /** `reinforce` (slice 033): `combat`-role troops only, at least one. */
+  static assertReinforcementArmy({ move_troops }: { move_troops: TroopCount[] }): void {
+    const moving = move_troops.filter(troop => troop.count > 0)
+    const only_combat = moving.every(troop => this.combatRoleFor(troop.code) === CombatRole.COMBAT)
+    if (moving.length === 0 || !only_combat) {
+      throw new Error(AllianceError.COMBAT_TROOPS_ONLY)
     }
   }
 

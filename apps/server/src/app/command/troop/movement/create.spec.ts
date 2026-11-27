@@ -40,7 +40,7 @@ describe('createTroopMovement', () => {
   let searchByCell: MockInstance
   let listInCell: MockInstance
   let scheduleTroopMovementFinish: MockInstance
-  let repository: Pick<Repository, 'cell' | 'troop' | 'outpost' | 'movement'>
+  let repository: Pick<Repository, 'cell' | 'city' | 'troop' | 'outpost' | 'movement'>
 
   let getMovementCapacity: MockInstance
 
@@ -81,6 +81,7 @@ describe('createTroopMovement', () => {
 
     repository = {
       cell: { getCell: vi.fn().mockResolvedValue(cell) } as unknown as Repository['cell'],
+      city: { searchByCell: vi.fn().mockResolvedValue(null) } as unknown as Repository['city'],
       troop: {
         listInCell,
         create: troopCreate,

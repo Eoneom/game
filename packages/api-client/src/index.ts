@@ -1,3 +1,4 @@
+import { AllianceEndpoint } from './endpoints/alliance'
 import { BuildingEndpoint } from './endpoints/building'
 import { CityEndpoint } from './endpoints/city'
 import { CommunicationEndpoint } from './endpoints/communication'
@@ -24,6 +25,14 @@ export { TroopCode } from '@server-core/troop/constant/code'
 export { TroopRole, troop_role } from '@server-core/troop/constant/role'
 export { ReportType } from '@server-core/communication/value/report-type'
 export { ChatChannel } from '@server-core/communication/chat/channel'
+export { AllianceRole } from '@server-core/alliance/constant/role'
+export {
+  ALLIANCE_APPLICATION_MESSAGE_MAX_LENGTH,
+  ALLIANCE_DESCRIPTION_MAX_LENGTH,
+  ALLIANCE_NAME_MAX_LENGTH,
+  ALLIANCE_NAME_MIN_LENGTH,
+} from '@server-core/alliance/constant/limits'
+export { AllianceError } from '@server-core/alliance/error'
 export { AbuseReportKind } from '@server-core/communication/abuse-report/kind'
 export {
   ABUSE_REPORT_REASON_MAX_LENGTH,
@@ -73,6 +82,7 @@ export * from './response'
 
 export class Client {
   private fetcher: Fetcher
+  public alliance: AllianceEndpoint
   public city: CityEndpoint
   public communication: CommunicationEndpoint
   public defense: DefenseEndpoint
@@ -88,6 +98,7 @@ export class Client {
   constructor({ base_url }: { base_url: string }) {
     this.fetcher = new Fetcher({ base_url })
 
+    this.alliance = new AllianceEndpoint({ fetcher: this.fetcher })
     this.city = new CityEndpoint({ fetcher: this.fetcher })
     this.communication = new CommunicationEndpoint({ fetcher: this.fetcher })
     this.defense = new DefenseEndpoint({ fetcher: this.fetcher })

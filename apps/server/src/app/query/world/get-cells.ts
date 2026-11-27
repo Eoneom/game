@@ -27,6 +27,8 @@ export interface WorldMapCityMarker {
   name: string
   player_id: string
   faction_code: FactionCode
+  /** Owner's alliance tag (slice 033). */
+  alliance_tag: string | null
   coordinates: Coordinates
 }
 
@@ -34,6 +36,7 @@ export interface WorldMapOutpostMarker {
   id: string
   player_id: string
   faction_code: FactionCode
+  alliance_tag: string | null
   type: OutpostType
   coordinates: Coordinates
 }
@@ -144,16 +147,27 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
       ])
     ]
 
-    const owners = await this.repository.player.listByIds(player_ids)
+    const [
+      owners,
+      tags
+    ] = await Promise.all([
+      this.repository.player.listByIds(player_ids),
+      this.repository.alliance.listTagsByPlayerIds(player_ids),
+    ])
     const faction_by_player_id = new Map(
       owners.map(player => [ player.id, player.faction_code ]),
     )
+    const tag_by_player_id = new Map(tags.map(entry => [
+      entry.player_id,
+      entry.tag
+    ]))
 
     const cities: WorldMapCityMarker[] = cities_in_bounds.map(({ city, coordinates }) => ({
       id: city.id,
       name: city.name,
       player_id: city.player_id,
       faction_code: faction_by_player_id.get(city.player_id) as FactionCode,
+      alliance_tag: tag_by_player_id.get(city.player_id) ?? null,
       coordinates
     }))
 
@@ -161,6 +175,7 @@ export class WorldGetCellsQuery extends GenericQuery<WorldGetCellsQueryRequest, 
       id: outpost.id,
       player_id: outpost.player_id,
       faction_code: faction_by_player_id.get(outpost.player_id) as FactionCode,
+      alliance_tag: tag_by_player_id.get(outpost.player_id) ?? null,
       type: outpost.type,
       coordinates
     }))

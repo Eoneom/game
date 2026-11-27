@@ -103,6 +103,33 @@ describe('processTroopRecruitQueue', () => {
     vi.restoreAllMocks()
   })
 
+  it('reads the player own stack only, never an allied reinforcement of the same code (slice 033)', async () => {
+    queue_rows = [ queueRow(2, 1) ]
+    const getInCell = vi.fn(async ({ player_id: owner_id }: { player_id: string }) => TroopEntity.init({
+      player_id: owner_id,
+      cell_id,
+      code: TroopCode.EXPLORER,
+    }))
+    const repository = Factory.getRepository()
+    repository.troop = { getInCell } as unknown as Repository['troop']
+
+    await processTroopRecruitQueue({
+      player_id,
+      city_id: city.id,
+      started_at: 10_000
+    })
+
+    expect(getInCell).toHaveBeenCalledWith({
+      cell_id,
+      player_id,
+      code: TroopCode.EXPLORER
+    })
+    const scheduled = scheduleTroopRecruitProgress.mock.calls[0][0]
+    const troop = await getInCell.mock.results[0].value
+    assert.strictEqual(troop.player_id, player_id)
+    assert.ok(scheduled)
+  })
+
   it('should do nothing when the queue is empty', async () => {
     await processTroopRecruitQueue({
       player_id,

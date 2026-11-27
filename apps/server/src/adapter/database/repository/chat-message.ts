@@ -87,6 +87,13 @@ export class PostgresChatMessageRepository
     return Number(result.numDeletedRows)
   }
 
+  async deleteByChannel(channel_key: string): Promise<void> {
+    await this.db
+      .deleteFrom('chat_message')
+      .where('channel', '=', channel_key)
+      .execute()
+  }
+
   protected buildFromRow(row: Selectable<DB['chat_message']>): ChatMessageEntity {
     return ChatMessageEntity.create({
       id: row.id,

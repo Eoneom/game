@@ -7,6 +7,7 @@ import {
   CombatModifiers,
   isDefenseStack,
   NEUTRAL_COMBAT_MODIFIERS,
+  stackModifiers,
 } from '#core/combat/type/battle-stack'
 import {
   attackContribution,
@@ -31,8 +32,12 @@ import {
 import { DefenseCode } from '#core/defense/constant/code'
 import { CombatRole } from '#core/troop/constant/combat-role'
 
+/** Losses are kept per stack owner: reinforcement lines carry their `player_id` (slice 033). */
 function lineKey(line: BattleCasualtyLine): string {
-  return `${isDefenseStack(line) ? 'defense' : 'troop'}:${line.code}`
+  if (isDefenseStack(line)) {
+    return `defense:${line.code}`
+  }
+  return line.player_id ? `troop:${line.code}:${line.player_id}` : `troop:${line.code}`
 }
 
 function mergeCasualties(
@@ -112,6 +117,7 @@ function computePools({
   strategy,
   round,
   modifiers,
+  owner_modifiers,
   defense_life_multiplier = 1,
   plasma_available,
 }: {
@@ -119,6 +125,8 @@ function computePools({
   strategy: CombatStrategy
   round: number
   modifiers: CombatModifiers
+  /** Per-owner Arsenal modifiers of reinforcement stacks (slice 033). */
+  owner_modifiers?: Record<string, CombatModifiers>
   /** 75 % when the opposing side uses `siege_assault` (slice 029). */
   defense_life_multiplier?: number
   plasma_available?: number
@@ -133,6 +141,11 @@ function computePools({
     }
     const role = combatRoleFor(stack.code)
     if (role === CombatRole.COMBAT) {
+      const arsenal = stackModifiers({
+        stack,
+        modifiers,
+        owner_modifiers,
+      })
       const cls = combatTroopClassFor(stack.code)
       const mult = cls
         ? CombatStrategyService.getMultipliers({
@@ -144,7 +157,7 @@ function computePools({
       const att = attackContribution({
         code: stack.code,
         count: stack.count,
-        attack_multiplier: mult.attack * modifiers.attack,
+        attack_multiplier: mult.attack * arsenal.attack,
       })
       attack_pool += att
       if (cls) {
@@ -153,7 +166,7 @@ function computePools({
       life_pool += lifeContribution({
         code: stack.code,
         count: stack.count,
-        life_multiplier: mult.life * modifiers.life,
+        life_multiplier: mult.life * arsenal.life,
       })
     } else {
       attack_pool += attackContribution({ code: stack.code, count: stack.count })
@@ -259,9 +272,23 @@ function casualtySortKey({
 }
 
 function toLossLine(stack: BattleStack, count: number): BattleCasualtyLine {
-  return isDefenseStack(stack)
-    ? { kind: 'defense', code: stack.code, count }
-    : { code: stack.code, count }
+  if (isDefenseStack(stack)) {
+    return {
+      kind: 'defense',
+      code: stack.code,
+      count
+    }
+  }
+  const line = {
+    code: stack.code,
+    count
+  }
+  return stack.player_id
+    ? {
+      ...line,
+      player_id: stack.player_id
+    }
+    : line
 }
 
 function applyLosses({
@@ -365,6 +392,7 @@ export class CombatService {
     defender_strategy,
     attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
     defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_owner_modifiers,
     defender_plasma,
   }: {
     round: number
@@ -374,6 +402,8 @@ export class CombatService {
     defender_strategy: CombatStrategy
     attacker_modifiers?: CombatModifiers
     defender_modifiers?: CombatModifiers
+    /** Arsenal modifiers of defender reinforcement owners, keyed by `player_id` (slice 033). */
+    defender_owner_modifiers?: Record<string, CombatModifiers>
     /** City plasma available to the defender's batteries this round; `undefined` = unlimited. */
     defender_plasma?: number
   }): {
@@ -395,6 +425,7 @@ export class CombatService {
       strategy: defender_strategy,
       round,
       modifiers: defender_modifiers,
+      owner_modifiers: defender_owner_modifiers,
       defense_life_multiplier: siege ? SIEGE_DEFENSE_LIFE_MULTIPLIER : 1,
       plasma_available: defender_plasma,
     })
@@ -465,6 +496,7 @@ export class CombatService {
     defender_strategy,
     attacker_modifiers = NEUTRAL_COMBAT_MODIFIERS,
     defender_modifiers = NEUTRAL_COMBAT_MODIFIERS,
+    defender_owner_modifiers,
     defender_plasma,
     max_round = 5,
   }: {
@@ -474,6 +506,7 @@ export class CombatService {
     defender_strategy: CombatStrategy
     attacker_modifiers?: CombatModifiers
     defender_modifiers?: CombatModifiers
+    defender_owner_modifiers?: Record<string, CombatModifiers>
     /** City plasma for the defender's batteries over the whole battle; `undefined` = unlimited. */
     defender_plasma?: number
     max_round?: number
@@ -498,6 +531,7 @@ export class CombatService {
         defender_strategy,
         attacker_modifiers,
         defender_modifiers,
+        defender_owner_modifiers,
         defender_plasma: plasma_left,
       })
       round_summaries.push(result.round_summary)

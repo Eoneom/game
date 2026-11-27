@@ -36,6 +36,40 @@ export interface AbuseReport {
   reporter_id: string;
 }
 
+export interface Alliance {
+  created_at: Timestamp;
+  description: Generated<string>;
+  faction_code: string;
+  id: Generated<string>;
+  name: string;
+  name_normalized: string;
+  tag: string;
+}
+
+export interface AllianceApplication {
+  alliance_id: string;
+  created_at: Timestamp;
+  id: Generated<string>;
+  message: string | null;
+  player_id: string;
+}
+
+export interface AllianceInvitation {
+  alliance_id: string;
+  created_at: Timestamp;
+  expires_at: Timestamp;
+  id: Generated<string>;
+  invited_by: string;
+  player_id: string;
+}
+
+export interface AllianceMember {
+  alliance_id: string;
+  joined_at: Timestamp;
+  player_id: string;
+  role: string;
+}
+
 export interface Auth {
   id: Generated<string>;
   last_action_at: Timestamp;
@@ -315,6 +349,7 @@ export interface SystemPlayerMemory {
 }
 
 export interface Player {
+  alliance_left_at: Timestamp | null;
   faction_code: string;
   id: Generated<string>;
   name: string;
@@ -365,6 +400,11 @@ export interface ReportBattle {
   target_id: string | null;
   target_kind: string;
   winner: string;
+}
+
+export interface ReportReinforcement {
+  owner_player_id: string;
+  report_id: string;
 }
 
 export interface ReportSpy {
@@ -429,6 +469,10 @@ export interface TroopRecruitQueue {
 
 export interface DB {
   abuse_report: AbuseReport;
+  alliance: Alliance;
+  alliance_application: AllianceApplication;
+  alliance_invitation: AllianceInvitation;
+  alliance_member: AllianceMember;
   auth: Auth;
   battle: Battle;
   battle_round: BattleRound;
@@ -458,6 +502,7 @@ export interface DB {
   system_player_memory: SystemPlayerMemory;
   report: Report;
   report_battle: ReportBattle;
+  report_reinforcement: ReportReinforcement;
   report_spy: ReportSpy;
   report_troop: ReportTroop;
   resource_stock: ResourceStock;

@@ -18,4 +18,11 @@ export enum AppEvent {
   MovementIncoming = 'movement:incoming',
   MailReceived = 'mail:received',
   ChatMessage = 'chat:message',
+  AllianceUpdated = 'alliance:updated',
+  AllianceInvitationReceived = 'alliance:invitation-received',
+  AllianceApplicationReceived = 'alliance:application-received',
+  AllianceJoined = 'alliance:joined',
+  AllianceLeft = 'alliance:left',
+  ReinforcementArrived = 'reinforcement:arrived',
+  ReinforcementRecalled = 'reinforcement:recalled',
 }

@@ -49,6 +49,8 @@ import { PlayerBlockRepository } from '#app/port/repository/player-block'
 import { PostgresPlayerBlockRepository } from '#adapter/database/repository/player-block'
 import { AbuseReportRepository } from '#app/port/repository/abuse-report'
 import { PostgresAbuseReportRepository } from '#adapter/database/repository/abuse-report'
+import { AllianceRepository } from '#app/port/repository/alliance'
+import { PostgresAllianceRepository } from '#adapter/database/repository/alliance'
 import {
   Kysely,
   sql
@@ -78,6 +80,7 @@ export class PostgresRepository implements Repository {
   chat_message: ChatMessageRepository
   player_block: PlayerBlockRepository
   abuse_report: AbuseReportRepository
+  alliance: AllianceRepository
 
   private db: Kysely<DB>
 
@@ -109,6 +112,7 @@ export class PostgresRepository implements Repository {
     this.chat_message = new PostgresChatMessageRepository(this.db)
     this.player_block = new PostgresPlayerBlockRepository()
     this.abuse_report = new PostgresAbuseReportRepository()
+    this.alliance = new PostgresAllianceRepository()
   }
 
   async connect(): Promise<void> {

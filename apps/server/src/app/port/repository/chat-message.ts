@@ -16,4 +16,7 @@ export type ChatMessageRepository = GenericRepository<ChatMessageEntity> & {
   }): Promise<ChatMessageEntity[]>
 
   deleteOlderThan(before: number): Promise<number>
+
+  /** Alliance channel messages are deleted with the alliance (slice 033). */
+  deleteByChannel(channel_key: string): Promise<void>
 }

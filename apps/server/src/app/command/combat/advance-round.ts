@@ -61,6 +61,7 @@ export async function advanceCombatRound({
       defender_strategy: battle.defender_strategy,
       attacker_modifiers: battle.state_json.attacker_modifiers,
       defender_modifiers: battle.state_json.defender_modifiers,
+      defender_owner_modifiers: battle.state_json.defender_owner_modifiers,
       defender_plasma: city_stock ? city_stock.plasma : undefined,
     })
 
@@ -130,5 +131,13 @@ export async function advanceCombatRound({
       perspective: ReportPerspective.DEFENDER,
       winner: finished.winner,
     })
+    for (const reinforcement of finished.reinforcement_reports ?? []) {
+      event_bus.emit(AppEvent.BattleFinished, {
+        player_id: reinforcement.player_id,
+        report_id: reinforcement.report_id,
+        perspective: ReportPerspective.REINFORCEMENT,
+        winner: finished.winner,
+      })
+    }
   }
 }

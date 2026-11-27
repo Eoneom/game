@@ -21,6 +21,8 @@ export interface WorldMapCityMarker {
   name: string
   player_id: string
   faction_code: FactionCode
+  /** Owner's alliance tag, shown as `[TAG]` before the label (slice 033). */
+  alliance_tag: string | null
   coordinates: Coordinates
 }
 
@@ -28,6 +30,7 @@ export interface WorldMapOutpostMarker {
   id: string
   player_id: string
   faction_code: FactionCode
+  alliance_tag: string | null
   type: OutpostType
   coordinates: Coordinates
 }

@@ -38,6 +38,10 @@ describe('CommunicationChatHistoryQuery', () => {
         listByIds: vi.fn().mockResolvedValue([ author ])
       },
       chat_message: { listHistory },
+      alliance: {
+        findMembership: vi.fn().mockResolvedValue(null),
+        listTagsByPlayerIds: vi.fn().mockResolvedValue([])
+      },
     } as unknown as Repository)
   })
 
@@ -66,7 +70,8 @@ describe('CommunicationChatHistoryQuery', () => {
         author: {
           id: author.id,
           name: 'Bob',
-          faction_code: FactionCode.THE_CONFEDERATION
+          faction_code: FactionCode.THE_CONFEDERATION,
+          alliance_tag: null
         },
         body: 'body 3',
         created_at: 3
@@ -113,7 +118,41 @@ describe('CommunicationChatHistoryQuery', () => {
   it('rejects an unknown channel', async () => {
     await expect(new CommunicationChatHistoryQuery().run({
       player_id: viewer.id,
+      channel: 'guild'
+    })).rejects.toThrow(CommunicationError.CHANNEL_FORBIDDEN)
+  })
+
+  it('rejects the alliance channel without an alliance: leaving removes access (slice 033)', async () => {
+    await expect(new CommunicationChatHistoryQuery().run({
+      player_id: viewer.id,
       channel: 'alliance'
     })).rejects.toThrow(CommunicationError.CHANNEL_FORBIDDEN)
+  })
+
+  it('reads the alliance channel of a member, with [TAG] authors (slice 033)', async () => {
+    const repository = Factory.getRepository()
+    repository.alliance = {
+      findMembership: vi.fn().mockResolvedValue({
+        alliance_id: 'a1',
+        player_id: viewer.id,
+        role: 'membre',
+        joined_at: 0
+      }),
+      listTagsByPlayerIds: vi.fn().mockResolvedValue([
+        {
+          player_id: author.id,
+          alliance_id: 'a1',
+          tag: 'VEIL'
+        } 
+      ]),
+    } as unknown as Repository['alliance']
+
+    const result = await new CommunicationChatHistoryQuery().run({
+      player_id: viewer.id,
+      channel: 'alliance'
+    })
+
+    expect(listHistory.mock.calls[0][0].channel_key).toBe('alliance:a1')
+    expect(result.messages[0].author.alliance_tag).toBe('VEIL')
   })
 })

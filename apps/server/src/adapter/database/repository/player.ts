@@ -5,6 +5,10 @@ import { FactionCode } from '#core/faction/constant/code'
 import { PlayerError } from '#core/player/error'
 import type { DB } from '#adapter/database/types'
 import {
+  fromTimestamp,
+  toTimestamp
+} from '#adapter/database/repository/shared/time'
+import {
   Insertable,
   Kysely,
   Selectable
@@ -89,12 +93,27 @@ export class PostgresPlayerRepository
     return rows.map(row => this.buildFromRow(row))
   }
 
+  async setAllianceLeftAt({
+    player_id,
+    left_at
+  }: {
+    player_id: string
+    left_at: number | null
+  }): Promise<void> {
+    await this.db
+      .updateTable('player')
+      .set({ alliance_left_at: toTimestamp(left_at) })
+      .where('id', '=', player_id)
+      .execute()
+  }
+
   protected buildFromRow(row: Selectable<DB['player']>): PlayerEntity {
     return PlayerEntity.create({
       id: row.id,
       name: row.name,
       faction_code: row.faction_code as FactionCode,
-      system_controlled: row.system_controlled
+      system_controlled: row.system_controlled,
+      alliance_left_at: fromTimestamp(row.alliance_left_at ?? null)
     })
   }
 
@@ -103,7 +122,8 @@ export class PostgresPlayerRepository
       id: entity.id,
       name: entity.name,
       faction_code: entity.faction_code,
-      system_controlled: entity.system_controlled
+      system_controlled: entity.system_controlled,
+      alliance_left_at: toTimestamp(entity.alliance_left_at)
     }
   }
 }

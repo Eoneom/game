@@ -5,7 +5,10 @@ import {
   MAIL_BODY_MAX_LENGTH,
   MAIL_SUBJECT_MAX_LENGTH
 } from '#core/communication/constant/limits'
-import { ChatChannel } from '#core/communication/chat/channel'
+import {
+  allianceChatChannelKey,
+  ChatChannel
+} from '#core/communication/chat/channel'
 import { FactionCode } from '#core/faction/constant/code'
 import { PlayerEntity } from '#core/player/entity'
 
@@ -102,18 +105,26 @@ export class CommunicationService {
     }
   }
 
-  /** Whether a player may read and post in a stored channel key. */
+  /**
+   * Whether a player may read and post in a stored channel key.
+   * `alliance_id` is the player's current alliance (slice 033): leaving removes access immediately.
+   */
   static canAccessChannel({
     player,
-    channel_key
+    channel_key,
+    alliance_id = null
   }: {
     player: Pick<PlayerEntity, 'faction_code' | 'system_controlled'>
-    channel_key: string
+    channel_key: string | null
+    alliance_id?: string | null
   }): boolean {
-    if (player.system_controlled) {
+    if (player.system_controlled || channel_key === null) {
       return false
     }
     if (channel_key === ChatChannel.GLOBAL) {
+      return true
+    }
+    if (alliance_id && channel_key === allianceChatChannelKey(alliance_id)) {
       return true
     }
     return channel_key === `${ChatChannel.FACTION}:${player.faction_code}`
