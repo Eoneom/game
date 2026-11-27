@@ -34,11 +34,18 @@ class WsClient {
     this.ws = null
   }
 
-  on<T = unknown>(type: string, handler: WsEventHandler<T>): void {
+  /** Returns a function that removes the handler (for component-scoped listeners). */
+  on<T = unknown>(type: string, handler: WsEventHandler<T>): () => void {
     if (!this.handlers.has(type)) {
       this.handlers.set(type, [])
     }
     this.handlers.get(type)?.push(handler as WsEventHandler)
+
+    return () => {
+      const handlers = this.handlers.get(type)
+      if (!handlers) return
+      this.handlers.set(type, handlers.filter(candidate => candidate !== handler))
+    }
   }
 }
 

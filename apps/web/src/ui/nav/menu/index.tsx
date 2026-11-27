@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import { useLocation } from '#location/context'
 import { useLogout } from '#auth/hooks'
 import { useCountUnreadReports } from '#communication/report/hooks'
+import { useCountUnreadMail } from '#communication/mail/hooks'
 import { useObservabilitySession } from '#admin/system-player-observability/hooks'
 
 export const NavMenu: React.FC = () => {
@@ -12,6 +13,7 @@ export const NavMenu: React.FC = () => {
   const { cityId, outpostId } = useLocation()
   const { pathname } = useRouterLocation()
   const { data: unreadCount } = useCountUnreadReports()
+  const { data: unreadMailCount } = useCountUnreadMail()
   const { data: observabilitySession } = useObservabilitySession()
 
   const RouterLink = Link as React.ComponentType<{
@@ -76,6 +78,14 @@ export const NavMenu: React.FC = () => {
             className={linkClass('/inbox/report')}
           >
             Rapport ({unreadCount ?? 0})
+          </RouterLink>
+        </li>
+        <li>
+          <RouterLink
+            to="/inbox/mail"
+            className={linkClass('/inbox/mail')}
+          >
+            Courrier ({unreadMailCount ?? 0})
           </RouterLink>
         </li>
         {observabilitySession?.is_admin ? (

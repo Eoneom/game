@@ -8,6 +8,7 @@ import { NavMenu } from '#ui/nav/menu'
 import { NavLocation } from '#ui/nav/location'
 import { ActivityStrip } from '#ui/activity'
 import { FxLayer } from '#ui/fx'
+import { ChatPanel } from '#communication/chat/panel'
 import { useAuth } from '#auth/context'
 import { useClearInvalidSession, useInitStoredToken } from '#auth/hooks'
 import { isInvalidSessionError } from '#auth/session'
@@ -55,6 +56,7 @@ const App: React.FC = () => {
           </main>
           <NavLocation />
         </div>
+        <ChatPanel />
         <FxLayer />
       </div>
     )

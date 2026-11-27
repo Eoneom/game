@@ -2,6 +2,7 @@ import { LayoutPage } from '#ui/layout/page'
 import React, { useState } from 'react'
 import { ReportList, type ReportReadFilter } from '#communication/report/list'
 import { ReportDetails } from '#communication/report/details'
+import { InboxTabs } from '#communication/inbox-tabs'
 import {
   useListReports,
   useGetReport,
@@ -29,6 +30,7 @@ export const ReportPage: React.FC<{
   }
 
   return <LayoutPage details={report && <ReportDetails report={report}/>}>
+    <InboxTabs active="report" />
     <ReportList
       reports={reports}
       currentPage={currentPage}

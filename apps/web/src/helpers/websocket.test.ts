@@ -1,6 +1,6 @@
 import { wsClient } from './websocket'
 import type { Mock } from 'vitest'
-import { vi } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 type MockWsInstance = {
   onmessage: ((event: { data: string }) => void) | null
@@ -67,6 +67,17 @@ describe('WsClient', () => {
       wsClient.on('other:event', handler)
 
       mockWsInstance.onmessage?.({ data: JSON.stringify({ type: 'city:event', city_id: 'x' }) })
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('stops calling a handler once unsubscribed', () => {
+      const handler = vi.fn()
+      wsClient.connect('token')
+      const unsubscribe = wsClient.on('unsubscribe:event', handler)
+
+      unsubscribe()
+      mockWsInstance.onmessage?.({ data: JSON.stringify({ type: 'unsubscribe:event' }) })
 
       expect(handler).not.toHaveBeenCalled()
     })

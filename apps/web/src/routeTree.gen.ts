@@ -14,6 +14,7 @@ import { Route as SharedRouteRouteImport } from './routes/_shared/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as SharedIndexRouteImport } from './routes/_shared/index'
 import { Route as InboxReportRouteImport } from './routes/inbox/report'
+import { Route as InboxMailRouteImport } from './routes/inbox/mail'
 import { Route as AdminSystemPlayersRouteImport } from './routes/admin/system-players'
 import { Route as AdminCombatSimulatorRouteImport } from './routes/admin/combat-simulator'
 import { Route as SharedReportRouteImport } from './routes/_shared/report'
@@ -65,6 +66,11 @@ const SharedIndexRoute = SharedIndexRouteImport.update({
 const InboxReportRoute = InboxReportRouteImport.update({
   id: '/inbox/report',
   path: '/inbox/report',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxMailRoute = InboxMailRouteImport.update({
+  id: '/inbox/mail',
+  path: '/inbox/mail',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSystemPlayersRoute = AdminSystemPlayersRouteImport.update({
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/admin/': typeof AdminIndexRoute
   '/city/$cityId/movement': typeof CityCityIdMovementRouteRouteWithChildren
@@ -255,6 +262,7 @@ export interface FileRoutesByTo {
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/': typeof SharedIndexRoute
   '/admin': typeof AdminIndexRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/_shared/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
+  '/inbox/mail': typeof InboxMailRoute
   '/inbox/report': typeof InboxReportRoute
   '/_shared/': typeof SharedIndexRoute
   '/admin/': typeof AdminIndexRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/inbox/mail'
     | '/inbox/report'
     | '/admin/'
     | '/city/$cityId/movement'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/inbox/mail'
     | '/inbox/report'
     | '/'
     | '/admin'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/_shared/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
+    | '/inbox/mail'
     | '/inbox/report'
     | '/_shared/'
     | '/admin/'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
+  InboxMailRoute: typeof InboxMailRoute
   InboxReportRoute: typeof InboxReportRoute
 }
 
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       path: '/inbox/report'
       fullPath: '/inbox/report'
       preLoaderRoute: typeof InboxReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox/mail': {
+      id: '/inbox/mail'
+      path: '/inbox/mail'
+      fullPath: '/inbox/mail'
+      preLoaderRoute: typeof InboxMailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/system-players': {
@@ -821,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRouteRoute: AdminRouteRouteWithChildren,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,
+  InboxMailRoute: InboxMailRoute,
   InboxReportRoute: InboxReportRoute,
 }
 export const routeTree = rootRouteImport
