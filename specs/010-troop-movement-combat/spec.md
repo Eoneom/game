@@ -4,7 +4,7 @@
 
 ## Summary
 
-Players create **movements** between map coordinates with an action (`MovementAction`: `explore`, `base`, `transport`, `attack`). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport/attack finish handlers. Peaceful outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)); `rebase` exists as a report type only, not as a `MovementAction`.
+Players create **movements** between map coordinates with an action (`MovementAction`: `explore`, `base`, `transport`, `attack`, `spy` — slice [`030`](../030-intelligence/spec.md)). Troops are deducted from origin cell stacks; a pg-boss job finishes at arrival and runs a **saga** (`sagaFinishOneMovement`) that dispatches to explore/base/transport/attack finish handlers. Peaceful outcomes include exploration updates, temporary/permanent outposts, city settle side effects, resource transport, and **communication reports** ([`012`](../012-communication-reports/spec.md)); `rebase` exists as a report type only, not as a `MovementAction`.
 
 **`attack`** ([`024`](../024-player-combat-pvp/spec.md)) requires a `combat_strategy`, at least one `combat`-role troop, no `scout`-role troop, and an enemy-faction target. On arrival `sagaFinishAttack` opens a **battle** (attacker strategy from the movement; defender strategy from the target garrison's `default_combat_strategy`, `balanced` when unset — see [`009`](../009-troops-stationary/spec.md#garrison-defense-strategy-024)). Up to five rounds run through `combat.round.advance`; outcomes (occupation, loot, temporary-outpost destruction, retreat) are applied and two battle reports are written.
 
@@ -19,6 +19,7 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `GET` | `/troop/movement` | yes | `troopListMovementHandler` |
 | `POST` | `/troop/movement` | yes | `troopCreateMovementHandler` |
 | `GET` | `/troop/movement/capacity` | yes | `troopMovementCapacityHandler` → `{ used, limit }` (slice [`028`](../028-command-center-shelter/spec.md)) |
+| `GET` | `/troop/movement/incoming` | yes | `troopListIncomingMovementHandler` → incoming attacks filtered by the live `detection` level (slice [`030`](../030-intelligence/spec.md)) |
 | `GET` | `/troop/movement/:movement_id` | yes | `troopGetMovementHandler` |
 | `POST` | `/troop/movement/estimate` | yes | `troopEstimateMovementHandler` |
 
@@ -45,6 +46,16 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `combat:strategy-required` | `attack` without `combat_strategy` |
 | `combat:battle-not-found` | Unknown battle id (round job / outcomes) |
 
+**`spy`** (slice [`030`](../030-intelligence/spec.md)): `espionage` ≥ 1, `scout`-role troops only, and an enemy-faction target resolved like an attack (`resolveSpyTarget` wraps `resolveAttackTarget`); same-faction targets keep `combat:same-faction-attack`, the movement cap applies, no `combat_strategy`. On arrival `sagaFinishSpy` rolls `p_success = clamp(0.50 + 0.15 × gap + 0.02 × (scouts − 1), 0.05, 0.95)` (`gap = espionage − target detection`, read at arrival): success writes a `spy` report, marks the cell explored and sends the scouts home with an automatic `base` movement (like `explore`); failure deletes the scouts and the movement and also writes a `spy_detected` report for the target; a vanished or same-faction target ends the mission without a roll and the scouts return. Spy movements are never announced to the target.
+
+| `IntelError` (spy movements) | Meaning |
+| --- | --- |
+| `intel:espionage-required` | Player has no `espionage` level |
+| `intel:scout-only` | Selection is empty or includes a non-`scout` troop |
+| `intel:no-valid-target` | No enemy stack or settlement at the destination |
+
+**Incoming attacks** ([`030`](../030-intelligence/spec.md)): `GET /troop/movement/incoming` lists other players' `attack` movements whose destination cell holds one of the player's cities, outposts or stationary troops (`movement.listIncomingAttacks`), while their finish job is pending. Fields follow the player's `detection` level read on each call: none at 0 (`[]`), target and `arrive_at` at 1, `attacker` at 2, `unit_count` (nearest 10) at 3, `troops` from 4; the strategy is never sent. Creating an attack emits `movement:incoming` to the defender when their `detection` ≥ 1.
+
 Tests: `apps/server/src/web/handler/troop/movement/*.spec.ts`, `apps/server/src/app/command/troop/movement/*.spec.ts`, `apps/server/src/app/query/troop/movement/*.spec.ts`, `apps/server/src/app/saga/finish/*.spec.ts`, `apps/server/src/app/command/combat/*.spec.ts`.
 
 ## Background jobs
@@ -58,7 +69,7 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 
 ## Saga routing
 
-`MovementAction.EXPLORE` → `sagaFinishExplore`; `BASE` → `sagaFinishBase`; `TRANSPORT` → `sagaFinishTransport`; `ATTACK` → `sagaFinishAttack`; default → `MOVEMENT_ACTION_NOT_IMPLEMENTED`.
+`MovementAction.EXPLORE` → `sagaFinishExplore`; `BASE` → `sagaFinishBase`; `TRANSPORT` → `sagaFinishTransport`; `ATTACK` → `sagaFinishAttack`; `SPY` → `sagaFinishSpy` (slice [`030`](../030-intelligence/spec.md)); default → `MOVEMENT_ACTION_NOT_IMPLEMENTED`.
 
 `TroopMovementGetActionQuery` resolves action for a movement id.
 
@@ -73,7 +84,7 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 
 ## Web UI
 
-`apps/web/src/modules/movement/` — list, item links to movement detail routes under city/outpost ([`019`](../019-web-shell-routing/spec.md)). Create form supports `attack` with a combat strategy picker (`create/strategy`). Movement details show « Bataille en cours » when `battle_id` is set. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail).
+`apps/web/src/modules/movement/` — list, item links to movement detail routes under city/outpost ([`019`](../019-web-shell-routing/spec.md)). Create form supports `attack` with a combat strategy picker (`create/strategy`). Movement details show « Bataille en cours » when `battle_id` is set. Slice [`030`](../030-intelligence/spec.md): « Espionner » action (scouts only, destination not same-faction) with an odds preview, and an « Attaques entrantes » section (`movement/incoming/`) fed by `GET /troop/movement/incoming`. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail).
 
 ## API client
 

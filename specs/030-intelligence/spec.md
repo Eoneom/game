@@ -1,6 +1,6 @@
 # Slice 030 — Intelligence: espionage and detection
 
-**Status**: Planned.
+**Status**: Implemented on `main` (slice 030): `espionage` and `detection` technologies (Renseignement branch), `spy` movement action with randomized resolution (`core/intel/`, `sagaFinishSpy`), `spy` / `spy_detected` reports (`report_spy`), `GET /troop/movement/incoming` and WS `movement:incoming`, web incoming-attack badge, « Attaques entrantes » section, « Espionner » action, spy report details, migration `00013_intelligence`.
 
 ## Summary
 
@@ -165,12 +165,37 @@ Migration (next free number):
 | [`017`](../017-realtime-websocket/spec.md) | `movement:incoming`. |
 | [`016`](../016-system-controlled-players/spec.md) | Research priority. |
 
-## Evidence index (when implemented)
+## Implementation notes
 
-| Area | Expected paths |
+- **Target resolution**: spy creation and arrival reuse the attack resolver (`resolveSpyTarget` wraps `resolveAttackTarget`): city, then outpost, then a single-owner field stack. `combat:no-valid-target` is renamed `intel:no-valid-target`; a same-faction owner keeps `combat:same-faction-attack`. A field cell holding stacks of several foreign owners is not a valid target (as for attacks). Creation checks run in the spec order (espionage, scouts, target), then the movement cap.
+- **Roll**: `finishTroopSpyMovement` takes an injectable `random` (default `Math.random`, uniform in [0, 1)); the mission succeeds when `roll < p_success`. `p_success` is rounded to 6 decimals to drop float noise. Both are stored in the report.
+- **Aborted mission** (target vanished or now same-faction): the spy owner still gets a `spy` report so the return is explained — `success: false`, an extra `aborted: true` flag (not in the spec's metadata list), `roll` / `p_success` `null`, `tier` 0, `scouts_lost` 0, and `target` with only `coordinates` (kind and owner fields `null`). No exploration, no `spy_detected`.
+- **Failure**: `tier` is 0 and no intel is attached; the scouts' troop rows are deleted, then the movement (no return trip). `spy_detected` reports have empty `troops` (the count is `scouts_destroyed`); the `spy` report's `troops` are the scouts sent.
+- **Snapshot content**: "troops on the cell" are the target owner's stationary stacks (the battle defender set), merged per code. Defenses with count 0, buildings at level 0 and technologies at level 0 are left out. Resources are the stored cell stock floored (as of its last gather, the same stock loot reads). `default_strategy` is the garrison default resolved to `balanced` when unset.
+- **Exploration**: success marks only the target cell explored for the spy owner (not the explore radius).
+- **Storage**: `report_spy` has `report_id` (PK, cascade), `movement_id`, `spy_player_id`, `target_player_id` (null when aborted), `target_json` and `metadata_json` (everything else); `report.createSpyReports` writes reports and rows in one transaction, `getSpyMetadataByReportId` merges them back. `report.type` has no check constraint, so the migration only adds the table and the technology backfill.
+- **Incoming attacks**: `movement.listIncomingAttacks` selects other players' `attack` movements whose destination cell holds one of the player's cities, outposts or stationary troops (one SQL query); entries without a pending finish job (arrived, battle running) are dropped and the rest sorted by `arrive_at`. The target is described from the player's side (city → outpost → field); outposts and field stacks have no name, a field target has no id. The detection level is read on every call; nothing is queried at level 0. `unit_count` is `round(total / 10) × 10`, so an army of 1–4 units reads 0.
+- **Event**: `createTroopMovement` emits `movement:incoming` after scheduling every attack (human or system) when the resolved defender's `detection` ≥ 1. Spy failures do not emit an event to the target; the `spy_detected` report shows up through the usual report refresh.
+- **System AI**: `detection`, `espionage` are appended after every other code in both research orders (default and Arsenal-first).
+- **Web « Espionner »**: offered when the selection is scouts only and the destination is not a same-faction settlement. The client reads the destination's settlement from a 1×1 `GET /world/cells` (`useDestinationStance`): enemy city / outpost → offered; same-faction → hidden; no settlement → offered, because field stacks are not on the map (the server then answers `intel:no-valid-target` if nothing is there). Without `espionage` the action shows « Recherchez l'Espionnage… » and cannot be sent. The preview reads « ≥ 5 % (jusqu'à X % contre une cible sans Détection) », X being the formula with the player's own Espionnage and gap = own level. The map panel lists `spy` with the explored-cell actions. Probability constants live in `core/intel/constant/probability.ts` and are exported by the API client.
+- **Web incoming attacks**: `useListIncomingMovements` (`['movements', 'incoming']`, so movement invalidations refresh it); the header badge (under the location title, links to the movements page) and the « Attaques entrantes » section render only when the list is non-empty, which the server guarantees only from detection 1. The section refetches when a countdown ends; `movement:incoming` shows a toast and refetches; `technology:research-finished` refetches (live detection level).
+
+## Follow-ups
+
+- **Artwork**: no dedicated images. `apps/web/src/modules/technology/image.ts` maps `espionage` → explorer art and `detection` → research lab art; replace them when `/technologies/espionage.png` and `/technologies/detection.png` exist.
+- **Spy detected notification**: the target gets no realtime toast for `spy_detected` (no event in the spec); consider a WS event if players miss it.
+- **Small armies at detection 3**: rounding to the nearest 10 shows 0 for 1–4 units; consider a minimum of 10 or a « < 10 » label.
+- **Balance**: probability coefficients, costs and the tier table need playtesting.
+
+## Evidence index
+
+| Area | Paths |
 | --- | --- |
-| Technologies | `core/technology/constant/code.ts`, requirement and pricing constants |
-| Spy | `core/troop/constant/movement-action.ts`, `app/command/troop/movement/create.ts`, `app/saga/finish/spy.ts`, `core/intel/` (probability, tiers) |
-| Detection | `app/query/troop/movement/incoming.ts`, `web/handler/troop/movement/incoming.ts`, `core/events.ts` |
-| Reports | `core/communication/`, `adapter/database/repository/report-spy.ts` |
-| Web | `modules/movement/*`, header, `modules/communication/report/details.tsx`, `modules/technology/*` |
+| Technologies | `apps/server/src/core/technology/constant/code.ts`, `order.ts`, `apps/server/src/core/requirement/constant/technology.ts`, `apps/server/src/core/pricing/constant/technology.ts` (+ `core/pricing/service.spec.ts`, Renseignement), `apps/server/src/app/command/player/system/technologies.ts` (+ `.spec.ts`) |
+| Intel domain | `apps/server/src/core/intel/error.ts`, `type.ts`, `constant/probability.ts`, `service.ts` (+ `service.spec.ts`: formula and clamps, tiers, scope per target kind, detection filter) |
+| Spy | `apps/server/src/core/troop/constant/movement-action.ts`, `apps/server/src/app/command/troop/movement/create.ts` (+ `create-spy.spec.ts`), `spy-target.ts`, `finish/spy.ts` (+ `finish/spy.spec.ts`), `apps/server/src/app/saga/finish/spy.ts` (+ `spy.spec.ts`), `movement.ts` (+ `movement.spec.ts`) |
+| Detection | `apps/server/src/app/query/troop/movement/incoming.ts` (+ `.spec.ts`), `apps/server/src/web/handler/troop/movement/incoming.ts` (+ `.spec.ts`), `apps/server/src/web/router.ts`, `apps/server/src/app/port/repository/movement.ts`, `apps/server/src/adapter/database/repository/movement.ts` (`listIncomingAttacks`), `apps/server/src/core/events.ts`, `apps/server/src/app/event-bus.ts`, `apps/server/src/web/ws.ts` (+ `ws.spec.ts`) |
+| Reports | `apps/server/src/core/communication/value/report-type.ts`, `apps/server/src/app/port/repository/report.ts`, `apps/server/src/adapter/database/repository/report.ts`, `report-spy.ts`, `apps/server/src/app/query/communication/report/get.ts` (+ `get-spy.spec.ts`), `apps/server/src/web/handler/communication/report/get.ts` |
+| API | `packages/api-client/src/endpoints/troop/movement/incoming.ts`, `troop/index.ts`, `communication/report/get.ts`, `packages/api-client/src/types/report-spy.ts`, `events.ts` (`MovementIncomingEventPayload`), `index.ts` (`IntelError`, `SPY_SUCCESS_*`) |
+| Migration | `apps/server/src/adapter/database/migrations/00013_intelligence.ts`, `apps/server/src/adapter/database/types.ts` (`ReportSpy`). Verified locally: 3 players → 3 `espionage` and 3 `detection` rows at level 0; `report_spy` created; `listIncomingAttacks` and a `report_spy` round trip run against the database |
+| Web | `apps/web/src/modules/movement/incoming/` (`index.tsx`, `item.tsx`, `translations.ts` + test), `movement/page.tsx`, `movement/spy.ts` (+ `spy.test.ts`), `movement/api/destination.ts`, `movement/create/index.tsx`, `movement/create/spy/index.tsx`, `movement/translations.ts`, `apps/web/src/modules/map/details/index.tsx`, `apps/web/src/ui/header/index.tsx`, `ui/header/incoming/index.tsx`, `apps/web/src/modules/troop/hooks.ts`, `troop/ws-listener.ts`, `apps/web/src/modules/communication/report/details.tsx`, `spy-details.tsx`, `spy-translations.ts` (+ test), `translations.ts`, `apps/web/src/modules/technology/branch.ts` (+ `branch.test.ts`), `translations.ts`, `image.ts`, `apps/web/src/helpers/error-translations.ts` |

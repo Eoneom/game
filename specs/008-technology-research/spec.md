@@ -71,6 +71,8 @@ Arsenal costs plasma from level 1; Économie costs plastic and mushroom only. Pe
 
 Slice [`029`](../029-city-defenses/spec.md) adds **Fortification** (`fortification`, branch Arsenal): `research_lab` 5, `central_inductor` 1; +3 % attack and life of city defenses per level (snapshotted at battle start as `defender_modifiers.fortification`); costs plastic 7000 / 1.7, mushroom 7000 / 1.7, plasma 400 / 1.7, duration 180 / 2. It unlocks turrets (1), shield generators (2) and plasma batteries (3). Migration `00012_city_defenses` backfills existing players at level 0.
 
+Slice [`030`](../030-intelligence/spec.md) adds the **Renseignement** branch: **Espionnage** (`espionage`) and **Détection** (`detection`), both `research_lab` 3, no technology prerequisite, plastic 3000 / 1.7, mushroom 3000 / 1.7, duration 120 / 2, no plasma, no level cap. Espionnage unlocks the `spy` movement action ([`010`](../010-troop-movement-combat/spec.md)); Détection reveals incoming attacks (`GET /troop/movement/incoming`); the gap between the two drives spy odds and report detail. Migration `00013_intelligence` backfills existing players at level 0.
+
 Costs/durations: `technology_costs` in `apps/server/src/core/pricing/constant/technology.ts` (`outpost_expansion` mirrors `outpost_logistics`). Bootstrap (`TechnologyService.init`) creates every code at level 0; migration `00008_outpost_expansion_technology` backfills existing players.
 
 French UI: `apps/web/src/modules/technology/translations.ts` — **Expansion des avant-postes**, effect **+5 avant-postes max par niveau (base 15)**.

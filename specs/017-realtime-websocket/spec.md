@@ -35,6 +35,7 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 | `technology:queue-item-dropped` | same | `city_id`, `technology_code`, `error_code` |
 | `troop:movement-finished` | same | — |
 | `battle:finished` | same | `player_id`, `report_id`, `perspective` (`attacker` \| `defender`), `winner` (`attacker` \| `defender` \| `draw`) — once per participant, after the battle reports commit ([`024`](../024-player-combat-pvp/spec.md)) |
+| `movement:incoming` | same | `player_id`, `movement_id`, `arrive_at` — to the defender when an attack movement is created and their `detection` ≥ 1 ([`030`](../030-intelligence/spec.md)); the client refetches `GET /troop/movement/incoming` |
 | `troop:recruitment-updated` | same | `city_id` |
 | `outpost:created` | same | — |
 | `outpost:deleted` | same | `outpost_id` |
@@ -42,7 +43,7 @@ Tests: `apps/server/src/web/ws.spec.ts`, `apps/web/src/helpers/websocket.test.ts
 
 Bus implementation: `apps/server/src/app/event-bus.ts` (typed payloads, info logging). Tests: `apps/server/src/app/event-bus.spec.ts`.
 
-Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), outpost lifecycle/gather.
+Emitters: gather commands, `finishBuildingUpgrade`, `finishTechnologyResearch`, `progressTroopRecruitment`, `sagaFinishOneMovement`, `advanceCombatRound` (`battle:finished`), `createTroopMovement` (`movement:incoming`), outpost lifecycle/gather.
 
 ## Web listeners
 
@@ -51,7 +52,7 @@ Registered in `startSession` (`apps/web/src/modules/auth/hooks.ts`):
 - `city/ws-listener.ts`
 - `building/ws-listener.ts`
 - `technology/ws-listener.ts`
-- `troop/ws-listener.ts`
+- `troop/ws-listener.ts` (incl. the « Attaque entrante » toast on `movement:incoming`, slice 030)
 - `outpost/ws-listener.ts`
 - `communication/ws-listener.ts` (battle report toast; registers once per page load)
 

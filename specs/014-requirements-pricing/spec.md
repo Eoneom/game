@@ -65,6 +65,13 @@ Constants: `constant/building.ts`, `constant/technology.ts`, `constant/troop.ts`
 | `shield_generator` | `city_wall` 4 | `fortification` 2 | 2000 | 1500 | 200 | 240 |
 | `plasma_battery` | `city_wall` 5, `central_inductor` 1 | `fortification` 3 | 1500 | 1000 | 300 | 180 |
 
+**Slice 030 technologies** ([`030`](../030-intelligence/spec.md)), branch Renseignement, no plasma:
+
+| Code | Buildings | Technologies | Plastic | Mushroom | Plasma | Duration (s) |
+| --- | --- | --- | --- | --- | --- | --- |
+| `espionage` | `research_lab` 3 | — | 3000 / 1.7 | 3000 / 1.7 | — | 120 / 2 |
+| `detection` | `research_lab` 3 | — | 3000 / 1.7 | 3000 / 1.7 | — | 120 / 2 |
+
 Tests: `apps/server/src/core/pricing/service.spec.ts`; requirement checks exercised in building/technology/troop/defense command specs.
 
 ## Web UI
