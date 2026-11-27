@@ -18,6 +18,7 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | --- | --- | --- | --- |
 | `GET` | `/troop/movement` | yes | `troopListMovementHandler` |
 | `POST` | `/troop/movement` | yes | `troopCreateMovementHandler` |
+| `GET` | `/troop/movement/capacity` | yes | `troopMovementCapacityHandler` → `{ used, limit }` (slice [`028`](../028-command-center-shelter/spec.md)) |
 | `GET` | `/troop/movement/:movement_id` | yes | `troopGetMovementHandler` |
 | `POST` | `/troop/movement/estimate` | yes | `troopEstimateMovementHandler` |
 
@@ -31,6 +32,9 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `troop:movement:transport-capacity-exceeded` | Transport payload too large |
 | `troop:movement:transport-resources-required` | Transport without resources |
 | `troop:movement:transport-resources-not-allowed` | Resources on non-transport action |
+| `troop:movement:limit-reached` | Player already owns `movement_limit` movements (slice [`028`](../028-command-center-shelter/spec.md)) |
+
+**Movement cap** ([`028`](../028-command-center-shelter/spec.md)): `movement_limit = 5 + Σ command_center level` over the player's cities; every `movement` row of the player counts (`movement.countByPlayer`). `createTroopMovement` (every action) rejects at the cap; a rebase (`rebaseTroopMovement`) runs the same check but excludes the inbound movement it replaces, so it is only blocked when the player is over the cap (after losing a city). Automatic return trips (`createReturnBaseTrip` from explore / transport) and battle retreats are never checked. Losing a city lowers the limit without cancelling movements under way.
 
 | `CombatError` (attack movements) | Meaning |
 | --- | --- |

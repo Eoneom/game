@@ -1,6 +1,6 @@
 # Slice 028 — Command center and underground shelter
 
-**Status**: Planned.
+**Status**: Implemented on `main` (slice 028): `command_center` and `underground_shelter` buildings, player-wide movement cap (`GET /troop/movement/capacity`), per-city recruitment queue, sheltered loot, system AI movement budget, migration `00011_command_center_shelter`.
 
 ## Summary
 
@@ -175,13 +175,31 @@ Migration (next free number after `027`):
 | [`016`](../016-system-controlled-players/spec.md) | Movement budget, command center rank. |
 | [`024`](../024-player-combat-pvp/spec.md) / [`026`](../026-plasma-economy/spec.md) | Shelter in loot formula. |
 
-## Evidence index (when implemented)
+## Implementation notes
 
-| Area | Expected paths |
+- **Rebase check**: a rebase replaces its inbound movement in the same command, so `rebaseTroopMovement` calls `AppService.assertMovementCapacity({ replaced_movement_count: 1 })`: it is only rejected when the player is already **over** the cap (after losing a city). A plain `count ≥ limit` check would strand troops whenever a player at the cap hits the outpost limit.
+- **Recruitment queue API**: queued rows are returned by `GET /city/:city_id/troop` (`recruit_queue`: `{ id, troop_code, count }[]`, `recruit_queue_limit`: 3 once the city's command center is built, else 0), like the building queue on `GET /city/:city_id/building`. `PUT /troop/queue/cancel` takes `{ city_id, queue_item_id }` (same shape as `/building/queue/cancel`); a row of another city is `troop:queue-item-not-found`.
+- **Queue flow** (`app/command/troop/start-recruit.ts`): `startTroopRecruitment` holds the former recruit logic (requirements, price, purchase, scheduling). `processTroopRecruitQueue` pops rows oldest first; resource and requirement failures drop the row and emit `troop:queue-item-dropped` (`{ city_id, troop_code, error_code }`). It runs when a batch completes (`progressTroopRecruitment`), after `cancelTroop`, and from `recruitTroop` when no batch is pending (unsticks rows left by a failed job, same as buildings). Enqueue checks ownership (`city:not-owner`) and roster; at level 0 the error stays `troop:already-in-progress`.
+- **Sheltered report amounts**: `sheltered` is what was actually protected, `min(stock, shelter capacity)` per resource, and is only filled when carriers tried to loot a city (attacker win with carriers); attacker reports always carry zeros. It is stored in a new `report_battle.sheltered_json` column (default zeros), added by the same migration.
+- **Energy**: `command_center` is a non-production consumer (like the labs), so it lowers the production energy ratio only through the shared supply.
+- **Building details**: command center metadata adds `current_movement_bonus` / `next_movement_bonus` (its level), `movement_limit` (player cap) and `recruit_queue_limit`; shelter metadata is `current_sheltered` / `next_sheltered`. Shelter amounts round up after trimming float noise (`2000 × 1.6² = 5120`, not 5121).
+- **System AI**: movement slots are checked per action from the tick snapshot plus `tick_context.movements_created` (the replan loop recollects the snapshot after each committed action). Scarce-slot priority reorders movement intents only among their own plan positions; structural prepends keep their place. "Several ticks" = `SYSTEM_COMMAND_CENTER_SATURATION_TICKS` (3), counted in system player memory (`movement_saturated_ticks`). Normal command center rank is the default (2); prioritized rank is 0. The shelter ranks 5 and is skipped until `central_inductor` ≥ 1. The AI does not enqueue recruitment.
+- **Admin**: the stats snapshot gains `movement_used` / `movement_limit`; the card shows "Mouvements en cours (n) — used / limit utilisés".
+
+## Follow-ups
+
+- **Artwork**: no dedicated images yet. `apps/web/src/modules/building/image.ts` maps `command_center` → research lab art and `underground_shelter` → mushroom warehouse art until `/buildings/<code>.png` exists; remove each placeholder entry when its image lands.
+- **Balance**: costs, shelter amounts and the AI saturation threshold need a playtest on the observability screen.
+
+## Evidence index
+
+| Area | Paths |
 | --- | --- |
-| Buildings | `core/building/constant/code.ts`, `order.ts`, `energy.ts`, `shelter-capacity.ts`; `core/requirement/constant/building.ts`; `core/pricing/constant/building.ts` |
-| Movement cap | `core/troop/constant/movement-limit.ts`, `app/command/troop/movement/create.ts`, `rebase.ts`, `web/handler/troop/movement/capacity.ts` |
-| Recruitment queue | `app/command/troop/recruit.ts`, `progress-recruit.ts`, `cancel.ts`, queue repository, `web/handler/troop/queue/cancel.ts` |
-| Loot | `app/command/combat/apply-battle-outcomes.ts` |
-| System AI | `app/command/player/system/actions.ts`, `storage.ts`, `query/player/system/empire-snapshot.ts` |
-| Web | `modules/building/*`, `modules/movement/*`, `modules/troop/*`, `modules/communication/report/details.tsx` |
+| Buildings | `apps/server/src/core/building/constant/code.ts`, `order.ts`, `energy.ts`, `shelter-capacity.ts`, `apps/server/src/core/building/helper.ts`, `apps/server/src/core/building/service.ts` (`getShelteredResources`, `getRecruitQueueLimit`, + `service.spec.ts`), `apps/server/src/core/requirement/constant/building.ts`, `apps/server/src/core/pricing/constant/building.ts`, `apps/server/src/app/service.ts` (command center energy), `apps/server/src/app/query/building/get.ts` (+ `get.spec.ts`) |
+| Movement cap | `apps/server/src/core/troop/constant/movement-limit.ts`, `apps/server/src/core/troop/service.ts` (`getMovementLimit`, `assertMovementCapacity`, + `service.spec.ts`), `apps/server/src/app/service.ts` (`getMovementCapacity`, `assertMovementCapacity`, + `service.spec.ts`), `apps/server/src/app/command/troop/movement/create.ts` (+ `create.spec.ts`), `rebase.ts` (+ `rebase.spec.ts`), `finish/explore.spec.ts` (return trip never blocked), `apps/server/src/adapter/database/repository/movement.ts` (`countByPlayer`), `building.ts` (`getTotalLevelForPlayer`), `apps/server/src/app/query/troop/movement/capacity.ts`, `apps/server/src/web/handler/troop/movement/capacity.ts` (+ `capacity.spec.ts`) |
+| Recruitment queue | `apps/server/src/core/troop/constant/recruit-queue.ts`, `apps/server/src/core/troop/recruit-queue-entity.ts`, `apps/server/src/app/port/repository/troop-recruit-queue.ts`, `apps/server/src/adapter/database/repository/troop-recruit-queue.ts`, `apps/server/src/app/command/troop/recruit.ts`, `start-recruit.ts`, `progress-recruit.ts`, `cancel.ts`, `cancel-queued.ts` (+ their `.spec.ts`), `apps/server/src/app/query/troop/list.ts` (+ `list.spec.ts`), `apps/server/src/web/handler/troop/cancel-queued.ts`, `list/mapper.ts` (+ specs), `apps/server/src/web/ws.ts`, `apps/server/src/app/event-bus.ts` |
+| Loot | `apps/server/src/app/command/combat/apply-battle-outcomes.ts` (+ `.spec.ts`, `underground shelter`, capture clears the queue), `apps/server/src/app/command/communication/report/create-battle.ts` (+ `.spec.ts`), `apps/server/src/core/combat/type/report-battle-metadata.ts`, `apps/server/src/adapter/database/repository/report.ts`, `report-battle.ts` |
+| System AI | `apps/server/src/core/player/system/movement-budget.ts` (+ `.spec.ts`), `empire-snapshot.ts`, `memory.ts`, `planner.ts`, `apps/server/src/app/command/player/system/actions.ts` (+ `actions.spec.ts`, `movement budget`), `storage.ts` (+ `storage.spec.ts`), `tick.ts` (+ `tick.spec.ts`), `memory.ts`, `skippable-error.ts`, `apps/server/src/app/query/player/system/empire-snapshot.ts` (+ `empire-snapshot-viewport-cache.spec.ts`), `system-tick-context.ts`, `apps/server/src/adapter/database/repository/system-player-memory.ts`, `apps/server/src/app/query/admin/system-player-stats.ts` |
+| API | `packages/api-client/src/endpoints/troop/movement/capacity.ts`, `troop/cancel-queued.ts`, `troop/list/shared.ts` (`recruit_queue`), `troop/index.ts`, `building/get.ts` (`CommandCenterBuilding`, `ShelterBuilding`), `admin/system-player-stats.ts`, `packages/api-client/src/types/report-battle.ts` (`sheltered`), `packages/api-client/src/index.ts` (`TROOP_RECRUIT_QUEUE_LIMIT`) |
+| Migration | `apps/server/src/adapter/database/migrations/00011_command_center_shelter.ts`, `apps/server/src/adapter/database/types.ts` (`TroopRecruitQueue`, `report_battle.sheltered_json`) |
+| Web | `apps/web/src/modules/building/translations.ts`, `image.ts`, `details/index.tsx`, `details/metadata/index.tsx`, `details/metadata/command-center/index.tsx`, `details/metadata/shelter/index.tsx`, `apps/web/src/modules/movement/capacity/index.tsx` (+ `index.test.tsx`), `movement/list/index.tsx`, `movement/create/index.tsx`, `movement/create/warning/index.tsx` (+ test), `apps/web/src/modules/troop/hooks.ts`, `troop/list/in-progress/index.tsx`, `troop/details/recruit/index.tsx`, `troop/ws-listener.ts`, `apps/web/src/helpers/error-translations.ts`, `apps/web/src/modules/communication/report/details.tsx`, `apps/web/src/modules/admin/system-player-observability/stats-panel.tsx`, `ws-listener.ts` |

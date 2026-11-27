@@ -45,6 +45,7 @@ Scheduling/cancel: `adapter/job-queue/building/finish-upgrade.ts`.
 - Production buildings (`MUSHROOM_FARM`, `RECYCLING_PLANT`, `CENTRAL_INDUCTOR`) earnings scale with cell coefficients and `gameTimeScale`.
 - Energy consumption/supply helpers for UI warnings (`getEnergyConsumption`, `getProductionEnergyRatio`, etc.).
 - Display order: `building_order` constant.
+- Slice [`028`](../028-command-center-shelter/spec.md) adds `command_center` (non-production energy consumer, `architecture` 2; each level raises the player movement cap and level ≥ 1 unlocks a recruitment queue in the city) and `underground_shelter` (no energy; shelters a fixed amount of each resource from loot, `BuildingService.getShelteredResources`). Both start at level 0 and use this upgrade queue; existing cities got level-0 rows in migration `00011_command_center_shelter`.
 
 ## Web UI
 

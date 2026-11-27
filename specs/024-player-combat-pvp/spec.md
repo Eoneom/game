@@ -352,7 +352,7 @@ City buildings are **not** deleted on capture.
 | Outcome | Winning attacker requirement |
 | --- | --- |
 | **Occupy** | ≥ 1 surviving `combat` unit. |
-| **Loot** | Surviving `carrier` stacks with total `transport_capacity` ≥ 1; taken in order plastic → mushroom → plasma, each `min(floor(stock × ratio), remaining capacity)` with ratio **50 %** for plastic and mushroom, **25 %** for plasma (`combat_loot_ratio` in `core/combat/constant/loot.ts`, [`026`](../026-plasma-economy/spec.md); [`015`](../015-resources-model/spec.md)). |
+| **Loot** | Surviving `carrier` stacks with total `transport_capacity` ≥ 1; taken in order plastic → mushroom → plasma, each `min(floor(max(0, stock − sheltered) × ratio), remaining capacity)` with ratio **50 %** for plastic and mushroom, **25 %** for plasma (`combat_loot_ratio` in `core/combat/constant/loot.ts`, [`026`](../026-plasma-economy/spec.md); [`015`](../015-resources-model/spec.md)). `sheltered` is the target city's `underground_shelter` capacity ([`028`](../028-command-center-shelter/spec.md)); outposts and field stacks have none. Capture is unaffected (the whole stock goes with the city). |
 | **Destroy** (temp outpost / troops) | Attacker win per matrix. |
 
 ## Battle lifecycle (jobs)
@@ -436,6 +436,7 @@ interface ReportBattleMetadata {
     loot_applied: boolean
     attacker_retreated: boolean // true when surviving attacker stacks were sent to movement origin (defender win or draw stalemate)
   }
+  sheltered: { plastic: number; mushroom: number; plasma: number } // defender report: what the underground shelter kept out of loot (028); zeros otherwise
   casualties_attacker: { code: TroopCode; count: number }[] // units lost
   casualties_defender: { code: TroopCode; count: number }[]
   round_summaries: {

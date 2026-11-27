@@ -17,6 +17,7 @@
 | `GET` | `/troop/:troop_id` | yes | `troopGetHandler` |
 | `PUT` | `/troop/recruit` | yes | `troopRecruitHandler` |
 | `PUT` | `/troop/cancel` | yes | `troopCancelHandler` |
+| `PUT` | `/troop/queue/cancel` | yes | `troopCancelQueuedHandler` (waiting batch, slice [`028`](../028-command-center-shelter/spec.md)) |
 
 | `TroopError` (stationary-related) | Meaning |
 | --- | --- |
@@ -26,6 +27,10 @@
 | `troop:not-enough-troops` | Insufficient count for an operation |
 | `troop:not-owner` | Wrong player |
 | `troop:not-in-faction-roster` | Code not allowed for faction |
+| `troop:queue-full` | Recruitment queue already holds `TROOP_RECRUIT_QUEUE_LIMIT` (3) waiting batches |
+| `troop:queue-item-not-found` | Unknown waiting batch id |
+
+**Recruitment queue** ([`028`](../028-command-center-shelter/spec.md)): a city with `command_center` ≥ 1 keeps up to 3 waiting batches (`troop_recruit_queue`) behind the active one. `recruitTroop` starts a batch when none is pending, otherwise enqueues (ownership + roster only; requirements and resources are checked and paid at start). At level 0 a running batch still fails with `troop:already-in-progress`. When a batch finishes (`progressTroopRecruitment`) or is cancelled, `processTroopRecruitQueue` starts the oldest row; rows that fail their checks are dropped with `troop:queue-item-dropped` (WebSocket + toast). City capture deletes the city's rows. `GET /city/:city_id/troop` returns `recruit_queue` and `recruit_queue_limit`.
 
 Recruitment progress emits `troop:recruitment-updated` (WebSocket [`017`](../017-realtime-websocket/spec.md)).
 

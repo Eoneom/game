@@ -66,7 +66,7 @@ Order and capacity rules are unchanged: resources are taken in the order plastic
 
 City **capture** (ownership transfer on attacker win, [`024`](../024-player-combat-pvp/spec.md)) is unaffected: the stock goes with the city.
 
-The future *underground shelter* building (slice `028`) will protect an additional share; not in this slice.
+Since slice [`028`](../028-command-center-shelter/spec.md), the target city's *underground shelter* protects a fixed amount per resource first: each ratio applies to `max(0, stock − sheltered)` (city targets only; outposts and field stacks are unsheltered). The defender report records the sheltered amounts (`sheltered`).
 
 ## System players
 
@@ -97,7 +97,7 @@ API responses already carry `plasma` in every `Resource` (`packages/api-client/s
 
 - Assigning plasma prices to any content (slices `027`, `029`, new factions `036` / `037`).
 - Plasma **upkeep** (per-combat or per-hour consumption by defenses) — slice `029`.
-- Underground shelter loot protection — slice `028`.
+- Underground shelter loot protection — implemented in slice [`028`](../028-command-center-shelter/spec.md).
 - Central inductor production or unlock rebalance.
 - Plasma in outposts (outposts have no inductor and do not produce plasma).
 - Cell-dependent plasma coefficients (all cells stay at `plasma: 1` until the map rework).
