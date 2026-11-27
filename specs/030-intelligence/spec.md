@@ -44,7 +44,7 @@ An **incoming attack** is an `attack` movement owned by another player whose des
 | --- | --- |
 | 0 | Nothing. |
 | 1 | Alert, targeted location, arrival time. |
-| 2 | + attacker name and faction. |
+| 2 | + attacker name and faction; since [`044`](../044-world-map-revamp/spec.md) also the attack's `origin` cell and `departure_at` (the map draws the arrow from the origin). |
 | 3 | + army size: total unit count, rounded to the nearest 10. |
 | ≥ 4 | + exact composition (troop code and count). The attacker's strategy is never revealed. |
 
@@ -54,7 +54,7 @@ The level is read **live** on each query, so research finished while an attack i
 
 | Item | Spec |
 | --- | --- |
-| `GET /troop/movement/incoming` | Incoming attacks visible to the player, with fields filtered by detection level: `{ id, target: { kind, id, name, coordinates }, arrive_at, attacker?: { name, faction_code }, unit_count?, troops? }`. Returns `[]` at level 0. |
+| `GET /troop/movement/incoming` | Incoming attacks visible to the player, with fields filtered by detection level: `{ id, target: { kind, id, name, coordinates }, arrive_at, origin?, departure_at?, attacker?: { name, faction_code }, unit_count?, troops? }` (`origin` / `departure_at` from level 2, slice [`044`](../044-world-map-revamp/spec.md), filtered in `IntelService.toIncomingAttackView` with `attacker`). Returns `[]` at level 0. |
 | WS `movement:incoming` | Sent to the defender when an attack movement is created and the defender's `detection` ≥ 1. Payload: `{ player_id, movement_id, arrive_at }`. The client refetches the list. |
 | Attack arrival | Existing `battle:finished` flow; the entry disappears from the list once the movement is hidden ([`010`](../010-troop-movement-combat/spec.md)). |
 
@@ -128,6 +128,7 @@ Stored like battle metadata (dedicated `report_spy` table, JSON columns).
 | Movement create | "Espionner" action available when only scouts are selected and the target is an enemy location; shows the success probability preview from the known levels (own espionage only; the target's detection is unknown, so show "≥ 5 %"). Since [`045`](../045-movements-revamp/spec.md): offered at wizard step 2 on enemy settlements and empty explored cells (field stacks), disabled (not hidden) without Espionnage, scouts-only troop rows; odds and failure warning in the summary. |
 | City dashboard ([`042`](../042-city-dashboard/spec.md)) | « Attaques entrantes » alert row above the cards when an attack targets this city or outpost (count, first arrival countdown, attacker from level 2, army size from 3); the « Mouvements » card counts « Entrants » (« Détection requise » at level 0) and lists incoming attacks in danger among the next arrivals. |
 | Reports | Details for `spy` (tiers, failure) and `spy_detected`. |
+| World map ([`044`](../044-world-map-revamp/spec.md)) | Incoming attacks: pulsing red ring and ETA on the target at level 1, thick red arrow from the origin from level 2 (click → `IncomingMovementDetails`). « Cibles et menaces » overlay fed by `GET /world/targets` (system cities / outposts and enemy outposts as targets, enemy human cities as threats, within 15 cells of the nearest own location, at most 60) and `GET /world/intel?x=&y=`: latest **successful** `spy` report of the viewer per cell (`report.listLatestSpyIntel`, `DISTINCT ON` destination), its age (fresh < 6 h, aging 6–24 h, stale > 24 h), tier and `IntelService.estimateStrength` (unmodified attack / life pools from the snapshot, defense attack at round 1; « ≥ » when a city tier 1 did not reveal defenses); « Favorable / Incertain / Risqué » against the current location's combat attack (1.5 / 0.75). Fog « ? » without a report. |
 | Technology list | **Renseignement** branch. |
 
 French copy for all new errors.
@@ -197,6 +198,7 @@ Migration (next free number):
 | Intel domain | `apps/server/src/core/intel/error.ts`, `type.ts`, `constant/probability.ts`, `service.ts` (+ `service.spec.ts`: formula and clamps, tiers, scope per target kind, detection filter) |
 | Spy | `apps/server/src/core/troop/constant/movement-action.ts`, `apps/server/src/app/command/troop/movement/create.ts` (+ `create-spy.spec.ts`), `spy-target.ts`, `finish/spy.ts` (+ `finish/spy.spec.ts`), `apps/server/src/app/saga/finish/spy.ts` (+ `spy.spec.ts`), `movement.ts` (+ `movement.spec.ts`) |
 | Detection | `apps/server/src/app/query/troop/movement/incoming.ts` (+ `.spec.ts`), `apps/server/src/web/handler/troop/movement/incoming.ts` (+ `.spec.ts`), `apps/server/src/web/router.ts`, `apps/server/src/app/port/repository/movement.ts`, `apps/server/src/adapter/database/repository/movement.ts` (`listIncomingAttacks`), `apps/server/src/core/events.ts`, `apps/server/src/app/event-bus.ts`, `apps/server/src/web/ws.ts` (+ `ws.spec.ts`) |
+| Map intel ([`044`](../044-world-map-revamp/spec.md)) | `apps/server/src/core/intel/{service.ts,constant/targets.ts}` (`estimateStrength`), `app/query/world/{targets,intel,target-intel}.ts`, `adapter/database/repository/report.ts` (`listLatestSpyIntel`, + `world-map.spec.ts`), `web/handler/world/{targets,intel}.ts`, `apps/web/src/modules/map/{drawer/targets.tsx,layers/overlay.tsx,overlays.ts}` |
 | Reports | `apps/server/src/core/communication/value/report-type.ts`, `apps/server/src/app/port/repository/report.ts`, `apps/server/src/adapter/database/repository/report.ts`, `report-spy.ts`, `apps/server/src/app/query/communication/report/get.ts` (+ `get-spy.spec.ts`), `apps/server/src/web/handler/communication/report/get.ts` |
 | API | `packages/api-client/src/endpoints/troop/movement/incoming.ts`, `troop/index.ts`, `communication/report/get.ts`, `packages/api-client/src/types/report-spy.ts`, `events.ts` (`MovementIncomingEventPayload`), `index.ts` (`IntelError`, `SPY_SUCCESS_*`) |
 | Migration | `apps/server/src/adapter/database/migrations/00013_intelligence.ts`, `apps/server/src/adapter/database/types.ts` (`ReportSpy`). Verified locally: 3 players → 3 `espionage` and 3 `detection` rows at level 0; `report_spy` created; `listIncomingAttacks` and a `report_spy` round trip run against the database |

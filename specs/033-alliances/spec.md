@@ -182,6 +182,7 @@ System players never join or create alliances and cannot receive reinforcements.
 | City troops page | "Renforts stationnés" section (owner, troops) — read only for the host. |
 | Troops abroad | List of own reinforcements with "Rappeler". |
 | Names | `[TAG]` prefix on map markers, reports and chat. |
+| World map ([`044`](../044-world-map-revamp/spec.md)) | `GET /world/markers` computes the `ally` relation (same `alliance_id` as the viewer, from `alliance.listTagsByPlayerIds`; it beats `system` and `faction`): green markers, green minimap dots, and « Renforcer » in the cell menu of an allied city (allied outposts get no action). Member city links (`?x=&y=`) centre and select the cell, also while the map is open. |
 | Battle report | `reinforcement` perspective. |
 
 ## Persistence

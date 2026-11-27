@@ -43,7 +43,7 @@ Boot: `ensureOutpostResourcesGatherScheduled` in `index.ts`. Gather success emit
 
 ## Web UI
 
-`apps/web/src/modules/outpost/` — dashboard, hooks, `ws-listener` for created/deleted/gather events. Since [`042`](../042-city-dashboard/spec.md) the outpost home `/outpost/$outpostId` is a reduced dashboard (`outpost/dashboard/`): incoming-attack alert, « Stocks et production », « Statut » (« Rendre permanent », settle form), « Garnison » (strategy, stationed units) and « Mouvements ». World map (`apps/web/src/modules/map/`) shows every outpost in the viewport via `GET /world/cells` `settlements.outposts` (temporary vs permanent label; faction-colored marker).
+`apps/web/src/modules/outpost/` — dashboard, hooks, `ws-listener` for created/deleted/gather events. Since [`042`](../042-city-dashboard/spec.md) the outpost home `/outpost/$outpostId` is a reduced dashboard (`outpost/dashboard/`): incoming-attack alert, « Stocks et production », « Statut » (« Rendre permanent », settle form), « Garnison » (strategy, stationed units) and « Mouvements ». World map (`apps/web/src/modules/map/`, rebuilt by [`044`](../044-world-map-revamp/spec.md)) shows every outpost from `GET /world/markers` (diamond for permanent, hollow diamond for temporary, colour by relation). Its cell menu offers « Établir un avant-poste » (`base` to an explored empty cell, opening the send wizard) disabled with « Limite d'avant-postes atteinte » at the outpost cap, and on an own outpost « Fonder une ville », a link to the outpost dashboard's settle form.
 
 ## API client
 

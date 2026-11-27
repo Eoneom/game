@@ -38,6 +38,8 @@ Players create **movements** between map coordinates with an action (`MovementAc
 | `troop:movement:limit-reached` | Player already owns `movement_limit` movements (slice [`028`](../028-command-center-shelter/spec.md)) |
 | `troop:movement:foreign-origin` | From another player's city, only a `base` recall to one of the player's own cities or outposts is allowed (slice [`033`](../033-alliances/spec.md)) |
 
+**Departure time** ([`044`](../044-world-map-revamp/spec.md)): `movement.started_at` (`timestamptz`, default `now()`, migration `00023_movement_started_at`) is written from the `start_at` given to `TroopService.createMovement` (player orders, rebase and return trips, reinforcement returns, exchange convoys and their carriers' trips home); rows in flight at migration time got `now()`. `GET /troop/movement` and `GET /troop/movement/:movement_id` entries carry `departure_at` (ms), which the map uses to place each movement's progress dot.
+
 **Transport cargo**: movement resources are plastic, mushroom, plasma and water (slice [`035`](../035-faction-exchange/spec.md), `movement.water`). Load = Σ amount × `resource_transport_weight` (plastic 1, mushroom 1, plasma 100, water 2) against the carriers' `transport_capacity` (`carrier`-role units of a Confederation player carry × 1.10, rounded per unit, slice [`039`](../039-confederation-identity/spec.md); the movement estimate shows the boosted capacity and speed). Request bodies that omit `water` count it as 0 (`getResourcesFromBody`). On arrival, cities take every unit of plasma and water (no cap); outposts store no water, so it stays in the cargo and returns with the carriers (the estimate flags `destination_capacity_exceeded`).
 
 **Faction exchange** ([`035`](../035-faction-exchange/spec.md)): each fill creates two `exchange` convoys (goods seller → buyer, water buyer → seller) with `movement.exchange_trade_id` set; `POST /troop/movement` refuses that action (`troop:movement:action-not-implemented`). Arrival (`sagaFinishExchange`) adds the cargo to the recipient's stock ignoring warehouse capacity, goes on to the recipient's closest city when the destination changed hands, or turns back with the cargo when the recipient has no city; the carriers return with an automatic `base` movement that keeps the trade link. **Reserved carriers**: carriers held by open exchange orders stay on the city cell but cannot move: `createTroopMovement` checks `available = stack count − reserved` (`ExchangeService.availableTroops`, `exchange.listReservedInCell`).
@@ -93,11 +95,11 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 
 ## Web UI
 
-`apps/web/src/modules/movement/` — since [`045`](../045-movements-revamp/spec.md): tabbed list « Sortants / Entrants / Retours / Convois » (compact tables, shared 1 s ticker, sort in the URL), details at `…/world/movement/$movementId` (« En bataille depuis HH:mm » when `battle_id` is set, strategy, troops, cargo), and the 3-step send wizard `MovementSendWizard` at `…/world/movement/send` (destination → action and troops → summary) whose state lives in the URL; attack strategy picker in `send/strategy`. Slice [`030`](../030-intelligence/spec.md): « Espionner » (scouts only, Espionnage ≥ 1) with an odds preview in the summary, and incoming attacks in the « Entrants » tab fed by `GET /troop/movement/incoming`. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail).
+`apps/web/src/modules/movement/` — since [`045`](../045-movements-revamp/spec.md): tabbed list « Sortants / Entrants / Retours / Convois » (compact tables, shared 1 s ticker, sort in the URL), details at `…/world/movement/$movementId` (« En bataille depuis HH:mm » when `battle_id` is set, strategy, troops, cargo), and the 3-step send wizard `MovementSendWizard` at `…/world/movement/send` (destination → action and troops → summary) whose state lives in the URL; attack strategy picker in `send/strategy`. Slice [`030`](../030-intelligence/spec.md): « Espionner » (scouts only, Espionnage ≥ 1) with an odds preview in the summary, and incoming attacks in the « Entrants » tab fed by `GET /troop/movement/incoming`. Troop module `ws-listener` listens for `troop:movement-finished` and `battle:finished` (refreshes movement list and detail). Since [`044`](../044-world-map-revamp/spec.md) the world map draws own movements as arrows (`modules/map/layers/movements.tsx`) and the details panel shows « Départ : HH:mm ».
 
 ## API client
 
-`packages/api-client/src/endpoints/troop/movement/` (`TroopGetMovementDataResponse.battle_id`; `kind`, `battle_id`, `troops`, `combat_strategy`, `movement_id`, estimate `modifiers` and the `MovementKind` export since [`045`](../045-movements-revamp/spec.md)).
+`packages/api-client/src/endpoints/troop/movement/` (`TroopGetMovementDataResponse.battle_id`; `kind`, `battle_id`, `troops`, `combat_strategy`, `movement_id`, estimate `modifiers` and the `MovementKind` export since [`045`](../045-movements-revamp/spec.md); `departure_at` on list and detail since [`044`](../044-world-map-revamp/spec.md)).
 
 ## Evidence index
 
@@ -107,7 +109,7 @@ On success: `AppEvent.TroopMovementFinished`; if base saga created an outpost, a
 | Sagas | `apps/server/src/app/saga/finish/` (incl. `attack.ts`) |
 | Queries | `apps/server/src/app/query/troop/movement/` |
 | Combat core | `apps/server/src/core/combat/` (`combat-service.ts`, `entity/battle.ts`, `type/battle-stack.ts`) |
-| Persistence | `apps/server/src/adapter/database/repository/battle.ts`, migrations `00006_player_combat_pvp.ts`, `00009_battle_round.ts` |
+| Persistence | `apps/server/src/adapter/database/repository/battle.ts`, migrations `00006_player_combat_pvp.ts`, `00009_battle_round.ts`, `00023_movement_started_at.ts` (044, `repository/movement.ts` + `movement.spec.ts`) |
 | Jobs | `apps/server/src/adapter/job-queue/troop/movement-finish.ts`, `apps/server/src/adapter/job-queue/combat/advance-round.ts` |
 | HTTP | `apps/server/src/web/handler/troop/movement/` |
 | Web | `apps/web/src/modules/movement/` |

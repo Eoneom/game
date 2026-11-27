@@ -13,6 +13,9 @@ The world is a fixed `100×100` integer grid of cells generated once at server s
 | Method | Path | Auth | Handler |
 | --- | --- | --- | --- |
 | `GET` | `/world/cells` | yes | `worldGetCellsHandler` |
+| `GET` | `/world/terrain` | yes | `worldTerrainHandler` — whole-world terrain string (slice [`044`](../044-world-map-revamp/spec.md)) |
+| `GET` | `/world/exploration` | yes | `worldExplorationHandler` — the viewer's explored cells with coefficients (044) |
+| `GET` | `/world/markers` | yes | `worldMarkersHandler` — settlements in bounds (side ≤ `MAX_MARKER_VIEWPORT_SIDE` 100) with relation and size (044) |
 
 **Query parameters**: `min_x`, `max_x`, `min_y`, `max_y` (required integers); optional `detail` (`terrain` | `full`, default `full`).
 
@@ -33,7 +36,17 @@ The world is a fixed `100×100` integer grid of cells generated once at server s
 
 **`settlements`**: `{ cities: [...], outposts: [...] }` for every city/outpost whose cell lies in the bounds. Cities include `id`, `name`, `player_id`, `faction_code`, `coordinates`. Outposts include `id`, `player_id`, `faction_code`, `type` (`temporary` / `permanent`), `coordinates`.
 
+The handler marks explored cells with a `Set` of the explored ids (slice 044; it used to scan the list for each cell). `GET /world/cells` keeps its shape; since slice 044 the web map no longer pages terrain through it (only the send wizard's one-cell destination read, `movement/api/destination.ts`, uses it).
+
 Tests: `apps/server/src/web/handler/world/get-cells.spec.ts`, `apps/server/src/app/query/world/get-cells.spec.ts`.
+
+### Map reads (slice [`044`](../044-world-map-revamp/spec.md))
+
+| Endpoint | Response | Notes |
+| --- | --- | --- |
+| `GET /world/terrain` | `{ size, terrain }`: `size × size` chars row-major from (1, 1), `f` forest, `r` ruins, `l` lake | `Cache-Control: private, max-age=86400`; the grid is read once and kept in memory (`app/query/world/world-cells.ts`, `WorldCellCache`). Terrain is not secret (every viewport already exposed it). |
+| `GET /world/exploration` | `{ cells: [x, y, plastic, mushroom, solar][] }`, coefficients rounded to 2 decimals | Explored cells only (same rule as `characteristic` above). |
+| `GET /world/markers?min_x&max_x&min_y&max_y` | `{ viewer: { player_id, faction_code, alliance_id }, cities, outposts }`; each settlement carries `owner_name`, `alliance_tag`, `relation` (`mine` > `ally` > `system` > `faction` > `enemy`, `WorldMarkerService.getRelation`), cities a `size` 1–4 from their total building levels (`CITY_SIZE_LEVEL_THRESHOLDS` 20 / 50 / 80) | Bounds validated like `/world/cells` (`assertWorldBounds`) with a max side of 100. Grouped reads only: `city.listInBounds`, `outpost.listInBounds`, `player.listByIds`, `alliance.listTagsByPlayerIds` (viewer included, for its `alliance_id`), `building.sumLevelsByCityIds`. |
 
 ## Domain rules (`core/world/`)
 
@@ -42,7 +55,8 @@ Tests: `apps/server/src/web/handler/world/get-cells.spec.ts`, `apps/server/src/a
 | `WORLD_SIZE` | `100` (coordinates `1..100`) |
 | `MAX_VIEWPORT_SIDE` | `20` cells per axis in one request |
 | `INITIAL_VIEWPORT_HALF_EXTENT` | `5` (server bootstrap / empire snapshot; not enforced on HTTP query) |
-| `CITY_MAP_INITIAL_HALF_EXTENT` | `3` (web city/outpost world map open + recenter → 7×7 visible) |
+| `MAX_MARKER_VIEWPORT_SIDE` | `100` cells per axis for `GET /world/markers` (slice 044) |
+| `CITY_SIZE_LEVEL_THRESHOLDS` | `[20, 50, 80]` (`core/world/constant/marker.ts`, map size hint, slice 044) |
 | `WorldService.generate()` | One `CellEntity` per coordinate; mushroom/plastic Perlin + solar Perlin; plasma coefficient fixed at `1` in generation |
 | `WorldService.getDistance` | `abs(dx) + abs(dy)`, multiplied by `10000` |
 | `WorldError` | `world:already-exists`, `world:cell-not-found`, `world:cell-city-mismatch`, `world:cell-outpost-mismatch`, `world:exploration-not-found`, `world:invalid-bounds` |
@@ -53,23 +67,17 @@ Exploration is per `player_id` (`ExplorationEntity`); updated by movement explor
 
 ## Web UI (`apps/web/src/modules/map/`)
 
-- **Cache**: `cell-cache.ts` merges every `GET /world/cells` response; the map draws cached cells intersecting the logical viewport (`viewportBoundsAround(center, half_extent)`), so HTTP completion does not change pan/zoom framing.
-- **Fetch**: `fetchBoundsAround` adds `PREFETCH_MARGIN_CELLS` (3) around the visible window (+ optional +1 cell on the pan direction), clamped to server `MAX_VIEWPORT_SIDE`. **Cache holes** trigger an **immediate** `detail=terrain` request (no debounce); when fully cached, optional debounced terrain refresh (~90ms). **`detail=full` only on cell click** (`loadCellIntel`, 1×1 bounds) and initial open/recenter — not on pan release. Terrain requests include settlements but skip exploration; client accumulates markers and filters to the visible window; cell intel (`explored`/coefficients) preserved when merging terrain batches. Stale responses ignored via generation counter; idle ring prefetch for uncached strips.
-- **Pan**: `PAN_PIXEL_TO_CELL_SENSITIVITY` (0.4) damps cells-per-pixel; Konva group offset resets each drag move so terrain stays world-anchored without snapping when tiles arrive.
-- **Open / recenter**: `CITY_MAP_INITIAL_HALF_EXTENT` (3). Wheel zoom toward cursor, zoom buttons, recenter to city/outpost home cell.
-- Renders terrain on all visible cells; coefficients in the side panel when `explored` and present in cache (`cells.tsx`, `details/index.tsx`, `canvas.tsx`). Settlement markers for all players in view (`markers.tsx`, `legend-overlay.tsx`). Geometry in `geometry.ts` / `helper.ts` / `viewport.ts`.
-- **Side panel movements** (`map/details/index.tsx`): selecting a cell embeds compact `MovementCreate` with destination fixed to that cell — **explore** on fogged cells; **base**, **transport**, and **attack** (with strategy + cargo when applicable) on explored cells. Same estimation/submit flow as `/world/movement`.
-- Routes under `/city/$cityId/world/...` and outpost world map routes ([`019`](../019-web-shell-routing/spec.md)).
+Rebuilt by slice [`044`](../044-world-map-revamp/spec.md): full-workspace map with 6 zoom levels (7 → 41 rows, `MAP_ZOOM_ROWS`), a minimap, « Aller à » / « Mes emplacements », relation-coloured markers, movement arrows, cell actions opening the send wizard, and the « Bonus de terrain » / « Cibles et menaces » overlays. Terrain comes once from `GET /world/terrain`, exploration from `GET /world/exploration`, markers from `GET /world/markers` (visible range padded by 50 %, debounced 150 ms). The former cell cache, fetch scheduler, `/world/cells` paging and `CITY_MAP_INITIAL_HALF_EXTENT` are removed; the default zoom on open and « Recentrer » is level 3 (15 rows). Routes under `/city/$cityId/world/map` and `/outpost/$outpostId/world/map` ([`019`](../019-web-shell-routing/spec.md)) take `?x=&y=&zoom=&layers=`.
 
 ## API client
 
-`packages/api-client/src/endpoints/world/get-cells.ts` — request query types and response cell shape.
+`packages/api-client/src/endpoints/world/get-cells.ts` — request query types and response cell shape. Slice 044: `endpoints/world/{terrain,exploration,markers}.ts` and `client.world.getTerrain` / `getExploration` / `getMarkers`.
 
 ## Evidence index
 
 | Area | Paths |
 | --- | --- |
 | Core | `apps/server/src/core/world/{service,helper,perlin,error,constant/size}.ts`, `cell/entity.ts`, `exploration/` |
-| Query | `apps/server/src/app/query/world/get-cells.ts` |
-| HTTP | `apps/server/src/web/handler/world/get-cells.ts` |
+| Query | `apps/server/src/app/query/world/get-cells.ts`; slice 044: `app/query/world/{world-cells,bounds,terrain,exploration,markers,settlements}.ts` (+ `map-queries.spec.ts`), `core/world/{marker,constant/marker}.ts` |
+| HTTP | `apps/server/src/web/handler/world/get-cells.ts`; slice 044: `web/handler/world/{terrain,exploration,markers,query-number}.ts` (+ `map-handlers.spec.ts`) |
 | Web | `apps/web/src/modules/map/` |
