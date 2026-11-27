@@ -163,14 +163,17 @@ export const MapToolbar: React.FC<Props> = ({
           Bonus de terrain
         </label>
         {layers.terrain && (
-          <select
-            aria-label="Ressource du bonus de terrain"
-            className="field-input w-40 py-1"
-            value={layers.terrain}
-            onChange={event => onLayersChange({ ...layers, terrain: event.target.value as TerrainMetric })}
-          >
-            {TERRAIN_METRICS.map(metric => <option key={metric} value={metric}>{TERRAIN_METRIC_LABELS[metric]}</option>)}
-          </select>
+          // `field-input` is full width: the wrapper keeps the select inline with the layer toggles.
+          <span className="w-40">
+            <select
+              aria-label="Ressource du bonus de terrain"
+              className="field-input py-1"
+              value={layers.terrain}
+              onChange={event => onLayersChange({ ...layers, terrain: event.target.value as TerrainMetric })}
+            >
+              {TERRAIN_METRICS.map(metric => <option key={metric} value={metric}>{TERRAIN_METRIC_LABELS[metric]}</option>)}
+            </select>
+          </span>
         )}
         <label className="flex cursor-pointer items-center gap-2">
           <input type="checkbox" checked={layers.targets} onChange={event => onLayersChange({ ...layers, targets: event.target.checked })} />
