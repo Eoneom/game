@@ -8,6 +8,7 @@ const mutateBlock = vi.fn()
 const mutateReport = vi.fn()
 const fetchNextPage = vi.fn()
 const wsHandlers = new Map<string, (payload: unknown) => void>()
+let allianceMember = false
 let historyPages: { messages: CommunicationChatMessage[]; has_more: boolean; viewer_player_id: string }[] = []
 
 vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigate }))
@@ -29,6 +30,7 @@ vi.mock('#communication/chat/hooks', () => ({
   }),
   usePostChatMessage: () => ({ mutate: mutatePost, isPending: false }),
 }))
+vi.mock('#alliance/hooks', () => ({ useMyAlliance: () => ({ data: { alliance: allianceMember ? { id: 'a1' } : null } }) }))
 vi.mock('#communication/block/hooks', () => ({ useBlockPlayer: () => ({ mutate: mutateBlock }) }))
 vi.mock('#communication/abuse-report/hooks', () => ({
   useReportAbuse: () => ({ mutate: mutateReport }),
@@ -39,7 +41,7 @@ import { ChatPanel } from './panel'
 
 const message = (id: string, author_id: string, name: string, body: string): CommunicationChatMessage => ({
   id,
-  author: { id: author_id, name, faction_code: FactionCode.THE_CONFEDERATION },
+  author: { id: author_id, name, faction_code: FactionCode.THE_CONFEDERATION, alliance_tag: null },
   body,
   created_at: new Date('2026-11-27T10:05:00').getTime(),
 })
@@ -127,5 +129,24 @@ describe('ChatPanel', () => {
 
     fireEvent.click(screen.getByRole('tab', { name: /Faction/ }))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('shows the Alliance tab and [TAG] names only for alliance members (slice 033)', () => {
+    historyPages = [ {
+      messages: [ { ...message('m1', 'bob', 'Bob', 'bonjour'), author: { id: 'bob', name: 'Bob', faction_code: FactionCode.THE_CONFEDERATION, alliance_tag: 'ABC' } } ],
+      has_more: false,
+      viewer_player_id: 'me',
+    } ]
+    const { unmount } = render(<ChatPanel />)
+    fireEvent.click(screen.getByRole('button', { name: /Discussion/ }))
+    expect(screen.queryByRole('tab', { name: /Alliance/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '[ABC] Bob' })).toBeInTheDocument()
+    unmount()
+
+    allianceMember = true
+    render(<ChatPanel />)
+    fireEvent.click(screen.getByRole('button', { name: /Discussion/ }))
+    expect(screen.getByRole('tab', { name: /Alliance/ })).toBeInTheDocument()
+    allianceMember = false
   })
 })

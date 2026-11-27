@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AllianceRouteImport } from './routes/alliance'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as SharedRouteRouteImport } from './routes/_shared/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
@@ -44,6 +45,11 @@ import { Route as CityCityIdWorldMovementRouteRouteImport } from './routes/city/
 import { Route as OutpostOutpostIdWorldMovementMovementIdRouteImport } from './routes/outpost/$outpostId/world/movement/$movementId'
 import { Route as CityCityIdWorldMovementMovementIdRouteImport } from './routes/city/$cityId/world/movement/$movementId'
 
+const AllianceRoute = AllianceRouteImport.update({
+  id: '/alliance',
+  path: '/alliance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -226,6 +232,7 @@ const CityCityIdWorldMovementMovementIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof SharedIndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/alliance': typeof AllianceRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/report': typeof SharedReportRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/outpost/$outpostId/world/movement/$movementId': typeof OutpostOutpostIdWorldMovementMovementIdRoute
 }
 export interface FileRoutesByTo {
+  '/alliance': typeof AllianceRoute
   '/report': typeof SharedReportRoute
   '/admin/combat-simulator': typeof AdminCombatSimulatorRoute
   '/admin/system-players': typeof AdminSystemPlayersRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_shared': typeof SharedRouteRouteWithChildren
   '/admin': typeof AdminRouteRouteWithChildren
+  '/alliance': typeof AllianceRoute
   '/city/$cityId': typeof CityCityIdRouteRouteWithChildren
   '/outpost/$outpostId': typeof OutpostOutpostIdRouteRouteWithChildren
   '/_shared/report': typeof SharedReportRoute
@@ -332,6 +341,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/alliance'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/report'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/outpost/$outpostId/world/movement/$movementId'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/alliance'
     | '/report'
     | '/admin/combat-simulator'
     | '/admin/system-players'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_shared'
     | '/admin'
+    | '/alliance'
     | '/city/$cityId'
     | '/outpost/$outpostId'
     | '/_shared/report'
@@ -436,6 +448,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   SharedRouteRoute: typeof SharedRouteRouteWithChildren
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  AllianceRoute: typeof AllianceRoute
   CityCityIdRouteRoute: typeof CityCityIdRouteRouteWithChildren
   OutpostOutpostIdRouteRoute: typeof OutpostOutpostIdRouteRouteWithChildren
   InboxMailRoute: typeof InboxMailRoute
@@ -444,6 +457,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/alliance': {
+      id: '/alliance'
+      path: '/alliance'
+      fullPath: '/alliance'
+      preLoaderRoute: typeof AllianceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -839,6 +859,7 @@ const OutpostOutpostIdRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   SharedRouteRoute: SharedRouteRouteWithChildren,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  AllianceRoute: AllianceRoute,
   CityCityIdRouteRoute: CityCityIdRouteRouteWithChildren,
   OutpostOutpostIdRouteRoute: OutpostOutpostIdRouteRouteWithChildren,
   InboxMailRoute: InboxMailRoute,

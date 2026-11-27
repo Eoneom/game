@@ -16,6 +16,7 @@ export default defineConfig({
   plugins: [ react(), tailwindcss() ],
   resolve: {
     alias: {
+      '#alliance': path.resolve(webSrc, 'modules/alliance'),
       '#helpers': path.resolve(webSrc, 'helpers'),
       '#hook': path.resolve(webSrc, 'hook'),
       '#location': path.resolve(webSrc, 'modules/location'),

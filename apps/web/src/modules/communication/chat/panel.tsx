@@ -16,11 +16,22 @@ import { useChatHistory, usePostChatMessage } from '#communication/chat/hooks'
 import { readChatPanelState, writeChatPanelState, type ChatPanelState } from '#communication/chat/storage'
 import { useBlockPlayer } from '#communication/block/hooks'
 import { promptAbuseReason, useReportAbuse } from '#communication/abuse-report/hooks'
+import { useMyAlliance } from '#alliance/hooks'
+import { allianceDisplayName } from '#alliance/translations'
 
-const TABS: { channel: ChatChannel; label: string }[] = [
+const BASE_TABS: { channel: ChatChannel; label: string }[] = [
   { channel: ChatChannel.GLOBAL, label: 'Global' },
   { channel: ChatChannel.FACTION, label: 'Faction' },
 ]
+
+/** The Alliance tab only shows for alliance members (slice 033). */
+const ALLIANCE_TAB = { channel: ChatChannel.ALLIANCE, label: 'Alliance' }
+
+const PLACEHOLDERS: Record<ChatChannel, string> = {
+  [ChatChannel.GLOBAL]: 'Message à tous…',
+  [ChatChannel.FACTION]: 'Message à votre faction…',
+  [ChatChannel.ALLIANCE]: 'Message à votre alliance…',
+}
 
 const formatChatTime = (timestamp: number): string => {
   const date = new Date(timestamp)
@@ -51,7 +62,7 @@ const ChatMessageRow: React.FC<{
     <div className="min-w-0">
       {isOwn ? (
         <span className="font-semibold" style={{ color: factionColor(message.author.faction_code) }}>
-          {message.author.name}
+          {allianceDisplayName(message.author.name, message.author.alliance_tag)}
         </span>
       ) : (
         <button
@@ -62,7 +73,7 @@ const ChatMessageRow: React.FC<{
           aria-expanded={menuOpen}
           onClick={onToggleMenu}
         >
-          {message.author.name}
+          {allianceDisplayName(message.author.name, message.author.alliance_tag)}
         </button>
       )}
       <span className="text-amber-dim"> : </span>
@@ -96,11 +107,19 @@ const ChatMessageRow: React.FC<{
 /** Collapsible chat panel at the bottom of every authenticated page (slice 032). */
 export const ChatPanel: React.FC = () => {
   const navigate = useNavigate()
-  const [ panel, setPanel ] = useState<ChatPanelState>(readChatPanelState)
+  const [ storedPanel, setPanel ] = useState<ChatPanelState>(readChatPanelState)
   const [ unseen, setUnseen ] = useState<Record<ChatChannel, boolean>>({
     [ChatChannel.GLOBAL]: false,
     [ChatChannel.FACTION]: false,
+    [ChatChannel.ALLIANCE]: false,
   })
+  const { data: myAlliance } = useMyAlliance()
+  const isAllianceMember = Boolean(myAlliance?.alliance)
+  const tabs = isAllianceMember ? [ ...BASE_TABS, ALLIANCE_TAB ] : BASE_TABS
+  // Leaving the alliance removes the tab: fall back to the global channel.
+  const panel: ChatPanelState = storedPanel.tab === ChatChannel.ALLIANCE && !isAllianceMember
+    ? { ...storedPanel, tab: ChatChannel.GLOBAL }
+    : storedPanel
   const [ draft, setDraft ] = useState('')
   const [ menuMessageId, setMenuMessageId ] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
@@ -152,7 +171,7 @@ export const ChatPanel: React.FC = () => {
     postMessage.mutate(body)
   }
 
-  const hasActivity = unseen[ChatChannel.GLOBAL] || unseen[ChatChannel.FACTION]
+  const hasActivity = unseen[ChatChannel.GLOBAL] || unseen[ChatChannel.FACTION] || (isAllianceMember && unseen[ChatChannel.ALLIANCE])
 
   return (
     <section
@@ -174,7 +193,7 @@ export const ChatPanel: React.FC = () => {
           {!panel.open && hasActivity && <ActivityDot label="Nouveaux messages" />}
         </button>
         <div role="tablist" className="ml-2 flex gap-1">
-          {TABS.map(({ channel, label }) => (
+          {tabs.map(({ channel, label }) => (
             <button
               key={channel}
               type="button"
@@ -255,7 +274,7 @@ export const ChatPanel: React.FC = () => {
             <input
               aria-label="Message"
               className="min-w-0 flex-1 rounded-sm border border-rust/50 bg-transparent px-2 py-1 text-sm text-amber placeholder:text-label focus:border-amber/60 focus:outline-none"
-              placeholder={panel.tab === ChatChannel.FACTION ? 'Message à votre faction…' : 'Message à tous…'}
+              placeholder={PLACEHOLDERS[panel.tab]}
               maxLength={CHAT_BODY_MAX_LENGTH}
               value={draft}
               onChange={event => setDraft(event.target.value)}

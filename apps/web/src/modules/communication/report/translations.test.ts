@@ -16,6 +16,11 @@ describe('battleResultKind', () => {
     expect(battleResultKind({ perspective: 'defender', winner: 'attacker' })).toBe('defeat')
   })
 
+  it('counts a reinforcement as the defender side (slice 033)', () => {
+    expect(battleResultKind({ perspective: 'reinforcement', winner: 'defender' })).toBe('victory')
+    expect(battleResultKind({ perspective: 'reinforcement', winner: 'attacker' })).toBe('defeat')
+  })
+
   it('is a draw for both sides on a draw', () => {
     expect(battleResultKind({ perspective: 'attacker', winner: 'draw' })).toBe('draw')
     expect(battleResultKind({ perspective: 'defender', winner: 'draw' })).toBe('draw')

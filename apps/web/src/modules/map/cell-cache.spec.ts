@@ -97,6 +97,7 @@ describe('cell-cache', () => {
             name: 'Old',
             player_id: 'p1',
             faction_code: FactionCode.THE_CONFEDERATION,
+            alliance_tag: null,
             coordinates: {
               x: 2,
               y: 2,
@@ -112,6 +113,7 @@ describe('cell-cache', () => {
             name: 'New',
             player_id: 'p2',
             faction_code: FactionCode.THE_TECHNOLOGICAL_SINGULARITY,
+            alliance_tag: null,
             coordinates: {
               x: 3,
               y: 3,

@@ -8,6 +8,7 @@ import { useGetTroop } from '#troop/hooks'
 import { Troop } from '#types'
 import { useGetCity, useSetCityCombatStrategy } from '#city/hooks'
 import { GarrisonCombatStrategy } from '#troop/garrison-strategy'
+import { ReinforcementsAbroad, StationedReinforcements } from '#alliance/reinforcements'
 
 interface Props {
   cityId: string
@@ -44,6 +45,8 @@ export const TroopPage: React.FC<Props> = ({ cityId }) => {
           selectedTroopId={selectedTroopId}
           onSelect={setSelectedTroopId}
         />
+        <StationedReinforcements cityId={cityId} />
+        <ReinforcementsAbroad cityId={cityId} />
       </div>
     </LayoutPage>
   )

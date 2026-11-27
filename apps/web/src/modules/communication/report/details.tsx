@@ -51,6 +51,36 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
     return <SpyDetectedReportDetails report={report} spyDetected={report.spy_detected} />
   }
 
+  if (report.type === ReportType.REINFORCEMENT) {
+    return (
+      <LayoutDetailsContent>
+        <h1>{ReportTypeLabels[report.type]}</h1>
+        <p className="details-meta">
+          {formatCoordinates(report.origin)} → {formatCoordinates(report.destination)}
+        </p>
+        {report.reinforcement && (
+          <p className="details-meta">
+            {report.reinforcement.owner_name} a stationné des troupes dans votre ville. Elles défendent avec votre
+            garnison ; seul leur propriétaire peut les rappeler.
+          </p>
+        )}
+        <h3>Troupes stationnées</h3>
+        <ul>
+          {report.troops.map(troop => (
+            <li key={troop.code} className="flex items-center gap-2">
+              <img
+                src={troopImageSrc(troop.code)}
+                alt={TroopTranslations[troop.code].name}
+                className="h-8 w-8"
+              />
+              {TroopTranslations[troop.code].name} × {troop.count}
+            </li>
+          ))}
+        </ul>
+      </LayoutDetailsContent>
+    )
+  }
+
   if (report.type === ReportType.BATTLE && report.battle) {
     const battle = report.battle
     const attacker_modifiers = formatCombatModifiers(battle.attacker_modifiers)
@@ -64,6 +94,14 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
         <p className="details-meta">
           {formatCoordinates(report.origin)} → {formatCoordinates(report.destination)}
         </p>
+        {report.battle_players && (
+          <p className="details-meta">
+            {report.battle_players.attacker_name} contre {report.battle_players.defender_name}
+          </p>
+        )}
+        {battle.perspective === 'reinforcement' && (
+          <p className="details-meta">Vos renforts défendaient une ville alliée.</p>
+        )}
         <p className="details-meta">Résultat : {winnerLabel(battle.winner)}</p>
         <p className="details-meta">
           Stratégies — attaquant : {CombatStrategyLabels[battle.attacker_strategy]} ;
@@ -72,7 +110,7 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
         {(attacker_modifiers || defender_modifiers) && (
           <p className="details-meta">
             Technologies — attaquant : {attacker_modifiers ?? 'aucune'} ;
-            défenseur : {defender_modifiers ?? 'aucune'}
+            {battle.perspective === 'reinforcement' ? 'vos renforts' : 'défenseur'} : {defender_modifiers ?? 'aucune'}
           </p>
         )}
         {hasResources(report.resources) && (
@@ -96,7 +134,11 @@ export const ReportDetails: React.FC<Props> = ({ report }) => {
         </ul>
         {destroyed_defenses.length > 0 && (
           <>
-            <h3>{battle.perspective === 'defender' ? 'Défenses détruites' : 'Défenses ennemies détruites'}</h3>
+            <h3>
+              {battle.perspective === 'defender'
+                ? 'Défenses détruites'
+                : battle.perspective === 'reinforcement' ? 'Défenses alliées détruites' : 'Défenses ennemies détruites'}
+            </h3>
             <ul>
               {destroyed_defenses.map(defense => (
                 <li key={defense.code} className="flex items-center gap-2">

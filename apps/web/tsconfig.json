@@ -13,6 +13,9 @@
       "@server-core/*": [
         "../../apps/server/src/core/*"
       ],
+      "#alliance/*": [
+        "./src/modules/alliance/*"
+      ],
       "#helpers/*": [
         "./src/helpers/*"
       ],

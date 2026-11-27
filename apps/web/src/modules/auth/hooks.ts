@@ -15,6 +15,7 @@ import { registerTroopWsListeners } from '#troop/ws-listener'
 import { registerDefenseWsListeners } from '#defense/ws-listener'
 import { registerOutpostWsListeners } from '#outpost/ws-listener'
 import { registerCommunicationWsListeners } from '#communication/ws-listener'
+import { registerAllianceWsListeners } from '#alliance/ws-listener'
 import { clearSystemPlayerObservabilityEvents } from '#admin/system-player-observability/event-store'
 import { clearSystemPlayerStatsSnapshots } from '#admin/system-player-observability/stats-store'
 import { invalidateSession, isInvalidSessionError } from '#auth/session'
@@ -66,6 +67,7 @@ const startSession = async ({
   registerDefenseWsListeners()
   registerOutpostWsListeners()
   registerCommunicationWsListeners()
+  registerAllianceWsListeners()
   wsClient.connect(token)
 }
 
@@ -157,6 +159,7 @@ export const useInitStoredToken = () => {
       registerDefenseWsListeners()
       registerOutpostWsListeners()
       registerCommunicationWsListeners()
+      registerAllianceWsListeners()
       wsClient.connect(token)
     })()
   }, [])

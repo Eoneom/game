@@ -28,6 +28,8 @@ import { useDestinationStance } from '#movement/api/destination'
 import { isScoutOnlySelection, isSpyActionAvailable } from '#movement/spy'
 import { useListTechnologies } from '#technology/hooks'
 import { MovementCreateSpyPreview } from './spy'
+import { isReinforceActionAvailable } from '#movement/reinforce'
+import { useMyAlliance } from '#alliance/hooks'
 import { Button } from '#ui/button'
 
 type MovementCreateProps = (
@@ -109,10 +111,14 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
   const { data: technologyList } = useListTechnologies()
   const espionageLevel = technologyList?.technologies.find(technology => technology.code === TechnologyCode.ESPIONAGE)?.level ?? 0
   const spyAvailable = isSpyActionAvailable({ troops: selectedTroopList, stance: destinationStance })
+  // Slice 033: « Renforcer » needs combat troops only and a city of another alliance member.
+  const { data: myAlliance } = useMyAlliance()
+  const reinforceAvailable = isReinforceActionAvailable({ troops: selectedTroopList, destination, myAlliance })
   const availableActions = useMemo(
     () => (allowedActions ?? Object.values(MovementAction))
-      .filter(movementAction => movementAction !== MovementAction.SPY || spyAvailable),
-    [allowedActions, spyAvailable]
+      .filter(movementAction => movementAction !== MovementAction.SPY || spyAvailable)
+      .filter(movementAction => movementAction !== MovementAction.REINFORCE || reinforceAvailable),
+    [allowedActions, spyAvailable, reinforceAvailable]
   )
 
   useEffect(() => {
@@ -205,6 +211,7 @@ export const MovementCreate: React.FC<MovementCreateProps> = ({
     && (action !== MovementAction.TRANSPORT || usedCapacity > 0)
     && (action !== MovementAction.ATTACK || combatStrategy)
     && (action !== MovementAction.SPY || (spyAvailable && espionageLevel > 0))
+    && (action !== MovementAction.REINFORCE || reinforceAvailable)
 
   return (
     <form

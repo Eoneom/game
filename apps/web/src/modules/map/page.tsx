@@ -9,11 +9,15 @@ import { useGetOutpost } from '#outpost/hooks'
 import { useListTroops } from '#troop/hooks'
 import { LayoutPage } from '#ui/layout/page'
 
-type MapPageProps =
+type MapPageProps = (
   | { cityId: string; outpostId?: never }
   | { cityId?: never; outpostId: string }
+) & {
+  /** Cell to center on and select first (alliance member cities, slice 033). */
+  focus?: { x: number, y: number } | null
+}
 
-export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
+export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId, focus = null }) => {
   const { data: city } = useGetCity(cityId)
   const { data: outpost } = useGetOutpost(outpostId)
   useListTroops(cityId ? { cityId } : { outpostId: outpostId as string })
@@ -32,10 +36,10 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
     panEnd,
     loadCellIntel,
   } = useWorld()
-  const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(null)
+  const [selectedCoordinates, setSelectedCoordinates] = useState<{ x: number, y: number} | null>(focus)
 
   React.useEffect(() => {
-    const initialCenter = cityCoordinates ?? outpostCoordinates
+    const initialCenter = focus ?? cityCoordinates ?? outpostCoordinates
     if (!initialCenter) return
     void fetch({
       center: initialCenter,
@@ -44,6 +48,8 @@ export const MapPage: React.FC<MapPageProps> = ({ cityId, outpostId }) => {
   }, [
     cityCoordinates,
     outpostCoordinates,
+    focus?.x,
+    focus?.y,
   ])
 
   const details = useMemo(() => {

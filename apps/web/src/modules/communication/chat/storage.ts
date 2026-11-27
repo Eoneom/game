@@ -28,7 +28,7 @@ export const readChatPanelState = (): ChatPanelState => {
     const parsed = JSON.parse(raw) as Partial<ChatPanelState>
     return {
       open: parsed.open === true,
-      tab: parsed.tab === ChatChannel.FACTION ? ChatChannel.FACTION : ChatChannel.GLOBAL,
+      tab: parsed.tab === ChatChannel.FACTION || parsed.tab === ChatChannel.ALLIANCE ? parsed.tab : ChatChannel.GLOBAL,
     }
   } catch {
     return DEFAULT_STATE

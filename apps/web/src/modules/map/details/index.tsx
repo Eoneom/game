@@ -25,6 +25,8 @@ const EXPLORED_CELL_ACTIONS = [
   MovementAction.ATTACK,
   // Shown only for scouts-only selections (slice 030).
   MovementAction.SPY,
+  // Shown only for combat-only selections aimed at an allied city (slice 033).
+  MovementAction.REINFORCE,
 ] as const
 
 export const MapDetails: React.FC<Props & DetailsInput> = ({ cityId, outpostId, coordinates, viewport }) => {

@@ -8,19 +8,22 @@ export const ReportTypeLabels: Record<ReportType, string> = {
   [ReportType.BATTLE]: 'Bataille',
   [ReportType.SPY]: 'Espionnage',
   [ReportType.SPY_DETECTED]: 'Espion repéré',
+  [ReportType.REINFORCEMENT]: 'Renforts alliés',
 }
 
 export type BattleResultKind = 'victory' | 'defeat' | 'draw'
 
+/** A `reinforcement` perspective fought on the defender side (slice 033). */
 export const battleResultKind = ({
   perspective,
   winner,
 }: {
-  perspective: 'attacker' | 'defender'
+  perspective: 'attacker' | 'defender' | 'reinforcement'
   winner: 'attacker' | 'defender' | 'draw'
 }): BattleResultKind => {
   if (winner === 'draw') return 'draw'
-  return winner === perspective ? 'victory' : 'defeat'
+  const side = perspective === 'reinforcement' ? 'defender' : perspective
+  return winner === side ? 'victory' : 'defeat'
 }
 
 const BattleResultLabels: Record<BattleResultKind, string> = {

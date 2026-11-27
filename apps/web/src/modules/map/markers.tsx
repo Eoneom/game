@@ -12,6 +12,7 @@ import {
   WorldMapOutpostMarker,
 } from '@eoneom/api-client'
 import React, { useMemo } from 'react'
+import { allianceDisplayName } from '#alliance/translations'
 import { Circle, Group, Text } from 'react-konva'
 
 interface Viewer {
@@ -83,7 +84,7 @@ export const MapMarkers: React.FC<Props> = ({
           key={`city-label-${city.id}`}
           x={c.x + ox - 22}
           y={c.y + oy + radius + 2}
-          text={city.name}
+          text={allianceDisplayName(city.name, city.alliance_tag)}
           fontSize={emphasized ? 13 : 11}
           fontFamily="Munson, system-ui, sans-serif"
           fill={style.cityStroke}
@@ -112,8 +113,10 @@ export const MapMarkers: React.FC<Props> = ({
         CELL_WORLD_SIZE,
       )
       const radius = emphasized ? 14 : 10
-      const label =
-        outpost.type === OutpostType.PERMANENT ? 'Avant-poste' : 'Camp temporaire'
+      const label = allianceDisplayName(
+        outpost.type === OutpostType.PERMANENT ? 'Avant-poste' : 'Camp temporaire',
+        outpost.alliance_tag
+      )
       list.push(
         <Circle
           key={`outpost-${outpost.id}`}

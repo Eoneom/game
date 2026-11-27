@@ -88,6 +88,14 @@ export const NavMenu: React.FC = () => {
             Courrier ({unreadMailCount ?? 0})
           </RouterLink>
         </li>
+        <li>
+          <RouterLink
+            to="/alliance"
+            className={linkClass('/alliance')}
+          >
+            Alliance
+          </RouterLink>
+        </li>
         {observabilitySession?.is_admin ? (
           <li>
             <RouterLink
